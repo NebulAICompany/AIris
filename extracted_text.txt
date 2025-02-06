@@ -1,0 +1,195 @@
+
+--- Page 1 ---
+T.C.
+Resmî
+Gazete
+Cumhurbaskanlign Genel Sekreterligi
+Hukuk ve Mevzuat Genel Midiirligince Yaymlannir
+14 Ocak 2025
+SALI
+Sayi : 32782
+YURUTME VE IDARE BOLUMU
+YONETMELIKLER
+Çevre, Sehircilik ve iklim Degisikligi Bakanligindan:
+ENDUSTRIYEL EMISYONLARIN YONETIMI YONETMELIGI
+BIRINCI BOLUM
+Baslangiç Hukumleri
+Amaç
+MADDE 1- (1) Bu Yonetmeligin amaci; çevrenin ve insan sagliginin butuncul olarak
+korunmasi için sifir kirlilik hedefleri dogrultusunda entegre kirlilik onleme ve kontrol yakla-
+simiyla hava, su, toprak, gurultu ve koku kirliligine neden olan sanayi kaynakli emisyonlari
+ve atik olusumunu kaynaginda onlemek ve azaltmak ile kaynaklari verimli kullanmak için sa-
+nayide yesil donusume, dongusel ekonomiye ve karbonsuzlasmaya yonelik idari ve teknik usul
+ve esaslari duzenlemektir.
+Kapsam
+MADDE 2- (1) Bu Yonetmelik, EK-1 ve EK-2'de yer alan faaliyetlerin gerçeklestiril-
+digi isletmeleri kapsar.
+(2) Milli giivenlik kapsaminda gorev ve yetkisi bulunan kurum ve kuruluslar, arastirma
+ve gelistirme faaliyetleri, yeni ûrin ve sureçlerin test edilmesi için kullanilan isletmeler veya
+isletme bolumleri bu Yonetmeligin kapsami disindadir.
+Dayanak
+MADDE 3- (1) Bu Yonetmelik, 9/8/1983 tarihli ve 2872 sayili Çevre Kanununun 3 in-
+ci, 8 inci ve 11 inci maddeleri ile 1 sayili Cumhurbaskanligi Teskilati Hakkinda Cumhurbas-
+kanligi Kararnamesinin 103 unci ve 104 unci maddelerine dayanilarak hazirlanmistir.
+Tanimlar
+MADDE 4- (1) Bu Yônetmelikte geçen;
+a) Bakanlik: Çevre, Sehircilik ve Îklim Degisikligi Bakanligini,
+b) Çevresel kalite standartlari: ilgili mevzuatla belirlenen, belirli bir kirletici veya kir-
+letici gruplarinin çevrede ya da alici ortamda insan sagligi ve çevreyi korumak için saglanmasi
+gereken degerleri,
+Kurulusu : 7. Ekim 1920
+Içindekiler 144. Sayfadadir.
+
+--- Page 2 ---
+Sayfa : 2
+RESMÎ GAZETE
+14 Ocak 2025 - Sayi : 32782
+c) Çevresel performans: Tuketim seviyeleri, malzemeler, su ve enerji kaynaklari ile
+ilgili kaynak verimliligi, emisyon degerleri, malzemelerin ve suyun yeniden kullanimi ve atik
+uretimi ile ilgili performansi,
+£) Degerlendirme raporu: SYD belgelendirme sirecinde basvuru dosyasi kabul edilen
+isletme için Bakanlikça yapilan duzenlemelerde ve Mevcut En lyi Teknikler (MET) dokiiman-
+lari dogrultusunda hazirlanan ve içerigi EK-4'te yer alan raporu,
+d) Degisiklik raporu: Tesiste yapilmasi planlanan degisiklige yënelik olarak hazirlanan
+raporu,
+e) Derin endustriyel donusum: iklim notr hedefi dogrultusunda; isletme tarafindan bir
+tesisin tamaminin veya bir kisminin tasariminda veya mevcut bir tesisin teknolojisinde buyuk
+bir degisiklik yapilmasini içeren, çapraz medya etkilerini de dikkate alarak MET sonuçlarinda
+belirlenen tekniklerle elde edilebilecek duzeylere kadar çevresel ortak faydalari optimize eden
+ve sera gazi emisyonlarinda kayda deger bir azalma saglayan MET'in veya yeni tekniklerin
+uygulanmasini,
+e-SYD Sistemi: SYD surecindeki is ve islemlerin elektronik ortamda gerçeklestiri-
+lecegi çevrimiçi sistemi,
+g) Emisyon: Maddelerin, titresimin, 1S1 veya gurûltununin isletme veya tesiste yer alan
+bir veya birden fazla kaynaktan havaya, suya ya da topraga dogrudan veya dolayli biçimde bi-
+rakilmasini,
+g) Emisyon sinir degeri (ESD): Bir emisyonun belirli parametrelerle ifade edilen kut-
+lesinin, belirli zaman dilimi içinde asilmamasi gereken konsantrasyonu ve/veya seviyesini,
+h) Esdeger parametreler veya teknik tedbirler: Sektorel MET dokimanlarinda ve MET-Ref
+dokumanlarinda ESD'leri verilmis olan kirleticiler yerine, tesisin ozelliklerine gëre goz onunde
+bulundurulacak parametre veya teknik tedbirleri,
+1) Gelismekte olan teknik: Ticari olarak gelistirilmesi halinde daha yiiksek seviyede
+çevre ve insan sagligi korumasini saglayacak veya mevcut tekniklerin uygulanma maliyetinden
+daha dusuk maliyetli ve asgari olarak mevcut çevre koruma duzeyinin muhafaza edilmesine
+imkan saglayacak endustriyel faaliyetlere yonelik yeni bir teknigi,
+i) Genel baglayici kurallar: SYD belgesi sartlarini belirlemek için getirilmis asgari ola-
+rak 10/9/2014 tarihli ve 29115 sayili Resmî Gazete'de yayimlanan Çevre izin ve Lisans Yo-
+netmeligi kapsamindaki emisyon sinir degerleri ve diger sartlari,
+Gozden geçirme raporu: SYD belgesi gozden geçirme siirecinde tesise iliskin hazir-
+lanan raporu,
+k) il mudurlugu: Çevre, Sehircilik ve iklim Degisikligi il mudurluklerini,
+I) Isletme: Tesis ve faaliyetleri,
+m) Isletmeci: SYD belgesine tabi olan tesisi isleten ve mulkiyet hakki, kiralama veya
+diger kanuni yetkilerle kullanma hakkina sahip gerçek veya tiizel kisiyi,
+n) Kirlilik: Însan faaliyetlerinin dogrudan veya dolayli sonucu olan maddelerin, titre-
+simlerin, gurililtunin veya 1Sinin ve kokunun insan sagligina, çevre kalitesine, maddi varliklara
+zararli olabilecek veya çevrenin kalitesini bozacak ve mesru amaçlarla kullanilmasina engel
+olabilecek sekilde havaya, suya veya topraga dogrudan ve dolayli biçimde birakilmasi sonucu
+olusan durumu,
+0) Madde: 7/11/2023 tarihli ve 32362 sayili Resmî Gazete' de yayimlanan Radyoaktif
+Atik ve Kullanilmis Yakit Yonetimi Yônetmeliginde yer alan radyoaktif maddeler, 13/8/2010
+tarihli ve 27671 sayili Resmî Gazete'de yayimlanan Genetik Yapisi Degistirilmis Organizmalar
+
+--- Page 3 ---
+14 Ocak 2025 - Sayi : 32782
+RESMÎ GAZETE
+Sayfa : 3
+ve Urunlerine Dair Yonetmelikte yer alan genetigi degistirilmis mikroorganizmalar ve
+18/3/2010 tarihli ve 5977 sayili Biyoguvenlik Kanununda yer alan genetik yapisi degistirilmis
+organizmalar tanimina giren maddeler hariç olmak uzere her turlu kimyasal element ve bunlarin
+bilesiklerini,
+0) Mevcut durum raporu: Bu Yônetmelik kapsaminda yer alan toprak kirliligi ve yer
+alti ve yer ustii suyunun kirlilik durumu hakkinda, ilgili mevzuat kapsaminda Bakanlikça ye-
+terlik verilmis kurum/kurulus tarafindan 8/6/2010 tarihli ve 27605 sayili Resmî Gazete'de: ya-
+yimlanan Toprak Kirliliginin Kontrolu ve Noktasal Kaynakli Kirlenmis Sahalara Dair Yonet-
+melik kapsaminda hazirlanan raporu,
+p) Mevcut En iyi Teknikler (MET): Çevrenin bir butun olarak en yuksek duzeyde ko-
+runmasinda teknolojik ve ekonomik surdurûlebiliirligi uluslararasi kabul gormus olan, Bakan-
+likça yayimlanan ve SYD belgesinin gerekliliklerine temel olusturan, en etkin, ileri, uygula-
+nabilir, temiz uretim teknikleri;
+1) Teknikler: Kullanilan teknolojiyi ve tesisin tasarlanma, insa, bakim, isletme ve dev-
+reden çikarma yontemlerini,
+2) Mevcut teknikler: Isletmeci tarafindan teknik ve ekonomik olarak uygulanabilir ol-
+dugu siirece, ulkemizde iiretilmesine veya kullaniliyor olmasina bakilmaksizin, sektërde eko-
+nomik ve teknik olarak surdurûlebilir kosullar ve maliyetler ile avantajlar dikkate alinarak uy-
+gulanan teknikleri,
+3) En iyi: Insan sagligi ve iklim korumasi da dahil olmak uzere, çevrenin bir butun ola-
+rak en yiiksek duzeyde korunmasinda en etkili olani,
+) MET ile iliskili emisyon seviyesi (MET-IES): Sektorel MET dokiumanlarinda, belli
+bir zaman dilimi içerisinde, belirli referans kosullari altinda ortalama bir deger olarak ifade
+edilen, MET veya MET kombinasyonu uygulanarak elde edilen, normal isletme kosullarinda
+erisilen emisyon seviyesi araligini,
+s) MET referans dokumani (MET-Ref): EK-1'de yer alan faaliyetler için EK-7'de yer
+alan kriterler dikkate alinarak, sektorel olarak hazirlanan uygulanan teknikleri, mevcut emis-
+yonlari, azaltim seviyelerini, MET'in belirlenmesinde goz ëninde bulundurulan kriterleri, MET
+sonuç belgelerini ve gelismekte olan teknikleri içeren ve Bakanlikça yayimlanan dokumani,
+S) MET sonuç belgesi: MET ile ilgili sonuçlar, tanmlar, MET uygulanabilirliginin de-
+gerlendirilmesi için gerekli bilgiler, MET-IES, bu tekniklerle iliskili çevresel performans sevi-
+yeleri, izleme, azaltim seviyeleri ve saha iyilestirilmesi uygulandigi durumlarda iyilestirme
+tedbirleri dahil olmak uzere bir çevre yonetim sisteminin içerigini ortaya koyan bir MET-Ref
+dokumaninin bolumlerini içeren ve Bakanlikça yayimlanan belgeyi,
+t) Onemli degisiklik: Bir tesisin SYD belgesinde yer alan bilgiler kapsaminda tesisin
+yapisinda veya isleyisinde, prosesinde, besleme sisteminde, kapasite veya boyutlarinda, insan
+sagligi ve çevre uzerinde ônemli olumsuz etkileri olabilecek olan çevre izin ve lisans belgesinin
+yenilenmesini gerektiren degisiklik veya genisletmeyi,
+u) Sanayide yesil donusûm (SYD): Çevresel etkiyi ve surdurûlebibililigi dikkate alan,
+yenilikçi ve en iyi çevresel uygulamalar ile enerji ve kaynak verimliligini artiran, surdurulebilir
+tuketim ve uretim modellerini benimseyen donusiim surecini,
+u) Sanayide yesil donusûm (SYD) belgesi: EK-1'de yer alan faaliyetlerin bu Yonetme-
+lik hukiimlerine uygun olarak isletildigini gosteren belgeyi,
+v) SYD bassorumlusu: SYD belgesi basvuru dosyasindaki bilgilere istinaden, deger-
+lendirme, degisiklik ve gozden geçirme sureçlerinde ilgili raporlari hazirlamak uzere sureçlerin
+koordinasyonunu saglamaktan ve raporlarin tamamindan sorumlu Bakanlikça yetkilendirilmis
+bassorumluyu,
+
+--- Page 4 ---
+Sayfa : 4
+RESMÎ GAZETE
+14 Ocak 2025 - Sayi : 32782
+y) SYD sorumlusu: SYD belgesi basvuru dosyasindaki bilgilere istinaden, degerlen-
+dirme, degisiklik ve gozden geçirme sureçlerinde ilgili raporlari hazirlamak iizere Bakanlikça
+yetkilendirilmis sorumluyu,
+Z) Sektorel MET dokiimanlarr: Bu Yônetmelik kapsaminda yer alan faaliyetler için
+uluslararasi kabul gormus uygulanan teknikleri, mevcut emisyonlari, izleme azaltim seviyele-
+rini, MET'in belirlenmesinde goz onunde bulundurulan kriterleri, MET-IES'i, saha iyilestiril-
+mesi uygulandigi durumlarda iyilestirme tedbirlerini ve gelismekte olan teknikleri içeren ve
+sektorel olarak hazirlanan ulusal teknolojik altyapi ile uyumlu Bakanlikça yayimlanan dokii-
+manlari,
+aa) Sifir kirlilik: Hava, su, toprak kirliliginin, gurultu ve atigin, sagliga ve dogal eko-
+sistemlere zararli kabul edilmeyen seviyelere dusururulmesi ile toksik olmayan bir çevre hede-
+fini,
+bb) Tesis: EK-1 ve EK-2'de yer alan bir veya birden fazla faaliyeti yiiriten isletmenin,
+bu faaliyetlerle teknik baglantisi olan ve kirlilik uzerinde etkisi olabilecek, ayni sahada bulunan
+ilgili islemlerin yurutuldugu sabit bir teknik birimi, faaliyeti veya faaliyetlerin butiinunti,
+cc) Uygunluk incelemesi: Yerinde tespit raporu hazirlanmis basvurularin uçuncu taraf
+dogrulama kuruluslarinca uygunlugunun dogrulanma surecini,
+çç) Uygunluk raporu: Uygunluk incelemesi surecinde hazirlanan raporu,
+dd) Uçuncu taraf dogrulama kurulusu: ISO/IEC 17029 standardina gore akredite olmus,
+SYD belgelendirme surecince uygunluk inceleme için ulusal ve uluslararasi alanda uygunluk
+inceleme prosedurûnin ve belgenin kabulunu temin eden kurum veya kurulusu,
+ee) Yerinde tespit raporu: Bakanlikça degerlendirme raporu uygun bulunan tesisin il
+mudurluklerince yerinde incelenmesi sonucunda hazirlanan raporu,
+ff) Zararli madde: 11/12/2013 tarihli ve 28848 mukerrer sayili Resmî Gazete'de ya-
+yimlanan Maddelerin ve Karisimlarin Siniflandirilmasi, Etiketlenmesi ve. Ambalajlanmasi Hak-
+kinda Yonetmelik kapsaminda zararli olarak siniflandirilan maddeleri ve karisimlari,
+ifade eder.
+IKINCI BOLUM
+Yetki ve Sorumluluklar
+Bakanligm yetki ve sorumluluklari
+MADDE 5- (1) Bakanlik;
+a) Belgelendirme surecinde uygulanacak MET'i, MET-IES'i, ESD ve ilgili hukumleri
+belirlemekle,
+b) SYD belgelendirme surecine iliskin duzenlemeleri, MET dokumanlarini ve rehber
+dokiimanlari hazirlamak ve yaymlamamakla,
+c) SYD belgelendirme surecini yurûtmek ve ilgili kurum ve kuruluslarla bu kapsamda
+gerçeklestirilen çalismalari desteklemekle,
+£) SYD belgelendirme siirecinde gorev alacak SYD sorumlulari ve bassorumlularina
+iliskin egitim, sinav uzmanlasma belgelendirilme, yetkilendirme ve denetimine yënelik usul
+ve esaslarini belirlemekle,
+d) Sanayide en iyi çevresel uygulamalar, sifir kirlilik, derin endustriyel donusum, sur-
+durulebilir tuketim ve uretim, temiz uretim konularinda ulke politikalari ve stratejilerini belir-
+lemek ve bu kapsamda ilgili kurum ve kuruluslarla yurûtulen ulusal ve uluslararasi çalismalari
+koordine etmekle,
+e) Ulke genelinde sifir kirlilik hedefini yakalamaya yonelik olarak tiim alici ortamlarda
+kirliligin azaltilmasina iliskin sektorel hedef ve eylemleri belirlemek, koordine etmek ve ça-
+lismalari tesvik etmekle,
