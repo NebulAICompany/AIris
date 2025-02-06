@@ -7,37 +7,61 @@ from PIL import Image, ImageTk
 import json
 import sys
 import os
+import time
+import threading
 from typing import Optional, Tuple, List
 import math
+
+
+# Updated Color Scheme Inspired by DeepSeek
+
+# Light Theme: Clean and professional with vibrant accents
+# Light Theme: Clean and professional with vibrant accents
+LIGHT_COLORS = {
+    "primary": "#F9FBFD",  # Almost White - clean background
+    "accent": "#6C63FF",  # Bright Blue Accent
+    "bg": "#FFFFFF",  # Pure White for high contrast areas
+    "text": "#1C1C1E",  # Jet Black - crisp, clear text
+    "secondary": "#E0E6ED",  # Soft Gray for subtle highlights
+    "button": "#6C63FF",  # Bright Blue Buttons
+    "file_list_bg": "#F5F7FA",  # Light gray for file list
+    "file_list_text": "#2C3E50",  # Dark gray for file names
+    "file_list_hover": "#EDF2F7",  # Slightly darker on hover
+}
+
+# Dark Theme: Sleek and modern with subtle contrasts
+DARK_COLORS = {
+    "primary": "#1E1E1E",  # Deep Charcoal - main background
+    "accent": "#6C63FF",  # Bright Blue Accent
+    "bg": "#121212",  # Deep Black - for high contrast sections
+    "text": "#CFD8DC",  # Light Gray - readable text
+    "secondary": "#5D7285",  # Muted Slate for subtle elements
+    "button": "#6C63FF",  # Bright Blue Buttons
+    "file_list_bg": "#2D3436",  # Dark gray for file list
+    "file_list_text": "#E2E8F0",  # Light gray for file names
+    "file_list_hover": "#3D4852",  # Slightly lighter on hover
+}
 
 
 class ModernWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Set initial theme
+        ctk.set_appearance_mode("light")
+        self.current_theme = "light"
+        self.colors = LIGHT_COLORS.copy()
+
         # Configure window
         self.title("Modern RAG Chatbot")
         self.geometry("1200x800")
         self.minsize(800, 600)
 
-        # Set color scheme
-        self.colors = {
-            "primary": "#B4C5E4",  # Soft Lavender-Blue
-            "accent": "#F28C8C",  # Muted Coral
-            "bg": "#EAF7EE",  # Pale Mint Cream
-            "text": "#333333",  # Charcoal Grey
-            "secondary": "#6B7280",  # Slate Grey
-        }
-
-        # Configure appearance
-        ctk.set_appearance_mode("light")
-        ctk.set_default_color_theme("blue")
-
         # Initialize state
         self.is_typing = False
         self.chat_history = []
         self.vector_store_ready = False
-        self.uploaded_files = []  # Track uploaded files
+        self.uploaded_files = []
 
         # Initialize UI
         self.setup_window()
@@ -47,16 +71,187 @@ class ModernWindow(ctk.CTk):
         self.bind("<Control-u>", lambda e: self.handle_upload())
 
     def setup_window(self):
-        # Make window borderless with rounded corners
         self.overrideredirect(True)
         self.configure(fg_color=self.colors["bg"])
-
-        # Create custom title bar
         self.create_title_bar()
-
-        # Add window drag functionality
         self.bind("<B1-Motion>", self.drag_window)
         self.bind("<Button-1>", self.get_pos)
+
+    @staticmethod
+    def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
+        """Convert hex color to RGB tuple"""
+        hex_color = hex_color.lstrip("#")
+        return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+
+    @staticmethod
+    def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
+        """Convert RGB tuple to hex color"""
+        return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+
+    def animate_color_transition(
+        self,
+        widget: ctk.CTkBaseClass,
+        property_name: str,
+        start_color: str,
+        end_color: str,
+        duration: float = 0.3,
+    ):
+        """Animate color transition for a widget property"""
+        start_rgb = self.hex_to_rgb(start_color)
+        end_rgb = self.hex_to_rgb(end_color)
+        steps = 30
+
+        def interpolate():
+            for i in range(steps + 1):
+                progress = i / steps
+                current_rgb = tuple(
+                    int(start_rgb[j] + (end_rgb[j] - start_rgb[j]) * progress)
+                    for j in range(3)
+                )
+                current_color = self.rgb_to_hex(current_rgb)
+
+                # Update widget color on main thread
+                self.after(
+                    0,
+                    lambda color=current_color: widget.configure(
+                        **{property_name: color}
+                    ),
+                )
+                time.sleep(duration / steps)
+
+        threading.Thread(target=interpolate, daemon=True).start()
+
+    def update_file_list_colors(self):
+        current_theme = ctk.get_appearance_mode().lower()
+        colors = LIGHT_COLORS if current_theme == "light" else DARK_COLORS
+
+        # Dosya listesi arka plan rengini güncelle
+        self.files_list.configure(fg_color=colors["file_list_bg"])
+
+        # Dosya öğelerini güncelle
+        for file_frame in self.files_list.winfo_children():
+            file_frame.configure(fg_color=colors["file_list_bg"])
+            for child in file_frame.winfo_children():
+                if isinstance(child, ctk.CTkLabel):
+                    child.configure(text_color=colors["file_list_text"])
+                elif isinstance(child, ctk.CTkButton):
+                    child.configure(
+                        fg_color=colors["accent"], hover_color=colors["file_list_hover"]
+                    )
+
+    # Replace the existing update_theme method
+
+    def refresh_messages(self):
+        """Refresh all messages with new theme colors"""
+        messages = []
+        for widget in self.chat_frame.winfo_children():
+            if isinstance(widget, ctk.CTkFrame) and widget.winfo_children():
+                bubble = widget.winfo_children()[0]
+                if isinstance(bubble, ctk.CTkLabel):
+                    is_user = bubble.cget("fg_color") == self.colors["accent"]
+                    messages.append(
+                        {
+                            "message": bubble.cget("text"),
+                            "is_user": is_user,
+                            "timestamp": widget.winfo_children()[-1].cget("text"),
+                        }
+                    )
+
+        self.clear_chat()
+        for msg in messages:
+            self.add_message(msg["message"], msg["is_user"], msg["timestamp"])
+
+    def update_theme(self, theme_name: str):
+        """Update the color scheme with smooth transitions"""
+        old_colors = self.colors.copy()
+        self.current_theme = theme_name.lower()
+        self.colors = (
+            DARK_COLORS.copy() if self.current_theme == "dark" else LIGHT_COLORS.copy()
+        )
+
+        # Apply theme mode
+        ctk.set_appearance_mode(self.current_theme)
+
+        # Animate main window
+        self.animate_color_transition(
+            self, "fg_color", old_colors["bg"], self.colors["bg"]
+        )
+
+        # Animate title bar
+        self.animate_color_transition(
+            self.title_bar, "fg_color", old_colors["primary"], self.colors["primary"]
+        )
+
+        # Animate sidebar
+        self.animate_color_transition(
+            self.sidebar, "fg_color", old_colors["primary"], self.colors["primary"]
+        )
+
+        # Animate chat frame
+        self.animate_color_transition(
+            self.chat_frame, "fg_color", old_colors["bg"], self.colors["bg"]
+        )
+
+        # Animate input container
+        self.animate_color_transition(
+            self.input_container, "fg_color", old_colors["bg"], self.colors["bg"]
+        )
+
+        # Update other UI elements
+        self.input_field.configure(
+            border_color=self.colors["accent"], text_color=self.colors["text"]
+        )
+
+        self.send_btn.configure(
+            fg_color=self.colors["accent"],
+            hover_color=self.darken_color(self.colors["accent"]),
+        )
+
+        # Refresh UI elements
+        self.refresh_ui()
+
+    def refresh_ui(self):
+        self.configure(fg_color=self.colors["bg"])
+
+        # Title bar update
+        self.title_bar.configure(fg_color=self.colors["primary"])
+        for child in self.title_bar.winfo_children():
+            if isinstance(child, ctk.CTkButton):
+                child.configure(
+                    fg_color=(
+                        self.colors["accent"]
+                        if "×" in child._text
+                        else self.colors["primary"]
+                    )
+                )
+
+        # Sidebar update
+        self.sidebar.configure(fg_color=self.colors["primary"])
+        for child in self.sidebar.winfo_children():
+            if isinstance(child, ctk.CTkButton):
+                child.configure(
+                    text_color=self.colors["text"], hover_color=self.colors["accent"]
+                )
+
+        # Update chat and input area
+        self.chat_frame.configure(fg_color=self.colors["bg"])
+        self.input_container.configure(fg_color=self.colors["bg"])
+        self.input_field.configure(
+            border_color=self.colors["accent"],
+            text_color=self.colors["text"],
+            border_width=2,
+        )
+        self.send_btn.configure(
+            fg_color=self.colors["accent"],
+            hover_color=self.darken_color(self.colors["accent"], 0.2),
+        )
+
+    def darken_color(self, color, amount=0.2):
+        """Darken a hex color by specified amount"""
+        color = color.lstrip("#")
+        rgb = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
+        darkened = tuple(max(0, int(c * (1 - amount))) for c in rgb)
+        return f"#{darkened[0]:02x}{darkened[1]:02x}{darkened[2]:02x}"
 
     def create_title_bar(self):
         # Custom title bar
@@ -150,7 +345,7 @@ class ModernWindow(ctk.CTk):
 
         # Scrollable files list
         self.files_list = ctk.CTkScrollableFrame(
-            self.files_frame, fg_color="transparent", height=200
+            self.files_frame, fg_color=self.colors["file_list_bg"], height=200
         )
         self.files_list.pack(fill="x", pady=5)
 
@@ -178,6 +373,8 @@ class ModernWindow(ctk.CTk):
         # Welcome message
         self.show_welcome_message()
 
+    # ...existing code...
+
     def create_input_area(self):
         # Input container
         self.input_container = ctk.CTkFrame(
@@ -185,11 +382,11 @@ class ModernWindow(ctk.CTk):
         )
         self.input_container.pack(side="bottom", fill="x", pady=10)
 
-        # Text input
+        # Text input with noticeable background color
         self.input_field = ctk.CTkTextbox(
             self.input_container,
-            fg_color="white",
-            border_color=self.colors["primary"],
+            fg_color="#E0E6ED",  # Light gray background for input field
+            border_color=self.colors["accent"],  # Accent color for border
             border_width=2,
             corner_radius=15,
             height=80,
@@ -258,22 +455,21 @@ class ModernWindow(ctk.CTk):
             self.update_vector_store()
 
     def add_file(self, file_path: str) -> bool:
-        """Add a file to the uploaded files list and UI."""
         file_name = Path(file_path).name
 
-        # Check if file already exists
         if file_path in self.uploaded_files:
             self.show_error("File already uploaded")
             return False
 
-        # Add to uploaded files list
         self.uploaded_files.append(file_path)
 
-        # Add to UI
-        file_frame = ctk.CTkFrame(self.files_list)
+        # Dosya UI öğesi oluşturuluyor
+        file_frame = ctk.CTkFrame(self.files_list, fg_color=self.colors["file_list_bg"])
         file_frame.pack(fill="x", pady=2)
 
-        file_label = ctk.CTkLabel(file_frame, text=file_name, font=("Inter", 10))
+        file_label = ctk.CTkLabel(
+            file_frame, text=file_name, text_color=self.colors["file_list_text"]
+        )
         file_label.pack(side="left", padx=5)
 
         remove_btn = ctk.CTkButton(
@@ -281,6 +477,8 @@ class ModernWindow(ctk.CTk):
             text="×",
             width=20,
             height=20,
+            fg_color=self.colors["accent"],
+            hover_color=self.colors["file_list_hover"],
             command=lambda: self.remove_file(file_path, file_frame),
         )
         remove_btn.pack(side="right", padx=2)
@@ -511,34 +709,37 @@ class SettingsWindow(ctk.CTkToplevel):
         self.title("Settings")
         self.geometry("400x300")
         self.attributes("-topmost", True)
+        self.parent = parent
 
         # Configure window
         self.configure(fg_color=parent.colors["bg"])
-
-        # Create settings
         self.create_settings()
-
         self._initialized = True
 
     def create_settings(self):
         """Create settings UI."""
         # Theme selection
-        theme_frame = ctk.CTkFrame(self)
-        theme_frame.pack(fill="x", padx=10, pady=5)
+        theme_frame = ctk.CTkFrame(self, fg_color="transparent")
+        theme_frame.pack(fill="x", padx=20, pady=10)
 
-        theme_label = ctk.CTkLabel(
-            theme_frame, text="Theme:", font=("Inter", 12, "bold")
+        ctk.CTkLabel(theme_frame, text="Theme:", font=("Inter", 12, "bold")).pack(
+            side="left"
         )
-        theme_label.pack(side="left", padx=5)
 
+        self.theme_var = ctk.StringVar(value=self.parent.current_theme.capitalize())
         theme_menu = ctk.CTkOptionMenu(
-            theme_frame, values=["Light", "Dark", "System"], command=self.change_theme
+            theme_frame,
+            values=["Light", "Dark"],
+            command=self.change_theme,
+            variable=self.theme_var,
         )
-        theme_menu.pack(side="right", padx=5)
+        theme_menu.pack(side="right")
 
     def change_theme(self, theme: str):
         """Handle theme change."""
-        ctk.set_appearance_mode(theme.lower())
+        self.parent.update_theme(theme)
+        self.configure(fg_color=self.parent.colors["bg"])
+        self.parent.update_file_list_colors()  # Corrected function call
 
     def change_model(self, model: str):
         """Handle model change."""
