@@ -99,7 +99,7 @@ class ModernWindow(ctk.CTk):
         """Animate color transition for a widget property"""
         start_rgb = self.hex_to_rgb(start_color)
         end_rgb = self.hex_to_rgb(end_color)
-        steps = 30
+        steps = int(60 * duration)
 
         def interpolate():
             for i in range(steps + 1):
@@ -169,9 +169,6 @@ class ModernWindow(ctk.CTk):
             DARK_COLORS.copy() if self.current_theme == "dark" else LIGHT_COLORS.copy()
         )
 
-        # Apply theme mode
-        ctk.set_appearance_mode(self.current_theme)
-
         # Animate main window
         self.animate_color_transition(
             self, "fg_color", old_colors["bg"], self.colors["bg"]
@@ -197,6 +194,54 @@ class ModernWindow(ctk.CTk):
             self.input_container, "fg_color", old_colors["bg"], self.colors["bg"]
         )
 
+        # Animate file list background
+        self.animate_color_transition(
+            self.files_list,
+            "fg_color",
+            old_colors["file_list_bg"],
+            self.colors["file_list_bg"],
+        )
+
+        # Animate file list text
+        for file_frame in self.files_list.winfo_children():
+            self.animate_color_transition(
+                file_frame,
+                "fg_color",
+                old_colors["file_list_bg"],
+                self.colors["file_list_bg"],
+            )
+            for child in file_frame.winfo_children():
+                if isinstance(child, ctk.CTkLabel):
+                    self.animate_color_transition(
+                        child,
+                        "text_color",
+                        old_colors["file_list_text"],
+                        self.colors["file_list_text"],
+                    )
+                elif isinstance(child, ctk.CTkButton):
+                    self.animate_color_transition(
+                        child, "fg_color", old_colors["accent"], self.colors["accent"]
+                    )
+                    self.animate_color_transition(
+                        child,
+                        "hover_color",
+                        old_colors["file_list_hover"],
+                        self.colors["file_list_hover"],
+                    )
+
+        # Animate minimize button
+        for child in self.title_bar.winfo_children():
+            if isinstance(child, ctk.CTkButton) and child.cget("text") == "−":
+                self.animate_color_transition(
+                    child, "fg_color", old_colors["primary"], self.colors["primary"]
+                )
+                self.animate_color_transition(
+                    child,
+                    "hover_color",
+                    "#9BAFD3",
+                    "#9BAFD3",  # Adjust hover color if needed
+                )
+
         # Update other UI elements
         self.input_field.configure(
             border_color=self.colors["accent"], text_color=self.colors["text"]
@@ -206,6 +251,9 @@ class ModernWindow(ctk.CTk):
             fg_color=self.colors["accent"],
             hover_color=self.darken_color(self.colors["accent"]),
         )
+
+        # Apply theme mode after starting the animations
+        ctk.set_appearance_mode(self.current_theme)
 
         # Refresh UI elements
         self.refresh_ui()
