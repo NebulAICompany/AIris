@@ -77,50 +77,6 @@ class ModernWindow(ctk.CTk):
         self.bind("<B1-Motion>", self.drag_window)
         self.bind("<Button-1>", self.get_pos)
 
-    @staticmethod
-    def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
-        """Convert hex color to RGB tuple"""
-        hex_color = hex_color.lstrip("#")
-        return tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
-
-    @staticmethod
-    def rgb_to_hex(rgb: Tuple[int, int, int]) -> str:
-        """Convert RGB tuple to hex color"""
-        return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
-
-    def animate_color_transition(
-        self,
-        widget: ctk.CTkBaseClass,
-        property_name: str,
-        start_color: str,
-        end_color: str,
-        duration: float = 0.3,
-    ):
-        """Animate color transition for a widget property"""
-        start_rgb = self.hex_to_rgb(start_color)
-        end_rgb = self.hex_to_rgb(end_color)
-        steps = int(60 * duration)
-
-        def interpolate():
-            for i in range(steps + 1):
-                progress = i / steps
-                current_rgb = tuple(
-                    int(start_rgb[j] + (end_rgb[j] - start_rgb[j]) * progress)
-                    for j in range(3)
-                )
-                current_color = self.rgb_to_hex(current_rgb)
-
-                # Update widget color on main thread
-                self.after(
-                    0,
-                    lambda color=current_color: widget.configure(
-                        **{property_name: color}
-                    ),
-                )
-                time.sleep(duration / steps)
-
-        threading.Thread(target=interpolate, daemon=True).start()
-
     def update_file_list_colors(self):
         current_theme = ctk.get_appearance_mode().lower()
         colors = LIGHT_COLORS if current_theme == "light" else DARK_COLORS
@@ -162,106 +118,24 @@ class ModernWindow(ctk.CTk):
             self.add_message(msg["message"], msg["is_user"], msg["timestamp"])
 
     def update_theme(self, theme_name: str):
-        """Update the color scheme with smooth transitions"""
-        old_colors = self.colors.copy()
+        """Update the color scheme instantly"""
         self.current_theme = theme_name.lower()
         self.colors = (
             DARK_COLORS.copy() if self.current_theme == "dark" else LIGHT_COLORS.copy()
         )
-
-        # Animate main window
-        self.animate_color_transition(
-            self, "fg_color", old_colors["bg"], self.colors["bg"]
-        )
-
-        # Animate title bar
-        self.animate_color_transition(
-            self.title_bar, "fg_color", old_colors["primary"], self.colors["primary"]
-        )
-
-        # Animate sidebar
-        self.animate_color_transition(
-            self.sidebar, "fg_color", old_colors["primary"], self.colors["primary"]
-        )
-
-        # Animate chat frame
-        self.animate_color_transition(
-            self.chat_frame, "fg_color", old_colors["bg"], self.colors["bg"]
-        )
-
-        # Animate input container
-        self.animate_color_transition(
-            self.input_container, "fg_color", old_colors["bg"], self.colors["bg"]
-        )
-
-        # Animate file list background
-        self.animate_color_transition(
-            self.files_list,
-            "fg_color",
-            old_colors["file_list_bg"],
-            self.colors["file_list_bg"],
-        )
-
-        # Animate file list text
-        for file_frame in self.files_list.winfo_children():
-            self.animate_color_transition(
-                file_frame,
-                "fg_color",
-                old_colors["file_list_bg"],
-                self.colors["file_list_bg"],
-            )
-            for child in file_frame.winfo_children():
-                if isinstance(child, ctk.CTkLabel):
-                    self.animate_color_transition(
-                        child,
-                        "text_color",
-                        old_colors["file_list_text"],
-                        self.colors["file_list_text"],
-                    )
-                elif isinstance(child, ctk.CTkButton):
-                    self.animate_color_transition(
-                        child, "fg_color", old_colors["accent"], self.colors["accent"]
-                    )
-                    self.animate_color_transition(
-                        child,
-                        "hover_color",
-                        old_colors["file_list_hover"],
-                        self.colors["file_list_hover"],
-                    )
-
-        # Animate minimize button
-        for child in self.title_bar.winfo_children():
-            if isinstance(child, ctk.CTkButton) and child.cget("text") == "−":
-                self.animate_color_transition(
-                    child, "fg_color", old_colors["primary"], self.colors["primary"]
-                )
-                self.animate_color_transition(
-                    child,
-                    "hover_color",
-                    "#9BAFD3",
-                    "#9BAFD3",  # Adjust hover color if needed
-                )
-
-        # Update other UI elements
-        self.input_field.configure(
-            border_color=self.colors["accent"], text_color=self.colors["text"]
-        )
-
-        self.send_btn.configure(
-            fg_color=self.colors["accent"],
-            hover_color=self.darken_color(self.colors["accent"]),
-        )
-
-        # Apply theme mode after starting the animations
         ctk.set_appearance_mode(self.current_theme)
-
-        # Refresh UI elements
         self.refresh_ui()
+        self.refresh_messages()
+        self.update_file_list_colors()
+        self.clear_chat()  # Chat alanını temizle
+        self.show_welcome_message()  # Hoş geldiniz mesajını tekrar göster
 
     def refresh_ui(self):
+        """Refresh all UI elements with new colors"""
+        # Update main window
         self.configure(fg_color=self.colors["bg"])
 
-        # Title bar update
+        # Update title bar
         self.title_bar.configure(fg_color=self.colors["primary"])
         for child in self.title_bar.winfo_children():
             if isinstance(child, ctk.CTkButton):
@@ -273,7 +147,7 @@ class ModernWindow(ctk.CTk):
                     )
                 )
 
-        # Sidebar update
+        # Update sidebar
         self.sidebar.configure(fg_color=self.colors["primary"])
         for child in self.sidebar.winfo_children():
             if isinstance(child, ctk.CTkButton):
@@ -281,21 +155,22 @@ class ModernWindow(ctk.CTk):
                     text_color=self.colors["text"], hover_color=self.colors["accent"]
                 )
 
-        # Update chat and input area
+        # Update chat and input areas
         self.chat_frame.configure(fg_color=self.colors["bg"])
         self.input_container.configure(fg_color=self.colors["bg"])
         self.input_field.configure(
+            fg_color=self.colors["bg"],
             border_color=self.colors["accent"],
             text_color=self.colors["text"],
             border_width=2,
         )
         self.send_btn.configure(
             fg_color=self.colors["accent"],
-            hover_color=self.darken_color(self.colors["accent"], 0.2),
+            hover_color=self.darken_color(self.colors["accent"]),
         )
 
-    def darken_color(self, color, amount=0.2):
-        """Darken a hex color by specified amount"""
+    def darken_color(self, color: str, amount: float = 0.2) -> str:
+        """Simple color darkening for hover effects"""
         color = color.lstrip("#")
         rgb = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
         darkened = tuple(max(0, int(c * (1 - amount))) for c in rgb)
@@ -585,7 +460,9 @@ class ModernWindow(ctk.CTk):
         for widget in self.chat_frame.winfo_children():
             widget.destroy()
 
-    def add_message(self, message: str, is_user: bool):
+    # ...existing code...
+
+    def add_message(self, message: str, is_user: bool, timestamp: Optional[str] = None):
         # Message container
         msg_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5, padx=20)
@@ -606,10 +483,11 @@ class ModernWindow(ctk.CTk):
         bubble.pack(side="right" if is_user else "left", pady=5)
 
         # Timestamp
-        time = datetime.now().strftime("%H:%M")
+        if not timestamp:
+            timestamp = datetime.now().strftime("%H:%M")
         time_label = ctk.CTkLabel(
             msg_frame,
-            text=time,
+            text=timestamp,
             text_color=self.colors["secondary"],
             font=("Inter", 10),
         )
@@ -617,11 +495,13 @@ class ModernWindow(ctk.CTk):
 
         # Store in history
         self.chat_history.append(
-            {"message": message, "is_user": is_user, "timestamp": time}
+            {"message": message, "is_user": is_user, "timestamp": timestamp}
         )
 
         # Scroll to bottom
         self.chat_frame._parent_canvas.yview_moveto(1.0)
+
+    # ...existing code...
 
     def send_message(self):
         message = self.input_field.get("1.0", "end-1c").strip()
