@@ -1,16 +1,16 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import filedialog
 from datetime import datetime
 import customtkinter as ctk
 from pathlib import Path
 from PIL import Image, ImageTk
-import json
+from typing import Optional, Tuple, List
 import sys
 import os
-import time
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from pipelines.pipeline_manager import PipelineManager
 import threading
-from typing import Optional, Tuple, List
-import math
 
 
 # Updated Color Scheme Inspired by DeepSeek
@@ -69,6 +69,7 @@ class ModernWindow(ctk.CTk):
 
         # Bind keyboard shortcuts
         self.bind("<Control-u>", lambda e: self.handle_upload())
+        self.pipeline_manager = PipelineManager()
 
     def setup_window(self):
         self.overrideredirect(True)
@@ -296,8 +297,6 @@ class ModernWindow(ctk.CTk):
         # Welcome message
         self.show_welcome_message()
 
-    # ...existing code...
-
     def create_input_area(self):
         # Input container
         self.input_container = ctk.CTkFrame(
@@ -358,9 +357,13 @@ class ModernWindow(ctk.CTk):
         welcome_label.pack()
 
     def handle_upload(self, event=None):
+        """Handle file upload with proper checks and user feedback"""
+        if not hasattr(self, "pipeline_manager"):
+            self.pipeline_manager = PipelineManager()
+
         filetypes = (
-            ("Text files", "*.txt"),
             ("PDF files", "*.pdf"),
+            ("Text files", "*.txt"),
             ("Word files", "*.doc;*.docx"),
             ("All files", "*.*"),
         )
@@ -370,12 +373,33 @@ class ModernWindow(ctk.CTk):
         )
 
         if files:
-            for file_path in files:
-                if self.add_file(file_path):
-                    self.add_message(f"Uploaded: {Path(file_path).name}", is_user=False)
+            # Reset vector store status until processing completes
+            self.vector_store_ready = False
 
-            # Update vector store
-            self.update_vector_store()
+            # Show processing message
+            self.add_message("Starting document processing...", is_user=False)
+
+            def process_callback(message):
+                """Callback to update UI with processing status"""
+                self.add_message(message, is_user=False)
+                # Only set vector store ready after successful processing
+                if "successfully" in message.lower():
+                    self.vector_store_ready = True
+
+            try:
+                # Process files asynchronously
+                self.pipeline_manager.process_files_async(
+                    files=files, callback=process_callback
+                )
+
+                # Add files to UI
+                for file_path in files:
+                    if file_path not in self.uploaded_files:
+                        self.add_file(file_path)
+
+            except Exception as e:
+                self.add_message(f"Error processing files: {str(e)}", is_user=False)
+                self.vector_store_ready = False
 
     def add_file(self, file_path: str) -> bool:
         file_name = Path(file_path).name
@@ -527,15 +551,20 @@ class ModernWindow(ctk.CTk):
         self.process_message(message)
 
     def process_message(self, message: str):
-        """Process user message and generate response."""
-        # Here you would implement the actual message processing pipeline
-        # For now, just simulate a response
-        response = f"I understand you want to know about: {message}"
+        """Process user message and generate response using the pipeline."""
 
-        if self.uploaded_files:
-            response += f"\nI'll search through {len(self.uploaded_files)} documents for relevant information."
+        def query_worker():
+            # Generate response using pipeline
+            response = self.pipeline_manager.query_documents(message)
 
-        self.after(1000, lambda: self.add_message(response, is_user=False))
+            # Remove typing indicator and add response
+            self.after(0, self.remove_typing_indicator)
+            self.after(0, lambda: self.add_message(response, is_user=False))
+
+        # Start query in separate thread
+        thread = threading.Thread(target=query_worker)
+        thread.daemon = True
+        thread.start()
 
     def show_typing_indicator(self):
         if hasattr(self, "typing_frame"):
@@ -688,8 +717,16 @@ class SettingsWindow(ctk.CTkToplevel):
 
 
 def main():
-    app = ModernWindow()
-    app.mainloop()
+    """Initialize and run the chatbot application"""
+    try:
+        app = ModernWindow()
+        # Ensure necessary directories exist
+        os.makedirs("uploads", exist_ok=True)
+        os.makedirs("vectorstore", exist_ok=True)
+        app.mainloop()
+    except Exception as e:
+        print(f"Error starting application: {str(e)}")
+        raise
 
 
 if __name__ == "__main__":
