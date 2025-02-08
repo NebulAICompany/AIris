@@ -2,6 +2,7 @@ from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 import os
 
+
 class UploadPipeline:
     def __init__(self, pdf_path: str, reco_arch: str = "parseq"):
         self.pdf_path = pdf_path
@@ -22,76 +23,114 @@ class UploadPipeline:
 
         return extracted_text
 
-    def save(self, extracted_text: dict, save_path: str):
+    def save(self, extracted_text: dict, save_path: str = None):
         if save_path is None:
-            save_path = self.pdf_path.replace(".pdf", "_ocr.txt")
-        elif not save_path.endswith(".pdf"):
-            if not os.path.exists(save_path):
-                os.mkdir(save_path)
-            save_path = os.path.join(save_path, self.pdf_path.replace(".pdf", "_ocr.txt"))
+            save_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/uploads"
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        save_path = os.path.join(
+            save_path, os.path.basename(self.pdf_path).replace(".pdf", "_ocr.txt")
+        )
+
         with open(save_path, "w", encoding="utf-8") as f:
             for page_num, page in enumerate(extracted_text["pages"], start=1):
                 f.write(f"\n--- Page {page_num} ---\n")
                 for block in page["blocks"]:
                     for line in block["lines"]:
-                        f.write(" ".join(word["value"] for word in line["words"]) + "\n")
+                        f.write(
+                            " ".join(word["value"] for word in line["words"]) + "\n"
+                        )
 
         print(f"\n✅ Text extraction complete! Saved to '{save_path}'")
-
 
 
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
+
+# ...existing code...
+
+
 class VectorStorePipeline:
     def __init__(self):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-        self.text_splitter = SemanticChunker(self.embeddings, breakpoint_threshold_type='percentile', breakpoint_threshold_amount=90) # chose which embeddings and breakpoint type and threshold to use)
-        
-    def run(self, uploads_path: str, save_path: str):
-        # Split the text into semantic chunks
-        extracted_texts = []
-        print(os.getcwd())
-        for _, _, files in os.walk(uploads_path):
-            for file in files:
-                with open(os.path.join(uploads_path, file), "r", encoding="utf-8") as f:
-                    extracted_text = f.read()
-                    extracted_texts.append(extracted_text)
-        docs = self.text_splitter.create_documents(extracted_texts)
-        print(f"\n✅ Text split into {len(docs)} semantic chunks")
-        vectorstore_path = f"{save_path}"
-        if os.path.exists(vectorstore_path):
-            # Load existing vectorstore
-            vectorstore = FAISS.load_local(vectorstore_path, self.embeddings,allow_dangerous_deserialization=True)
-            print(f"\n✅ Loaded existing vector store from '{vectorstore_path}'")
-            # Add new documents to the vectorstore
-            vectorstore.add_documents(docs)
-        else:
-            # Create new vectorstore
-            vectorstore = FAISS.from_documents(docs, self.embeddings)
-            print(f"\n✅ Created new vector store")
-            os.mkdir(save_path)
-        vectorstore.save_local(vectorstore_path)
-        print(f"\n✅ Vector store updated and saved to '{vectorstore_path}'")
+        # Adjust semantic chunker parameters
+        self.text_splitter = SemanticChunker(
+            self.embeddings,
+            breakpoint_threshold_type="percentile",
+            breakpoint_threshold_amount=80,  # Lower threshold to create more chunks
+        )
 
-        # Delete the files in the uploads_path
-        for _, _, files in os.walk(uploads_path):
+    def run(self, uploads_path: str, save_path: str):
+        try:
+            # Check if uploads directory is empty
+            files = [
+                f for f in os.listdir(uploads_path) if f.endswith((".txt", ".pdf"))
+            ]
+            if not files:
+                print("No text files found in uploads directory")
+                return
+
+            # Split the text into semantic chunks
+            extracted_texts = []
+            total_text_length = 0
+
             for file in files:
                 file_path = os.path.join(uploads_path, file)
-                os.remove(file_path)
-                print(f"\n✅ Deleted file '{file_path}'")
-        # chunks_query_retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
-        # return chunks_query_retriever
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        text = f.read()
+                        if text.strip():  # Check if text is not empty
+                            extracted_texts.append(text)
+                            total_text_length += len(text)
+                            print(f"Read {len(text)} characters from {file}")
+                except Exception as e:
+                    print(f"Error reading file {file}: {str(e)}")
+
+            if not extracted_texts:
+                print("No valid text content found in files")
+                return
+
+            print(f"Total text length: {total_text_length} characters")
+
+            # Create documents from texts
+            docs = self.text_splitter.create_documents(extracted_texts)
+
+            if not docs:
+                print(
+                    "Warning: No chunks were created. Text may be too short or uniform."
+                )
+                return
+
+            print(f"\n✅ Text split into {len(docs)} semantic chunks")
+
+            # Create or update vector store
+            vectorstore_path = save_path
+            if os.path.exists(os.path.join(vectorstore_path, "index.faiss")):
+                print("Loading existing vector store...")
+                vectorstore = FAISS.load_local(
+                    vectorstore_path,
+                    self.embeddings,
+                    allow_dangerous_deserialization=True,
+                )
+                vectorstore.add_documents(docs)
+            else:
+                print("Creating new vector store...")
+                os.makedirs(vectorstore_path, exist_ok=True)
+                vectorstore = FAISS.from_documents(docs, self.embeddings)
+
+            vectorstore.save_local(vectorstore_path)
+            print(f"\n✅ Vector store updated and saved to '{vectorstore_path}'")
+
+            # Clean up uploads directory
+            for file in files:
+                os.remove(os.path.join(uploads_path, file))
+                print(f"✅ Deleted processed file: {file}")
+
+        except Exception as e:
+            print(f"Error in vector store pipeline: {str(e)}")
+            raise
 
 
-
-upload_pipeline = UploadPipeline(pdf_path="20250114-pages-14.pdf")
-upload_pipeline.save(upload_pipeline.run(), "uploads")
-
-os.environ["OPENAI_API_KEY"] = "***REMOVED***"  # Replace with your OpenAI key
-
-vector_store_pipeline = VectorStorePipeline()
-vector_store_pipeline.run("uploads", "vectorstore")
-
-
+# ...existing code...
