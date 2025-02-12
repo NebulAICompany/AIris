@@ -65,6 +65,7 @@ class ModernWindow(ctk.CTk):
         self.uploaded_files = []
         self.uploads_dir = Path("uploads")
         self.uploads_dir.mkdir(exist_ok=True)  # Ensure uploads directory exists
+        self.messages = []  # Store messages here
 
         # Initialize UI
         self.setup_window()
@@ -106,75 +107,98 @@ class ModernWindow(ctk.CTk):
 
     def refresh_messages(self):
         """Refresh all messages with new theme colors"""
-        messages = []
-        for widget in self.chat_frame.winfo_children():
-            if isinstance(widget, ctk.CTkFrame) and widget.winfo_children():
-                bubble = widget.winfo_children()[0]
-                if isinstance(bubble, ctk.CTkLabel):
-                    is_user = bubble.cget("fg_color") == self.colors["accent"]
-                    messages.append(
-                        {
-                            "message": bubble.cget("text"),
-                            "is_user": is_user,
-                            "timestamp": widget.winfo_children()[-1].cget("text"),
-                        }
-                    )
-
         self.clear_chat()
-        for msg in messages:
+        for msg in self.messages:
             self.add_message(msg["message"], msg["is_user"], msg["timestamp"])
 
     def update_theme(self, theme_name: str):
         """Update the color scheme instantly"""
-        self.current_theme = theme_name.lower()
-        self.colors = (
-            DARK_COLORS.copy() if self.current_theme == "dark" else LIGHT_COLORS.copy()
-        )
-        ctk.set_appearance_mode(self.current_theme)
-        self.refresh_ui()
-        self.refresh_messages()
-        self.update_file_list_colors()
-        self.clear_chat()  # Chat alanını temizle
-        self.show_welcome_message()  # Hoş geldiniz mesajını tekrar göster
+        try:
+            self.current_theme = theme_name.lower()
+            self.colors = (
+                DARK_COLORS.copy()
+                if self.current_theme == "dark"
+                else LIGHT_COLORS.copy()
+            )
+            ctk.set_appearance_mode(self.current_theme)
+
+            # Store current messages and clear the list
+            current_messages = self.messages.copy()
+            self.messages = []  # Clear messages list
+
+            # Clear chat first
+            self.clear_chat()
+
+            # Update UI colors
+            self.refresh_ui()
+
+            # Re-add messages with new theme colors
+            for msg in current_messages:
+                self.add_message(
+                    msg["message"],
+                    msg["is_user"],
+                    msg["timestamp"],
+                    store_message=False,
+                )
+
+            # Restore messages list
+            self.messages = current_messages
+
+            # Update file list colors last
+            self.update_file_list_colors()
+        except Exception as e:
+            print(f"Theme update error: {str(e)}")
+            self.show_error("Failed to update theme. Please try again.")
 
     def refresh_ui(self):
         """Refresh all UI elements with new colors"""
-        # Update main window
-        self.configure(fg_color=self.colors["bg"])
+        try:
+            # Update main window
+            self.configure(fg_color=self.colors["bg"])
 
-        # Update title bar
-        self.title_bar.configure(fg_color=self.colors["primary"])
-        for child in self.title_bar.winfo_children():
-            if isinstance(child, ctk.CTkButton):
-                child.configure(
-                    fg_color=(
-                        self.colors["accent"]
-                        if "×" in child._text
-                        else self.colors["primary"]
-                    )
+            # Update title bar
+            if hasattr(self, "title_bar"):
+                self.title_bar.configure(fg_color=self.colors["primary"])
+                for child in self.title_bar.winfo_children():
+                    if isinstance(child, ctk.CTkButton):
+                        child.configure(
+                            fg_color=(
+                                self.colors["accent"]
+                                if "×" in child._text
+                                else self.colors["primary"]
+                            )
+                        )
+
+            # Update sidebar if it exists
+            if hasattr(self, "sidebar"):
+                self.sidebar.configure(fg_color=self.colors["primary"])
+                for child in self.sidebar.winfo_children():
+                    if isinstance(child, ctk.CTkButton):
+                        child.configure(
+                            text_color=self.colors["text"],
+                            hover_color=self.colors["accent"],
+                        )
+
+            # Update chat and input areas if they exist
+            if hasattr(self, "chat_frame"):
+                self.chat_frame.configure(fg_color=self.colors["bg"])
+            if hasattr(self, "input_container"):
+                self.input_container.configure(fg_color=self.colors["bg"])
+            if hasattr(self, "input_field"):
+                self.input_field.configure(
+                    fg_color=self.colors["bg"],
+                    border_color=self.colors["accent"],
+                    text_color=self.colors["text"],
+                )
+            if hasattr(self, "send_btn"):
+                self.send_btn.configure(
+                    fg_color=self.colors["accent"],
+                    hover_color=self.darken_color(self.colors["accent"]),
                 )
 
-        # Update sidebar
-        self.sidebar.configure(fg_color=self.colors["primary"])
-        for child in self.sidebar.winfo_children():
-            if isinstance(child, ctk.CTkButton):
-                child.configure(
-                    text_color=self.colors["text"], hover_color=self.colors["accent"]
-                )
-
-        # Update chat and input areas
-        self.chat_frame.configure(fg_color=self.colors["bg"])
-        self.input_container.configure(fg_color=self.colors["bg"])
-        self.input_field.configure(
-            fg_color=self.colors["bg"],
-            border_color=self.colors["accent"],
-            text_color=self.colors["text"],
-            border_width=2,
-        )
-        self.send_btn.configure(
-            fg_color=self.colors["accent"],
-            hover_color=self.darken_color(self.colors["accent"]),
-        )
+        except Exception as e:
+            print(f"UI refresh error: {str(e)}")
+            self.show_error("Failed to refresh UI elements")
 
     def darken_color(self, color: str, amount: float = 0.2) -> str:
         """Simple color darkening for hover effects"""
@@ -509,9 +533,14 @@ class ModernWindow(ctk.CTk):
         for widget in self.chat_frame.winfo_children():
             widget.destroy()
 
-    # ...existing code...
-
-    def add_message(self, message: str, is_user: bool, timestamp: Optional[str] = None):
+    def add_message(
+        self,
+        message: str,
+        is_user: bool,
+        timestamp: Optional[str] = None,
+        store_message: bool = True,
+    ):
+        """Add a message to the chat area"""
         # Message container
         msg_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5, padx=20)
@@ -557,10 +586,14 @@ class ModernWindow(ctk.CTk):
         )
         time_label.pack(side="right" if is_user else "left", pady=(0, 2))
 
-        # Store in history
-        self.chat_history.append(
-            {"message": message, "is_user": is_user, "timestamp": timestamp}
-        )
+        # Store in history and messages only if store_message is True
+        if store_message:
+            self.chat_history.append(
+                {"message": message, "is_user": is_user, "timestamp": timestamp}
+            )
+            self.messages.append(
+                {"message": message, "is_user": is_user, "timestamp": timestamp}
+            )
 
         # Scroll to bottom
         self.chat_frame._parent_canvas.yview_moveto(1.0)
@@ -757,9 +790,6 @@ class SettingsWindow(ctk.CTkToplevel):
     def destroy(self):
         SettingsWindow._instance = None
         super().destroy()
-
-
-# ...existing code...
 
 
 def main():
