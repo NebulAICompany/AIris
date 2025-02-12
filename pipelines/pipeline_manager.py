@@ -107,23 +107,38 @@ class PipelineManager:
             return f"Error generating response: {str(e)}"
 
     def process_files_async(self, files: List[str], callback) -> None:
-        """Process multiple files asynchronously"""
+        """Process multiple files asynchronously, skipping already processed files"""
+
+        # Identify files that have not been processed yet
+        new_files = [file for file in files if file not in self.processed_files]
+
+        if not new_files:
+            callback("All selected files have already been processed.")
+            return
 
         def process_worker():
-            while True:
+            while not self.message_queue.empty():
                 try:
                     file_path = self.message_queue.get_nowait()
-                    success = self.process_file(file_path, callback)
-                    self.callback_queue.put(success)
+                    if file_path in self.processed_files:
+                        callback(
+                            f"Skipping already processed file: {Path(file_path).name}"
+                        )
+                    else:
+                        success = self.process_file(file_path, callback)
+                        if success:
+                            with self.processing_lock:
+                                self.processed_files.append(file_path)
+                        self.callback_queue.put(success)
                     self.message_queue.task_done()
                 except Exception:
                     break
 
-            # Update vector store after all files are processed
+            # Update vector store after all new files are processed
             self.update_vectorstore(callback)
 
-        # Add files to queue
-        for file_path in files:
+        # Add only new files to queue
+        for file_path in new_files:
             self.message_queue.put(file_path)
 
         # Start worker thread

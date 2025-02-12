@@ -49,9 +49,6 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 
-# ...existing code...
-
-
 class VectorStorePipeline:
     def __init__(self):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
@@ -123,14 +120,12 @@ class VectorStorePipeline:
             vectorstore.save_local(vectorstore_path)
             print(f"\n✅ Vector store updated and saved to '{vectorstore_path}'")
 
-            # Clean up uploads directory
+            # Clean up only .txt files from uploads directory
             for file in files:
-                os.remove(os.path.join(uploads_path, file))
-                print(f"✅ Deleted processed file: {file}")
+                if file.endswith(".txt"):  # Only delete .txt files
+                    os.remove(os.path.join(uploads_path, file))
+                    print(f"✅ Deleted processed .txt file: {file}")
 
         except Exception as e:
             print(f"Error in vector store pipeline: {str(e)}")
             raise
-
-
-# ...existing code...

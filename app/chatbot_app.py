@@ -62,10 +62,15 @@ class ModernWindow(ctk.CTk):
         self.chat_history = []
         self.vector_store_ready = False
         self.uploaded_files = []
+        self.uploads_dir = Path("uploads")
+        self.uploads_dir.mkdir(exist_ok=True)  # Ensure uploads directory exists
 
         # Initialize UI
         self.setup_window()
         self.setup_layout()
+
+        # Load existing files from uploads folder
+        self.load_existing_files()
 
         # Bind keyboard shortcuts
         self.bind("<Control-u>", lambda e: self.handle_upload())
@@ -372,45 +377,52 @@ class ModernWindow(ctk.CTk):
             title="Select documents to upload", filetypes=filetypes
         )
 
-        if files:
-            # Reset vector store status until processing completes
-            self.vector_store_ready = False
+        if not files:
+            return
 
-            # Show processing message
-            self.add_message("Starting document processing...", is_user=False)
-
-            def process_callback(message):
-                """Callback to update UI with processing status"""
-                self.add_message(message, is_user=False)
-                # Only set vector store ready after successful processing
-                if "successfully" in message.lower():
-                    self.vector_store_ready = True
-
+        # Copy files to uploads directory
+        new_files = []
+        for file_path in files:
             try:
-                # Process files asynchronously
-                self.pipeline_manager.process_files_async(
-                    files=files, callback=process_callback
-                )
+                source_path = Path(file_path)
+                dest_path = self.uploads_dir / source_path.name
 
-                # Add files to UI
-                for file_path in files:
-                    if file_path not in self.uploaded_files:
-                        self.add_file(file_path)
+                # Copy file to uploads directory if it doesn't exist
+                if not dest_path.exists():
+                    from shutil import copy2
 
+                    copy2(str(source_path), str(dest_path))
+                    new_files.append(str(dest_path))
+                    self.add_file(str(dest_path))
+                else:
+                    self.show_error(
+                        f"File {source_path.name} already exists in uploads"
+                    )
             except Exception as e:
-                self.add_message(f"Error processing files: {str(e)}", is_user=False)
-                self.vector_store_ready = False
+                self.show_error(f"Error copying file {source_path.name}: {str(e)}")
 
-    def add_file(self, file_path: str) -> bool:
+        if new_files:
+            # Show processing message
+            self.add_message("Processing new documents...", is_user=False)
+
+            # Process new files without deleting them
+            self.pipeline_manager.process_files_async(
+                files=new_files,
+                callback=lambda msg: self.add_message(msg, is_user=False),
+            )
+
+    def add_file(self, file_path: str, initialize: bool = False) -> bool:
+        """Add file to UI and tracking list"""
         file_name = Path(file_path).name
 
-        if file_path in self.uploaded_files:
+        if file_path in self.uploaded_files and not initialize:
             self.show_error("File already uploaded")
             return False
 
-        self.uploaded_files.append(file_path)
+        if not initialize:
+            self.uploaded_files.append(file_path)
 
-        # Dosya UI öğesi oluşturuluyor
+        # Create file UI element
         file_frame = ctk.CTkFrame(self.files_list, fg_color=self.colors["file_list_bg"])
         file_frame.pack(fill="x", pady=2)
 
@@ -419,36 +431,48 @@ class ModernWindow(ctk.CTk):
         )
         file_label.pack(side="left", padx=5)
 
-        remove_btn = ctk.CTkButton(
-            file_frame,
-            text="×",
-            width=20,
-            height=20,
-            fg_color=self.colors["accent"],
-            hover_color=self.colors["file_list_hover"],
-            command=lambda: self.remove_file(file_path, file_frame),
-        )
-        remove_btn.pack(side="right", padx=2)
-
         return True
 
     def remove_file(self, file_path: str, file_frame: ctk.CTkFrame):
-        """Remove a file from the uploaded files list and UI."""
+        """Remove file from UI only (keep file in uploads folder)"""
         self.uploaded_files.remove(file_path)
         file_frame.destroy()
-        self.update_vector_store()
 
-    def update_vector_store(self):
-        """Update the vector store with the current set of files."""
-        if self.uploaded_files:
-            # Here you would implement the actual vector store update
-            # For now, just simulate processing
-            self.vector_store_ready = True
-            self.add_message(
-                "Documents processed and ready for querying!", is_user=False
+    def load_existing_files(self):
+        """Load all existing files from the uploads directory"""
+        try:
+            for file_path in self.uploads_dir.glob("*.*"):
+                if file_path.suffix.lower() in [".pdf", ".txt", ".doc", ".docx"]:
+                    self.add_file(str(file_path), initialize=True)
+
+            # Process all files in uploads folder
+            if self.uploaded_files:
+                self.pipeline_manager.process_files_async(
+                    files=self.uploaded_files, callback=self.handle_processing_callback
+                )
+
+            # Check if vector store has files
+            self.check_vector_store_status()
+        except Exception as e:
+            self.show_error(f"Error loading existing files: {str(e)}")
+
+    def check_vector_store_status(self):
+        """Check if vector store has documents and update status"""
+        try:
+            vector_store_path = Path("vectorstore")
+            # Check if vectorstore directory exists and has files
+            self.vector_store_ready = vector_store_path.exists() and any(
+                vector_store_path.iterdir()
             )
-        else:
+        except Exception as e:
             self.vector_store_ready = False
+            self.show_error(f"Error checking vector store status: {str(e)}")
+
+    def handle_processing_callback(self, msg: str):
+        """Handle callback from file processing"""
+        self.add_message(msg, is_user=False)
+        # Update vector store status after processing
+        self.check_vector_store_status()
 
     def show_error(self, message: str):
         """Show an error message to the user."""
@@ -525,9 +549,8 @@ class ModernWindow(ctk.CTk):
         # Scroll to bottom
         self.chat_frame._parent_canvas.yview_moveto(1.0)
 
-    # ...existing code...
-
     def send_message(self):
+        """Ensure messages are sent only when the vector store is ready"""
         message = self.input_field.get("1.0", "end-1c").strip()
         if not message:
             return
