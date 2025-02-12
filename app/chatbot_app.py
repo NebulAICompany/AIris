@@ -11,6 +11,7 @@ import os
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from pipelines.pipeline_manager import PipelineManager
 import threading
+from customtkinter import CTkImage
 
 
 # Updated Color Scheme Inspired by DeepSeek
@@ -515,12 +516,27 @@ class ModernWindow(ctk.CTk):
         msg_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5, padx=20)
 
+        # Message content container with better alignment
+        content_frame = ctk.CTkFrame(msg_frame, fg_color="transparent")
+        content_frame.pack(fill="x", pady=(5, 0))  # Add top padding for alignment
+
+        if not is_user:  # Only show logo for bot messages
+            logo_image = Image.open("image.jpg")
+            logo_image = logo_image.resize((45, 45), Image.LANCZOS)
+            logo_photo = CTkImage(dark_image=logo_image, size=(45, 45))
+
+            # Logo label with anchor to top
+            logo_label = ctk.CTkLabel(content_frame, image=logo_photo, text="")
+            logo_label.pack(
+                side="left", anchor="n", padx=5, pady=(0, 5)
+            )  # Align to top
+
         # Message bubble
         bubble_color = self.colors["accent"] if is_user else self.colors["primary"]
         text_color = "white" if is_user else self.colors["text"]
 
         bubble = ctk.CTkLabel(
-            msg_frame,
+            content_frame,
             text=message,
             fg_color=bubble_color,
             text_color=text_color,
@@ -530,7 +546,7 @@ class ModernWindow(ctk.CTk):
         )
         bubble.pack(side="right" if is_user else "left", pady=5)
 
-        # Timestamp
+        # Timestamp below the message
         if not timestamp:
             timestamp = datetime.now().strftime("%H:%M")
         time_label = ctk.CTkLabel(
@@ -539,7 +555,7 @@ class ModernWindow(ctk.CTk):
             text_color=self.colors["secondary"],
             font=("Inter", 10),
         )
-        time_label.pack(side="right" if is_user else "left", pady=2)
+        time_label.pack(side="right" if is_user else "left", pady=(0, 2))
 
         # Store in history
         self.chat_history.append(
@@ -597,13 +613,20 @@ class ModernWindow(ctk.CTk):
         self.typing_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         self.typing_frame.pack(fill="x", pady=5, padx=20)
 
+        # Add logo to typing indicator
+        logo_image = Image.open("image.jpg")
+        logo_image = logo_image.resize((45, 45), Image.LANCZOS)
+        logo_photo = CTkImage(dark_image=logo_image, size=(45, 45))
+
+        # Logo label
+        logo_label = ctk.CTkLabel(self.typing_frame, image=logo_photo, text="")
+        logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))  # Align to top
+
+        # Typing indicator dots
         indicator = ctk.CTkLabel(
             self.typing_frame, text="●●●", text_color=self.colors["secondary"]
         )
-        indicator.pack(side="left")
-
-        # Remove after delay
-        self.after(1000, self.remove_typing_indicator)
+        indicator.pack(side="left", pady=5)
 
     def remove_typing_indicator(self):
         """Remove the typing indicator."""
