@@ -199,29 +199,12 @@ class ModernWindow(ctk.CTk):
                             )
                         )
 
-            # Update sidebar if it exists
+            # Update sidebar and its children recursively
             if hasattr(self, "sidebar"):
                 self.sidebar.configure(fg_color=self.colors["primary"])
-                for child in self.sidebar.winfo_children():
-                    if isinstance(child, ctk.CTkButton):
-                        child.configure(
-                            text_color=(
-                                "#E2E8F0"
-                                if self.current_theme == "dark"
-                                else self.colors["text"]
-                            ),
-                            hover_color=self.colors["accent"],
-                        )
-                    elif isinstance(child, ctk.CTkLabel):
-                        child.configure(
-                            text_color=(
-                                "#E2E8F0"
-                                if self.current_theme == "dark"
-                                else self.colors["text"]
-                            )
-                        )
+                self._update_sidebar_colors(self.sidebar)
 
-            # Update chat and input areas if they exist
+            # Update chat and input areas
             if hasattr(self, "chat_frame"):
                 self.chat_frame.configure(fg_color=self.colors["bg"])
             if hasattr(self, "input_container"):
@@ -241,6 +224,48 @@ class ModernWindow(ctk.CTk):
         except Exception as e:
             print(f"UI refresh error: {str(e)}")
             self.show_error("UI öğeleri yenilenemedi")
+
+    def _update_sidebar_colors(self, widget):
+        """Sidebar'daki tüm widget'ların renklerini recursive olarak güncelle"""
+        for child in widget.winfo_children():
+            if isinstance(child, ctk.CTkButton):
+                # Nav buttons specific styling
+                child.configure(
+                    text_color=(
+                        "#E0E6ED"
+                        if self.current_theme == "dark"
+                        else self.colors["text"]
+                    ),
+                    hover_color=self.colors["accent"],
+                )
+            elif isinstance(child, ctk.CTkLabel):
+                # Labels specific styling
+                child.configure(
+                    text_color=(
+                        "#E0E6ED"
+                        if self.current_theme == "dark"
+                        else self.colors["text"]
+                    )
+                )
+
+            # Version label özel durumu
+            if isinstance(child, ctk.CTkLabel) and child._text == "v1.0.0":
+                child.configure(
+                    text_color=(
+                        "#E0E6ED"
+                        if self.current_theme == "dark"
+                        else self.colors["secondary"]
+                    )
+                )
+
+            # Files list özel durumu
+            if isinstance(child, ctk.CTkScrollableFrame):
+                child.configure(fg_color=self.colors["file_list_bg"])
+                self._update_sidebar_colors(child)
+
+            # Recursive olarak alt widget'ları da güncelle
+            if hasattr(child, "winfo_children"):
+                self._update_sidebar_colors(child)
 
     def darken_color(self, color: str, amount: float = 0.2) -> str:
         """Hover efektleri için basit renk karartma"""
