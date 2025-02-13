@@ -246,7 +246,7 @@ class ModernWindow(ctk.CTk):
             self.title_bar,
             text="Modern RAG Chatbot",
             text_color=self.colors["text"],
-            font=("Inter", 12, "bold"),
+            font=("Helvetica Neue", 18, "bold"),  # Updated font size
         )
         title_label.pack(side="left", padx=10)
 
@@ -331,18 +331,18 @@ class ModernWindow(ctk.CTk):
         self.files_list.pack(fill="x", pady=5)
 
         # Profile section at bottom
-        self.profile_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        self.profile_frame.pack(side="bottom", pady=10, padx=10)
+        # self.profile_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        # self.profile_frame.pack(side="bottom", pady=10, padx=10)
 
-        profile_label = ctk.CTkLabel(
-            self.profile_frame,
-            text="JD",  # User initials
-            fg_color=self.colors["accent"],
-            corner_radius=20,
-            width=40,
-            height=40,
-        )
-        profile_label.pack(side="left", padx=5)
+        # profile_label = ctk.CTkLabel(
+        #     self.profile_frame,
+        #     text="JD",  # User initials
+        #     fg_color=self.colors["accent"],
+        #     corner_radius=20,
+        #     width=40,
+        #     height=40,
+        # )
+        # profile_label.pack(side="left", padx=5)
 
     def create_chat_area(self):
         # Main chat frame (85% width)
@@ -370,7 +370,8 @@ class ModernWindow(ctk.CTk):
             border_color=self.colors["accent"],  # Accent color for border
             border_width=2,
             corner_radius=15,
-            height=50,  # Reduced height
+            height=90,  # Increased height
+            font=("Helvetica Neue", 16),
         )
         self.input_field.pack(side="left", fill="x", expand=True, padx=(0, 10))
 
@@ -378,8 +379,8 @@ class ModernWindow(ctk.CTk):
         self.send_btn = ctk.CTkButton(
             self.input_container,
             text="→",
-            width=40,  # Slightly smaller width
-            height=40,  # Matching height
+            width=50,  # Increased width
+            height=50,  # Increased height
             fg_color=self.colors["accent"],
             corner_radius=20,  # Rounded corners
             command=self.send_message,
@@ -390,6 +391,37 @@ class ModernWindow(ctk.CTk):
         # Bind enter key
         self.input_field.bind("<Return>", self.handle_return)
         self.input_field.bind("<Shift-Return>", self.handle_shift_return)
+        self.input_field.bind("<Control-a>", self.select_input_text)
+
+    def select_input_text(self, event):
+        """Select only the actual text content, excluding empty lines"""
+        try:
+            # Get the text content and strip whitespace
+            text = self.input_field.get("1.0", "end-1c").rstrip()
+            if not text:
+                return "break"
+
+            # Find the last non-empty line
+            lines = text.split("\n")
+            last_non_empty = len(lines) - 1
+            while last_non_empty >= 0 and not lines[last_non_empty].strip():
+                last_non_empty -= 1
+
+            if last_non_empty < 0:
+                return "break"
+
+            # Calculate the end position
+            end_line = last_non_empty + 1
+            end_char = len(lines[last_non_empty])
+
+            # Create the selection
+            self.input_field.tag_remove("sel", "1.0", "end")
+            self.input_field.tag_add("sel", "1.0", f"{end_line}.{end_char}")
+
+            return "break"  # Prevent default Ctrl+A behavior
+        except Exception as e:
+            print(f"Selection error: {str(e)}")
+            return "break"
 
     def show_welcome_message(self):
         welcome_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
@@ -411,7 +443,7 @@ class ModernWindow(ctk.CTk):
             text=welcome_text,
             text_color=self.colors["text"],
             justify="left",
-            font=("Inter", 14),
+            font=("Helvetica Neue", 16),  # Updated font size
         )
         welcome_label.pack()
 
@@ -536,7 +568,10 @@ class ModernWindow(ctk.CTk):
         error_frame.pack(fill="x", pady=5, padx=20)
 
         error_label = ctk.CTkLabel(
-            error_frame, text=f"Hata: {message}", text_color="white"
+            error_frame,
+            text=f"Hata: {message}",
+            text_color="white",
+            font=("Helvetica Neue", 18),  # Updated font size
         )
         error_label.pack(pady=5, padx=10)
 
@@ -604,7 +639,8 @@ class ModernWindow(ctk.CTk):
             text_color=text_color,
             corner_radius=15,
             justify="left",
-            wraplength=500,
+            wraplength=600,  # Increased wrap length
+            font=("Helvetica Neue", 18),  # Updated font size
         )
         bubble_frame.pack(side="right" if is_user else "left", pady=5)
 
@@ -615,7 +651,7 @@ class ModernWindow(ctk.CTk):
             msg_frame,
             text=timestamp,
             text_color=self.colors["secondary"],
-            font=("Inter", 10),
+            font=("Inter", 16),  # Updated font size
         )
         time_label.pack(side="right" if is_user else "left", pady=(0, 2))
 
@@ -744,7 +780,9 @@ class HistoryWindow(ctk.CTkToplevel):
 
             # Timestamp
             time_label = ctk.CTkLabel(
-                msg_frame, text=entry["timestamp"], font=("Inter", 10)
+                msg_frame,
+                text=entry["timestamp"],
+                font=("Helvetica Neue", 16),  # Updated font size
             )
             time_label.pack(side="left", padx=5)
 
@@ -752,7 +790,7 @@ class HistoryWindow(ctk.CTkToplevel):
             user_label = ctk.CTkLabel(
                 msg_frame,
                 text="Sen:" if entry["is_user"] else "Bot:",
-                font=("Inter", 10, "bold"),
+                font=("Helvetica Neue", 16, "bold"),  # Updated font size
             )
             user_label.pack(side="left", padx=5)
 
@@ -791,7 +829,9 @@ class SettingsWindow(ctk.CTkToplevel):
         theme_frame = ctk.CTkFrame(self, fg_color="transparent")
         theme_frame.pack(fill="x", padx=20, pady=10)
 
-        ctk.CTkLabel(theme_frame, text="Tema:", font=("Inter", 12, "bold")).pack(
+        ctk.CTkLabel(
+            theme_frame, text="Tema:", font=("Helvetica Neue", 18, "bold")
+        ).pack(  # Updated font size
             side="left"
         )
 
