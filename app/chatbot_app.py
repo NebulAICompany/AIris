@@ -279,8 +279,8 @@ class ModernWindow(ctk.CTk):
         self.title_bar = ctk.CTkFrame(
             self,
             fg_color=self.colors["title_bar"],
-            corner_radius=5,
-            height=30,  # Reduced height
+            height=26,  # Reduced height
+            corner_radius=0,
         )
         self.title_bar.pack(fill="x", pady=(0, 5))
 
