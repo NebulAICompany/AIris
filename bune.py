@@ -110,8 +110,8 @@ class ModernWindow(ctk.CTk):
         # Replace markdown headers
         text = re.sub(r"##\s*([^\n]+)", lambda m: f"\n{m.group(1).upper()}\n", text)
 
-        # Format bold text
-        text = re.sub(r"\*\*([^\*]+)\*\*", lambda m: f"➤ {m.group(1)}", text)
+        # Format bold text using asterisks (keep markers for later processing)
+        text = re.sub(r"\*\*([^\*]+)\*\*", r"BOLD_START\1BOLD_END", text)
 
         # Format italic text
         text = re.sub(r"\*([^\*]+)\*", lambda m: f"∙ {m.group(1)}", text)
@@ -125,11 +125,8 @@ class ModernWindow(ctk.CTk):
         # Add proper spacing around sections
         text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excess newlines
 
-        # Remove the line that was causing automatic line breaks after periods
-        # text = re.sub(r"([.!?])\s*([A-Z])", r"\1\n\2", text)  # This line is removed
+        text = text.rstrip()
 
-        # Clean up
-        text = text.strip()
         return text
 
     def refresh_messages(self):
@@ -355,33 +352,31 @@ class ModernWindow(ctk.CTk):
         self.show_welcome_message()
 
     def create_input_area(self):
-        # Input container with reduced height and centered position
+        # Input container
         self.input_container = ctk.CTkFrame(
-            self, fg_color="transparent", height=70
-        )  # Reduced height
-        self.input_container.pack(
-            side="bottom", fill="x", pady=(0, 20), padx=(350, 50)
-        )  # Added horizontal padding
+            self.main_container, fg_color="transparent", height=100
+        )
+        self.input_container.pack(side="bottom", fill="x", pady=10)
 
-        # Text input with improved styling
+        # Text input with noticeable background color
         self.input_field = ctk.CTkTextbox(
             self.input_container,
             fg_color="#E0E6ED",  # Light gray background for input field
             border_color=self.colors["accent"],  # Accent color for border
             border_width=2,
             corner_radius=15,
-            height=50,  # Reduced height
+            height=80,
         )
         self.input_field.pack(side="left", fill="x", expand=True, padx=(0, 10))
 
-        # Send button with improved positioning
+        # Send button
         self.send_btn = ctk.CTkButton(
             self.input_container,
             text="→",
-            width=40,  # Slightly smaller width
-            height=40,  # Matching height
+            width=50,
+            height=50,
             fg_color=self.colors["accent"],
-            corner_radius=20,  # Rounded corners
+            corner_radius=25,
             command=self.send_message,
             hover_color="#FF6B6B",  # Darker accent on hover
         )
@@ -576,7 +571,7 @@ class ModernWindow(ctk.CTk):
 
         # Message content container with better alignment
         content_frame = ctk.CTkFrame(msg_frame, fg_color="transparent")
-        content_frame.pack(fill="x", pady=(5, 0))  # Add top padding for alignment
+        content_frame.pack(fill="x", pady=(5, 0))
 
         if not is_user:  # Only show logo for bot messages
             logo_image = Image.open("image.jpg")
@@ -585,26 +580,69 @@ class ModernWindow(ctk.CTk):
 
             # Logo label with anchor to top
             logo_label = ctk.CTkLabel(content_frame, image=logo_photo, text="")
-            logo_label.pack(
-                side="left", anchor="n", padx=5, pady=(0, 5)
-            )  # Align to top
+            logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))
 
-        # Message bubble
-        bubble_color = self.colors["accent"] if is_user else self.colors["primary"]
-        text_color = "white" if is_user else self.colors["text"]
+        # Message bubble container
+        bubble_frame = ctk.CTkFrame(
+            content_frame,
+            fg_color=self.colors["accent"] if is_user else self.colors["primary"],
+            corner_radius=15,
+        )
+        bubble_frame.pack(side="right" if is_user else "left", pady=5, padx=5)
 
         formatted_text = self.format_message_text(message)
+        parts = re.split(r"(BOLD_START|BOLD_END)", formatted_text)
+        bold = False
+        current_text = ""
 
-        bubble_frame = ctk.CTkLabel(
-            content_frame,
-            text=formatted_text,
-            fg_color=bubble_color,
-            text_color=text_color,
-            corner_radius=15,
-            justify="left",
-            wraplength=500,
-        )
-        bubble_frame.pack(side="right" if is_user else "left", pady=5)
+        # Text container inside bubble
+        text_container = ctk.CTkFrame(bubble_frame, fg_color="transparent")
+        text_container.pack(padx=10, pady=5)
+
+        for part in parts:
+            if part == "BOLD_START":
+                if (
+                    current_text.strip()
+                ):  # Only create label if there's non-whitespace text
+                    label = ctk.CTkLabel(
+                        text_container,
+                        text=current_text.rstrip(),  # Remove trailing whitespace
+                        text_color="white" if is_user else self.colors["text"],
+                        font=("Inter", 14),
+                        justify="left",
+                        wraplength=500,
+                    )
+                    label.pack(anchor="w")
+                current_text = ""
+                bold = True
+            elif part == "BOLD_END":
+                if (
+                    current_text.strip()
+                ):  # Only create label if there's non-whitespace text
+                    label = ctk.CTkLabel(
+                        text_container,
+                        text=current_text.rstrip(),  # Remove trailing whitespace
+                        text_color="white" if is_user else self.colors["text"],
+                        font=("Inter", 14, "bold"),
+                        justify="left",
+                        wraplength=500,
+                    )
+                    label.pack(anchor="w")
+                current_text = ""
+                bold = False
+            else:
+                current_text += part
+
+        if current_text.strip():  # Only create label if there's non-whitespace text
+            label = ctk.CTkLabel(
+                text_container,
+                text=current_text.rstrip(),  # Remove trailing whitespace
+                text_color="white" if is_user else self.colors["text"],
+                font=("Inter", 14, "bold" if bold else "normal"),
+                justify="left",
+                wraplength=500,
+            )
+            label.pack(anchor="w")
 
         # Timestamp below the message
         if not timestamp:
