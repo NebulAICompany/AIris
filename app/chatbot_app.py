@@ -29,6 +29,7 @@ LIGHT_COLORS = {
     "file_list_bg": "#F5F7FA",  # Light gray for file list
     "file_list_text": "#2C3E50",  # Dark gray for file names
     "file_list_hover": "#EDF2F7",  # Slightly darker on hover
+    "title_bar": "#B0B3FF",  # New color for title bar in light mode
 }
 
 # Dark Theme: Sleek and modern with subtle contrasts
@@ -42,6 +43,8 @@ DARK_COLORS = {
     "file_list_bg": "#2D3436",  # Dark gray for file list
     "file_list_text": "#E2E8F0",  # Light gray for file names
     "file_list_hover": "#3D4852",  # Slightly lighter on hover
+    "title_bar": "#3A3A6C",  # New color for title bar in dark mode
+    "sidebar_text": "#E0E6ED",  # New color for sidebar text in dark mode
 }
 
 
@@ -185,14 +188,14 @@ class ModernWindow(ctk.CTk):
 
             # Update title bar
             if hasattr(self, "title_bar"):
-                self.title_bar.configure(fg_color=self.colors["primary"])
+                self.title_bar.configure(fg_color=self.colors["title_bar"])
                 for child in self.title_bar.winfo_children():
                     if isinstance(child, ctk.CTkButton):
                         child.configure(
                             fg_color=(
                                 self.colors["accent"]
                                 if "×" in child._text
-                                else self.colors["primary"]
+                                else self.colors["title_bar"]
                             )
                         )
 
@@ -202,8 +205,20 @@ class ModernWindow(ctk.CTk):
                 for child in self.sidebar.winfo_children():
                     if isinstance(child, ctk.CTkButton):
                         child.configure(
-                            text_color=self.colors["text"],
+                            text_color=(
+                                "#E2E8F0"
+                                if self.current_theme == "dark"
+                                else self.colors["text"]
+                            ),
                             hover_color=self.colors["accent"],
+                        )
+                    elif isinstance(child, ctk.CTkLabel):
+                        child.configure(
+                            text_color=(
+                                "#E2E8F0"
+                                if self.current_theme == "dark"
+                                else self.colors["text"]
+                            )
                         )
 
             # Update chat and input areas if they exist
@@ -237,7 +252,10 @@ class ModernWindow(ctk.CTk):
     def create_title_bar(self):
         # Custom title bar
         self.title_bar = ctk.CTkFrame(
-            self, fg_color=self.colors["primary"], corner_radius=10
+            self,
+            fg_color=self.colors["title_bar"],
+            corner_radius=5,
+            height=30,  # Reduced height
         )
         self.title_bar.pack(fill="x", pady=(0, 5))
 
@@ -245,7 +263,7 @@ class ModernWindow(ctk.CTk):
         close_btn = ctk.CTkButton(
             self.title_bar,
             text="×",
-            width=40,
+            width=30,  # Reduced width
             fg_color=self.colors["accent"],
             command=self.quit,
             hover_color="#FF6B6B",  # Darker red on hover
@@ -255,8 +273,8 @@ class ModernWindow(ctk.CTk):
         minimize_btn = ctk.CTkButton(
             self.title_bar,
             text="−",
-            width=40,
-            fg_color=self.colors["primary"],
+            width=30,  # Reduced width
+            fg_color=self.colors["title_bar"],
             hover_color="#9BAFD3",  # Darker primary on hover
             command=self.iconify,
         )
@@ -278,7 +296,6 @@ class ModernWindow(ctk.CTk):
 
     def create_sidebar(self):
         # Sidebar frame (15% width)
-
         self.sidebar = ctk.CTkFrame(
             self.main_container,
             fg_color=self.colors["primary"],
@@ -295,7 +312,7 @@ class ModernWindow(ctk.CTk):
         # Load and display logo
         try:
             logo_image = Image.open("image.jpg")
-            logo_image = logo_image.resize((40, 40), Image.LANCZOS)
+            logo_image = logo_image.resize((50, 50), Image.LANCZOS)
             logo_photo = CTkImage(dark_image=logo_image, size=(50, 50))
             logo_label = ctk.CTkLabel(brand_frame, image=logo_photo, text="")
             logo_label.pack(side="left", padx=5)
@@ -309,6 +326,7 @@ class ModernWindow(ctk.CTk):
             text_color=self.colors["text"],
         )
         brand_label.pack(side="left", padx=5, pady=5)
+
         # Navigation section
         nav_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         nav_frame.pack(fill="x", pady=10)
@@ -326,7 +344,9 @@ class ModernWindow(ctk.CTk):
                 nav_frame,
                 text=text,
                 fg_color="transparent",
-                text_color=self.colors["text"],
+                text_color=(
+                    "#E2E8F0" if self.current_theme == "dark" else self.colors["text"]
+                ),
                 hover_color=self.colors["accent"],
                 anchor="w",
                 height=40,
@@ -349,7 +369,9 @@ class ModernWindow(ctk.CTk):
             files_header,
             text="📁 Yüklenen Dosyalar",
             font=("Helvetica Neue", 16, "bold"),
-            text_color=self.colors["text"],
+            text_color=(
+                "#E2E8F0" if self.current_theme == "dark" else self.colors["text"]
+            ),
         )
         files_label.pack(anchor="w")
 
@@ -370,7 +392,9 @@ class ModernWindow(ctk.CTk):
             version_frame,
             text="v1.0.0",
             font=("Helvetica Neue", 12),
-            text_color=self.colors["secondary"],
+            text_color=(
+                "#E2E8F0" if self.current_theme == "dark" else self.colors["secondary"]
+            ),
         )
         version_label.pack(side="right")
 
