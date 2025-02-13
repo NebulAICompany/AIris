@@ -55,7 +55,7 @@ class ModernWindow(ctk.CTk):
         self.colors = LIGHT_COLORS.copy()
 
         # Configure window
-        self.title("Modern RAG Chatbot")
+        self.title("NebulaAI Chatbot")
         self.geometry("1200x800")
         self.minsize(800, 600)
 
@@ -244,7 +244,7 @@ class ModernWindow(ctk.CTk):
         # Title
         title_label = ctk.CTkLabel(
             self.title_bar,
-            text="Modern RAG Chatbot",
+            text="NebulaAI Chatbot",
             text_color=self.colors["text"],
             font=("Helvetica Neue", 18, "bold"),  # Updated font size
         )
@@ -428,7 +428,7 @@ class ModernWindow(ctk.CTk):
         welcome_frame.pack(fill="x", pady=20, padx=20)
 
         welcome_text = """
-        Modern RAG Chatbot'a Hoş Geldiniz!
+        NebulaAI Chatbot'a Hoş Geldiniz!
         
         Başlamak için:
         1. Yükle düğmesini kullanarak belgelerinizi yükleyin (Ctrl+U)
