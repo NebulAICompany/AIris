@@ -7,6 +7,7 @@ from PIL import Image, ImageTk
 from typing import Optional, Tuple, List
 import sys
 import os
+import re
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from pipelines.pipeline_manager import PipelineManager
@@ -104,6 +105,32 @@ class ModernWindow(ctk.CTk):
                     )
 
     # Replace the existing update_theme method
+    def format_message_text(self, text: str) -> str:
+        """Format message text with proper spacing and markdown-like syntax"""
+        # Replace markdown headers
+        text = re.sub(r"##\s*([^\n]+)", lambda m: f"\n{m.group(1).upper()}\n", text)
+
+        # Format bold text
+        text = re.sub(r"\*\*([^\*]+)\*\*", lambda m: f"➤ {m.group(1)}", text)
+
+        # Format italic text
+        text = re.sub(r"\*([^\*]+)\*", lambda m: f"∙ {m.group(1)}", text)
+
+        # Format lists
+        text = re.sub(r"^\s*-\s", "• ", text, flags=re.MULTILINE)
+        text = re.sub(
+            r"^\s*\d+\.\s", lambda m: f"{m.group()}➤ ", text, flags=re.MULTILINE
+        )
+
+        # Add proper spacing around sections
+        text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excess newlines
+
+        # Remove the line that was causing automatic line breaks after periods
+        # text = re.sub(r"([.!?])\s*([A-Z])", r"\1\n\2", text)  # This line is removed
+
+        # Clean up
+        text = text.strip()
+        return text
 
     def refresh_messages(self):
         """Refresh all messages with new theme colors"""
@@ -564,16 +591,18 @@ class ModernWindow(ctk.CTk):
         bubble_color = self.colors["accent"] if is_user else self.colors["primary"]
         text_color = "white" if is_user else self.colors["text"]
 
-        bubble = ctk.CTkLabel(
+        formatted_text = self.format_message_text(message)
+
+        bubble_frame = ctk.CTkLabel(
             content_frame,
-            text=message,
+            text=formatted_text,
             fg_color=bubble_color,
             text_color=text_color,
             corner_radius=15,
             justify="left",
             wraplength=500,
         )
-        bubble.pack(side="right" if is_user else "left", pady=5)
+        bubble_frame.pack(side="right" if is_user else "left", pady=5)
 
         # Timestamp below the message
         if not timestamp:
