@@ -106,7 +106,7 @@ class ModernWindow(ctk.CTk):
 
     # Replace the existing update_theme method
     def format_message_text(self, text: str) -> str:
-        """Format message text with proper spacing and markdown-like syntax"""
+        """Mesaj metnini uygun boşluk ve markdown benzeri sözdizimi ile biçimlendir"""
         # Replace markdown headers
         text = re.sub(r"##\s*([^\n]+)", lambda m: f"\n{m.group(1).upper()}\n", text)
 
@@ -133,13 +133,13 @@ class ModernWindow(ctk.CTk):
         return text
 
     def refresh_messages(self):
-        """Refresh all messages with new theme colors"""
+        """Yeni tema renkleriyle tüm mesajları yenile"""
         self.clear_chat()
         for msg in self.messages:
             self.add_message(msg["message"], msg["is_user"], msg["timestamp"])
 
     def update_theme(self, theme_name: str):
-        """Update the color scheme instantly"""
+        """Renk şemasını anında güncelle"""
         try:
             self.current_theme = theme_name.lower()
             self.colors = (
@@ -175,10 +175,10 @@ class ModernWindow(ctk.CTk):
             self.update_file_list_colors()
         except Exception as e:
             print(f"Theme update error: {str(e)}")
-            self.show_error("Failed to update theme. Please try again.")
+            self.show_error("Tema güncellenemedi. Lütfen tekrar deneyin.")
 
     def refresh_ui(self):
-        """Refresh all UI elements with new colors"""
+        """Tüm UI öğelerini yeni renklerle yenile"""
         try:
             # Update main window
             self.configure(fg_color=self.colors["bg"])
@@ -225,10 +225,10 @@ class ModernWindow(ctk.CTk):
 
         except Exception as e:
             print(f"UI refresh error: {str(e)}")
-            self.show_error("Failed to refresh UI elements")
+            self.show_error("UI öğeleri yenilenemedi")
 
     def darken_color(self, color: str, amount: float = 0.2) -> str:
-        """Simple color darkening for hover effects"""
+        """Hover efektleri için basit renk karartma"""
         color = color.lstrip("#")
         rgb = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
         darkened = tuple(max(0, int(c * (1 - amount))) for c in rgb)
@@ -297,10 +297,10 @@ class ModernWindow(ctk.CTk):
 
         # Sidebar buttons with commands
         buttons = [
-            ("Home", "home", self.handle_home),
-            ("History", "history", self.handle_history),
-            ("Settings", "settings", self.handle_settings),
-            ("Upload", "upload", self.handle_upload),
+            ("Ana Sayfa", "home", self.handle_home),
+            ("Geçmiş", "history", self.handle_history),
+            ("Ayarlar", "settings", self.handle_settings),
+            ("Yükle", "upload", self.handle_upload),
         ]
 
         for text, icon, command in buttons:
@@ -320,7 +320,7 @@ class ModernWindow(ctk.CTk):
         self.files_frame.pack(fill="x", pady=10, padx=10)
 
         files_label = ctk.CTkLabel(
-            self.files_frame, text="Uploaded Files", font=("Inter", 12, "bold")
+            self.files_frame, text="Yüklenen Dosyalar", font=("Inter", 12, "bold")
         )
         files_label.pack(fill="x")
 
@@ -396,14 +396,14 @@ class ModernWindow(ctk.CTk):
         welcome_frame.pack(fill="x", pady=20, padx=20)
 
         welcome_text = """
-        Welcome to the Modern RAG Chatbot!
+        Modern RAG Chatbot'a Hoş Geldiniz!
         
-        To get started:
-        1. Upload your documents using the Upload button (Ctrl+U)
-        2. Wait for processing to complete
-        3. Start chatting!
+        Başlamak için:
+        1. Yükle düğmesini kullanarak belgelerinizi yükleyin (Ctrl+U)
+        2. İşlemin tamamlanmasını bekleyin
+        3. Sohbete başlayın!
         
-        Supported file types: .txt, .pdf, .doc, .docx
+        Desteklenen dosya türleri: .txt, .pdf, .doc, .docx
         """
 
         welcome_label = ctk.CTkLabel(
@@ -416,19 +416,19 @@ class ModernWindow(ctk.CTk):
         welcome_label.pack()
 
     def handle_upload(self, event=None):
-        """Handle file upload with proper checks and user feedback"""
+        """Dosya yüklemeyi uygun kontroller ve kullanıcı geri bildirimi ile işleyin"""
         if not hasattr(self, "pipeline_manager"):
             self.pipeline_manager = PipelineManager()
 
         filetypes = (
-            ("PDF files", "*.pdf"),
-            ("Text files", "*.txt"),
-            ("Word files", "*.doc;*.docx"),
-            ("All files", "*.*"),
+            ("PDF dosyaları", "*.pdf"),
+            ("Metin dosyaları", "*.txt"),
+            ("Word dosyaları", "*.doc;*.docx"),
+            ("Tüm dosyalar", "*.*"),
         )
 
         files = filedialog.askopenfilenames(
-            title="Select documents to upload", filetypes=filetypes
+            title="Yüklenecek belgeleri seçin", filetypes=filetypes
         )
 
         if not files:
@@ -450,14 +450,16 @@ class ModernWindow(ctk.CTk):
                     self.add_file(str(dest_path))
                 else:
                     self.show_error(
-                        f"File {source_path.name} already exists in uploads"
+                        f"{source_path.name} dosyası zaten yüklemeler içinde mevcut"
                     )
             except Exception as e:
-                self.show_error(f"Error copying file {source_path.name}: {str(e)}")
+                self.show_error(
+                    f"{source_path.name} dosyası kopyalanırken hata: {str(e)}"
+                )
 
         if new_files:
             # Show processing message
-            self.add_message("Processing new documents...", is_user=False)
+            self.add_message("Yeni belgeler işleniyor...", is_user=False)
 
             # Process new files without deleting them
             self.pipeline_manager.process_files_async(
@@ -466,11 +468,11 @@ class ModernWindow(ctk.CTk):
             )
 
     def add_file(self, file_path: str, initialize: bool = False) -> bool:
-        """Add file to UI and tracking list"""
+        """Dosyayı UI ve izleme listesine ekle"""
         file_name = Path(file_path).name
 
         if file_path in self.uploaded_files and not initialize:
-            self.show_error("File already uploaded")
+            self.show_error("Dosya zaten yüklendi")
             return False
 
         if not initialize:
@@ -488,12 +490,12 @@ class ModernWindow(ctk.CTk):
         return True
 
     def remove_file(self, file_path: str, file_frame: ctk.CTkFrame):
-        """Remove file from UI only (keep file in uploads folder)"""
+        """Dosyayı yalnızca UI'dan kaldır (dosyayı yüklemeler klasöründe tut)"""
         self.uploaded_files.remove(file_path)
         file_frame.destroy()
 
     def load_existing_files(self):
-        """Load all existing files from the uploads directory"""
+        """Yüklemeler dizinindeki tüm mevcut dosyaları yükle"""
         try:
             for file_path in self.uploads_dir.glob("*.*"):
                 if file_path.suffix.lower() in [".pdf", ".txt", ".doc", ".docx"]:
@@ -508,10 +510,10 @@ class ModernWindow(ctk.CTk):
             # Check if vector store has files
             self.check_vector_store_status()
         except Exception as e:
-            self.show_error(f"Error loading existing files: {str(e)}")
+            self.show_error(f"Mevcut dosyalar yüklenirken hata: {str(e)}")
 
     def check_vector_store_status(self):
-        """Check if vector store has documents and update status"""
+        """Vektör deposunda belgeler olup olmadığını kontrol edin ve durumu güncelleyin"""
         try:
             vector_store_path = Path("vectorstore")
             # Check if vectorstore directory exists and has files
@@ -520,21 +522,21 @@ class ModernWindow(ctk.CTk):
             )
         except Exception as e:
             self.vector_store_ready = False
-            self.show_error(f"Error checking vector store status: {str(e)}")
+            self.show_error(f"Vektör deposu durumu kontrol edilirken hata: {str(e)}")
 
     def handle_processing_callback(self, msg: str):
-        """Handle callback from file processing"""
+        """Dosya işleme geri çağrısını işleyin"""
         self.add_message(msg, is_user=False)
         # Update vector store status after processing
         self.check_vector_store_status()
 
     def show_error(self, message: str):
-        """Show an error message to the user."""
+        """Kullanıcıya bir hata mesajı göster."""
         error_frame = ctk.CTkFrame(self.chat_frame, fg_color=self.colors["accent"])
         error_frame.pack(fill="x", pady=5, padx=20)
 
         error_label = ctk.CTkLabel(
-            error_frame, text=f"Error: {message}", text_color="white"
+            error_frame, text=f"Hata: {message}", text_color="white"
         )
         error_label.pack(pady=5, padx=10)
 
@@ -542,23 +544,23 @@ class ModernWindow(ctk.CTk):
         self.after(3000, error_frame.destroy)
 
     def handle_home(self):
-        """Handle Home button click."""
+        """Ana Sayfa düğmesine tıklamayı işleyin."""
         self.clear_chat()
         self.show_welcome_message()
 
     def handle_history(self):
-        """Handle History button click."""
+        """Geçmiş düğmesine tıklamayı işleyin."""
         if self.chat_history:
             history_window = HistoryWindow(self)
             history_window.show_history(self.chat_history)
 
     def handle_settings(self):
-        """Handle Settings button click."""
+        """Ayarlar düğmesine tıklamayı işleyin."""
         settings_window = SettingsWindow(self)
         settings_window.show()
 
     def clear_chat(self):
-        """Clear all messages from the chat area."""
+        """Sohbet alanındaki tüm mesajları temizleyin."""
         for widget in self.chat_frame.winfo_children():
             widget.destroy()
 
@@ -569,7 +571,7 @@ class ModernWindow(ctk.CTk):
         timestamp: Optional[str] = None,
         store_message: bool = True,
     ):
-        """Add a message to the chat area"""
+        """Sohbet alanına bir mesaj ekleyin"""
         # Message container
         msg_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5, padx=20)
@@ -630,7 +632,7 @@ class ModernWindow(ctk.CTk):
         self.chat_frame._parent_canvas.yview_moveto(1.0)
 
     def send_message(self):
-        """Ensure messages are sent only when the vector store is ready"""
+        """Mesajların yalnızca vektör deposu hazır olduğunda gönderilmesini sağlayın"""
         message = self.input_field.get("1.0", "end-1c").strip()
         if not message:
             return
@@ -638,7 +640,7 @@ class ModernWindow(ctk.CTk):
         if not self.vector_store_ready and not message.lower().startswith(
             ("help", "upload")
         ):
-            self.show_error("Please upload documents first!")
+            self.show_error("Lütfen önce belgeleri yükleyin!")
             return
 
         # Clear input
@@ -654,7 +656,7 @@ class ModernWindow(ctk.CTk):
         self.process_message(message)
 
     def process_message(self, message: str):
-        """Process user message and generate response using the pipeline."""
+        """Kullanıcı mesajını işleyin ve pipeline kullanarak yanıt oluşturun"""
 
         def query_worker():
             # Generate response using pipeline
@@ -693,37 +695,37 @@ class ModernWindow(ctk.CTk):
         indicator.pack(side="left", pady=5)
 
     def remove_typing_indicator(self):
-        """Remove the typing indicator."""
+        """Yazma göstergesini kaldırın."""
         if hasattr(self, "typing_frame"):
             self.typing_frame.destroy()
         self.is_typing = False
 
     def handle_return(self, event):
-        """Handle Return key press."""
+        """Return tuşuna basmayı işleyin."""
         if not event.state & 0x1:  # Shift key not pressed
             self.send_message()
             return "break"
 
     def handle_shift_return(self, event):
-        """Handle Shift+Return key press."""
+        """Shift+Return tuşuna basmayı işleyin."""
         return  # Allow default behavior (new line)
 
     def get_pos(self, event):
-        """Get initial position for window dragging."""
+        """Pencere sürükleme için başlangıç konumunu alın."""
         self.xwin = event.x
         self.ywin = event.y
 
     def drag_window(self, event):
-        """Handle window dragging."""
+        """Pencere sürüklemeyi işleyin."""
         self.geometry(f"+{event.x_root - self.xwin}+{event.y_root - self.ywin}")
 
 
 class HistoryWindow(ctk.CTkToplevel):
-    """Window for displaying chat history."""
+    """Sohbet geçmişini görüntülemek için pencere."""
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("Chat History")
+        self.title("Sohbet Geçmişi")
         self.geometry("600x400")
 
         # Configure window
@@ -734,7 +736,7 @@ class HistoryWindow(ctk.CTkToplevel):
         self.history_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
     def show_history(self, history: List[dict]):
-        """Display chat history."""
+        """Sohbet geçmişini görüntüleyin."""
         for entry in history:
             # Message container
             msg_frame = ctk.CTkFrame(self.history_frame, fg_color="transparent")
@@ -749,7 +751,7 @@ class HistoryWindow(ctk.CTkToplevel):
             # User indicator
             user_label = ctk.CTkLabel(
                 msg_frame,
-                text="You:" if entry["is_user"] else "Bot:",
+                text="Sen:" if entry["is_user"] else "Bot:",
                 font=("Inter", 10, "bold"),
             )
             user_label.pack(side="left", padx=5)
@@ -760,7 +762,7 @@ class HistoryWindow(ctk.CTkToplevel):
 
 
 class SettingsWindow(ctk.CTkToplevel):
-    """Window for app settings."""
+    """Uygulama ayarları için pencere."""
 
     _instance = None
 
@@ -773,7 +775,7 @@ class SettingsWindow(ctk.CTkToplevel):
         if hasattr(self, "_initialized") and self._initialized:
             return
         super().__init__(parent)
-        self.title("Settings")
+        self.title("Ayarlar")
         self.geometry("400x300")
         self.attributes("-topmost", True)
         self.parent = parent
@@ -784,12 +786,12 @@ class SettingsWindow(ctk.CTkToplevel):
         self._initialized = True
 
     def create_settings(self):
-        """Create settings UI."""
+        """Ayarlar UI oluştur."""
         # Theme selection
         theme_frame = ctk.CTkFrame(self, fg_color="transparent")
         theme_frame.pack(fill="x", padx=20, pady=10)
 
-        ctk.CTkLabel(theme_frame, text="Theme:", font=("Inter", 12, "bold")).pack(
+        ctk.CTkLabel(theme_frame, text="Tema:", font=("Inter", 12, "bold")).pack(
             side="left"
         )
 
@@ -803,18 +805,18 @@ class SettingsWindow(ctk.CTkToplevel):
         theme_menu.pack(side="right")
 
     def change_theme(self, theme: str):
-        """Handle theme change."""
+        """Tema değişikliğini işleyin."""
         self.parent.update_theme(theme)
         self.configure(fg_color=self.parent.colors["bg"])
         self.parent.update_file_list_colors()  # Corrected function call
 
     def change_model(self, model: str):
-        """Handle model change."""
+        """Model değişikliğini işleyin."""
         # Implement model switching logic here
         pass
 
     def show(self):
-        """Show the settings window."""
+        """Ayarlar penceresini göster."""
         self.deiconify()
         self.lift()
 
@@ -824,7 +826,7 @@ class SettingsWindow(ctk.CTkToplevel):
 
 
 def main():
-    """Initialize and run the chatbot application"""
+    """Chatbot uygulamasını başlatın ve çalıştırın"""
     try:
         app = ModernWindow()
         # Ensure necessary directories exist
@@ -832,7 +834,7 @@ def main():
         os.makedirs("vectorstore", exist_ok=True)
         app.mainloop()
     except Exception as e:
-        print(f"Error starting application: {str(e)}")
+        print(f"Uygulama başlatılırken hata: {str(e)}")
         raise
 
 
