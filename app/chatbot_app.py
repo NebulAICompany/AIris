@@ -241,15 +241,6 @@ class ModernWindow(ctk.CTk):
         )
         self.title_bar.pack(fill="x", pady=(0, 5))
 
-        # Title
-        title_label = ctk.CTkLabel(
-            self.title_bar,
-            text="NebulaAI Chatbot",
-            text_color=self.colors["text"],
-            font=("Helvetica Neue", 18, "bold"),  # Updated font size
-        )
-        title_label.pack(side="left", padx=10)
-
         # Window controls
         close_btn = ctk.CTkButton(
             self.title_bar,
@@ -287,62 +278,101 @@ class ModernWindow(ctk.CTk):
 
     def create_sidebar(self):
         # Sidebar frame (15% width)
+
         self.sidebar = ctk.CTkFrame(
             self.main_container,
             fg_color=self.colors["primary"],
             corner_radius=15,
-            width=180,
+            width=250,
         )
         self.sidebar.pack(side="left", fill="y", padx=(0, 10))
+        self.sidebar.pack_propagate(False)  # Prevent sidebar from shrinking
 
-        # Sidebar buttons with commands
-        buttons = [
-            ("Ana Sayfa", "home", self.handle_home),
-            ("Geçmiş", "history", self.handle_history),
-            ("Ayarlar", "settings", self.handle_settings),
-            ("Yükle", "upload", self.handle_upload),
+        # Logo and brand section at top
+        brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        brand_frame.pack(fill="x", pady=(10, 20), padx=10, anchor="n")
+
+        # Load and display logo
+        try:
+            logo_image = Image.open("image.jpg")
+            logo_image = logo_image.resize((40, 40), Image.LANCZOS)
+            logo_photo = CTkImage(dark_image=logo_image, size=(50, 50))
+            logo_label = ctk.CTkLabel(brand_frame, image=logo_photo, text="")
+            logo_label.pack(side="left", padx=5)
+        except Exception as e:
+            print(f"Logo yüklenemedi: {str(e)}")
+
+        brand_label = ctk.CTkLabel(
+            brand_frame,
+            text="NebulaAI",
+            font=("Helvetica Neue", 25, "bold"),
+            text_color=self.colors["text"],
+        )
+        brand_label.pack(side="left", padx=5, pady=5)
+        # Navigation section
+        nav_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        nav_frame.pack(fill="x", pady=10)
+
+        # Navigation buttons with icons (using emoji as placeholders)
+        nav_items = [
+            ("🏠 Ana Sayfa", self.handle_home),
+            ("📜 Geçmiş", self.handle_history),
+            ("⚙️ Ayarlar", self.handle_settings),
+            ("📤 Yükle", self.handle_upload),
         ]
 
-        for text, icon, command in buttons:
-            btn = ctk.CTkButton(
-                self.sidebar,
+        for text, command in nav_items:
+            nav_btn = ctk.CTkButton(
+                nav_frame,
                 text=text,
                 fg_color="transparent",
                 text_color=self.colors["text"],
                 hover_color=self.colors["accent"],
-                corner_radius=10,
+                anchor="w",
+                height=40,
+                font=("Helvetica Neue", 16),
                 command=command,
             )
-            btn.pack(pady=5, padx=10, fill="x")
+            nav_btn.pack(pady=5, padx=10, fill="x")
 
-        # Files section
-        self.files_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        self.files_frame.pack(fill="x", pady=10, padx=10)
+        # Separator line
+        separator = ctk.CTkFrame(
+            self.sidebar, height=2, fg_color=self.colors["secondary"]
+        )
+        separator.pack(fill="x", pady=20, padx=15)
+
+        # Files section with header
+        files_header = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        files_header.pack(fill="x", pady=(0, 10), padx=15)
 
         files_label = ctk.CTkLabel(
-            self.files_frame, text="Yüklenen Dosyalar", font=("Inter", 12, "bold")
+            files_header,
+            text="📁 Yüklenen Dosyalar",
+            font=("Helvetica Neue", 16, "bold"),
+            text_color=self.colors["text"],
         )
-        files_label.pack(fill="x")
+        files_label.pack(anchor="w")
 
-        # Scrollable files list
+        # Scrollable files list with updated styling
         self.files_list = ctk.CTkScrollableFrame(
-            self.files_frame, fg_color=self.colors["file_list_bg"], height=200
+            self.sidebar,
+            fg_color=self.colors["file_list_bg"],
+            height=200,
+            corner_radius=10,
         )
-        self.files_list.pack(fill="x", pady=5)
+        self.files_list.pack(fill="x", pady=5, padx=10)
 
-        # Profile section at bottom
-        # self.profile_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        # self.profile_frame.pack(side="bottom", pady=10, padx=10)
+        # Bottom section with version info
+        version_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        version_frame.pack(side="bottom", fill="x", pady=15, padx=15)
 
-        # profile_label = ctk.CTkLabel(
-        #     self.profile_frame,
-        #     text="JD",  # User initials
-        #     fg_color=self.colors["accent"],
-        #     corner_radius=20,
-        #     width=40,
-        #     height=40,
-        # )
-        # profile_label.pack(side="left", padx=5)
+        version_label = ctk.CTkLabel(
+            version_frame,
+            text="v1.0.0",
+            font=("Helvetica Neue", 12),
+            text_color=self.colors["secondary"],
+        )
+        version_label.pack(side="right")
 
     def create_chat_area(self):
         # Main chat frame (85% width)
@@ -357,11 +387,13 @@ class ModernWindow(ctk.CTk):
     def create_input_area(self):
         # Input container with reduced height and centered position
         self.input_container = ctk.CTkFrame(
-            self, fg_color="transparent", height=70
+            self, fg_color="transparent", height=90
         )  # Reduced height
         self.input_container.pack(
-            side="bottom", fill="x", pady=(0, 20), padx=(350, 50)
+            side="bottom", fill="x", pady=(0, 20), padx=(275, 50)
         )  # Added horizontal padding
+
+        self.input_container.pack_propagate(False)  # Prevent container from shrinking
 
         # Text input with improved styling
         self.input_field = ctk.CTkTextbox(
@@ -370,7 +402,7 @@ class ModernWindow(ctk.CTk):
             border_color=self.colors["accent"],  # Accent color for border
             border_width=2,
             corner_radius=15,
-            height=90,  # Increased height
+            height=70,  # Increased height
             font=("Helvetica Neue", 16),
         )
         self.input_field.pack(side="left", fill="x", expand=True, padx=(0, 10))
