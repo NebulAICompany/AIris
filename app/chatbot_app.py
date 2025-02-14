@@ -3,82 +3,68 @@ from tkinter import filedialog
 from datetime import datetime
 import customtkinter as ctk
 from pathlib import Path
-from PIL import Image, ImageTk
-from typing import Optional, Tuple, List
+from PIL import Image
+from typing import Optional, List
 import sys
 import os
 import re
-
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-from pipelines.pipeline_manager import PipelineManager
 import threading
 from customtkinter import CTkImage
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from pipelines.pipeline_manager import PipelineManager
 
-# Updated Color Scheme Inspired by DeepSeek
-
-# Light Theme: Clean and professional with vibrant accents
-# Light Theme: Clean and professional with vibrant accents
+# Light Theme Colors
 LIGHT_COLORS = {
-    "primary": "#F9FBFD",  # Almost White - clean background
-    "accent": "#6C63FF",  # Bright Blue Accent
-    "bg": "#FFFFFF",  # Pure White for high contrast areas
-    "text": "#1C1C1E",  # Jet Black - crisp, clear text
-    "secondary": "#E0E6ED",  # Soft Gray for subtle highlights
-    "button": "#6C63FF",  # Bright Blue Buttons
-    "file_list_bg": "#F5F7FA",  # Light gray for file list
-    "file_list_text": "#2C3E50",  # Dark gray for file names
-    "file_list_hover": "#EDF2F7",  # Slightly darker on hover
-    "title_bar": "#B0B3FF",  # New color for title bar in light mode
+    "primary": "#F9FBFD",
+    "accent": "#6C63FF",
+    "bg": "#FFFFFF",
+    "text": "#1C1C1E",
+    "secondary": "#E0E6ED",
+    "button": "#6C63FF",
+    "file_list_bg": "#F5F7FA",
+    "file_list_text": "#2C3E50",
+    "file_list_hover": "#EDF2F7",
+    "title_bar": "#B0B3FF",
 }
 
-# Dark Theme: Sleek and modern with subtle contrasts
+# Dark Theme Colors
 DARK_COLORS = {
-    "primary": "#1E1E1E",  # Deep Charcoal - main background
-    "accent": "#6C63FF",  # Bright Blue Accent
-    "bg": "#121212",  # Deep Black - for high contrast sections
-    "text": "#CFD8DC",  # Light Gray - readable text
-    "secondary": "#5D7285",  # Muted Slate for subtle elements
-    "button": "#6C63FF",  # Bright Blue Buttons
-    "file_list_bg": "#2D3436",  # Dark gray for file list
-    "file_list_text": "#E2E8F0",  # Light gray for file names
-    "file_list_hover": "#3D4852",  # Slightly lighter on hover
-    "title_bar": "#3A3A6C",  # New color for title bar in dark mode
-    "sidebar_text": "#E0E6ED",  # New color for sidebar text in dark mode
+    "primary": "#1E1E1E",
+    "accent": "#6C63FF",
+    "bg": "#121212",
+    "text": "#CFD8DC",
+    "secondary": "#5D7285",
+    "button": "#6C63FF",
+    "file_list_bg": "#2D3436",
+    "file_list_text": "#E2E8F0",
+    "file_list_hover": "#3D4852",
+    "title_bar": "#3A3A6C",
 }
 
 
 class ModernWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
-
-        # Set initial theme
         ctk.set_appearance_mode("light")
         self.current_theme = "light"
         self.colors = LIGHT_COLORS.copy()
 
-        # Configure window
         self.title("NebulaAI Chatbot")
         self.geometry("1200x800")
         self.minsize(800, 600)
 
-        # Initialize state
         self.is_typing = False
         self.chat_history = []
         self.vector_store_ready = False
         self.uploaded_files = []
         self.uploads_dir = Path("uploads")
-        self.uploads_dir.mkdir(exist_ok=True)  # Ensure uploads directory exists
-        self.messages = []  # Store messages here
+        self.uploads_dir.mkdir(exist_ok=True)
+        self.messages = []
 
-        # Initialize UI
         self.setup_window()
         self.setup_layout()
-
-        # Load existing files from uploads folder
         self.load_existing_files()
-
-        # Bind keyboard shortcuts
         self.bind("<Control-u>", lambda e: self.handle_upload())
         self.pipeline_manager = PipelineManager()
 
@@ -93,10 +79,8 @@ class ModernWindow(ctk.CTk):
         current_theme = ctk.get_appearance_mode().lower()
         colors = LIGHT_COLORS if current_theme == "light" else DARK_COLORS
 
-        # Dosya listesi arka plan rengini güncelle
         self.files_list.configure(fg_color=colors["file_list_bg"])
 
-        # Dosya öğelerini güncelle
         for file_frame in self.files_list.winfo_children():
             file_frame.configure(fg_color=colors["file_list_bg"])
             for child in file_frame.winfo_children():
@@ -107,42 +91,24 @@ class ModernWindow(ctk.CTk):
                         fg_color=colors["accent"], hover_color=colors["file_list_hover"]
                     )
 
-    # Replace the existing update_theme method
     def format_message_text(self, text: str) -> str:
-        """Mesaj metnini uygun boşluk ve markdown benzeri sözdizimi ile biçimlendir"""
-        # Replace markdown headers
         text = re.sub(r"##\s*([^\n]+)", lambda m: f"\n{m.group(1).upper()}\n", text)
-
-        # Format bold text
         text = re.sub(r"\*\*([^\*]+)\*\*", lambda m: f"➤ {m.group(1)}", text)
-
-        # Format italic text
         text = re.sub(r"\*([^\*]+)\*", lambda m: f"∙ {m.group(1)}", text)
-
-        # Format lists
         text = re.sub(r"^\s*-\s", "• ", text, flags=re.MULTILINE)
         text = re.sub(
             r"^\s*\d+\.\s", lambda m: f"{m.group()}➤ ", text, flags=re.MULTILINE
         )
-
-        # Add proper spacing around sections
-        text = re.sub(r"\n{3,}", "\n\n", text)  # Remove excess newlines
-
-        # Remove the line that was causing automatic line breaks after periods
-        # text = re.sub(r"([.!?])\s*([A-Z])", r"\1\n\2", text)  # This line is removed
-
-        # Clean up
+        text = re.sub(r"\n{3,}", "\n\n", text)
         text = text.strip()
         return text
 
     def refresh_messages(self):
-        """Yeni tema renkleriyle tüm mesajları yenile"""
         self.clear_chat()
         for msg in self.messages:
             self.add_message(msg["message"], msg["is_user"], msg["timestamp"])
 
     def update_theme(self, theme_name: str):
-        """Renk şemasını anında güncelle"""
         try:
             self.current_theme = theme_name.lower()
             self.colors = (
@@ -152,17 +118,11 @@ class ModernWindow(ctk.CTk):
             )
             ctk.set_appearance_mode(self.current_theme)
 
-            # Store current messages and clear the list
             current_messages = self.messages.copy()
-            self.messages = []  # Clear messages list
-
-            # Clear chat first
+            self.messages = []
             self.clear_chat()
-
-            # Update UI colors
             self.refresh_ui()
 
-            # Re-add messages with new theme colors
             for msg in current_messages:
                 self.add_message(
                     msg["message"],
@@ -171,22 +131,15 @@ class ModernWindow(ctk.CTk):
                     store_message=False,
                 )
 
-            # Restore messages list
             self.messages = current_messages
-
-            # Update file list colors last
             self.update_file_list_colors()
         except Exception as e:
-            print(f"Theme update error: {str(e)}")
-            self.show_error("Tema güncellenemedi. Lütfen tekrar deneyin.")
+            self.show_error("Tema güncellenemedi")
 
     def refresh_ui(self):
-        """Tüm UI öğelerini yeni renklerle yenile"""
         try:
-            # Update main window
             self.configure(fg_color=self.colors["bg"])
 
-            # Update title bar
             if hasattr(self, "title_bar"):
                 self.title_bar.configure(fg_color=self.colors["title_bar"])
                 for child in self.title_bar.winfo_children():
@@ -199,12 +152,10 @@ class ModernWindow(ctk.CTk):
                             )
                         )
 
-            # Update sidebar and its children recursively
             if hasattr(self, "sidebar"):
                 self.sidebar.configure(fg_color=self.colors["primary"])
                 self._update_sidebar_colors(self.sidebar)
 
-            # Update chat and input areas
             if hasattr(self, "chat_frame"):
                 self.chat_frame.configure(fg_color=self.colors["bg"])
             if hasattr(self, "input_container"):
@@ -226,10 +177,8 @@ class ModernWindow(ctk.CTk):
             self.show_error("UI öğeleri yenilenemedi")
 
     def _update_sidebar_colors(self, widget):
-        """Sidebar'daki tüm widget'ların renklerini recursive olarak güncelle"""
         for child in widget.winfo_children():
             if isinstance(child, ctk.CTkButton):
-                # Nav buttons specific styling
                 child.configure(
                     text_color=(
                         "#E0E6ED"
@@ -239,7 +188,6 @@ class ModernWindow(ctk.CTk):
                     hover_color=self.colors["accent"],
                 )
             elif isinstance(child, ctk.CTkLabel):
-                # Labels specific styling
                 child.configure(
                     text_color=(
                         "#E0E6ED"
@@ -248,7 +196,6 @@ class ModernWindow(ctk.CTk):
                     )
                 )
 
-            # Version label özel durumu
             if isinstance(child, ctk.CTkLabel) and child._text == "v1.0.0":
                 child.configure(
                     text_color=(
@@ -258,69 +205,57 @@ class ModernWindow(ctk.CTk):
                     )
                 )
 
-            # Files list özel durumu
             if isinstance(child, ctk.CTkScrollableFrame):
                 child.configure(fg_color=self.colors["file_list_bg"])
                 self._update_sidebar_colors(child)
 
-            # Recursive olarak alt widget'ları da güncelle
             if hasattr(child, "winfo_children"):
                 self._update_sidebar_colors(child)
 
     def darken_color(self, color: str, amount: float = 0.2) -> str:
-        """Hover efektleri için basit renk karartma"""
         color = color.lstrip("#")
         rgb = tuple(int(color[i : i + 2], 16) for i in (0, 2, 4))
         darkened = tuple(max(0, int(c * (1 - amount))) for c in rgb)
         return f"#{darkened[0]:02x}{darkened[1]:02x}{darkened[2]:02x}"
 
     def create_title_bar(self):
-        # Custom title bar
         self.title_bar = ctk.CTkFrame(
             self,
             fg_color=self.colors["title_bar"],
-            height=26,  # Reduced height
+            height=26,
             corner_radius=0,
         )
         self.title_bar.pack(fill="x", pady=(0, 5))
 
-        # Window controls
         close_btn = ctk.CTkButton(
             self.title_bar,
             text="×",
-            width=30,  # Reduced width
+            width=30,
             fg_color=self.colors["accent"],
             command=self.quit,
-            hover_color="#FF6B6B",  # Darker red on hover
+            hover_color="#FF6B6B",
         )
         close_btn.pack(side="right", padx=5, pady=5)
 
         minimize_btn = ctk.CTkButton(
             self.title_bar,
             text="−",
-            width=30,  # Reduced width
+            width=30,
             fg_color=self.colors["title_bar"],
-            hover_color="#9BAFD3",  # Darker primary on hover
+            hover_color="#9BAFD3",
             command=self.iconify,
         )
         minimize_btn.pack(side="right", padx=5, pady=5)
 
     def setup_layout(self):
-        # Main container
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
         self.main_container.pack(fill="both", expand=True, padx=10, pady=5)
 
-        # Create sidebar
         self.create_sidebar()
-
-        # Create main chat area
         self.create_chat_area()
-
-        # Create input area
         self.create_input_area()
 
     def create_sidebar(self):
-        # Sidebar frame (15% width)
         self.sidebar = ctk.CTkFrame(
             self.main_container,
             fg_color=self.colors["primary"],
@@ -328,13 +263,11 @@ class ModernWindow(ctk.CTk):
             width=250,
         )
         self.sidebar.pack(side="left", fill="y", padx=(0, 10))
-        self.sidebar.pack_propagate(False)  # Prevent sidebar from shrinking
+        self.sidebar.pack_propagate(False)
 
-        # Logo and brand section at top
         brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         brand_frame.pack(fill="x", pady=(10, 20), padx=10, anchor="n")
 
-        # Load and display logo
         try:
             logo_image = Image.open("image.jpg")
             logo_image = logo_image.resize((50, 50), Image.LANCZOS)
@@ -352,11 +285,9 @@ class ModernWindow(ctk.CTk):
         )
         brand_label.pack(side="left", padx=5, pady=5)
 
-        # Navigation section
         nav_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         nav_frame.pack(fill="x", pady=10)
 
-        # Navigation buttons with icons (using emoji as placeholders)
         nav_items = [
             ("🏠 Ana Sayfa", self.handle_home),
             ("📜 Geçmiş", self.handle_history),
@@ -380,13 +311,11 @@ class ModernWindow(ctk.CTk):
             )
             nav_btn.pack(pady=5, padx=10, fill="x")
 
-        # Separator line
         separator = ctk.CTkFrame(
             self.sidebar, height=2, fg_color=self.colors["secondary"]
         )
         separator.pack(fill="x", pady=20, padx=15)
 
-        # Files section with header
         files_header = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         files_header.pack(fill="x", pady=(0, 10), padx=15)
 
@@ -400,7 +329,6 @@ class ModernWindow(ctk.CTk):
         )
         files_label.pack(anchor="w")
 
-        # Scrollable files list with updated styling
         self.files_list = ctk.CTkScrollableFrame(
             self.sidebar,
             fg_color=self.colors["file_list_bg"],
@@ -409,7 +337,6 @@ class ModernWindow(ctk.CTk):
         )
         self.files_list.pack(fill="x", pady=5, padx=10)
 
-        # Bottom section with version info
         version_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         version_frame.pack(side="bottom", fill="x", pady=15, padx=15)
 
@@ -424,65 +351,51 @@ class ModernWindow(ctk.CTk):
         version_label.pack(side="right")
 
     def create_chat_area(self):
-        # Main chat frame (85% width)
         self.chat_frame = ctk.CTkScrollableFrame(
             self.main_container, fg_color=self.colors["bg"], corner_radius=15
         )
         self.chat_frame.pack(side="left", fill="both", expand=True)
 
-        # Welcome message
         self.show_welcome_message()
 
     def create_input_area(self):
-        # Input container with reduced height and centered position
-        self.input_container = ctk.CTkFrame(
-            self, fg_color="transparent", height=90
-        )  # Reduced height
-        self.input_container.pack(
-            side="bottom", fill="x", pady=(0, 20), padx=(275, 50)
-        )  # Added horizontal padding
+        self.input_container = ctk.CTkFrame(self, fg_color="transparent", height=90)
+        self.input_container.pack(side="bottom", fill="x", pady=(0, 20), padx=(275, 50))
+        self.input_container.pack_propagate(False)
 
-        self.input_container.pack_propagate(False)  # Prevent container from shrinking
-
-        # Text input with improved styling
         self.input_field = ctk.CTkTextbox(
             self.input_container,
-            fg_color="#E0E6ED",  # Light gray background for input field
-            border_color=self.colors["accent"],  # Accent color for border
+            fg_color="#E0E6ED",
+            border_color=self.colors["accent"],
             border_width=2,
             corner_radius=15,
-            height=70,  # Increased height
+            height=70,
             font=("Helvetica Neue", 16),
         )
         self.input_field.pack(side="left", fill="x", expand=True, padx=(0, 10))
 
-        # Send button with improved positioning
         self.send_btn = ctk.CTkButton(
             self.input_container,
             text="→",
-            width=50,  # Increased width
-            height=50,  # Increased height
+            width=50,
+            height=50,
             fg_color=self.colors["accent"],
-            corner_radius=20,  # Rounded corners
+            corner_radius=20,
             command=self.send_message,
-            hover_color="#FF6B6B",  # Darker accent on hover
+            hover_color="#FF6B6B",
         )
         self.send_btn.pack(side="right")
 
-        # Bind enter key
         self.input_field.bind("<Return>", self.handle_return)
         self.input_field.bind("<Shift-Return>", self.handle_shift_return)
         self.input_field.bind("<Control-a>", self.select_input_text)
 
     def select_input_text(self, event):
-        """Select only the actual text content, excluding empty lines"""
         try:
-            # Get the text content and strip whitespace
             text = self.input_field.get("1.0", "end-1c").rstrip()
             if not text:
                 return "break"
 
-            # Find the last non-empty line
             lines = text.split("\n")
             last_non_empty = len(lines) - 1
             while last_non_empty >= 0 and not lines[last_non_empty].strip():
@@ -491,15 +404,13 @@ class ModernWindow(ctk.CTk):
             if last_non_empty < 0:
                 return "break"
 
-            # Calculate the end position
             end_line = last_non_empty + 1
             end_char = len(lines[last_non_empty])
 
-            # Create the selection
             self.input_field.tag_remove("sel", "1.0", "end")
             self.input_field.tag_add("sel", "1.0", f"{end_line}.{end_char}")
 
-            return "break"  # Prevent default Ctrl+A behavior
+            return "break"
         except Exception as e:
             print(f"Selection error: {str(e)}")
             return "break"
@@ -524,12 +435,11 @@ class ModernWindow(ctk.CTk):
             text=welcome_text,
             text_color=self.colors["text"],
             justify="left",
-            font=("Helvetica Neue", 16),  # Updated font size
+            font=("Helvetica Neue", 16),
         )
         welcome_label.pack()
 
     def handle_upload(self, event=None):
-        """Dosya yüklemeyi uygun kontroller ve kullanıcı geri bildirimi ile işleyin"""
         if not hasattr(self, "pipeline_manager"):
             self.pipeline_manager = PipelineManager()
 
@@ -547,14 +457,12 @@ class ModernWindow(ctk.CTk):
         if not files:
             return
 
-        # Copy files to uploads directory
         new_files = []
         for file_path in files:
             try:
                 source_path = Path(file_path)
                 dest_path = self.uploads_dir / source_path.name
 
-                # Copy file to uploads directory if it doesn't exist
                 if not dest_path.exists():
                     from shutil import copy2
 
@@ -571,17 +479,14 @@ class ModernWindow(ctk.CTk):
                 )
 
         if new_files:
-            # Show processing message
             self.add_message("Yeni belgeler işleniyor...", is_user=False)
 
-            # Process new files without deleting them
             self.pipeline_manager.process_files_async(
                 files=new_files,
                 callback=lambda msg: self.add_message(msg, is_user=False),
             )
 
     def add_file(self, file_path: str, initialize: bool = False) -> bool:
-        """Dosyayı UI ve izleme listesine ekle"""
         file_name = Path(file_path).name
 
         if file_path in self.uploaded_files and not initialize:
@@ -591,7 +496,6 @@ class ModernWindow(ctk.CTk):
         if not initialize:
             self.uploaded_files.append(file_path)
 
-        # Create file UI element
         file_frame = ctk.CTkFrame(self.files_list, fg_color=self.colors["file_list_bg"])
         file_frame.pack(fill="x", pady=2)
 
@@ -603,33 +507,27 @@ class ModernWindow(ctk.CTk):
         return True
 
     def remove_file(self, file_path: str, file_frame: ctk.CTkFrame):
-        """Dosyayı yalnızca UI'dan kaldır (dosyayı yüklemeler klasöründe tut)"""
         self.uploaded_files.remove(file_path)
         file_frame.destroy()
 
     def load_existing_files(self):
-        """Yüklemeler dizinindeki tüm mevcut dosyaları yükle"""
         try:
             for file_path in self.uploads_dir.glob("*.*"):
                 if file_path.suffix.lower() in [".pdf", ".txt", ".doc", ".docx"]:
                     self.add_file(str(file_path), initialize=True)
 
-            # Process all files in uploads folder
             if self.uploaded_files:
                 self.pipeline_manager.process_files_async(
                     files=self.uploaded_files, callback=self.handle_processing_callback
                 )
 
-            # Check if vector store has files
             self.check_vector_store_status()
         except Exception as e:
             self.show_error(f"Mevcut dosyalar yüklenirken hata: {str(e)}")
 
     def check_vector_store_status(self):
-        """Vektör deposunda belgeler olup olmadığını kontrol edin ve durumu güncelleyin"""
         try:
             vector_store_path = Path("vectorstore")
-            # Check if vectorstore directory exists and has files
             self.vector_store_ready = vector_store_path.exists() and any(
                 vector_store_path.iterdir()
             )
@@ -638,13 +536,10 @@ class ModernWindow(ctk.CTk):
             self.show_error(f"Vektör deposu durumu kontrol edilirken hata: {str(e)}")
 
     def handle_processing_callback(self, msg: str):
-        """Dosya işleme geri çağrısını işleyin"""
         self.add_message(msg, is_user=False)
-        # Update vector store status after processing
         self.check_vector_store_status()
 
     def show_error(self, message: str):
-        """Kullanıcıya bir hata mesajı göster."""
         error_frame = ctk.CTkFrame(self.chat_frame, fg_color=self.colors["accent"])
         error_frame.pack(fill="x", pady=5, padx=20)
 
@@ -652,31 +547,26 @@ class ModernWindow(ctk.CTk):
             error_frame,
             text=f"Hata: {message}",
             text_color="white",
-            font=("Helvetica Neue", 18),  # Updated font size
+            font=("Helvetica Neue", 18),
         )
         error_label.pack(pady=5, padx=10)
 
-        # Auto-remove after 3 seconds
         self.after(3000, error_frame.destroy)
 
     def handle_home(self):
-        """Ana Sayfa düğmesine tıklamayı işleyin."""
         self.clear_chat()
         self.show_welcome_message()
 
     def handle_history(self):
-        """Geçmiş düğmesine tıklamayı işleyin."""
         if self.chat_history:
             history_window = HistoryWindow(self)
             history_window.show_history(self.chat_history)
 
     def handle_settings(self):
-        """Ayarlar düğmesine tıklamayı işleyin."""
         settings_window = SettingsWindow(self)
         settings_window.show()
 
     def clear_chat(self):
-        """Sohbet alanındaki tüm mesajları temizleyin."""
         for widget in self.chat_frame.winfo_children():
             widget.destroy()
 
@@ -687,27 +577,20 @@ class ModernWindow(ctk.CTk):
         timestamp: Optional[str] = None,
         store_message: bool = True,
     ):
-        """Sohbet alanına bir mesaj ekleyin"""
-        # Message container
         msg_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         msg_frame.pack(fill="x", pady=5, padx=20)
 
-        # Message content container with better alignment
         content_frame = ctk.CTkFrame(msg_frame, fg_color="transparent")
-        content_frame.pack(fill="x", pady=(5, 0))  # Add top padding for alignment
+        content_frame.pack(fill="x", pady=(5, 0))
 
-        if not is_user:  # Only show logo for bot messages
+        if not is_user:
             logo_image = Image.open("image.jpg")
             logo_image = logo_image.resize((45, 45), Image.LANCZOS)
             logo_photo = CTkImage(dark_image=logo_image, size=(45, 45))
 
-            # Logo label with anchor to top
             logo_label = ctk.CTkLabel(content_frame, image=logo_photo, text="")
-            logo_label.pack(
-                side="left", anchor="n", padx=5, pady=(0, 5)
-            )  # Align to top
+            logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))
 
-        # Message bubble
         bubble_color = self.colors["accent"] if is_user else self.colors["primary"]
         text_color = "white" if is_user else self.colors["text"]
 
@@ -720,23 +603,21 @@ class ModernWindow(ctk.CTk):
             text_color=text_color,
             corner_radius=15,
             justify="left",
-            wraplength=600,  # Increased wrap length
-            font=("Helvetica Neue", 18),  # Updated font size
+            wraplength=600,
+            font=("Helvetica Neue", 18),
         )
         bubble_frame.pack(side="right" if is_user else "left", pady=5)
 
-        # Timestamp below the message
         if not timestamp:
             timestamp = datetime.now().strftime("%H:%M")
         time_label = ctk.CTkLabel(
             msg_frame,
             text=timestamp,
             text_color=self.colors["secondary"],
-            font=("Inter", 16),  # Updated font size
+            font=("Inter", 16),
         )
         time_label.pack(side="right" if is_user else "left", pady=(0, 2))
 
-        # Store in history and messages only if store_message is True
         if store_message:
             self.chat_history.append(
                 {"message": message, "is_user": is_user, "timestamp": timestamp}
@@ -745,11 +626,9 @@ class ModernWindow(ctk.CTk):
                 {"message": message, "is_user": is_user, "timestamp": timestamp}
             )
 
-        # Scroll to bottom
         self.chat_frame._parent_canvas.yview_moveto(1.0)
 
     def send_message(self):
-        """Mesajların yalnızca vektör deposu hazır olduğunda gönderilmesini sağlayın"""
         message = self.input_field.get("1.0", "end-1c").strip()
         if not message:
             return
@@ -760,30 +639,20 @@ class ModernWindow(ctk.CTk):
             self.show_error("Lütfen önce belgeleri yükleyin!")
             return
 
-        # Clear input
         self.input_field.delete("1.0", "end")
 
-        # Add user message
         self.add_message(message, is_user=True)
 
-        # Show typing indicator
         self.show_typing_indicator()
 
-        # Process message and generate response
         self.process_message(message)
 
     def process_message(self, message: str):
-        """Kullanıcı mesajını işleyin ve pipeline kullanarak yanıt oluşturun"""
-
         def query_worker():
-            # Generate response using pipeline
             response = self.pipeline_manager.query_documents(message)
-
-            # Remove typing indicator and add response
             self.after(0, self.remove_typing_indicator)
             self.after(0, lambda: self.add_message(response, is_user=False))
 
-        # Start query in separate thread
         thread = threading.Thread(target=query_worker)
         thread.daemon = True
         thread.start()
@@ -796,93 +665,70 @@ class ModernWindow(ctk.CTk):
         self.typing_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         self.typing_frame.pack(fill="x", pady=5, padx=20)
 
-        # Add logo to typing indicator
         logo_image = Image.open("image.jpg")
         logo_image = logo_image.resize((45, 45), Image.LANCZOS)
         logo_photo = CTkImage(dark_image=logo_image, size=(45, 45))
 
-        # Logo label
         logo_label = ctk.CTkLabel(self.typing_frame, image=logo_photo, text="")
-        logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))  # Align to top
+        logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))
 
-        # Typing indicator dots
         indicator = ctk.CTkLabel(
             self.typing_frame, text="●●●", text_color=self.colors["secondary"]
         )
         indicator.pack(side="left", pady=5)
 
     def remove_typing_indicator(self):
-        """Yazma göstergesini kaldırın."""
         if hasattr(self, "typing_frame"):
             self.typing_frame.destroy()
         self.is_typing = False
 
     def handle_return(self, event):
-        """Return tuşuna basmayı işleyin."""
-        if not event.state & 0x1:  # Shift key not pressed
+        if not event.state & 0x1:
             self.send_message()
             return "break"
 
     def handle_shift_return(self, event):
-        """Shift+Return tuşuna basmayı işleyin."""
-        return  # Allow default behavior (new line)
+        return
 
     def get_pos(self, event):
-        """Pencere sürükleme için başlangıç konumunu alın."""
         self.xwin = event.x
         self.ywin = event.y
 
     def drag_window(self, event):
-        """Pencere sürüklemeyi işleyin."""
         self.geometry(f"+{event.x_root - self.xwin}+{event.y_root - self.ywin}")
 
 
 class HistoryWindow(ctk.CTkToplevel):
-    """Sohbet geçmişini görüntülemek için pencere."""
-
     def __init__(self, parent):
         super().__init__(parent)
         self.title("Sohbet Geçmişi")
         self.geometry("600x400")
-
-        # Configure window
         self.configure(fg_color=parent.colors["bg"])
-
-        # Create scrollable frame for history
         self.history_frame = ctk.CTkScrollableFrame(self)
         self.history_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
     def show_history(self, history: List[dict]):
-        """Sohbet geçmişini görüntüleyin."""
         for entry in history:
-            # Message container
             msg_frame = ctk.CTkFrame(self.history_frame, fg_color="transparent")
             msg_frame.pack(fill="x", pady=5)
 
-            # Timestamp
             time_label = ctk.CTkLabel(
-                msg_frame,
-                text=entry["timestamp"],
-                font=("Helvetica Neue", 16),  # Updated font size
+                msg_frame, text=entry["timestamp"], font=("Helvetica Neue", 16)
             )
             time_label.pack(side="left", padx=5)
 
-            # User indicator
             user_label = ctk.CTkLabel(
                 msg_frame,
                 text="Sen:" if entry["is_user"] else "Bot:",
-                font=("Helvetica Neue", 16, "bold"),  # Updated font size
+                font=("Helvetica Neue", 16, "bold"),
             )
             user_label.pack(side="left", padx=5)
 
-            # Message
             msg_label = ctk.CTkLabel(msg_frame, text=entry["message"], wraplength=400)
             msg_label.pack(side="left", padx=5)
 
 
 class SettingsWindow(ctk.CTkToplevel):
-    """Uygulama ayarları için pencere."""
-
     _instance = None
 
     def __new__(cls, parent):
@@ -898,23 +744,17 @@ class SettingsWindow(ctk.CTkToplevel):
         self.geometry("400x300")
         self.attributes("-topmost", True)
         self.parent = parent
-
-        # Configure window
         self.configure(fg_color=parent.colors["bg"])
         self.create_settings()
         self._initialized = True
 
     def create_settings(self):
-        """Ayarlar UI oluştur."""
-        # Theme selection
         theme_frame = ctk.CTkFrame(self, fg_color="transparent")
         theme_frame.pack(fill="x", padx=20, pady=10)
 
         ctk.CTkLabel(
             theme_frame, text="Tema:", font=("Helvetica Neue", 18, "bold")
-        ).pack(  # Updated font size
-            side="left"
-        )
+        ).pack(side="left")
 
         self.theme_var = ctk.StringVar(value=self.parent.current_theme.capitalize())
         theme_menu = ctk.CTkOptionMenu(
@@ -926,18 +766,11 @@ class SettingsWindow(ctk.CTkToplevel):
         theme_menu.pack(side="right")
 
     def change_theme(self, theme: str):
-        """Tema değişikliğini işleyin."""
         self.parent.update_theme(theme)
         self.configure(fg_color=self.parent.colors["bg"])
-        self.parent.update_file_list_colors()  # Corrected function call
-
-    def change_model(self, model: str):
-        """Model değişikliğini işleyin."""
-        # Implement model switching logic here
-        pass
+        self.parent.update_file_list_colors()
 
     def show(self):
-        """Ayarlar penceresini göster."""
         self.deiconify()
         self.lift()
 
@@ -947,10 +780,8 @@ class SettingsWindow(ctk.CTkToplevel):
 
 
 def main():
-    """Chatbot uygulamasını başlatın ve çalıştırın"""
     try:
         app = ModernWindow()
-        # Ensure necessary directories exist
         os.makedirs("uploads", exist_ok=True)
         os.makedirs("vectorstore", exist_ok=True)
         app.mainloop()
