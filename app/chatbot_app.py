@@ -106,15 +106,36 @@ class ModernWindow(ctk.CTk):
                     )
 
     def format_message_text(self, text: str) -> str:
-        text = re.sub(r"##\s*([^\n]+)", lambda m: f"\n{m.group(1).upper()}\n", text)
+        """
+        Enhanced markdown formatting for chat messages.
+        """
+        # Başlıkları formatlayın (## Başlık)
+        text = re.sub(r"##\s*([^\n]+)", lambda m: f"\n\n{m.group(1).upper()}\n", text)
+
+        # Kalın metinleri formatlayın (**metin**)
         text = re.sub(r"\*\*([^\*]+)\*\*", lambda m: f"➤ {m.group(1)}", text)
+
+        # İtalik metinleri formatlayın (*metin*)
         text = re.sub(r"\*([^\*]+)\*", lambda m: f"∙ {m.group(1)}", text)
-        text = re.sub(r"^\s*-\s", "• ", text, flags=re.MULTILINE)
+
+        # Liste öğelerini indentation ile formatlayın
         text = re.sub(
-            r"^\s*\d+\.\s", lambda m: f"{m.group()}➤ ", text, flags=re.MULTILINE
-        )
+            r"^\s*-\s(.+)$", lambda m: f"    • {m.group(1)}", text, flags=re.MULTILINE
+        )  # Madde işaretli liste
+
+        text = re.sub(
+            r"^\s*(\d+)\.\s(.+)$",
+            lambda m: f"    {m.group(1)}. {m.group(2)}",
+            text,
+            flags=re.MULTILINE,
+        )  # Numaralı liste
+
+        # Fazla boş satırları temizleyin
         text = re.sub(r"\n{3,}", "\n\n", text)
+
+        # Kenar boşluklarını temizleyin
         text = text.strip()
+
         return text
 
     def refresh_messages(self):
