@@ -86,8 +86,8 @@ class ModernWindow(ctk.CTk):
         self.overrideredirect(True)
         self.configure(fg_color=self.colors["bg"])
         self.create_title_bar()
-        self.bind("<B1-Motion>", self.drag_window)
-        self.bind("<Button-1>", self.get_pos)
+        # self.bind("<B1-Motion>", self.drag_window)
+        # self.bind("<Button-1>", self.get_pos)
 
     def update_file_list_colors(self):
         current_theme = ctk.get_appearance_mode().lower()
@@ -241,6 +241,10 @@ class ModernWindow(ctk.CTk):
         )
         self.title_bar.pack(fill="x", pady=(0, 5))
 
+        # Add drag bindings specifically to the title bar
+        self.title_bar.bind("<B1-Motion>", self.drag_window)
+        self.title_bar.bind("<Button-1>", self.get_pos)
+
         close_btn = ctk.CTkButton(
             self.title_bar,
             text="×",
@@ -304,6 +308,9 @@ class ModernWindow(ctk.CTk):
 
         nav_items = [
             ("🏠 Ana Sayfa", self.handle_home),
+            ("📋 Çeviri", self.handle_translation),
+            ("📝 Özet", self.handle_summary),
+            ("📊 Analiz", self.handle_analysis),
             ("📜 Geçmiş", self.handle_history),
             ("⚙️ Ayarlar", self.handle_settings),
             ("📤 Yükle", self.handle_upload),
@@ -363,6 +370,18 @@ class ModernWindow(ctk.CTk):
             ),
         )
         version_label.pack(side="right")
+
+    def handle_translation(self):
+        # Placeholder for translation functionality
+        self.show_error("Çeviri özelliği yakında eklenecek!")
+
+    def handle_summary(self):
+        # Placeholder for summary functionality
+        self.show_error("Özet özelliği yakında eklenecek!")
+
+    def handle_analysis(self):
+        # Placeholder for analysis functionality
+        self.show_error("Analiz özelliği yakında eklenecek!")
 
     def create_chat_area(self):
         self.chat_frame = ctk.CTkScrollableFrame(
