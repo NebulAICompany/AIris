@@ -29,9 +29,11 @@ class QueryPipeline:
         prompt = f"""Aşağıdaki verilen context'i KESİNLİKLE kullanarak, soruya **TÜM CEVABI MARKDOWN SYNTAXI İLE** formatla:
         - Başlıkları `##` ile oluştur
         - **Kalın** ve *italik* metin kullan
-        - Listeler için `-` veya `1.` kullan
-        - Vereceğin cevaplar için asla * işareti kullanmadan önce - veya 1. kullanma gibi liste işaretlerini kullanma. * işareti kullanacağın yerde bunlar olmasın.
+        - **Kalın** Yazdığın listelerden önce - işareti kullanma
+        - Listeler için `.` veya `1.` gibi işaretler kullan
         - Context dışına çıkma!
+        - Cevabı yazarken, gereksiz tüm bilgilerden kaçın ve sadece soruya odaklan
+        - Cevabı bilmiyorsan, sadece "Üzgünüm, bu sorunun cevabı metinde bulunmamaktadır." yaz
 
         Context:
         {' '.join(relevant_chunks)}
