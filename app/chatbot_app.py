@@ -68,6 +68,20 @@ class ModernWindow(ctk.CTk):
         self.bind("<Control-u>", lambda e: self.handle_upload())
         self.pipeline_manager = PipelineManager()
 
+        # Logo önbelleği ekleyin
+        self.cached_logo = self.load_and_cache_logo()
+
+    def load_and_cache_logo(self, size=(60, 60)):
+        """Logo yükle ve önbellekte sakla"""
+        try:
+            logo_image = Image.open("image-modified.png")
+            # Daha yüksek çözünürlük için boyutu büyüt
+            logo_image = logo_image.resize(size, Image.Resampling.BICUBIC)
+            return CTkImage(dark_image=logo_image, size=size)
+        except Exception as e:
+            print(f"Logo yüklenemedi: {str(e)}")
+            return None
+
     def setup_window(self):
         self.overrideredirect(True)
         self.configure(fg_color=self.colors["bg"])
@@ -483,7 +497,7 @@ class ModernWindow(ctk.CTk):
 
             self.pipeline_manager.process_files_async(
                 files=new_files,
-                callback=lambda msg: self.add_message(msg, is_user=False),
+                callback=self.handle_processing_callback,
             )
 
     def add_file(self, file_path: str, initialize: bool = False) -> bool:
@@ -583,12 +597,8 @@ class ModernWindow(ctk.CTk):
         content_frame = ctk.CTkFrame(msg_frame, fg_color="transparent")
         content_frame.pack(fill="x", pady=(5, 0))
 
-        if not is_user:
-            logo_image = Image.open("image.jpg")
-            logo_image = logo_image.resize((45, 45), Image.LANCZOS)
-            logo_photo = CTkImage(dark_image=logo_image, size=(45, 45))
-
-            logo_label = ctk.CTkLabel(content_frame, image=logo_photo, text="")
+        if not is_user and self.cached_logo:
+            logo_label = ctk.CTkLabel(content_frame, image=self.cached_logo, text="")
             logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))
 
         bubble_color = self.colors["accent"] if is_user else self.colors["primary"]
@@ -665,22 +675,66 @@ class ModernWindow(ctk.CTk):
         self.typing_frame = ctk.CTkFrame(self.chat_frame, fg_color="transparent")
         self.typing_frame.pack(fill="x", pady=5, padx=20)
 
-        logo_image = Image.open("image.jpg")
-        logo_image = logo_image.resize((45, 45), Image.LANCZOS)
-        logo_photo = CTkImage(dark_image=logo_image, size=(45, 45))
+        if self.cached_logo:
+            logo_label = ctk.CTkLabel(
+                self.typing_frame, image=self.cached_logo, text=""
+            )
+            logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))
 
-        logo_label = ctk.CTkLabel(self.typing_frame, image=logo_photo, text="")
-        logo_label.pack(side="left", anchor="n", padx=5, pady=(0, 5))
-
-        indicator = ctk.CTkLabel(
-            self.typing_frame, text="●●●", text_color=self.colors["secondary"]
+        self.dot_labels = []
+        # Create indicator frame
+        bubble_frame = ctk.CTkFrame(
+            self.typing_frame, fg_color=self.colors["primary"], corner_radius=15
         )
-        indicator.pack(side="left", pady=5)
+        bubble_frame.pack(side="left", pady=5, padx=10)
+
+        # Create dots container
+        self.dots_frame = ctk.CTkFrame(bubble_frame, fg_color="transparent")
+        self.dots_frame.pack(padx=10, pady=5)
+
+        # Create three dots
+        self.dots = []
+        for i in range(3):
+            dot = ctk.CTkLabel(
+                self.dots_frame,
+                text="•",
+                font=("Helvetica Neue", 32),
+                text_color=self.colors["secondary"],
+            )
+            dot.pack(side="left", padx=2)
+            self.dots.append(dot)
+
+        # Start animation
+        self.animate_dots()
+
+    def animate_dots(self):
+        if not self.is_typing or not hasattr(self, "dots"):
+            return
+
+        # Animation cycle
+        if not hasattr(self, "dot_index"):
+            self.dot_index = 0
+
+        # Reset all dots to normal color
+        for dot in self.dots:
+            dot.configure(text_color=self.colors["secondary"])
+
+        # Highlight current dot
+        self.dots[self.dot_index].configure(text_color=self.colors["accent"])
+
+        # Move to next dot
+        self.dot_index = (self.dot_index + 1) % 3
+
+        # Continue animation if still typing
+        if self.is_typing:
+            self.after(300, self.animate_dots)
 
     def remove_typing_indicator(self):
+        self.is_typing = False
         if hasattr(self, "typing_frame"):
             self.typing_frame.destroy()
-        self.is_typing = False
+        if hasattr(self, "dot_index"):
+            delattr(self, "dot_index")
 
     def handle_return(self, event):
         if not event.state & 0x1:
