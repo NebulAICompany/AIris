@@ -32,9 +32,7 @@ class QueryPipeline:
         - **Kalın** Yazdığın listelerden önce - işareti kullanma
         - Listeler için `.` veya `1.` gibi işaretler kullan
         - Context dışına çıkma!
-        - Cevabı yazarken, gereksiz tüm bilgilerden kaçın ve sadece soruya odaklan
-        - Cevabı bilmiyorsan, sadece "Üzgünüm, bu sorunun cevabı metinde bulunmamaktadır." yaz
-
+       
         Context:
         {' '.join(relevant_chunks)}
 
