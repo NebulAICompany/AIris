@@ -356,7 +356,7 @@ class ModernWindow(ctk.CTk):
         separator = ctk.CTkFrame(
             self.sidebar, height=2, fg_color=self.colors["secondary"]
         )
-        separator.pack(fill="x", pady=20, padx=15)
+        separator.pack(fill="x", pady=0, padx=15)
 
         files_header = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         files_header.pack(fill="x", pady=(0, 10), padx=15)
@@ -374,7 +374,7 @@ class ModernWindow(ctk.CTk):
         self.files_list = ctk.CTkScrollableFrame(
             self.sidebar,
             fg_color=self.colors["file_list_bg"],
-            height=200,
+            height=400,
             corner_radius=10,
         )
         self.files_list.pack(fill="x", pady=5, padx=10)
@@ -392,17 +392,84 @@ class ModernWindow(ctk.CTk):
         )
         version_label.pack(side="right")
 
-    def handle_translation(self):
-        # Placeholder for translation functionality
-        self.show_error("Çeviri özelliği yakında eklenecek!")
+    def get_selected_files(self):
+        """Return the paths of selected files"""
+        selected_files = []
+        for file_frame in self.files_list.winfo_children():
+            if hasattr(file_frame, "checkbox_var") and file_frame.checkbox_var.get():
+                file_path = getattr(file_frame, "file_path", None)
+                if file_path:
+                    selected_files.append(file_path)
+        return selected_files
 
     def handle_summary(self):
-        # Placeholder for summary functionality
-        self.show_error("Özet özelliği yakında eklenecek!")
+        """Summary mode handler"""
+
+        if not self.check_vector_store_status():
+            self.show_error("Lütfen önce belgeleri yükleyin!")
+            return
+
+        selected_files = self.get_selected_files()
+        if not selected_files:
+            self.show_error("Lütfen özet çıkarılacak dosyaları seçin!")
+            return
+
+        file_names = [Path(f).stem for f in selected_files]
+        prompt = f"Şu dosyaların özetini çıkar: {', '.join(file_names)}. Her dosya için ayrı özet oluştur."
+
+        self.show_typing_indicator()
+        self.process_message(prompt)
+
+    def handle_translation(self):
+        """Translation mode handler"""
+        if not self.check_vector_store_status():
+            self.show_error("Please upload documents first!")
+            return
+
+        selected_files = self.get_selected_files()
+        if not selected_files:
+            self.show_error("Please select files to translate!")
+            return
+
+        file_names = [Path(f).stem for f in selected_files]
+
+        prompt = f"""Please translate the content of these files to English: {', '.join(file_names)}
+        
+        Important instructions:
+        1. Translate each file separately
+        2. Maintain the original formatting and structure
+        3. Before each translation, specify the file name
+        4. Ensure accurate and natural English translation
+        5. Keep any technical terms or proper nouns unchanged
+        6. If there are multiple paragraphs, translate each while maintaining separation
+        
+        Please translate now.
+        """
+
+        self.show_typing_indicator()
+        self.process_message(prompt)
 
     def handle_analysis(self):
-        # Placeholder for analysis functionality
-        self.show_error("Analiz özelliği yakında eklenecek!")
+        """Analysis mode handler"""
+        if not self.check_vector_store_status():
+            self.show_error("Lütfen önce belgeleri yükleyin!")
+            return
+
+        selected_files = self.get_selected_files()
+        if not selected_files:
+            self.show_error("Lütfen analiz edilecek dosyaları seçin!")
+            return
+
+        file_names = [Path(f).stem for f in selected_files]
+        prompt = f"""Şu dosyaların analizini yap: {', '.join(file_names)}. Her dosya için:
+        1. Duygu analizi
+        2. Anahtar kelimeler
+        3. Ana temalar
+        4. Yazı tarzı analizi
+        başlıklarıyla ayrı analiz oluştur."""
+
+        self.show_typing_indicator()
+        self.process_message(prompt)
 
     def create_chat_area(self):
         self.chat_frame = ctk.CTkScrollableFrame(
@@ -553,10 +620,29 @@ class ModernWindow(ctk.CTk):
         file_frame = ctk.CTkFrame(self.files_list, fg_color=self.colors["file_list_bg"])
         file_frame.pack(fill="x", pady=2)
 
+        # Add checkbox
+        checkbox_var = ctk.BooleanVar()
+        checkbox = ctk.CTkCheckBox(
+            file_frame,
+            text="",
+            variable=checkbox_var,
+            width=20,
+            height=20,
+            fg_color=self.colors["accent"],
+            hover_color=self.darken_color(self.colors["accent"]),
+            border_color=self.colors["secondary"],
+        )
+        checkbox.pack(side="left", padx=5)
+
+        # Add file name label
         file_label = ctk.CTkLabel(
             file_frame, text=file_name, text_color=self.colors["file_list_text"]
         )
         file_label.pack(side="left", padx=5)
+
+        # Store file path and checkbox variable in frame
+        file_frame.file_path = file_path
+        file_frame.checkbox_var = checkbox_var
 
         return True
 
@@ -565,9 +651,11 @@ class ModernWindow(ctk.CTk):
         file_frame.destroy()
 
     def load_existing_files(self):
+        """Mevcut dosyaları yükle"""
         try:
             for file_path in self.uploads_dir.glob("*.*"):
                 if file_path.suffix.lower() in [".pdf", ".txt", ".doc", ".docx"]:
+                    self.uploaded_files.append(str(file_path))
                     self.add_file(str(file_path), initialize=True)
 
             if self.uploaded_files:
@@ -575,23 +663,35 @@ class ModernWindow(ctk.CTk):
                     files=self.uploaded_files, callback=self.handle_processing_callback
                 )
 
+            # Vector store durumunu başlangıçta kontrol et
             self.check_vector_store_status()
         except Exception as e:
             self.show_error(f"Mevcut dosyalar yüklenirken hata: {str(e)}")
 
     def check_vector_store_status(self):
+        """Vector store'un durumunu kontrol et"""
         try:
             vector_store_path = Path("vectorstore")
+            # Sadece klasörün varlığını ve içinin dolu olmasını kontrol et
             self.vector_store_ready = vector_store_path.exists() and any(
                 vector_store_path.iterdir()
             )
+            return self.vector_store_ready
         except Exception as e:
             self.vector_store_ready = False
-            self.show_error(f"Vektör deposu durumu kontrol edilirken hata: {str(e)}")
+            print(f"Vector store kontrol hatası: {str(e)}")
+            return False
 
     def handle_processing_callback(self, msg: str):
+        """İşlem tamamlandığında çağrılan callback"""
         self.add_message(msg, is_user=False)
-        self.check_vector_store_status()
+
+        # İşlem tamamlandığında vector store durumunu güncelle
+        if msg.lower().endswith("completed.") or msg.lower().endswith("tamamlandı."):
+            self.vector_store_ready = True
+        else:
+            # Her durumda vector store durumunu kontrol et
+            self.check_vector_store_status()
 
     def show_error(self, message: str):
         error_frame = ctk.CTkFrame(self.chat_frame, fg_color=self.colors["accent"])
@@ -679,22 +779,27 @@ class ModernWindow(ctk.CTk):
         self.chat_frame._parent_canvas.yview_moveto(1.0)
 
     def send_message(self):
+        """Mesaj gönderme işlemi"""
         message = self.input_field.get("1.0", "end-1c").strip()
         if not message:
             return
 
-        if not self.vector_store_ready and not message.lower().startswith(
+        # Vector store durumunu güncelle
+        vector_store_ready = self.check_vector_store_status()
+
+        # Eğer vector store hazır değilse ve özel komut değilse
+        if not vector_store_ready and not message.lower().startswith(
             ("help", "upload")
         ):
-            self.show_error("Lütfen önce belgeleri yükleyin!")
+            self.show_error("Lütfen önce belgeleri yükleyin ve işlenmesini bekleyin!")
             return
 
+        # Mesajı ekle ve input'u temizle
         self.input_field.delete("1.0", "end")
-
         self.add_message(message, is_user=True)
 
+        # Typing göstergesi ve mesaj işleme
         self.show_typing_indicator()
-
         self.process_message(message)
 
     def process_message(self, message: str):
