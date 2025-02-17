@@ -22,7 +22,7 @@ LIGHT_COLORS = {
     "text": "#1C1C1E",
     "secondary": "#E0E6ED",
     "button": "#6C63FF",
-    "file_list_bg": "#F5F7FA",
+    "file_list_bg": "#E0E6ED",
     "file_list_text": "#2C3E50",
     "file_list_hover": "#EDF2F7",
     "title_bar": "#B0B3FF",
@@ -195,12 +195,15 @@ class ModernWindow(ctk.CTk):
                 self.chat_frame.configure(fg_color=self.colors["bg"])
             if hasattr(self, "input_container"):
                 self.input_container.configure(fg_color=self.colors["bg"])
-            if hasattr(self, "input_field"):
-                self.input_field.configure(
-                    fg_color=self.colors["bg"],
-                    border_color=self.colors["accent"],
-                    text_color=self.colors["text"],
-                )
+                # Input field'ın rengini güncelle
+                if hasattr(self, "input_field"):
+                    self.input_field.configure(
+                        fg_color=self.colors[
+                            "primary"
+                        ],  # Değiştirildi: bg yerine primary
+                        border_color=self.colors["accent"],
+                        text_color=self.colors["text"],
+                    )
             if hasattr(self, "send_btn"):
                 self.send_btn.configure(
                     fg_color=self.colors["accent"],
@@ -287,24 +290,28 @@ class ModernWindow(ctk.CTk):
         minimize_btn.pack(side="right", padx=5, pady=5)
 
     def setup_layout(self):
+        # Create main container
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_container.pack(fill="both", expand=True, padx=10, pady=5)
-        self.create_input_area()
+        self.main_container.pack(fill="both", expand=True, padx=(275, 10), pady=5)
 
-        self.create_sidebar()
-        self.create_chat_area()
+        # Create components in correct order
+        self.create_input_area()  # Create input area first
+        self.create_chat_area()  # Then create chat area
+        self.create_sidebar()  # Finally create sidebar
+
+        # Now position the input container
         self.input_container.pack(side="bottom", fill="x", pady=(0, 20), padx=(275, 50))
 
     def create_sidebar(self):
+        # Değişiklik 5: sidebar'ı main_container dışında konumlandır
         self.sidebar = ctk.CTkFrame(
             self,
             fg_color=self.colors["primary"],
             corner_radius=15,
             width=250,
-            height=740,  # Set height in constructor
+            height=740,
         )
-        self.sidebar.place(x=10, y=45)
-
+        self.sidebar.place(x=10, y=45)  # Konumu korundu
         self.sidebar.pack_propagate(False)
 
         # def update_sidebar_height(event=None):
@@ -368,7 +375,7 @@ class ModernWindow(ctk.CTk):
         # separator.pack(fill="x", pady=0, padx=15)
 
         files_header = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        files_header.pack(fill="x", pady=(0, 10), padx=15)
+        files_header.pack(fill="x", pady=(5, 15), padx=15)
 
         files_label = ctk.CTkLabel(
             files_header,
@@ -468,21 +475,23 @@ class ModernWindow(ctk.CTk):
         self.process_message(prompt)
 
     def create_chat_area(self):
+        # Değişiklik 4: chat_frame'in konumlandırmasını düzelt
         self.chat_frame = ctk.CTkScrollableFrame(
             self.main_container, fg_color=self.colors["bg"], corner_radius=15
         )
-        self.chat_frame.pack(side="left", fill="both", expand=True)
-
-        self.show_welcome_message()
+        self.chat_frame.pack(
+            fill="both", expand=True, pady=(0, 90)
+        )  # Bottom padding eklendi
 
     def create_input_area(self):
+        # Create the input container
         self.input_container = ctk.CTkFrame(self, fg_color="transparent", height=90)
-        self.input_container.pack(side="bottom", fill="x", pady=(0, 20), padx=(275, 50))
         self.input_container.pack_propagate(False)
 
+        # Create the input field
         self.input_field = ctk.CTkTextbox(
             self.input_container,
-            fg_color="#E0E6ED",
+            fg_color=self.colors["primary"],
             border_color=self.colors["accent"],
             border_width=2,
             corner_radius=15,
@@ -491,6 +500,7 @@ class ModernWindow(ctk.CTk):
         )
         self.input_field.pack(side="left", fill="x", expand=True, padx=(0, 10))
 
+        # Create the send button
         self.send_btn = ctk.CTkButton(
             self.input_container,
             text="→",
@@ -503,6 +513,7 @@ class ModernWindow(ctk.CTk):
         )
         self.send_btn.pack(side="right")
 
+        # Bind events
         self.input_field.bind("<Return>", self.handle_return)
         self.input_field.bind("<Shift-Return>", self.handle_shift_return)
         self.input_field.bind("<Control-a>", self.select_input_text)
