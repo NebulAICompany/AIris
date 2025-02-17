@@ -289,20 +289,29 @@ class ModernWindow(ctk.CTk):
     def setup_layout(self):
         self.main_container = ctk.CTkFrame(self, fg_color="transparent")
         self.main_container.pack(fill="both", expand=True, padx=10, pady=5)
+        self.create_input_area()
 
         self.create_sidebar()
         self.create_chat_area()
-        self.create_input_area()
+        self.input_container.pack(side="bottom", fill="x", pady=(0, 20), padx=(275, 50))
 
     def create_sidebar(self):
         self.sidebar = ctk.CTkFrame(
-            self.main_container,
+            self,
             fg_color=self.colors["primary"],
             corner_radius=15,
             width=250,
+            height=740,  # Set height in constructor
         )
-        self.sidebar.pack(side="left", fill="y", padx=(0, 10))
+        self.sidebar.place(x=10, y=45)
+
         self.sidebar.pack_propagate(False)
+
+        # def update_sidebar_height(event=None):
+        #     new_height = self.winfo_height() - 240
+        #     self.sidebar.configure(height=new_height)
+
+        # self.bind("<Configure>", update_sidebar_height)
 
         brand_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         brand_frame.pack(fill="x", pady=(10, 20), padx=10, anchor="n")
@@ -325,7 +334,7 @@ class ModernWindow(ctk.CTk):
         brand_label.pack(side="left", padx=5, pady=5)
 
         nav_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        nav_frame.pack(fill="x", pady=10)
+        nav_frame.pack(fill="x", pady=0, anchor="n")
 
         nav_items = [
             ("🏠 Ana Sayfa", self.handle_home),
@@ -353,10 +362,10 @@ class ModernWindow(ctk.CTk):
             )
             nav_btn.pack(pady=5, padx=10, fill="x")
 
-        separator = ctk.CTkFrame(
-            self.sidebar, height=2, fg_color=self.colors["secondary"]
-        )
-        separator.pack(fill="x", pady=0, padx=15)
+        # separator = ctk.CTkFrame(
+        #     self.sidebar, height=2, fg_color=self.colors["secondary"]
+        # )
+        # separator.pack(fill="x", pady=0, padx=15)
 
         files_header = ctk.CTkFrame(self.sidebar, fg_color="transparent")
         files_header.pack(fill="x", pady=(0, 10), padx=15)
@@ -374,23 +383,10 @@ class ModernWindow(ctk.CTk):
         self.files_list = ctk.CTkScrollableFrame(
             self.sidebar,
             fg_color=self.colors["file_list_bg"],
-            height=400,
+            height=235,
             corner_radius=10,
         )
-        self.files_list.pack(fill="x", pady=5, padx=10)
-
-        version_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        version_frame.pack(side="bottom", fill="x", pady=15, padx=15)
-
-        version_label = ctk.CTkLabel(
-            version_frame,
-            text="v1.0.0",
-            font=("Helvetica Neue", 12),
-            text_color=(
-                "#E2E8F0" if self.current_theme == "dark" else self.colors["secondary"]
-            ),
-        )
-        version_label.pack(side="right")
+        self.files_list.pack(fill="x", pady=0, padx=10)
 
     def get_selected_files(self):
         """Return the paths of selected files"""
