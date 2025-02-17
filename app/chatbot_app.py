@@ -295,12 +295,12 @@ class ModernWindow(ctk.CTk):
         self.main_container.pack(fill="both", expand=True, padx=(275, 10), pady=5)
 
         # Create components in correct order
-        self.create_input_area()  # Create input area first
         self.create_chat_area()  # Then create chat area
+        self.create_input_area()  # Create input area first
         self.create_sidebar()  # Finally create sidebar
 
         # Now position the input container
-        self.input_container.pack(side="bottom", fill="x", pady=(0, 20), padx=(275, 50))
+        self.input_container.pack(side="bottom", fill="x", pady=(0, 5), padx=(275, 50))
 
     def create_sidebar(self):
         # Değişiklik 5: sidebar'ı main_container dışında konumlandır
@@ -393,7 +393,7 @@ class ModernWindow(ctk.CTk):
             height=235,
             corner_radius=10,
         )
-        self.files_list.pack(fill="x", pady=0, padx=10)
+        self.files_list.pack(fill="x", pady=5, padx=10)
 
     def get_selected_files(self):
         """Return the paths of selected files"""
@@ -480,7 +480,7 @@ class ModernWindow(ctk.CTk):
             self.main_container, fg_color=self.colors["bg"], corner_radius=15
         )
         self.chat_frame.pack(
-            fill="both", expand=True, pady=(0, 90)
+            fill="both", expand=True, pady=(0, 5)
         )  # Bottom padding eklendi
 
     def create_input_area(self):
@@ -637,7 +637,7 @@ class ModernWindow(ctk.CTk):
             height=20,
             fg_color=self.colors["accent"],
             hover_color=self.darken_color(self.colors["accent"]),
-            border_color=self.colors["secondary"],
+            border_color=self.colors["file_list_text"],
         )
         checkbox.pack(side="left", padx=5)
 
