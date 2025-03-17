@@ -1,38 +1,74 @@
-from doctr.io import DocumentFile
-from doctr.models import ocr_predictor
+from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
 import os
+from pathlib import Path
 
 
 class UploadPipeline:
-    def __init__(self, pdf_path: str, reco_arch: str = "parseq"):
+    def __init__(
+        self, pdf_path: str, azure_endpoint: str = None, azure_key: str = None
+    ):
         self.pdf_path = pdf_path
-        self.reco_arch = reco_arch
+
+        # Get Azure credentials from environment variables if not provided
+        self.azure_endpoint = azure_endpoint or os.environ.get(
+            "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"
+        )
+        self.azure_key = azure_key or os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_KEY")
+
+        if not self.azure_endpoint or not self.azure_key:
+            raise ValueError(
+                "Azure Document Intelligence credentials not provided. "
+                "Set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT and AZURE_DOCUMENT_INTELLIGENCE_KEY "
+                "environment variables or pass them as parameters."
+            )
+
+        self.document_analysis_client = DocumentAnalysisClient(
+            endpoint=self.azure_endpoint, credential=AzureKeyCredential(self.azure_key)
+        )
 
     def run(self):
-        # Load the PDF file
-        doc = DocumentFile.from_pdf(self.pdf_path)
-
-        # Load the OCR model (pretrained)
-        model = ocr_predictor(pretrained=True, reco_arch=self.reco_arch)
-
-        # Perform OCR
-        result = model(doc)
+        # Load and process the PDF file with Azure Document Intelligence
+        with open(self.pdf_path, "rb") as f:
+            poller = self.document_analysis_client.begin_analyze_document(
+                "prebuilt-read", document=f
+            )
+        result = poller.result()
 
         # Convert result to structured text
-        extracted_text = result.export()
+        extracted_text = {"content": result.content, "pages": []}
+
+        for page in result.pages:
+            page_data = {
+                "page_number": page.page_number,
+                "blocks": [
+                    {"lines": []}
+                ],  # Maintaining structure similar to original format
+            }
+
+            for line in page.lines:
+                page_data["blocks"][0]["lines"].append(
+                    {"words": [{"value": word} for word in line.content.split()]}
+                )
+
+            extracted_text["pages"].append(page_data)
 
         return extracted_text
 
     def save(self, extracted_text: dict, save_path: str = None):
         if save_path is None:
-            save_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/uploads"
+            # Use relative path if not specified
+            base_dir = Path(__file__).resolve().parent.parent
+            save_path = str(base_dir / "uploads")
+
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        save_path = os.path.join(
+
+        output_file = os.path.join(
             save_path, os.path.basename(self.pdf_path).replace(".pdf", "_ocr.txt")
         )
 
-        with open(save_path, "w", encoding="utf-8") as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             for page_num, page in enumerate(extracted_text["pages"], start=1):
                 f.write(f"\n--- Page {page_num} ---\n")
                 for block in page["blocks"]:
@@ -41,7 +77,7 @@ class UploadPipeline:
                             " ".join(word["value"] for word in line["words"]) + "\n"
                         )
 
-        print(f"\n✅ Text extraction complete! Saved to '{save_path}'")
+        print(f"\n✅ Text extraction complete! Saved to '{output_file}'")
 
 
 from langchain_experimental.text_splitter import SemanticChunker
