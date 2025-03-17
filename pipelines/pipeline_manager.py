@@ -6,17 +6,26 @@ import threading
 from queue import Queue
 import time
 
+os.environ["AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"] = (
+    "https://airis.cognitiveservices.azure.com/"
+)
+os.environ["AZURE_DOCUMENT_INTELLIGENCE_KEY"] = "a2302a791af84047a664bc16174435cb"
+
 
 class PipelineManager:
     def __init__(self):
-        self.uploads_dir = Path("C:/Users/ASUS/Desktop/Coding/Python/vectorrag/uploads")
-        self.vectorstore_dir = Path(
-            "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/vectorstore"
-        )
+        # Göreceli yollar kullan - proje ana dizininden başlayacak şekilde
+        self.base_dir = Path(__file__).resolve().parent.parent
+        self.uploads_dir = self.base_dir / "uploads"
+        self.vectorstore_dir = self.base_dir / "vectorstore"
         self.message_queue = Queue()
         self.callback_queue = Queue()
         self.processing_lock = threading.Lock()
         self.processed_files = []
+
+        # Check for Azure credentials in environment variables
+        self.azure_endpoint = os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
+        self.azure_key = os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_KEY")
 
         # Create necessary directories
         self.uploads_dir.mkdir(exist_ok=True)
@@ -37,8 +46,10 @@ class PipelineManager:
             if not os.path.exists(file_path):
                 raise FileNotFoundError(f"File not found: {file_path}")
 
-            # Create upload pipeline instance
-            upload_pipeline = self.UploadPipeline(file_path)
+            # Create upload pipeline instance with Azure credentials
+            upload_pipeline = self.UploadPipeline(
+                file_path, azure_endpoint=self.azure_endpoint, azure_key=self.azure_key
+            )
 
             # Extract text
             extracted_text = upload_pipeline.run()
