@@ -62,11 +62,13 @@ class ModernWindow(ctk.CTk):
         self.uploads_dir.mkdir(exist_ok=True)
         self.messages = []
 
+        # Create pipeline_manager BEFORE calling methods that use it
+        self.pipeline_manager = PipelineManager()
+
         self.setup_window()
         self.setup_layout()
         self.load_existing_files()
         self.bind("<Control-u>", lambda e: self.handle_upload())
-        self.pipeline_manager = PipelineManager()
 
         # Logo önbelleği ekleyin
         self.cached_logo = self.load_and_cache_logo()
@@ -568,11 +570,10 @@ class ModernWindow(ctk.CTk):
         welcome_label.pack()
 
     def handle_upload(self, event=None):
-        if not hasattr(self, "pipeline_manager"):
-            self.pipeline_manager = PipelineManager()
-
         filetypes = (
             ("PDF dosyaları", "*.pdf"),
+            ("PowerPoint dosyaları", "*.pptx"),
+            ("Resim dosyaları", "*.jpg;*.jpeg;*.png"),
             ("Metin dosyaları", "*.txt"),
             ("Word dosyaları", "*.doc;*.docx"),
             ("Tüm dosyalar", "*.*"),
@@ -661,11 +662,21 @@ class ModernWindow(ctk.CTk):
         """Mevcut dosyaları yükle"""
         try:
             for file_path in self.uploads_dir.glob("*.*"):
-                if file_path.suffix.lower() in [".pdf", ".txt", ".doc", ".docx"]:
+                if file_path.suffix.lower() in [
+                    ".pdf",
+                    ".txt",
+                    ".doc",
+                    ".docx",
+                    ".pptx",
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                ]:
                     self.uploaded_files.append(str(file_path))
                     self.add_file(str(file_path), initialize=True)
 
             if self.uploaded_files:
+                # Now pipeline_manager is already initialized
                 self.pipeline_manager.process_files_async(
                     files=self.uploaded_files, callback=self.handle_processing_callback
                 )

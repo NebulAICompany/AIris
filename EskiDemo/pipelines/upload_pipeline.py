@@ -2,13 +2,15 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 import os
 from pathlib import Path
+from pptx import Presentation
 
 
 class UploadPipeline:
     def __init__(
-        self, pdf_path: str, azure_endpoint: str = None, azure_key: str = None
+        self, file_path: str, azure_endpoint: str = None, azure_key: str = None
     ):
-        self.pdf_path = pdf_path
+        self.file_path = file_path
+        self.file_extension = Path(file_path).suffix.lower()
 
         # Get Azure credentials from environment variables if not provided
         self.azure_endpoint = azure_endpoint or os.environ.get(
@@ -28,32 +30,102 @@ class UploadPipeline:
         )
 
     def run(self):
-        # Load and process the PDF file with Azure Document Intelligence
-        with open(self.pdf_path, "rb") as f:
-            poller = self.document_analysis_client.begin_analyze_document(
-                "prebuilt-read", document=f
-            )
-        result = poller.result()
+        # Determine file type and call appropriate processing method
+        if self.file_extension in [".pdf", ".jpg", ".jpeg", ".png"]:
+            return self._process_document()
+        elif self.file_extension == ".pptx":
+            return self._process_pptx()
+        else:
+            # Default to text processing
+            return self._process_text()
 
-        # Convert result to structured text
-        extracted_text = {"content": result.content, "pages": []}
+    def _process_document(self):
+        # Process PDF or image documents with Azure Document Intelligence
+        try:
+            with open(self.file_path, "rb") as f:
+                poller = self.document_analysis_client.begin_analyze_document(
+                    model_id="prebuilt-read", document=f
+                )
+            result = poller.result()
 
-        for page in result.pages:
-            page_data = {
-                "page_number": page.page_number,
-                "blocks": [
-                    {"lines": []}
-                ],  # Maintaining structure similar to original format
+            # Convert result to structured text
+            extracted_text = {"content": result.content, "pages": []}
+
+            for page in result.pages:
+                page_data = {
+                    "page_number": page.page_number,
+                    "blocks": [{"lines": []}],
+                }
+
+                for line in page.lines:
+                    page_data["blocks"][0]["lines"].append(
+                        {"words": [{"value": word} for word in line.content.split()]}
+                    )
+
+                extracted_text["pages"].append(page_data)
+
+            return extracted_text
+
+        except Exception as e:
+            print(f"Error processing document: {str(e)}")
+            return {
+                "content": f"Error processing document: {str(e)}",
+                "pages": [{"page_number": 1, "blocks": [{"lines": []}]}],
             }
 
-            for line in page.lines:
-                page_data["blocks"][0]["lines"].append(
-                    {"words": [{"value": word} for word in line.content.split()]}
-                )
+    def _process_pptx(self):
+        # Process PowerPoint presentations
+        prs = Presentation(self.file_path)
+        extracted_text = {"content": "", "pages": []}
 
-            extracted_text["pages"].append(page_data)
+        for i, slide in enumerate(prs.slides, 1):
+            page_content = []
+            page_data = {"page_number": i, "blocks": [{"lines": []}]}
+
+            # Extract text from shapes
+            for shape in slide.shapes:
+                if hasattr(shape, "text") and shape.text.strip():
+                    page_content.append(shape.text.strip())
+                    words = shape.text.strip().split()
+                    if words:
+                        page_data["blocks"][0]["lines"].append(
+                            {"words": [{"value": word} for word in words]}
+                        )
+
+            if page_content:
+                slide_content = "\n".join(page_content)
+                extracted_text["content"] += f"Slide {i}:\n{slide_content}\n\n"
+                extracted_text["pages"].append(page_data)
 
         return extracted_text
+
+    def _process_text(self):
+        # Process text files (default fallback)
+        try:
+            with open(self.file_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+
+            lines = content.split("\n")
+            extracted_text = {"content": content, "pages": []}
+
+            page_data = {"page_number": 1, "blocks": [{"lines": []}]}
+
+            for line in lines:
+                if line.strip():
+                    words = line.strip().split()
+                    page_data["blocks"][0]["lines"].append(
+                        {"words": [{"value": word} for word in words]}
+                    )
+
+            extracted_text["pages"].append(page_data)
+            return extracted_text
+        except Exception as e:
+            print(f"Error reading text file {self.file_path}: {str(e)}")
+            # Return minimal structure to prevent errors
+            return {
+                "content": "",
+                "pages": [{"page_number": 1, "blocks": [{"lines": []}]}],
+            }
 
     def save(self, extracted_text: dict, save_path: str = None):
         if save_path is None:
@@ -64,9 +136,9 @@ class UploadPipeline:
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        output_file = os.path.join(
-            save_path, os.path.basename(self.pdf_path).replace(".pdf", "_ocr.txt")
-        )
+        # Get base filename without extension
+        base_name = Path(self.file_path).stem
+        output_file = os.path.join(save_path, f"{base_name}_ocr.txt")
 
         with open(output_file, "w", encoding="utf-8") as f:
             for page_num, page in enumerate(extracted_text["pages"], start=1):
