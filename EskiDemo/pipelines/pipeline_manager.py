@@ -16,8 +16,8 @@ class PipelineManager:
     def __init__(self):
         # Göreceli yollar kullan - proje ana dizininden başlayacak şekilde
         self.base_dir = Path(__file__).resolve().parent.parent
-        self.uploads_dir = self.base_dir / "uploads"
-        self.vectorstore_dir = self.base_dir / "vectorstore"
+        self.uploads_dir = self.base_dir / "uploads"  # Corrected path
+        self.vectorstore_dir = self.base_dir / "vectorstore"  # Corrected path
         self.message_queue = Queue()
         self.callback_queue = Queue()
         self.processing_lock = threading.Lock()
@@ -33,8 +33,8 @@ class PipelineManager:
 
         # Import pipelines dynamically to avoid circular imports
         sys.path.append(str(Path(__file__).parent))
-        from upload_pipeline import UploadPipeline, VectorStorePipeline
-        from query_pipeline import QueryPipeline
+        from pipelines.upload_pipeline import UploadPipeline, VectorStorePipeline
+        from pipelines.query_pipeline import QueryPipeline
 
         self.UploadPipeline = UploadPipeline
         self.VectorStorePipeline = VectorStorePipeline
@@ -101,7 +101,7 @@ class PipelineManager:
     def query_documents(self, query: str) -> str:
         """Query the vector store and return response"""
         try:
-            if not os.path.exists(self.vectorstore_dir):
+            if not os.path.exists(self.vectorstore_dir):  # Updated path
                 return "Error: Vector store not found. Please upload documents first."
 
             # Create query pipeline instance

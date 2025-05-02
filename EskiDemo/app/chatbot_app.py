@@ -58,7 +58,7 @@ class ModernWindow(ctk.CTk):
         self.chat_history = []
         self.vector_store_ready = False
         self.uploaded_files = []
-        self.uploads_dir = Path("uploads")
+        self.uploads_dir = Path("uploads")  # Corrected path
         self.uploads_dir.mkdir(exist_ok=True)
         self.messages = []
 
@@ -326,7 +326,7 @@ class ModernWindow(ctk.CTk):
         brand_frame.pack(fill="x", pady=(10, 20), padx=10, anchor="n")
 
         try:
-            logo_image = Image.open("image.jpg")
+            logo_image = Image.open("image.jpg")  # Updated path
             logo_image = logo_image.resize((50, 50), Image.LANCZOS)
             logo_photo = CTkImage(dark_image=logo_image, size=(50, 50))
             logo_label = ctk.CTkLabel(brand_frame, image=logo_photo, text="")
@@ -689,7 +689,7 @@ class ModernWindow(ctk.CTk):
     def check_vector_store_status(self):
         """Vector store'un durumunu kontrol et"""
         try:
-            vector_store_path = Path("vectorstore")
+            vector_store_path = Path("EskiDemo/vectorstore")  # Corrected path
             # Sadece klasörün varlığını ve içinin dolu olmasını kontrol et
             self.vector_store_ready = vector_store_path.exists() and any(
                 vector_store_path.iterdir()

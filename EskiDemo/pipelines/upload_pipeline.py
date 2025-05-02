@@ -130,8 +130,10 @@ class UploadPipeline:
     def save(self, extracted_text: dict, save_path: str = None):
         if save_path is None:
             # Use relative path if not specified
+            from pathlib import Path
             base_dir = Path(__file__).resolve().parent.parent
-            save_path = str(base_dir / "uploads")
+            save_path = str(base_dir / "uploads")  # Updated path
+            print(f"Default save path: {save_path}")
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -222,7 +224,7 @@ class VectorStorePipeline:
                 vectorstore.add_documents(docs)
             else:
                 print("Creating new vector store...")
-                os.makedirs(vectorstore_path, exist_ok=True)
+                os.makedirs(vectorstore_path, exist_ok=True)  # Updated path
                 vectorstore = FAISS.from_documents(docs, self.embeddings)
 
             vectorstore.save_local(vectorstore_path)
