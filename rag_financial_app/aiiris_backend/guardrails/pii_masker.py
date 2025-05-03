@@ -6,7 +6,7 @@ PII_PATTERNS = {
     "TC": r"\b[1-9][0-9]{10}\b",  # 11-digit Turkish national ID starting with non-zero
     "IBAN": r"\bTR\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{0,2}\b",  # Turkish IBAN with optional spacing
     "PHONE": r"\b(\+90|0)?\s?(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}|\d{3}[-.\s]?\d{3}[-.\s]?\d{4})\b",  # Various Turkish phone formats
-    "VERGI_NO": r"\b\d{10}\b",  # 10-digit tax ID number    
+    "VERGI_NO": r"\b\d{10}\b",  # 10-digit tax ID 
     # Daha eklenebilir..
 }
 

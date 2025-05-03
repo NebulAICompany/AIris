@@ -32,7 +32,11 @@ def run_orchestration(query: str) -> str:
 
     # 4. Retrieval + Reranking
     retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
-    reranked_docs = rerank(preprocessed_query, retrieved_docs, with_score=False, top_n=3)
+    
+    # Extract only the content from the retrieved docs before reranking
+    doc_contents = [doc["content"] for doc in retrieved_docs]
+    reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=3)
+
 
     # 5. Prompt oluştur 
     context = "\n\n".join(reranked_docs)
