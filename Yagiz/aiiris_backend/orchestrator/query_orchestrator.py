@@ -32,14 +32,30 @@ def run_orchestration(query: str) -> str:
 
     # 4. Retrieval + Reranking
     retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
+    print(f"Retrieved documents: {retrieved_docs}")
     
     # Extract only the content from the retrieved docs before reranking
-    doc_contents = [doc["content"] for doc in retrieved_docs]
+    doc_contents = [{"content" : doc["content"] ,"metadata": doc["metadata"]} for doc in retrieved_docs]
+    print(f"Document contents: {doc_contents}")
     reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=3)
+    print(f"Reranked documents: {reranked_docs}")
+    
+    context_entries = []
+    for doc in reranked_docs:
+        content = doc["content"]
+        metadata = doc["metadata"]
+        
+        metadata_str = ""
+        metadata_str += f"Source: {metadata.get('source')}\n"
+        metadata_str += f"Date: {metadata.get('date')}\n"
+        metadata_str += f"Category: {metadata.get('category')}\n"
+        
+        context_entries.append(f"İçerik: {content}\n\nMetadata:\n{metadata_str}")
 
 
     # 5. Prompt oluştur 
-    context = "\n\n".join(reranked_docs)
+    context = "\n\n---\n\n".join(context_entries)
+        
     prompt = create_rag_prompt(context=context, query=masked_query)
 
     # 6. Cevabı al
@@ -53,4 +69,16 @@ def run_orchestration(query: str) -> str:
     # 8. Maske çöz
     final_answer = unmask_pii(answer, pii_map)
 
+    source_citations = []
+    for i, doc in enumerate(reranked_docs):
+        metadata = doc["metadata"]
+        citation = f"[{i+1}] "
+        citation += f"Kaynak: {metadata.get('source')}, "
+        citation += f"Tarih: {metadata.get('date')}, "
+        citation += f"Kategori: {metadata.get('category')}"
+        
+        source_citations.append(citation)
+        
+    final_answer += "\n\nKaynaklar:\n" + "\n".join(source_citations)
+    
     return final_answer
