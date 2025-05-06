@@ -31,8 +31,7 @@ class UploadPipeline:
         # Load and process the PDF file with Azure Document Intelligence
         with open(self.pdf_path, "rb") as f:
             poller = self.document_analysis_client.begin_analyze_document(
-                "prebuilt-read", document=f
-            )
+                "prebuilt-read", document=f )
         result = poller.result()
 
         # Convert result to structured text
