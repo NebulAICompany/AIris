@@ -1,0 +1,10 @@
+azure-ai-documentintelligence
+python-pptx
+pillow
+customtkinter
+langchain-experimental
+langchain-openai
+langchain-community
+faiss-cpu
+openai
+python-docx
