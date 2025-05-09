@@ -15,7 +15,13 @@ def create_rag_prompt(context: str, query: str) -> str:
 Soru: {query}
 
 Yukarıdaki bağlam bilgisine dayanarak, soruyu yanıtla. Eğer cevap bağlamda yoksa, 
-bilmediğini söyle ve tahmin etme."""
+bilmediğini söyle ve tahmin etme. Cevap verirken kullandığın bilginin metadatalarını 
+aşağıdaki formatta final cevabın sonuna ekle:
+
+Kullanılan Bilgi Metadataları:
+- Kaynak: [Source]
+- Tarih: [Date]
+- Kategori: [Category]"""
     
     return prompt
 

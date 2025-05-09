@@ -1,5 +1,6 @@
 import re 
 from typing import List, Dict, Tuple, Set
+from aiiris_backend.monitoring.metrics import guard_violations_total
 
 
 HARMFUL_KEYWORDS = {
@@ -75,11 +76,14 @@ def check_input_violations(text: str) -> List[str]:
         # Ayrıca \b ile kelimenin başında ve sonunda boşluk olup olmadığını kontrol ediyoruz. kelimenin tam olarak eşleşmesini sağlıyor.
         if matched_words:
             violations.append(f"{category.capitalize()} tespit edildi: {', '.join(matched_words)}")
+            guard_violations_total.labels(violation_type=category).inc()
+            
             
     for sec_type, patterns in SECURITY_PATTERNS.items():
         for pattern in patterns:
             if re.search(pattern,text, re.IGNORECASE):
                 violations.append(f"Güvenlik ihlali: {sec_type.capitalize()}")
+                guard_violations_total.labels(violation_type=sec_type).inc()
                 break
             
     return violations
@@ -96,23 +100,27 @@ def check_output_violations(text: str) -> List[str]:
                             if re.search(rf'\b{re.escape(marker)}\b', text_lower, re.IGNORECASE))
     if certainity_markers >= 3:
         violations.append("Aşırı kesinlik tespit edildi.")
+        guard_violations_total.labels(violation_type="aşırı_kesinlik").inc()
         
     # Belirsizlik kontrolü
     uncertainty_markers = sum(1 for marker in HALLUCINATION_MARKERS["belirsizlik"]
                             if re.search(rf'\b{re.escape(marker)}\b', text_lower, re.IGNORECASE))
     if uncertainty_markers >= 3:
         violations.append("Belirsizlik tespit edildi.")
+        guard_violations_total.labels(violation_type="belirsizlik").inc()
         
     # Uydurma bilgi kontrolü
     for pattern in FABRICATION_PATTERNS:
         if re.search(pattern, text_lower, re.IGNORECASE):
             violations.append("Uydurma bilgi tespit edildi.")
+            guard_violations_total.labels(violation_type="uydurma_bilgi").inc()
             break
         
     # Zararlı öneri kontrolü
     for pattern in HARMFUL_ADVICE_PATTERNS:
         if re.search(pattern, text_lower, re.IGNORECASE):
             violations.append("Zararlı öneri tespit edildi.")
+            guard_violations_total.labels(violation_type="zararlı_tavsiye").inc()
             break
         
     return violations
