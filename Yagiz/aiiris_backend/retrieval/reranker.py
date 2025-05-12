@@ -30,10 +30,11 @@ def rerank(query: str, documents: List[str], with_score: bool = True , model_nam
     try : 
         model = _load_model(model_name)
         pairs = [[query, doc] for doc in documents]
+        print(f"Pairs: {pairs}")
         scores = model.predict(pairs, show_progress_bar=True)
         reranked = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
         top_docs = [doc for doc, _ in reranked[:top_n]]
-        
+        print(f"Top documents: {top_docs}")
         if with_score:
             return [{"content": doc, "score": float(score)} for doc, score in reranked[:top_n]]
         else:
