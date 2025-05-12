@@ -6,6 +6,7 @@ from aiiris_backend.llm.prompt_templates import create_rag_prompt
 from aiiris_backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from aiiris_backend.guardrails.pii_masker import mask_pii, unmask_pii
 from aiiris_backend.guardrails.filters import check_input_violations, check_output_violations, sanitize_output
+from .reflection import reflect_and_retry
 
 VECTORSTORE_PATH = "aiiris_backend/retrieval/vectorstore"
 load_vectorstore(VECTORSTORE_PATH)
@@ -61,6 +62,16 @@ def run_orchestration(query: str) -> str:
 
     # 6. Cevabı al
     answer = generate_answer(prompt)
+    
+    def get_improved_answer():
+        enhanced_prompt = create_rag_prompt(
+            context=context, 
+            query=masked_query,
+            instruction="Lütfen soruya daha kapsamlı ve doğru bir yanıt sağlayın. Önceki yanıtınız yetersiz bulundu."
+        )
+        return generate_answer(enhanced_prompt)
+    
+    answer = reflect_and_retry(prompt=masked_query, initial_answer=answer, retry_fn=get_improved_answer, max_retries=2)
 
     # 7. Çıktı kontrolü (hallucination, uydurma vs.)
     output_violations = check_output_violations(answer)

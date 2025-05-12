@@ -3,7 +3,6 @@ import time
 from openai import OpenAI
 from aiiris_backend.monitoring.metrics import llm_duration_seconds
 
-
 client = OpenAI(api_key="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")
 
 def generate_answer(prompt: str) -> str:
@@ -23,3 +22,5 @@ def generate_answer(prompt: str) -> str:
         return answer
     except Exception as e:
         return f"LLM yanıtı alınamadı: {str(e)}"
+    
+
