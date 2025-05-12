@@ -33,7 +33,7 @@ def rerank(query: str, documents: dict[str], with_score: bool = True , model_nam
         scores = model.predict(pairs, show_progress_bar=True)
         reranked = sorted(zip(documents, scores), key=lambda x: x[1], reverse=True)
         top_docs = reranked[:top_n]
-        
+ 
         if with_score:
             return [{"content": doc["content"], "metadata": doc.get("metadata,{}"), "score": float(score)} for doc, score in top_docs]
         else:

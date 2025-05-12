@@ -2,7 +2,6 @@ import os
 import pdfplumber
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
-import torch
 from transformers import BlipProcessor, BlipForConditionalGeneration
 import json
 import re
@@ -73,7 +72,7 @@ class UploadPipeline:
                     for cell in table.cells:
                         y_pos = min([point.y for point in cell.bounding_polygon])
                         elements.append({
-                            "type": "te"
+                            "type": "table"
                         })
 
                 elements.sort(key=lambda e: e["y"])
@@ -217,3 +216,82 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
+        def run(self):
+            results = []
+            pdf = fitz.open(self.pdf_path)
+            with open(self.pdf_path, "rb") as f:
+                poller = self.document_analysis_client.begin_analyze_document("prebuilt-layout", document=f)
+                result = poller.result()
+            #page_number = 0
+            print("num of paragraphs: ", len(result.paragraphs))
+            for paragraph in result.paragraphs:
+                paragraph_text = paragraph.content
+
+                sentences = nltk.sent_tokenize(paragraph_text)
+                for sentence_number, sentence in enumerate(sentences):
+                    metadata = {
+                        "content": sentence,
+                        "page_number": paragraph.page_number,
+                        "type": "text",
+                        #"bbox": [{"x": p.x, "y": p.y} for p in paragraph.bounding_polygon],
+                        "source_file": self.source_file
+                    }
+                    results.append(metadata)
+
+            for table in result.tables:
+                table_content = []
+                for cell in table.cells:
+                    table_content.append({
+                        "text": cell.content,
+                        "row_index": cell.row_index,
+                        "column_index": cell.column_index
+                    })
+
+                metadata = {
+                    "content": table_content,
+                    "page_number": table.page_number,
+                    "type": "table",
+                    "bbox": None,  # Azure Form Recognizer’da cell bazında var, table genel koordinatını ayrıca hesaplayabiliriz
+                    "source_file": self.source_file
+                }
+                results.append(metadata)
+            
+            for page_num in range(len(pdf)):
+                page = pdf.load_page(page_num)
+                images = page.get_images(full=True)
+
+                for img_index, img in enumerate(images):
+                    try:
+                        img_xref = img[0]
+                        img_bbox = page.get_image_bbox(img)
+                        
+                        base_image = pdf.extract_image(img_xref)
+                        image_bytes = base_image["image"]
+                        
+                        description = self.run_blip_model(Image.open(io.BytesIO(image_bytes)))
+
+                        metadata = {
+                            "type": "image",
+                            "coordinates": {
+                                "x0": round(img_bbox.x0, 2),
+                                "y0": round(img_bbox.y0, 2),
+                                "x1": round(img_bbox.x1, 2),
+                                "y1": round(img_bbox.y1, 2)
+                            },
+                            "description": description,
+                            "page_number": page_num,
+                            "source_file": self.source_file,
+                            "image_data": {
+                                "format": base_image["ext"],
+                                "bytes": base_image["image"],
+                                "size": len(base_image["image"]),
+                            }
+                        }
+                        results.append(metadata)
+                    except Exception as e:
+                        print(f"Error processing image {img_index}: {e}")
+                        continue
+            print(len(results))
+            return results
+        """

@@ -53,7 +53,7 @@ sample_docs = [
 ]
 
 # Create the vector store directory if it doesn't exist
-vector_store_path = "aiiris_backend/retrieval/vectorstore"
+vector_store_path = "Yagiz/aiiris_backend/retrieval/vectorstore"
 os.makedirs(vector_store_path, exist_ok=True)
 
 # Create and save the vector store
@@ -64,7 +64,7 @@ print(f"Test vector store created and saved to {vector_store_path}")
 print(f"Number of documents: {len(sample_docs)}")
 
 # Test a simple query to verify it works
-query = "merkez bankası faiz kararları"
+query = "kripto para piyasası"
 results = vectorstore.similarity_search(query=query, k=2)
 print("\nTest query results:")
 for doc in results:

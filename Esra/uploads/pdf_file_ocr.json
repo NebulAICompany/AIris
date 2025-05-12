@@ -1,0 +1,416 @@
+[
+    {
+        "type": "image",
+        "coordinates": {
+            "x0": -0.1,
+            "y0": -0.15,
+            "x1": 595.1,
+            "y1": 841.75
+        },
+        "description": "a white background with a blue and white logo",
+        "page_number": 1,
+        "source_file": "pdf_file.pdf",
+        "image_data": {
+            "format": "jpeg",
+            "size": 97889
+        }
+    },
+    {
+        "type": "image",
+        "coordinates": {
+            "x0": 0.75,
+            "y0": -6.7,
+            "x1": 595.07,
+            "y1": 842.2
+        },
+        "description": "tefest - the next generation",
+        "page_number": 1,
+        "source_file": "pdf_file.pdf",
+        "image_data": {
+            "format": "jpeg",
+            "size": 526311
+        }
+    },
+    {
+        "content": "TEKNOLOJi",
+        "page_number": 1,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "# MİLLİ",
+        "page_number": 1,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "HAMLESI",
+        "page_number": 1,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "TEKNOFEST HAVACILIK, UZAY VE TEKNOLOJİ FESTİVALİ",
+        "page_number": 1,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "FİNANSAL TEKNOLOJİLER YARIŞMASI ÖN DEĞERLENDIRME RAPORU",
+        "page_number": 1,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Proje Adı: AIris: Üretken Yapay Zeka Destekli Finansal Belge Analizi ve Mali Raporlama Takım Adı: NebulAI Takım ID: #676073 Başvuru ID: #3403154",
+        "page_number": 1,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "İçindekiler",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "1.Proje Özeti",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "1",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "2.Çözüm Ürettiği Sorun/İhtiyaç",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "1",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "3.İnovasyon ve Ticarileşme Potansiyeli",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "2",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "4.Kullanılacak Yöntem",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "2\n:unselected:",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "5.Hedef Kitle",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "3\n:unselected:",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "6.Pazar Analizi",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "3",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "7.Risk Analizi",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "4",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "8.Proje Takvimi",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "5",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "9.Kaynakça",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "6",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "1.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "PROJE ÖZETİ",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Proje, finansal süreçlerde verimliliği arttırmayı amaçlayan bir yapay zeka destekli iş asistanı geliştirmeyi hedeflemektedir.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Temel olarak, Retrieval-Augmented Generation (RAG) teknolojisi ile entegre edilen bu sistem, finansal belgelerden otomatik bilgi çıkarımı ve analiz yapmayı sağlayarak mali raporlamayı hızlandırmayı ve kolaylaştırmayı amaçlar.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Proje, özellikle küçük ve orta ölçekli işletmeler (KOBİ'ler) olmak üzere farklı büyüklüklerdeki işletmelerde maliyetleri düşürmek, hataları azaltmak ve daha güvenilir finansal kararlar alınmasını sağlamak adına büyük bir potansiyele sahiptir.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Yapay zeka destekli sistem, PDF, Excel gibi farklı formatlarda gelen verileri işlemekte, belgeler arasındaki ilişkileri anlamakta, kullanıcıya doğru ve hızlı analizler sunmaktadır.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Sistemin sunduğu özellikler arasında otomatik veri doğrulama, el yazısı tanıma, dijital imza entegrasyonu ve gelişmiş belge organizasyonu yer alırken API entegrasyonu ile başka finansal araçlarla uyumlu hale getirilebilecektir.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Bu çözüm, sektöründe esnek, yenilikçi ve düşük maliyetli bir alternatif olarak öne çıkmayı hedeflemektedir.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "2.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "ÇÖZÜM ÜRETTİĞİ SORUN/İHTİYAÇ",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Günümüzde finansal süreçlerin yönetimi, doğru bilgiye hızlı erişim ihtiyacı nedeniyle kritik bir hal almıştır.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Ancak, farklı formatlarda tutulan finansal belgelerden doğru bilgi çıkarımı, manuel yöntemlerle yapıldığında zaman kaybı, insan hataları ve uyumsuzluklara yol açmaktadır (Choudhary & Sahu, 2020).",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Ayrıca, şirketler güncel verilere gerçek zamanlı erişim sağlayamayarak hızlı ve doğru kararlar almakta zorluk çekmektedir.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Küçük ve orta ölçekli işletmeler (KOBİ'ler), finansal belge yönetiminde büyük zorluklar yaşamaktadır (Pereira et al., 2019).",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Bu sorunları çözmek için geliştirdiğimiz proje, Üretken Yapay Zeka teknolojilerini kullanarak RAG tabanlı bir yapay zeka destekli soru-cevap sistemi sunmaktadır.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Sistem, farklı formatlardaki belgelerden bilgi çıkarımı ve doğrulama yaparak verileri güncel tutacak ve doğru raporlar oluşturacaktır.",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "Ayrıca, otomatik veri doğrulama, dijital imza entegrasyonu ve",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": "1",
+        "page_number": 2,
+        "type": "text",
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "content": [
+            {
+                "text": "İçindekiler",
+                "row_index": 0,
+                "column_index": 0
+            },
+            {
+                "text": "",
+                "row_index": 0,
+                "column_index": 1
+            },
+            {
+                "text": "1.Proje Özeti",
+                "row_index": 1,
+                "column_index": 0
+            },
+            {
+                "text": "1",
+                "row_index": 1,
+                "column_index": 1
+            },
+            {
+                "text": "2.Çözüm Ürettiği Sorun/İhtiyaç",
+                "row_index": 2,
+                "column_index": 0
+            },
+            {
+                "text": "1",
+                "row_index": 2,
+                "column_index": 1
+            },
+            {
+                "text": "3.İnovasyon ve Ticarileşme Potansiyeli",
+                "row_index": 3,
+                "column_index": 0
+            },
+            {
+                "text": "2",
+                "row_index": 3,
+                "column_index": 1
+            },
+            {
+                "text": "4.Kullanılacak Yöntem",
+                "row_index": 4,
+                "column_index": 0
+            },
+            {
+                "text": "2\n:unselected:",
+                "row_index": 4,
+                "column_index": 1
+            },
+            {
+                "text": "5.Hedef Kitle",
+                "row_index": 5,
+                "column_index": 0
+            },
+            {
+                "text": "3\n:unselected:",
+                "row_index": 5,
+                "column_index": 1
+            },
+            {
+                "text": "6.Pazar Analizi",
+                "row_index": 6,
+                "column_index": 0
+            },
+            {
+                "text": "3",
+                "row_index": 6,
+                "column_index": 1
+            },
+            {
+                "text": "7.Risk Analizi",
+                "row_index": 7,
+                "column_index": 0
+            },
+            {
+                "text": "4",
+                "row_index": 7,
+                "column_index": 1
+            },
+            {
+                "text": "8.Proje Takvimi",
+                "row_index": 8,
+                "column_index": 0
+            },
+            {
+                "text": "5",
+                "row_index": 8,
+                "column_index": 1
+            },
+            {
+                "text": "9.Kaynakça",
+                "row_index": 9,
+                "column_index": 0
+            },
+            {
+                "text": "6",
+                "row_index": 9,
+                "column_index": 1
+            }
+        ],
+        "page_number": 2,
+        "type": "table",
+        "bbox": null,
+        "source_file": "pdf_file.pdf"
+    },
+    {
+        "type": "image",
+        "coordinates": {
+            "x0": 131.9,
+            "y0": 460.49,
+            "x1": 463.4,
+            "y1": 753.79
+        },
+        "description": "the table of the different types of the different types of the different types of the different types of the different",
+        "page_number": 5,
+        "source_file": "pdf_file.pdf",
+        "image_data": {
+            "format": "png",
+            "size": 29549
+        }
+    }
+]
