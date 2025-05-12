@@ -27,7 +27,7 @@ class UploadPipeline:
             )
         self.document_analysis_client = DocumentAnalysisClient( endpoint = self.azure_endpoint, credential = AzureKeyCredential(self.azure_key) )
     
-    def run(self):
+    def z(self):
         results = []
         pdf = fitz.open(self.pdf_path)
         with open(self.pdf_path, "rb") as f:
@@ -122,7 +122,7 @@ class UploadPipeline:
 
                
 
-    def save_as_json(self, results: list | dict, pretty_print: bool = True, save_path: str = None) -> str:
+    def save_as_json(self, results: dict, pretty_print: bool = True, save_path: str = None) -> str:
         if not results:
             raise ValueError("No results to save - empty input detected")
         

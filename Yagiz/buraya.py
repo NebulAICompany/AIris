@@ -163,7 +163,7 @@ os.environ["OPENAI_API_KEY"] = (
 #     uploads_path="D:/GitHub/vectorrag/Yusuf/uploads",
 #     save_path="D:/GitHub/vectorrag/Yusuf/vectorstore",
 # )
-print(QueryPipeline(
-    query="Resmi gazetenin madde 4'ünü açıkla",
-    vectorstore_path="D:/GitHub/vectorrag/Yusuf/vectorstore",
-).find_similar_chunks())
+# print(QueryPipeline(
+#     query="Resmi gazetenin madde 4'ünü açıkla",
+#     vectorstore_path="D:/GitHub/vectorrag/Yusuf/vectorstore",
+# ).find_similar_chunks())
