@@ -77,15 +77,17 @@ def spell_check(query: str) -> str:
                 corrected.append(word)
                 continue
             
+            normalized_word = normalize_repeated_chars(word)
+            
             # Yazım hatası kontrolü ve düzeltme önerisi
-            if not turkish_spell_checker.check(word):
-                suggestions = turkish_spell_checker.suggestForWord(word)   
+            if not turkish_spell_checker.check(normalized_word):
+                suggestions = turkish_spell_checker.suggestForWord(normalized_word)   
                 if suggestions and len(suggestions) > 0:
                     corrected.append(str(suggestions[0]))
-                else:
-                    corrected.append(word)
+                else: 
+                    corrected.append(normalized_word)
             else:
-                corrected.append(word)
+                corrected.append(normalized_word)
         return ' '.join(corrected)
             
     except Exception as e:
@@ -138,4 +140,29 @@ def detect_intent(query: str) -> Tuple[IntentType, float]:
         return ("bilinmeyen", max_score)
     
     return (detected_intent, max_score)
+
+
+def normalize_repeated_chars(word: str) -> str:
+    if not word or not isinstance(word, str):
+        return word
+    
+    result = []
+    i = 0
+    
+    while i < len(word):
+        char = word[i]
+        result.append(char)
+        repeat_count = 1
+        
+        j = i + 1
+        while j < len(word) and word[j] == char:
+            repeat_count += 1
+            j += 1
+            
+            if repeat_count == 2:
+                result.append(char)
+        
+        i = j
+        
+    return ''.join(result)
 

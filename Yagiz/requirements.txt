@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+prometheus_client
+langchain-core
+langchain-community
+langchain-openai
+langchain-huggingface
+sentence-transformers
+faiss-cpu
+openai
+langdetect
+jpype1
+azure-ai-formrecognizer
+python-pptx
+pillow
+python-docx
+numpy
