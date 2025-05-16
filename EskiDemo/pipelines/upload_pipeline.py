@@ -2,7 +2,6 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 import os
 from pathlib import Path
-from pptx import Presentation
 
 
 class UploadPipeline:
