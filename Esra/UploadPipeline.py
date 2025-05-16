@@ -118,7 +118,7 @@ class UploadPipeline:
                         except Exception as e:
                             print(f"Error processing image {img_index}: {e}")
                             continue
-        self.save_as_json(results)
+        # self.save_as_json(results)
 
     def save_as_json(self, results: dict, pretty_print: bool = True, save_path: str = None) -> str:
         if not results:
@@ -179,7 +179,7 @@ class UploadPipeline:
 
 def main():
     # pdf_path = "the_file.pdf"  # Kendi PDF dosyanızın yolunu belirtin
-    pdf_path = "pdf_file.pdf"
+    pdf_path = "Esra/pdf_file.pdf"
     #pdf_path = "belge.pdf"
     #pdf_path = "file.pdf"
     #pdf_path = "image.pdf"

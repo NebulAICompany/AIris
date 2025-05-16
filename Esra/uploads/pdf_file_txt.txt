@@ -1,0 +1,53 @@
+
+------Page 1------
+
+TEKNOLOJi # MİLLİ HAMLESI TEKNOFEST HAVACILIK, UZAY VE TEKNOLOJİ FESTİVALİ FİNANSAL TEKNOLOJİLER YARIŞMASI ÖN DEĞERLENDIRME RAPORU Proje Adı: AIris: Üretken Yapay Zeka Destekli Finansal Belge Analizi ve Mali Raporlama Takım Adı: NebulAI Takım ID: #676073 Başvuru ID: #3403154 
+[Image 1]
+Description: a white background with a blue and white logo
+
+[Image 2]
+Description: tefest - the next generation
+
+------Page 2------
+
+İçindekiler 1.Proje Özeti 1 2.Çözüm Ürettiği Sorun/İhtiyaç 1 3.İnovasyon ve Ticarileşme Potansiyeli 2 4.Kullanılacak Yöntem 2
+:unselected: 5.Hedef Kitle 3
+:unselected: 6.Pazar Analizi 3 7.Risk Analizi 4 8.Proje Takvimi 5 9.Kaynakça 6 1. PROJE ÖZETİ Proje, finansal süreçlerde verimliliği arttırmayı amaçlayan bir yapay zeka destekli iş asistanı geliştirmeyi hedeflemektedir. Temel olarak, Retrieval-Augmented Generation (RAG) teknolojisi ile entegre edilen bu sistem, finansal belgelerden otomatik bilgi çıkarımı ve analiz yapmayı sağlayarak mali raporlamayı hızlandırmayı ve kolaylaştırmayı amaçlar. Proje, özellikle küçük ve orta ölçekli işletmeler (KOBİ'ler) olmak üzere farklı büyüklüklerdeki işletmelerde maliyetleri düşürmek, hataları azaltmak ve daha güvenilir finansal kararlar alınmasını sağlamak adına büyük bir potansiyele sahiptir. Yapay zeka destekli sistem, PDF, Excel gibi farklı formatlarda gelen verileri işlemekte, belgeler arasındaki ilişkileri anlamakta, kullanıcıya doğru ve hızlı analizler sunmaktadır. Sistemin sunduğu özellikler arasında otomatik veri doğrulama, el yazısı tanıma, dijital imza entegrasyonu ve gelişmiş belge organizasyonu yer alırken API entegrasyonu ile başka finansal araçlarla uyumlu hale getirilebilecektir. Bu çözüm, sektöründe esnek, yenilikçi ve düşük maliyetli bir alternatif olarak öne çıkmayı hedeflemektedir. 2. ÇÖZÜM ÜRETTİĞİ SORUN/İHTİYAÇ Günümüzde finansal süreçlerin yönetimi, doğru bilgiye hızlı erişim ihtiyacı nedeniyle kritik bir hal almıştır. Ancak, farklı formatlarda tutulan finansal belgelerden doğru bilgi çıkarımı, manuel yöntemlerle yapıldığında zaman kaybı, insan hataları ve uyumsuzluklara yol açmaktadır (Choudhary & Sahu, 2020). Ayrıca, şirketler güncel verilere gerçek zamanlı erişim sağlayamayarak hızlı ve doğru kararlar almakta zorluk çekmektedir. Küçük ve orta ölçekli işletmeler (KOBİ'ler), finansal belge yönetiminde büyük zorluklar yaşamaktadır (Pereira et al., 2019). Bu sorunları çözmek için geliştirdiğimiz proje, Üretken Yapay Zeka teknolojilerini kullanarak RAG tabanlı bir yapay zeka destekli soru-cevap sistemi sunmaktadır. Sistem, farklı formatlardaki belgelerden bilgi çıkarımı ve doğrulama yaparak verileri güncel tutacak ve doğru raporlar oluşturacaktır. Ayrıca, otomatik veri doğrulama, dijital imza entegrasyonu ve 1 
+[Table 1]
+[0,0]: İçindekiler
+[0,1]: 
+[1,0]: 1.Proje Özeti
+[1,1]: 1
+[2,0]: 2.Çözüm Ürettiği Sorun/İhtiyaç
+[2,1]: 1
+[3,0]: 3.İnovasyon ve Ticarileşme Potansiyeli
+[3,1]: 2
+[4,0]: 4.Kullanılacak Yöntem
+[4,1]: 2
+:unselected:
+[5,0]: 5.Hedef Kitle
+[5,1]: 3
+:unselected:
+[6,0]: 6.Pazar Analizi
+[6,1]: 3
+[7,0]: 7.Risk Analizi
+[7,1]: 4
+[8,0]: 8.Proje Takvimi
+[8,1]: 5
+[9,0]: 9.Kaynakça
+[9,1]: 6
+
+------Page 3------
+
+
+------Page 4------
+
+
+------Page 5------
+
+
+[Image 1]
+Description: the table of the different types of the different types of the different types of the different types of the different
+
+------Page 6------
+
