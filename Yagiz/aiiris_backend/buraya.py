@@ -6,7 +6,7 @@ from langchain_community.vectorstores import FAISS
 
 class VectorStorePipeline:
     def __init__(self):
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         # Adjust semantic chunker parameters
         self.text_splitter = SemanticChunker(
             self.embeddings,
@@ -66,6 +66,7 @@ class VectorStorePipeline:
                     self.embeddings,
                     allow_dangerous_deserialization=True,
                 )
+                print(f"Loaded {len(vectorstore)} existing chunks")
                 vectorstore.add_documents(docs)
             else:
                 print("Creating new vector store...")

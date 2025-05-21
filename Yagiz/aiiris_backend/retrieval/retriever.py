@@ -48,6 +48,7 @@ def retrieve_top_k(query: str, k: int = 2) -> List[str]:
 
     try:
         print(f"Retrieving top {k} documents for query: {query}")
+        print(_vectorstore)
         docs_with_scores = _vectorstore.similarity_search_with_score(query, k=k)
         print(f"Retrieved {len(docs_with_scores)} documents")   
         return [{

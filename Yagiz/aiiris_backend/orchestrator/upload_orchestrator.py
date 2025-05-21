@@ -9,11 +9,11 @@ from langchain_openai import OpenAIEmbeddings
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 # Import from upload.py and buraya.py
-from upload import UploadPipeline
-import buraya
+from aiiris_backend.upload import UploadPipeline
+import aiiris_backend.buraya as buraya
 
 # Vector store path
-VECTOR_STORE_PATH = "aiiris_backend/retrieval/vectorstore"
+VECTOR_STORE_PATH = "aiiris_backend/vectorstore"
 
 def process_file(file_path: str) -> dict:
     """
@@ -38,7 +38,7 @@ def process_file(file_path: str) -> dict:
         pipeline = UploadPipeline(pdf_path=file_path)
 
         pipeline.run()
-        save_dir = Path(__file__).resolve().parent / "uploads"
+        save_dir = Path(__file__).resolve().parent.parent / "uploads"
         # Step 2: Create or update vector store
         buraya.VectorStorePipeline(
         ).run(uploads_path=save_dir, save_path=VECTOR_STORE_PATH)

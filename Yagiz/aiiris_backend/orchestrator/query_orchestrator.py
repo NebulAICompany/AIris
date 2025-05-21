@@ -7,9 +7,9 @@ from aiiris_backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from aiiris_backend.guardrails.pii_masker import mask_pii, unmask_pii
 from aiiris_backend.guardrails.filters import check_input_violations, check_output_violations, sanitize_output
 from .reflection import reflect_and_retry
+import os
 
-VECTORSTORE_PATH = "aiiris_backend/retrieval/vectorstore"
-load_vectorstore(VECTORSTORE_PATH)
+VECTORSTORE_PATH = "aiiris_backend/vectorstore" 
 
 def preprocess_query(query: str):
     cleaned = clean_query(query)
@@ -23,6 +23,11 @@ def preprocess_query(query: str):
     return corrected, lang, intent
 
 def run_orchestration(query: str) -> str:
+    
+    # Vectorstore'ı yükle
+    if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
+        print(f"Loading vectorstore from {VECTORSTORE_PATH}")
+        load_vectorstore(VECTORSTORE_PATH)
     # 1. Temizlik + analiz
     preprocessed_query, lang, intent = preprocess_query(query)
 
@@ -37,6 +42,7 @@ def run_orchestration(query: str) -> str:
 
     # 4. Retrieval + Reranking0
     retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
+    print("GELDİ")
     
     # Extract only the content from the retrieved docs before reranking
     doc_contents = [{"content" : doc["content"] ,"metadata": doc["metadata"]} for doc in retrieved_docs]
