@@ -11,7 +11,12 @@ openai
 langdetect
 jpype1
 azure-ai-formrecognizer
+azure-cognitiveservices-vision-computervision
+msrest
 python-pptx
 pillow
 python-docx
 numpy
+pymupdf
+transformers
+pandas
