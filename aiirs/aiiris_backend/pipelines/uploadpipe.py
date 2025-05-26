@@ -2,12 +2,11 @@ from pathlib import Path
 from PIL import Image
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
-import os, fitz, nltk, io
-from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
-from azure.cognitiveservices.vision.computervision import ComputerVisionClient
-from msrest.authentication import CognitiveServicesCredentials
+import os, fitz, nltk, io, base64, openai
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "C:/Users/USER/Desktop/google-key.json"
 from transformers import TapexTokenizer, BartForConditionalGeneration
 import pandas as pd
+
 
 class UploadPipeline:
     def __init__(self, pdf_path: str):
@@ -15,10 +14,6 @@ class UploadPipeline:
         self.device = "cpu"
         self.azure_endpoint_doc_intel = "https://docaiiriswork.cognitiveservices.azure.com/"
         self.azure_key_doc_intel = "1Ab3Lpd2qh8sEtMCOZZLoW6QFqtBOVOYgwzcbo8I9BxBY9J3vtEcJQQJ99BEACYeBjFXJ3w3AAALACOG22i3"
-        self.azure_endpoint_com_vis = "https://esracom.cognitiveservices.azure.com/"
-        self.azure_key_com_vis = "1frCnTrE9FgLCRYEIN9AHpkQ8Mvj1v8fUbZrMtudo4GjYiaL1ZWJJQQJ99BEACYeBjFXJ3w3AAAFACOGU8g9"
-        self.image_processor_url = "https://esracom.cognitiveservices.azure.com/" + "vision/v3.2/analyze"
-        self.source_file = os.path.basename(pdf_path)
 
         if not self.azure_endpoint_doc_intel or not self.azure_key_doc_intel:
             raise ValueError(
@@ -33,32 +28,7 @@ class UploadPipeline:
         extracted_data = self.analyze_pdf_in_parts_and_collect_results(2)
         return extracted_data
 
-    def describe_table_with_tapex(self, table_content, column_headers):
-        # DataFrame oluştur
-        df_data = {header: [] for header in column_headers}
-        print("in describa table")
-        for row in table_content:
-            for i, cell in enumerate(row):
-                header = column_headers[i]
-                df_data[header].append(cell)
-
-        df = pd.DataFrame(df_data)
-        
-        # Model ve tokenizer
-        model_name = "microsoft/tapex-large"
-        tokenizer = TapexTokenizer.from_pretrained(model_name)
-        model = BartForConditionalGeneration.from_pretrained(model_name)
-        
-        query = "Summarize the table in detail."
-
-        inputs = tokenizer(table=df, query=query, return_tensors="pt")
-        outputs = model.generate(**inputs)
-        explanation = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        print("the explanation is: ", explanation)  
-        return explanation
-    
     def analyze_pdf_in_parts_and_collect_results(self, pages_per_part=2):
-        # PDF dosyasını parçalara ayırır ve her parçayı analiz eder
         pdf = fitz.open(self.pdf_path)
         num_pages = len(pdf)
         save_dir = Path(__file__).resolve().parent / "uploads"
@@ -88,76 +58,14 @@ class UploadPipeline:
                     page = pdf.load_page(page_num)
                     dosya.write(f"\n------Page {page_num + 1}------\n\n")
 
-                    table_boxes = []
+                    # Bounding boxes trackers
+                    occupied_boxes = []
 
-                    # Tables
-                    # Checks if there is a table in current page and takes the information in that table
-                    page_tables = [t for t in result.tables if t.bounding_regions and t.bounding_regions[0].page_number == (page_num - start_page + 1)]
-                    table_counter = 1
-                    for table in page_tables:
-                        dosya.write(f"\n[Table {table_counter}]\n")
-                        table_content = []
-                        header_row = []
-                        max_col = max(cell.column_index for cell in table.cells)
-
-                        # Header satırını dosyaya ve content'e yaz
-                        for col_index in range(max_col + 1):
-                            header_cell = next((cell for cell in table.cells if cell.row_index == 0 and cell.column_index == col_index), None)
-                            content = header_cell.content if header_cell else f"Kolon {col_index+1}"
-                            dosya.write(f"[0,{col_index}]: {content}\n")
-                            header_row.append(content)
-                            
-                            if header_cell and header_cell.bounding_regions:
-                                table_boxes.append(header_cell.bounding_regions[0].polygon)
-                        
-                        max_row = max(cell.row_index for cell in table.cells)
-
-                        # Satır-sütun ve içerikleri txt'ye yaz + content listele
-                        for row_index in range(1, max_row + 1):
-                            row_content = []
-                            for col_index in range(max_col + 1):
-                                cell = next((cell for cell in table.cells if cell.row_index == row_index and cell.column_index == col_index), None)
-                                content = cell.content if cell else ""
-                                dosya.write(f"[{row_index},{col_index}]: {content}\n")
-                                row_content.append(content)
-
-                                if cell and cell.bounding_regions:
-                                    table_boxes.append(cell.bounding_regions[0].polygon)
-                            table_content.append(row_content)
-
-                        # Tapex Large ile açıklama üret
-                        table_description = self.describe_table_with_tapex(table_content, header_row)
-
-                        dosya.write(f"\n[Table Explanation] : {table_description}\n\n")
-
-                        table_counter += 1
-
-
-                    if page_tables:
-                        dosya.write("\n")
-
-                    # Paragraphs
-                    # Checks if there is a paragraph in current page and takes the information in that paragraph
-                    page_paragraphs = [p for p in result.paragraphs if p.bounding_regions and p.bounding_regions[0].page_number == (page_num - start_page + 1)]
-                    for paragraph in page_paragraphs:
-                        
-                        para_region = paragraph.bounding_regions[0].polygon
-                        is_inside_table = any(self.check_overlap(para_region, box) for box in table_boxes)
-                        
-                        if is_inside_table:
-                            continue
-                        sentences = nltk.sent_tokenize(paragraph.content)
-                        for sentence in sentences:
-                            dosya.write(sentence + " ")
-                        dosya.write("\n")
-
-                    # Images
-                    # Checks if there is an image in current page and appends the description of that image
+                    ## 1️⃣ Images
                     images = page.get_images(full=True)
                     for img_index, img in enumerate(images):
                         try:
                             img_xref = img[0]
-                            
                             img_bbox = page.get_image_bbox(img)
                             img_polygon = [
                                 (img_bbox.x0, img_bbox.y0),
@@ -165,51 +73,105 @@ class UploadPipeline:
                                 (img_bbox.x1, img_bbox.y1),
                                 (img_bbox.x0, img_bbox.y1)
                             ]
-                            is_inside_table = any(self.check_overlap(img_polygon, box) for box in table_boxes)
-                            if is_inside_table:
-                                print(f"Image {img_index + 1} is inside a table, skipping...")
-                                continue
+                            # Check overlap with existing occupied regions
+                            #if any(self.check_overlap(img_polygon, box) for box in occupied_boxes):
+                                #continue
 
                             base_image = pdf.extract_image(img_xref)
                             image_bytes = base_image["image"]
                             description = self.describe_image(image_bytes)
 
-                            dosya.write(f"\n[Image {img_index + 1}]\n")
+                            dosya.write(f"[Image {img_index + 1}]\n\n")
                             dosya.write(f"Description: {description}\n")
+                            dosya.write("---\n")
+
+                            occupied_boxes.append(img_polygon)
 
                         except Exception as e:
                             print(f"Error processing image {img_index}: {e}")
                             continue
 
+                    ## 2️⃣ Tables
+                    page_tables = [t for t in result.tables if t.bounding_regions and t.bounding_regions[0].page_number == (page_num - start_page + 1)]
+                    table_counter = 1
+                    for table in page_tables:
+                        # Check if this table overlaps any occupied area (image)
+                        table_regions = [region.polygon for region in table.bounding_regions]
+                        if any(self.check_overlap(region, occ) for region in table_regions for occ in occupied_boxes):
+                            continue
+
+                        dosya.write(f"\n[Table {table_counter}]\n")
+                        table_content = []
+                        header_row = []
+                        max_col = max(cell.column_index for cell in table.cells)
+
+                        for col_index in range(max_col + 1):
+                            header_cell = next((cell for cell in table.cells if cell.row_index == 0 and cell.column_index == col_index), None)
+                            content = header_cell.content if header_cell else f"Kolon {col_index+1}"
+                            dosya.write(f"[0,{col_index}]: {content}\n")
+                            header_row.append(content)
+
+                        max_row = max(cell.row_index for cell in table.cells)
+                        for row_index in range(1, max_row + 1):
+                            row_content = []
+                            for col_index in range(max_col + 1):
+                                cell = next((cell for cell in table.cells if cell.row_index == row_index and cell.column_index == col_index), None)
+                                content = cell.content if cell else ""
+                                dosya.write(f"[{row_index},{col_index}]: {content}")
+                                row_content.append(content)
+                            table_content.append(row_content)
+                            dosya.write("\n")
+                        table_counter += 1
+                        # Append all table regions to occupied_boxes
+                        occupied_boxes.extend(table_regions)
+
+                    if page_tables:
+                        dosya.write("\n")
+
+                    ## 3️⃣ Paragraphs
+                    page_paragraphs = [p for p in result.paragraphs if p.bounding_regions and p.bounding_regions[0].page_number == (page_num - start_page + 1)]
+                    for paragraph in page_paragraphs:
+                        para_region = paragraph.bounding_regions[0].polygon
+                        if any(self.check_overlap(para_region, box) for box in occupied_boxes):
+                            continue
+                        sentences = nltk.sent_tokenize(paragraph.content)
+                        for sentence in sentences:
+                            dosya.write(sentence + " ")
+                        dosya.write("\n")
+
                 print(f"{start_page+1}-{end_page}. sayfalar işlendi.")
 
         pdf.close()
 
-    def describe_image(self, image_bytes):
-        # Creates a description of the image using Azure Computer Vision
-        try:
-            image = Image.open(io.BytesIO(image_bytes))
-            buf = io.BytesIO()
-            image.save(buf, format='JPEG')
-            jpeg_bytes = buf.getvalue()
-            
-            the_feature = [VisualFeatureTypes.description]
 
-            computer_vision_client = ComputerVisionClient(
-                self.azure_endpoint_com_vis,
-                CognitiveServicesCredentials(self.azure_key_com_vis)
+    def describe_image(self, image_bytes):
+        try:
+            client = openai.OpenAI(api_key="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")
+
+            base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla."},
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla."},
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                        ]
+                    }
+                ],
+                max_tokens=500
             )
-            result = computer_vision_client.analyze_image_in_stream(
-                image=io.BytesIO(jpeg_bytes),
-                visual_features=the_feature,
-                language="en"
-            )
-            if not result.description.captions:
-                return "No description available"
-            return result.description.captions[0].text
+
+            description = response.choices[0].message.content
+            return description
+
         except Exception as e:
-            print(f"Error in image description: {e}")
-            return "No description available"
+            print(f"Error in GPT image description: {e}")
+            return "Açıklama alınamadı."
+
 
     def check_overlap(self, box1, box2):
         """
@@ -235,11 +197,8 @@ class UploadPipeline:
         return True
 
 def main():
-    # pdf_path = "the_file.pdf"  # Kendi PDF dosyanızın yolunu belirtin
-    pdf_path = "aiiris_backend/uploads/pdf_file.pdf"
-    #pdf_path = "belge.pdf"
-    #pdf_path = "file.pdf"
-    #pdf_path = "image.pdf"
+    pdf_path = "uploads/pdf_file.pdf"
+    #pdf_path = "uploads/market_demand.pdf"
     
     if not os.path.exists(pdf_path):
         print(f"X Hata: {pdf_path} dosyası bulunamadı!")
