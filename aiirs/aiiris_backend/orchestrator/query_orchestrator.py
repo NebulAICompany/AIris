@@ -8,6 +8,7 @@ from aiiris_backend.guardrails.pii_masker import mask_pii, unmask_pii
 from aiiris_backend.guardrails.filters import check_input_violations, check_output_violations, sanitize_output
 from .reflection import reflect_and_retry
 import os
+from aiiris_backend.retrieval.web_search import should_use_web_search, summarize_web_context
 
 VECTORSTORE_PATH = "aiiris_backend/vectorstore" 
 
@@ -43,12 +44,20 @@ def run_orchestration(query: str) -> str:
     # 4. Retrieval + Reranking0
     retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
     print("GELDİ")
+    if should_use_web_search(preprocessed_query, retrieved_docs):
+        web_context = summarize_web_context(preprocessed_query)  
+    else:
+        web_context = ""      
     
     # Extract only the content from the retrieved docs before reranking
     doc_contents = [{"content" : doc["content"] ,"metadata": doc["metadata"]} for doc in retrieved_docs]
     reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=3)
     
     context_entries = []
+    
+    if web_context:
+        context_entries.append(f"[WEB BİLGİSİ]\n{web_context.strip()}")
+        
     for doc in reranked_docs:
         content = doc["content"]
         metadata = doc["metadata"]
@@ -60,7 +69,8 @@ def run_orchestration(query: str) -> str:
         
         context_entries.append(f"İçerik: {content}\n\nMetadata:\n{metadata_str}")
 
-
+    if web_context:
+        context_entries.append(f"Web Arama Sonuçları:\n{web_context}")
     # 5. Prompt oluştur 
     context = "\n\n---\n\n".join(context_entries)
             
