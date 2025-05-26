@@ -1,0 +1,157 @@
+
+------Page 1------
+
+
+[Table 1]
+[0,0]: Amaç
+[0,1]: Uygulanacak politika araçları
+[0,2]: Olası sonuçlar
+[1,0]: Büyümeyi hızlandırmak[1,1]: Gevşek para politikası (faizlerin düşürülmesi, zorunlu karşılıkların indirilmesi, likiditeyi bollaştıracak APİ uygulaması.) Gevşek maliye politikası (Kamu harcamalarının artırılması, vergilerin düşürülmesi, teşviklerin artırılması.)[1,2]: Faizlerde düşüş, kredilerde artış, yatırım artışı ve / veya kapasite kullanımında artış, üretim artışı, istihdam artışı (işsizlik düşüşü) ithalat artışı (başta enerji ithalatı olmak üzere), cari açıkta artış, bütçe açığında artış.
+[2,0]: Enflasyonla mücadele etmek[2,1]: Sıkı para politikası (faizlerin artırılması, zorunlu karşılıkların artırılması, yerli paranın değerli tutulması.) Sıkı maliye politikası (harcamaların kısıtlanması, vergilerin artırılması, bütçe disiplininin yükseltilmesi.)[2,2]: Faiz artışı, talepte düşüş, kredilerde düşüş, ithalatın düşüşü, cari açığın düşüşü, bütçede faiz giderlerinin artışı, faiz dışı giderlerin düşüşü (hangisi daha büyükse bütçe açığı ona göre biçimlenir.)
+[3,0]: İşsizlikle mücadele etmek[3,1]: Gevşek para politikası (faizlerin düşürülmesi, zorunlu karşılıkların indirilmesi, likiditeyi bollaştıracak APİ uygulaması.) Gevşek maliye politikası (Kamu harcamalarının artırılması, vergilerin düşürülmesi, teşviklerin artırılması.)[3,2]: Kamu harcamalarında artış, vergi indirimleri ve / veya teşviklerde artış, büyümenin teşviki, istihdam artışı, talep artışı, enflasyonist baskılarda artış.
+[4,0]: Cari açığı düşürmek[4,1]: Sıkı para politikası (zorunlu karşılıkların artırılması, yerli paranın değer kaybetmesi) Destekleyici maliye politikası önlemleri (ithal ikamesi uygulaması, ihracat teşvikleri) Tarife dışı engeller uygulaması[4,2]: İhracat artışı, ithalat düşüşü, kredilerde düşüş, yatırımlarda düşüş, üretimde düşüş ve / veya arzın talepteki artışı karşılayamaması, büyümenin düşüşü.
+[5,0]: Bütçe açığını düşürmek[5,1]: Sıkı maliye politikası (harcamaların kısıtlanması, vergilerin artırılması, bütçe disiplininin yükseltilmesi.)[5,2]: Kamu harcamalarının düşüşü, vergi gelirlerinin artışı, kamu borçlanmasının düşüşü.
+[6,0]: Gelir dağılımını düzeltmek[6,1]: Maliye politikası önlemleri (Vergilerle ilgili düzenlemeler)[6,2]: Dolaysız vergilerin artışı, vergi denetiminin yaygınlaştırılması, kayıt dışı işlemlerle mücadele.
+[7,0]: Kamu kesimi borç yükünü azaltmak[7,1]: Sıkı maliye politikası (harcamaların kısıtlanması, vergilerin artırılması, bütçe disiplininin yükseltilmesi.) Destekleyici para politikası önlemleri (faizlerin düşmesi için çaba)[7,2]: Kamu borç yükünün düşüşü, faizlerde düşüş, özel kesimin piyasadan dışlanması olgusunun tersine dönmesi, özel kesim borçlanmasının artması.
+
+İKTİSAT POLİTİKASININ AMAÇLARI ÇERÇEVESİNDE UYGULANMASI GEREKEN POLİTİKALAR 
+İktisat Politikası Uygulama Süreci 
+İktisat politikalarının uygulama aşamalarında alt politikalar bazında küçük farklılıklar olsa da ortak bir süreç oluşturulabilir. Politika uygulama aşamalarını literatürde bazen hasta-doktor ilişkisiyle karakterize edilmektedir. (Özyurt 2006, s. 222) 
+Doktor, muayene olmak üzere kendisine gelen hastaya teşhis koyabilmek için ilk aşamada onu tanımlayıcı bir dizi işlem gerçekleştirir. Geçmişine yönelik çeşitli sorular sorar, veriler toplar. Fiziki muayenesini yapar, ilgili testleri ve ölçümleri yaptırmasını ister. Sonuçta hastanın bütün verilerinin mevcut olduğu bir hasta dosyası oluşturur. İkinci aşamada elde etmiş olduğu bütün verileri incelemek 
+
+------Page 2------
+
+suretiyle hastalığın teşhisini koyar. Burada doktorun amacı hastayı en kısa sürede sağlığına kavuşturmaktır. Üçüncü aşamada hastayı en kısa sürede iyileştirecek ilaçları reçete eder. Hastalığa iyi gelebilecek birden çok ilaç vardır. Ancak doktor, en kısa sürede sonuç alabileceği ve yan etkisi olmayan ilaçları seçmeye özen gösterir. Dördüncü aşamada, belirli bir süre sonra hastanın iyi olup olmadığını görmek ister. Bunun için hastayı kontrole çağırır, sağlığına kavuşup kavuşmadığını kontrol eder, ayrıca verdiği ilaçların yan etkilere (olumlu-olumsuz) yol açıp açmadığına bakar. İlaçların yan etkisi yok ve hasta iyileşmişse süreç tamamlanmış demektir. Hasta iyileşmemiş ya da ilaçların yan etkisi ortaya çıkmışsa beşinci aşama olarak teni bir süreci başlatır. 
+İktisat politikası uygulamalarını da anlatılan bu süreçle örtüştürmek mümkündür. Uygulamaların ağırlıklı kısmını oluşturan para ve maliye politikaları bazında süreç şu aşamalarla ortaya konulabilir; 
+Birinci aşama; başlangıç şartlarının tespit edilmesi aşamasıdır. Politika yapıcısı ülke ekonomisi hakkında parasal, reel ve diğer kesimlere ilişkin verileri toplar ve bir veri seti oluşturur. Bu verilerin şekillenmesinde ülkedeki sosyo-ekonomik yapı, kurumsal ve hukuki yapı, siyasi-ideolojik yapı, bireysel tercihler ve sözü edilen yapılara göre oluşan toplumsal tercihler önemli rol oynar. 
+İkinci aşama; bu aşamada politika uygulamasında ulaşılmak istenen amaçlar ortaya konulur. Amaçların tespitinde ve sayısal hedeflerin konulmasında mümkün olduğu kadar ulaşılabilir hedefler konulmalıdır. Ayrıca amaçların birbiriyle çelişme durumları da değerlendirilir. 
+Üçüncü aşama; belirlenen amaçlara ulaşabilmek için kullanılabilecek politika araçları belirlenir. Araç seçimi tıpkı ilaç seçimi gibi oldukça teknik ve karmaşık bir durumdur. Zira alt politikalar kapsamında birçok farklı araç seçilme imkanı vardır. Bunlar içinde yan etkisi olmayan ve de amaca en kısa sürede ulaşmayı sağlayanlar seçilmelidir. 
+Dördüncü aşama; bu aşamada uygulanan politikaların sonuçları kontrol edilir. Yani hedeflene amaçlara ulaşılıp ulaşılamadığına bakılır. Amaçlar gerçekleştirilmişse problem yoktur. Amaçlara ulaşılmamış ya da uygulanan politikaların olumsuz yan etkileri ortaya çıkmışsa bunlar giderilme süreci başlatılır. 
+Beşinci aşama; uygulanan politikaların hedefe ulaşmasını engelleyen gözden kaçmış engeller ortadan kaldırılır. Aynı zamanda politikaların olumsuz yan etkileri ortaya çıkmışsa onların da giderilmesi yönünde önlemler alınır. 
+2 
+
+------Page 3------
+
+toplumsal tercihler 
+kişisel tercihler 
+hukuki yapı 
+siyasi yapı 
+Veriler 
+1 
+2 
+fiyat istikrarı 
+tam istihdam 
+Amaçlar 
+büyüme 
+ödemeler 
+bilaçosu 
+sosyal ve kültürel yapı 
+finasal istikrar 
+diğer amaçlar 
+Ekonomik Yapı 
+5 
+para politikası 
+Sonuçlar Yan Etkiler 
+4 
+3 
+Araçlar 
+araçları 
+maliye politikası araçları 
+gelirler politikası araçları 
+İktisat Politikası Uygulama Aşamaları 
+dış ticaret politikası araçları 
+araçları 
+diğer politika 
+İktisat Politikası Uygulamalarında Gecikme Sorunu 
+İktisat politikası uygulamalarında başarıyı artıran faktörlerden birisi de ihtiyaç duyulan politikanın zamanında uygulanabilmesidir. Zira tam zamanında uygulanamayan politikaların istikrar sağlama bir yana aksine dengesizlik kaynağı olduğu bilinen bir gerçektir. Bununla birlikte, hedeflere ulaşmayı zorlaştıran ve politikaların başarısına gölge düşüren bir faktör konumunda olan, politika uygulamalarındaki gecikme sorununu da tamamıyla ortadan kaldırmak mümkün değildir. 
+Ekonomik istikrarsızlıkla karşılaşılması durumunda, politika otoritelerinin (hükümetin) karar alma süreci birbirini takip eden iki safha halinde analiz edilebilir. 
+1. İstikrarsızlığın türünün tespiti; Dengesizlik karşısında herhangi bir politika uygulanıp uygulanmayacağına karar verilmesi safhası 
+2. Politika uygulamasına karar verilmesi durumunda, uygulanacak politikanın tür ve uygulama koşullarının belirlenmesi safhası 
+1. İstikrarsızlığın Türünün Tespit Edilmesi; Politika Uygulanıp Uygulanmayacağına İlişkin Kararın Verilmesi 
+Ekonomide herhangi bir dengesizlikle karşı karşıya kalındığında yapılacak ilk iş dengesizliğin kısa süreli geçici bir dengesizlik mi yoksa uzun vadeli kalıcı bir dengesizlik mi olduğunun tespit edilmesidir. Tespit sonucunda dengesizliğe yol açan faktörlerin geçici nitelikte olduğu ve dengesizliğin kısa sürede ortadan kalkacağı yönünde bir kanaat oluşursa yapılacak işlem herhangi bir politika uygulamamaktır. 
+Tam istihdam durumunda olan bir ekonomide tüketim harcamalarının bir dönemliğine geçici olarak azaldığını varsayalım. Bu durumda politika otoriteleri herhangi bir politika uygulamazlarsa ve üreticiler de talep daralmasının geçici olduğunu algılayıp üretim miktarlarını stok değişmeleri ile düzenleyip kapasite değişikliklerine gitmezlerse daralmanın etkisi kısa süre ortadan kalkacak ve ekonomi tekrar eski durumuna dönebilecektir. 
+3 
+
+------Page 4------
+
+İktisat politikası uygulamalarında dengesizliğe sebep olan şokun geçici mi yoksa kalıcı mı olduğunun tespiti de kolay değildir. Bunun en canlı örneği 1973 petrol krizinde yaşanmıştır. 1973'te petrol krizi başladığında birçok otorite petrol ambargosunun çok fazla sürmeyeceği, OPEC'in buna çok fazla dayanamayacağı ve artan petrol fiyatlarının kısa sürede eski seviyesine ineceği yönünde bir öngörü beyan etmiştir. Ancak durum böyle olmamış ve film mutlu sonla bitmemiştir. Durgunluğun kısa süreli ve geçici olacağı beklentisi boşa çıkmış ve kriz yaklaşık 12 yıl sürmüştür. Bu sonuç, doğru öngörü yapılamasının ne kadar zor ve önemli olduğunun bariz göstergesidir. 
+Karşılaşılan dengesizliğin kısa süreli ve geçici olacağı yönünde öngörü yapılmış ve doğru çıkmışsa bir problem yoktur. Herhangi bir politika uygulanmaz ve ekonomi kendi haline bırakılırsa belirli bir süre sonra ekonomi tekrar eski durumuna gelir. 
+Ancak, öngörü yanlış yapılmışsa yani geçici olan bir dengesizlik hali uzun süreli ve kalıcı olarak algılanıp, politika uygulamasına karar verilmişse bu durumda politika otoriteleri kendi kendilerine yeni bir istikrarsızlık kaynağı üretmiş olurlar. Zira, ekonomiyi kendi haline bırakmak yerine politika uygulanması, istikrara kavuşma sürecinin normalden daha hızlı işlemesine sebebiyet vererek ters yönde yeni bir istikrarsızlık kaynağı yaratır. Bu durum şekil aşağıdaki şekil yardımıyla ortaya konulabilir. 
+Reel GSMH 
+I- İktisat politikası uygulanırsa 
+B 
+A 
+II- İktisat politikası uygulanmazsa 
+0 
+t1 t2 
+t3 t4 
+t 
+Şekil ...; Konjonktürel Dalgalanmalar ve Politika Öngörüsü 
+A ve B noktalarının her ikisinde de üretim azalmakta ekonomi durgunluğa giriş yaşamaktadır. Anacak, A ve B noktalarının özellikleri birbirinden farklıdır. A noktasında başlayan durgunluk süreci geçici özellik taşırken B noktasındaki durgunluk uzun dönemli ve kalıcı niteliktedir. 
+A noktasındaki geçici durgunlukta, politika uygulayıcılarının doğru öngörüde bulunamayıp, (durgunluğu kalıcı ve uzun süreli kabul etme) anti-deflasyonist politika uyguladıklarını varsayalım. Politika uygulama süreci gecikmeleri de dikkate aldığımızda t2 döneminde başlayacaktır. Politikaların sonuçları alınmaya başladığında, ekonomide kısa süre sonra kendiliğinden başlayacak olan canlanma süreci tetiklenecektir. Ekonomi hızlı bir şekilde ısınacak ve t3 döneminde politika uygulanmaması durumunda karşılaşılacak olandan daha yüksek düzeyde (I no'lu yol) bir enflasyon baskısına maruz kalınacaktır. Takip eden t4 dönemine gelindiğinde de bu sefer anti-enflasyonist politika zorunluluğu 
+4 
+
+------Page 5------
+
+[Image 1]
+
+Description: Bu görselde beyaz zemin üzerine siyah renkte bir şekil bulunmaktadır. Şekil, şematik olarak bir insan siluetini andırmaktadır. Karikatür tarzında çizilmiş olan bu figürde yuvarlak bir kafa, gövdeden daha ince olan kollar ve bacaklar görülmektedir. Kollar yana açılmış ve vücut simetrik bir duruş sergilemektedir. Gövde ise ince ve dik formdadır. Bu tür çizimler genellikle basit ve anlaşılır gösterimleri ifade eder. Arka plan tamamen beyazdır, bu da figürü daha belirgin hale getirmektedir.
+---
+[Image 2]
+
+Description: Görsel, bir ağaç gövdesi etrafında sarılarak yukarı doğru uzanan yılan tarzında bir yaratığı tasvir ediyor. Yaratığın başı ağacın sağ tarafında çıkıntı yapıyor ve dili dışarıda. Gövdesi sıkı bir şekilde ağaca dolanmış, kuyruk ucuna doğru iniyor. Ağaç ince ve dikey bir yapıya sahip, zemin kısmı görselin alt kısmında yer alıyor. Görsel tamamen siyah beyaz çizimden oluşuyor ve detaylar ince çizgilerle belirtilmiş. Yaratığın gözleri dikkat çekici bir şekilde belirginleştirilmiş.
+---
+[Image 3]
+
+Description: Bu görsel, kara kalem tekniğiyle çizilmiş bir köpek portresini göstermektedir. Köpek, profilden resmedilmiş ve sağa doğru bakıyor. Detaylar son derece belirgin; kulak, burun, göz ve kürk oldukça detaylı ve gerçekçi bir şekilde işlenmiş. Gözler dikkat çekici, canlı bir ifade taşıyor. Köpeğin kulakları dik ve uyanık bir ifadeye sahip. Burun ve ağız yapısı, köpeğin yüz hatlarını belirginleştiren gölgelerle vurgulanmış. Genel olarak, çizim gerçekçi ve duygusal bir ifadeye sahip. Arka plan ise boş bırakılmış ve köpeğin yüzü ön plana çıkmış.
+---
+[Image 4]
+
+Description: Bu görselde, siyah arka plan üzerine beyaz renkte bir kedi silueti yer almakta. Kedinin duruşu oturur bir pozisyonda ve yandan profili görülüyor. Kedinin kulakları dik, kuyruğu ise aşağı doğru sarkmış durumda. Dikkat çeken başka bir detay ise kedinin çevresinde gayet ince çizgilerle kontur oluşturulmuş olması. Kedinin genel hatları son derece belirgin ve keskin olarak çizilmiş.
+---
+[Image 5]
+
+Description: Bu görsel, iki farklı yazı fontuyla "Hello world!" ifadesini gösteriyor. Üstteki metin daha düz ve kalın bir yazı tipi kullanırken, alttaki metin italik ve el yazısını andıran bir stil ile yazılmış. Yazılar siyah renkte ve beyaz zemin üzerinde yer alıyor. Bu tür bir görsel, yazı tipi karşılaştırması ya da tipografi çalışmaları için kullanılabilir.
+---
+[Image 6]
+
+Description: Bu görüntüde, bir triatlon sporcusunun yer aldığı bir simge veya piktogram bulunmaktadır. Görüntü siyah beyazdır ve sportif aktiviteyi temsil eden minimalist bir tarza sahiptir. 
+
+Sporcu, mücadelenin farklı etaplarını tamamlayacak şekilde sembolik olarak üç pozisyonda gösterilmiştir. En solda yüzme, ortada bisiklet ve en sağda koşu pozisyonları vardır. Her bir spor dalı için karakteristik pozisyon ve ekipman tasvir edilmiştir. Yüzmede dalgalı çizgiler suyu sembolize etmektedir, bisiklette iki tekerlekli bir bisiklet detaylarıyla birlikte sunulmuş ve koşuda sporcu koşu duruşu ile gösterilmiştir.
+
+Genel olarak, görsel, triatlon sporunun üç ana branşını özetleyici bir şekilde kapsar ve bu etkinliklerin dinamik doğasını basit ve etkili bir şekilde aktarır.
+---
+doğacaktır. Uygulanacak olan anti enflasyonist politika ekonomide normal dalgalanmanın (II no'lu yol) meydana getireceği durgunluktan daha fazla bir durgunluğa sebebiyet verecektir. 
+2. Politika uygulamasına karar verilmesi durumunda, uygulanacak politikanın tür ve uygulama koşullarının belirlenmesi safhası 
+Ekonomide kalıcı bir dengesizliğin ortaya çıktığını ve politika uygulayıcılarının doğru öngörüde bulunduğunu varsayalım. Bu durumda, politika uygulama sürecinde birtakım gecikmelerle karşılaşılması kaçınılmazdır. Söz konusu gecikmeler başlangıçta iki gruba ayrılabilir; i) İçsel Gecikmeler ii) Dışsal Gecikmeler. 
+İçsel Gecikmeler; Ekonomide dengesizliğin ortaya çıktığı an ile politika uygulanmasının başlatılmasına kadar geçen süreyi kapsayan gecikme türüdür. 
+Dışsal Gecikmeler; Politikanın uygulanmaya başladığı an ile politikanın ekonomi üzerindeki etkilerinin ortaya çıkması ve tamamlanmasına kadar geçen süreyi kapsayan gecikme süresidir. 
+İktisat Politikası Uygulamalarındaki Gecikmeler 
+İçsel Gecikmeler 
+Tanıma Gecikmesi 
+Karar Gecikmesi 
+Uygulama Gecikmesi 
+İçsel Gecikmeler kendi içinde üç'e ayrılır. Bunlar; 
+i. Tanıma Gecikmesi ii. Karar Gecikmesi 
+Dışsal Gecikmeler 
+Etki Oluşumu Gecikmesi 
+Etki tamamlanma Gecikmesi 
+iii. Uygulama Gecikmesi 
+i. Tanıma Gecikmesi; Bu gecikme türü literatürde algılama yada enformasyon gecikmesi olarak ta bilinir. Ekonomide bir dengesizlik ortaya çıktığında, politika yapıcılarının bunu algılayıp bir politika uygulanması gerekir kanaatine varmaları arasında geçen süreyi kapsar. Bu süreçte, dengesizlik hakkında gerekli istatistiki ve diğer bilgiler toplanır, istikrarsızlığın geçici mi yoksa sürekli mi olacağı tartışılır, konunun ciddiyeti kavrandıktan sonra politika uygulaması kararı alınır. Ampirik çalışmalarda 
+5 
+
+------Page 6------
+
+tanıma gecikmesinin ortalama 5 ay civarında olabileceği ifade edilmektedir. Ayrıca bu gecikme süresinin, genişleyici politikalar izleneceği zaman daha kısa, daraltıcı politikalar izleneceği zaman daha uzun olduğu ifade edilmektedir. (Dornbucsh .. ) 
+ii. Karar Gecikmesi; Politika uygulamasının ilke olarak benimsenmesi ile uygulanacak kararların alınması arasında geçen süre karar gecikmesi olarak adlandırılır. Bu süreç, uygulanması düşünülen parasal ve mali tedbirlerin planlanması, tartışmaya açılması ve karar alma dönemlerini içerir. Para ve maliye politikası uygulamalarında karar gecikme süreleri birbirinden farklılık arz eder. Para politikası uygulamalarında kara gecikmesi daha kısa iken maliye politikası uygulamalarında oldukça uzundur. 
+Para politikası uygulamalarında en sık kullanılan araç, açık piyasa işlemleridir. Merkez Bankaları ya da Para Politikası Kurulları bu işlemler için periyodik olarak toplanmakta ve ekonomiyi sürekli izlemektedirler. Bu nedenle para politikasına ilişkin kara alma süreci bir toplantı süresi ile örtüşebilmektedir. 
+Ancak aynı şey maliye politikası uygulamaları için söylenemez. Örneğin; kamu harcamalarının artırılmak istendiğini varsayalım. Öncelikle hükümetin bir yasa tasarısı hazırlaması gerekir. Daha sonra bu tasarının mecliste görüşülmesi, milletvekillerinin ikna edilmesi ve kabul edilmesi söz konusudur. Vekilleri ikna süreci bazen zor ve uzun olabilmektedir. Zira her vekil, artacak kamu harcamasından kendi seçim bölgesine daha fazla pay alabilmek için birbirleriyle rekabet halindedirler. Kabul sürecinden sonra, yeni projelerin hazırlanması, proje seçimi ve bunların müteahhitlere ihalesi aşaması gelir. 
+Benzer şekilde vergi oranlarının değiştirilmek istendiğini düşünelim. Bunun için prosedür gereği söz konusu değişikliğin bütçe içinde gösterilmesi gerekir. Bunun için muhtemelen yeni mali yıla kadar beklenmesi gerekecektir. Bu da en az 12 aylık bir zaman demektir. Maliye politikası uygulamalarında mevzuat ve prosedür gereği karar süreci daha ağır işlemekte ve para politikasına oranla karar gecikmesi daha uzun olmaktadır. 
+iii. Uygulama Gecikmesi; Uygulanacak politika kararının alınmasıyla uygulama yapılması arasında geçen süre uygulama gecikmesi olarak adlandırılır. Bu aşamada gerekli alt yapı hazırlanır, ilgili birimlerin koordinasyonu-organizasyonu sağlanır, teknik personel ve donanım temin edilir. 
+İktisat politikası uygulama sürecinde görülen dışsal gecikmeler ise ikiye ayrılır. 
+i. Etki oluşum gecikmesi 
+ii. Etkinin tamamlanması gecikmesi 
+i. Etki Oluşum Gecikmesi; Politikanın uygulanmaya başlandığı an ile uygulamanın ilk sonuçlarının alındığı zaman dilimi arasında geçen süreyi kapsar. Örneğin; vergi oranlarının değiştirilmesi ilk olarak gergi gelirlerinin tutarını değiştirir. Bu değişimin ne kadar olduğunu görebilmek için ise içinde bulunulan mali yılın sonuna kadar beklenmesi gerekir. Ya da benzer şekilde açık piyasa işlemlerinin faiz oranını etkilemesi için geçmesi gereken süre etki oluşum gecikmesi olarak bilinir. 
+ii. Etki Tamamlanma Gecikmesi; Uygulamaya konulan politikaların ilk etkilerinin alınmaya başlandığı zaman ile bu etkilerin ekonomiye yayılması ve istenilen sonuçlara ulaşılması arasında geçen süre etki tamamlanma gecikmesi olarak bilinir. Örneğin; yukarıda açık piyasa işlemleri sonucunda faiz oranlarının değişmesi etki gecikmesi olarak ifade edilmişti. Faiz oranlarındaki bu değişikliğin yatırımları değiştirmesi, yatırım değişikliğinin milli gelir ve istihdamda değişikliğe yol açması için geçmesi gereken süre etki tamamlanma gecikmesine tipik örnektir. 
+İçsel gecikmede olduğu gibi dışsal gecikmenin uzunluğu da para ve maliye politikası uygulamaları açısından farklılık arz etmektedir. Maliye politikası uygulamaları, özellikle kamu harcamaları toplam talebi para politikasından daha kısa sürede etkileyebilmektedir. Bu nedenle maliye politikası uygulamalarında dışsal gecikmelerin para politikası uygulamalarına göre daha kısa olduğu kabul edilir. Bununla birlikte maliye politikası, para politikasına oranla oldukça uzun bir içsel gecikmeye sahip olduğundan daha az tercih edilir. 
+6 

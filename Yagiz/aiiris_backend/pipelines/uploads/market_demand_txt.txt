@@ -1,0 +1,184 @@
+
+------Page 1------
+
+:unselected: 
+INTERMEDIATE 
+MICROECONOMICS 
+NINTH EDITION 
+HAL R. VARIAN 
+CHAPTER 15 
+Market Demand and Elasticity 
+
+[Image 1]
+Description: Bu görsel, mavi renkte stilize edilmiş bir kuş siluetini göstermektedir. Kuşun kanatları iki yana açık şekilde tasvir edilmiş ve gövdesi de belirgin bir biçimde çizilmiştir. Minimalist bir tasarıma sahip olan bu görsel, genel olarak bir kuşun uçuş anındaki zarafetini ve dinamizmini yansıtmaktadır. Kuşun detayları basit ve net bir şekilde ifade edilmiş, karmaşıklıktan uzak bir tasarım tercih edilmiştir.
+***
+
+[Image 2]
+Description: Görsel, "Intermediate Microeconomics" adlı bir kitabın dokuzuncu baskısının kapağını göstermektedir. Kapakta, farklı renk ve tasarımlarda çeşitli güneş gözlükleri yer almakta ve bunlar yatay bir şekilde, bir dizi halinde dizilmiştir. Büyük harflerle kitabın adı "INTERMEDIATE MICROECONOMICS" ortada yazılmış ve hemen altında küçük harflerle "NINTH EDITION" ifadesi bulunmaktadır. Tasarım, modern ve sade bir görünüme sahiptir, gözlükler ise ekonomik farklılıkları simgelercesine çeşitlilik göstermektedir.
+***
+
+[Image 3]
+Description: Görselde, arka planda çeşitli güneş gözlüklerinin sergilendiği bir vitrin yer alıyor. Raflarda farklı şekil, renk ve boyutta gözlükler sıralanmış. Ön planda ise sırtı dönük bir insan silueti bulunmakta. Bu kişi, vitrine doğru bakar şekilde konumlanmış. Alt kısmında "HAL R. VARIAN" yazısı görünüyor. Görsel, mağaza içi alışveriş veya sergileme temasını çağrıştırıyor.
+***
+
+------Page 2------
+
+From Individual to Market Demand Functions 
+Think of an economy containing n consumers, denoted by i=1,. .. ,n. Consumer i's ordinary demand function for commodity 1 is 
+xi (p1, P2, mi). 
+When all consumers are price takers, the market demand function for commodity 1 is 
+,m, ... ,m) = >xi +(P1, P) i=1 n 
+. 
+If all consumers are identical then x1(p1, P2, M)= nxi1(p1, P2, m) where M = nm. 
+
+[Image 1]
+Description: Bu görsel, matematiksel ifadeler içermektedir. İfade, bir dizi terimi toplamak için kullanılan sigma (∑) sembolünü ve ardında yer alan çeşitli terimleri kapsamaktadır. 
+
+- Solda ve sağda, "v" harfi ile başlayan, üstünde "-1" üst simgesi yer alan, parantez içinde "n, n, n, m" değişkenlerini içeren uzun bir ifade bulunmaktadır.
+- Ortada ise bu ifadeler arasında bir çıkarma işlemi yapılmış gibi durmaktadır.
+- Ortadaki sigma sembolünün üzerinde "n" harfi yer almakta, bu da toplamın n'ye kadar olan terimlerini kapsadığını göstermektedir.
+
+Bu matematiksel ifade, genelde bir dizi ya da fonksiyonun belirli bir aralıktaki toplamını hesaplamak veya bir diferansiyel hesaplamak amacıyla kullanılabilir.
+***
+
+[Image 2]
+Description: Bu görsel bir matematiksel denklem veya formül içermektedir. Detayları şu şekildedir:
+
+- Formül, lambda (λ) ile başlamakta ve bir fonksiyon ifadesi içermektedir: \( Q(p_1, p_2, m_1, \ldots, m_n) \).
+- Ardından, bu fonksiyondan bir toplam çıkarılmakta: \(\sum_{i=1}^{j} x_i \cdot Q(p_1, p_2, m_i)\).
+- Toplama işlemi, i'nin 1'den j'ye kadar değiştiği bir aralıkta gerçekleştirilmekte.
+- Fonksiyonlar muhtemelen \( p_1, p_2 \) ve \( m_n \) gibi değişkenleri kullanarak parametrelenmiştir.
+- Eşitliğin genel yapısı, bir sistemin veya denklemin çözüm sürecinde kullanılan karmaşık bir ifadenin parçası olabilir. 
+
+Bu tür ifadeler genellikle ekonomi, mühendislik veya fizik gibi alanlarda optimizasyon veya olasılık hesaplamalarında kullanılabilir.
+***
+
+[Image 3]
+Description: Bu görselde, bir matematiksel denklem yer almaktadır. Denklem şu şekildedir:
+
+- Sol tarafta, üst simge olarak "1" ile belirtilmiş olan \(x^{1}(p_1, p_2, M)\) ifadesi bulunmaktadır. Burada \(p_1\), \(p_2\) ve \(M\) değişkenler veya parametreler olabilir.
+  
+- Eşittir işaretinin sağ tarafında ise \(n \times x_{i}^{1}(p_1, p_2, m)\) ifadesi yer almaktadır. Bu kısımda \(x_{i}^{1}\) ifadesi \(i\) indeksine sahip bir fonksiyonu gösterir, ve yine \(p_1\), \(p_2\) ile küçük m (\(m\)) parametre olarak yer alır.
+
+Bu tür denklemler genellikle ekonomi, optimizasyon veya matematiksel modelleme gibi alanlarda kullanılır.
+***
+
+------Page 3------
+
+From Individual to Market Demand Functions 
+P1 
+1 
+P1 
+P1 A's demand 
+P1 
+1 
+p," 
+11 
+P1 
+20 
+P1 1 
+* 
+X1 
+P1 1 
+P1 
+35 
+B's demand 
+15 
+X1 * 
+The horizontal sum of the demand curves of individuals A and B 
+X1 * 
+
+[Image 1]
+Description: Bu görsel, iki bireyin (A ve B) talep eğrileri ile bu eğrilerin yatay toplamını göstermektedir.
+
+1. **A'nın Talep Eğrisi:**
+   - Sol üstte yer alan grafik.
+   - Dikey eksen fiyat seviyesini (\(p_1\)) ve yatay eksen ise talep edilen miktarı (\(x_1^*\)) göstermektedir.
+   - Eğri, başlangıçta dikey olarak yüksek bir fiyat seviyesinde başlamakta, sonra yatay ve ardından eğimli bir şekilde 20 birim talep miktarı noktasına kadar devam etmektedir.
+
+2. **B'nin Talep Eğrisi:**
+   - Sağ üstte bulunan grafik.
+   - Yapısı, A'nın talep eğrisine benzer; ancak B'nin maksimum talep miktarı 15 birimdir.
+   - Eğri, başlangıçta dikey uzanmakta, ardından yatay ve eğimli bir şekilde devam etmektedir.
+
+3. **A ve B'nin Talep Eğrilerinin Yatay Toplamı:**
+   - Alt sırada bulunan grafik.
+   - A ve B'nin talep eğrilerinin yatay toplamı, benzer şekilde yüksek bir fiyat seviyesinde başlamakta ve toplam olarak 35 birim talebe ulaşmaktadır.
+   - Bu grafik, her iki bireyin talep ettiğinin toplamı olan eğrileri yatay biçimde toplamaktadır.
+
+Grafikte gösterilen \(p_1'\) ve \(p_1''\) fiyat seviyeleri, talep eğrilerinin belirli fiyat aralıklarına atıfta bulunmaktadır. Her üç grafikte de, belirli fiyat seviyelerine karşılık gelen talep edilen miktarlar gösterilmektedir. Grafik, bir pazarın toplam talep eğrisinin nasıl oluştuğunu ve bireylerin taleplerinin nasıl birleştirildiğini görselleştirmektedir.
+***
+
+------Page 4------
+
+
+[Table 1]
+[0,0]: = Ex,y
+[0,1]: Percentage change in x
+[0,2]: Ax x
+[0,3]: %4x
+[1,0]: 
+[1,1]: Percentage change in y
+[1,2]: =
+Ay/y
+=
+[1,3]: %Ay
+
+Elasticities 
+Elasticity measures the "sensitivity" of one variable with respect to another. The elasticity of variable x with respect to variable y is 
+
+------Page 5------
+
+Types of Elasticities 
+1. own-price elasticity of demand (change in demand x1 with respect to change in p1) 
+2. cross-price elasticity of demand (change in demand x1 with respect to change in p2) 
+3. income elasticity of demand (change in demand x1 with respect to change in m) 
+4. own-price elasticity of supply (change in supply x1 with respect to change in p1) 
+5. cross-price elasticity of supply (change in supply x1 with respect to change in p2) 
+
+------Page 6------
+
+Why we need elasticity? 
+Why not just use the slope of a demand curve to measure the sensitivity of quantity demanded to a change in a commodity's own price? 
+· Because the value of sensitivity then depends upon the (arbitrary) units of measurement used for quantity demanded. 
+Slope = 
+AX1 
+Ap1 
+The slope depends on the units of measurement. 
+4%×1 
+Ex,P1 4%P1 
+is a ratio of percentages and so has no units of measurement. Hence, own-price elasticity of demand is a sensitivity measure that is independent of units of measurement. 
+
+------Page 7------
+
+Arc and Point Elasticities 
+An "average" own-price elasticity of demand for commodity i over an interval of values for pi is an arc elasticity, usually computed by a midpoint formula. Elasticity computed for a single value of p; is a point elasticity. 
+arc elasticity 
+point elasticity 
+Ex,P1 
+4%p1 
+4%×1 
+4%x1 
+Ex,P1 
+4%p1 
+x1 (new) - x1 (old) 1/2 * (x1 (new) + x1 (old)) 
+= 
+1/2 * (p1 (new) + p(old)) 
+Ap1/P1 
+DX1/X1 
+X1 Ap1 
+_ P1 4x1 
+P1 
+dx1 
+X1 dp1 P1 (new) - p1(old) 
+
+------Page 8------
+
+
+[Table 1]
+[0,0]: 
+[0,1]: X1 (new) - x1 (old)
+[0,2]: 6 - 8
+[1,0]: Percentage change in demand
+[1,1]: 1/2 * (x1 (new) + x1 (old))
+=
