@@ -1,8 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-from duckduckgo_search import DDGS
+from duckduckgo_search import DDGS 
 from aiiris_backend.llm.llm_engine import generate_answer
 from typing import List
+
 
 def search_web(query: str, max_links: int = 5) -> list[str]:
     results = []

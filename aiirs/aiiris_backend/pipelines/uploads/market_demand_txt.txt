@@ -1,0 +1,151 @@
+
+------Page 1------
+
+[Image 1]
+
+Description: Bu bir grafik. Kuş silueti şeklinde stilize edilmiş bir logo veya ikon gibi görünüyor. Grafik, minimalist bir tasarıma sahip ve muhtemelen bir markanın veya kuruluşun sembolü olarak kullanılıyor olabilir. Detaylı finansal bir veri içermediği için finansal konsept açısından daha fazla açıklama yapılamıyor.
+---
+[Image 2]
+
+Description: Bu bir fotoğraf. Bir kitap kapağını gösteriyor. Kapakta "Intermediate Microeconomics" ve "Ninth Edition" yazıları ile birlikte çeşitli güneş gözlükleri görülüyor.
+---
+[Image 3]
+
+Description: Bu bir fotoğraf. Görsel, bir kişinin sırtı dönük şekilde güneş gözlüklerine baktığı bir vitrin ortamını gösteriyor. Vitrindeki farklı modellerde ve renklerde gözlükler dikkat çekiyor. Fotoğrafın altında "Hal R. Varian" yazısı bulunuyor.
+---
+:unselected: 
+INTERMEDIATE 
+MICROECONOMICS 
+NINTH EDITION 
+HAL R. VARIAN 
+CHAPTER 15 
+Market Demand and Elasticity 
+
+------Page 2------
+
+[Image 1]
+
+Description: Bu, bir matematiksel ifade içeren grafik bir görsel. Görselde, bir toplam sembolü (\(\sum\)) kullanılarak formüle edilmiş bir denklem yer alıyor. Bu denklem, matematiksel analiz veya istatistik gibi alanlarda kullanılabilecek bir formülü temsil ediyor olabilir. Toplama işlemi, genellikle bir dizi elemanın toplamını almak için kullanılır. Denklemdeki ifadeler hakkında daha fazla bilgi olmadan, tam olarak neyi temsil ettiğini açıklamak zor, ancak genel bir matematiksel toplam ifadesi olduğu söylenebilir.
+---
+[Image 2]
+
+Description: Bu bir grafik değil, matematiksel bir ifadeyi içeren bir görsel. Görselde bir formül yer almakta ve bu formüller genelde matematik, fizik veya ekonomi gibi alanlarda belirli hesaplamaları veya ifadeleri temsil eder. 
+
+İfade genel olarak, bir fonksiyonun veya bir seri toplamının göstergesi olabilir. Burada, parantez içinde \( (p_1, p_2, m_1, \ldots, m_n) \) şeklinde değişkenler yer almakta ve bu değişkenler üzerinden bir hesaplama veya optimizasyon yapıldığı anlaşılmaktadır. Toplam işareti ise (\(\Sigma\)), bu değişkenler üzerinden bir toplam alınacağını belirtir.
+---
+[Image 3]
+
+Description: Bu görsel bir fotoğraf değildir, bir formül veya matematiksel ifadedir. İfade, ekonomi veya mikroekonomi teorilerinde yer alabilecek bir talep fonksiyonunu veya bütçe ile ilgili bir denklemi temsil ediyor gibi görünüyor.
+
+### Detaylı Açıklama:
+
+- **\(x^1(p_1, p_2, M)\)**: Bu, bir tüketicinin iki mallı bir ortamda ilk mal için talep fonksiyonunu gösteriyor olabilir. \(p_1\) ve \(p_2\) malların fiyatlarını, \(M\) ise tüketicinin gelirini temsil eder.
+
+- **\(nx_i^1(p_1, p_2, m)\)**: Burada, \(n\) bir katsayı veya başka bir parametre olabilir. \(x_i^1\) ise belirli bir talep fonksiyonunu veya onun bir versiyonunu gösteriyor olabilir. Küçük m harfi, farklı bir bütçeyi veya kısıtı temsil edebilir.
+
+Bu tür denklemler genellikle tüketici davranışlarının modellenmesi veya tercih teorileri ile ilgili çalışmalarda kullanılır. Tüketicinin optimize ettiği fayda fonksiyonları, bütçe kısıtları ve eldeki kaynaklar çerçevesinde tüketim kararlarının nasıl şekillendiği üzerine modeller oluşturulmasında kullanılır.
+---
+From Individual to Market Demand Functions 
+Think of an economy containing n consumers, denoted by i=1,. .. ,n. Consumer i's ordinary demand function for commodity 1 is 
+xi (p1, P2, mi). 
+When all consumers are price takers, the market demand function for commodity 1 is 
+,m, ... ,m) = >xi +(P1, P) i=1 n 
+. 
+If all consumers are identical then x1(p1, P2, M)= nxi1(p1, P2, m) where M = nm. 
+
+------Page 3------
+
+[Image 1]
+
+Description: Bu bir grafik. Grafik, iki bireyin talep eğrilerinin yatay toplamını gösteriyor. 
+
+Üstteki iki ayrı grafik, birey A ve birey B'nin talep eğrilerini temsil ediyor. 
+
+- **A'nın talebi:** Grafikte sol üst köşede, talep miktarının fiyatın düşmesiyle genel olarak arttığını gösteriyor. \( p_1'' \) ile \( p_1' \) arası talep değişimi 20 birime kadar gösterilmiş.
+- **B'nin talebi:** Sağ üst köşede, zamanla talep miktarındaki değişimi gösteriyor. \( p_1'' \) ile \( p_1' \) arası talep değişimi 15 birime kadar gösterilmiş.
+
+Altta:
+- **Eğrilerin yatay toplamı:** Bu grafik, birey A ve B'nin talep eğrilerinin toplamını gösteriyor. Toplam talep, her iki bireyin talep ettiği miktarlar eklenerek elde ediliyor. Bu da 35 birime kadar çıkıyor.
+
+Grafik, iki bireyin bireysel taleplerinin birleşerek toplam piyasa talebini nasıl oluşturduğunu görselleştiriyor.
+---
+From Individual to Market Demand Functions 
+P1 
+1 
+P1 
+P1 A's demand 
+P1 
+1 
+p," 
+11 
+P1 
+20 
+P1 1 
+* 
+X1 
+P1 1 
+P1 
+35 
+B's demand 
+15 
+X1 * 
+The horizontal sum of the demand curves of individuals A and B 
+X1 * 
+
+------Page 4------
+
+
+[Table 1]
+[0,0]: = Ex,y
+[0,1]: Percentage change in x
+[0,2]: Ax x
+[0,3]: %4x
+[1,1]: Percentage change in y
+[1,2]: =
+Ay/y
+=
+[1,3]: %Ay
+[Description] = Verilen tablo tam anlamıyla bir tablo formatında değil, daha çok karmaşık bir metin dizisi gibi görünüyor. Bu yüzden bilgileri uygun bir biçime dönüştürmeye çalışacağım ve ardından analize geçeceğim.
+
+Tablodan anlaşılan yapıyı aşağıdaki gibi düzenleyebilirim:
+
+- Yüzde değişim (x): %4
+- Yüzde değişim (y): Ay = Ay / y
+
+### Analiz:
+
+1. **Yüzde değişim (x): %4**
+   - Bu, x değişkeninin belirli bir dönemde %4 oranında değiştiğini ifade eder. Pozitif ya da negatif işaret belirtilmemiş, bu yüzden teorik olarak %4'lük bir artış ya da azalma olabilir. Bu tip bir yüzde değişim, genellikle bir büyüme veya küçülme oranını gösterir. Örneğin, satışların %4 artması ya da maliyetlerin %4 azalması gibi.
+
+2. **Yüzde değişim (y): Ay = Ay / y**
+   - Burada, y değişkeninin yüzdesel değişimi olarak verilen ifade biraz kafa karıştırıcı olabilir. Görünüşe göre Ay'da bir değişiklik var, fakat bu değişiklik Ay'in y'ye bölünmesine dayalı. Bu, belirli bir periyot için y değişim oranının belirli bir formüle dayandığını gösteriyor olabilir.
+   - Sonuç net bir yüzde değeri vermediği için, y'nin yüzde değişimi anlaşılması zor bir şekilde ifade edilmiş.
+
+### Yorumlar:
+
+- **Öne Çıkan Noktalar:**
+  - x için %4'lük bir değişim net bir şekilde belirtilmiş ve anlaşılır durumdadır. Bu, takip edilen değerlerin ölçülmesinde önemli bir gösterge olabilir.
+  - y için verilen ifade, daha fazla detay ya da açıklama olmadan tam anlamıyla ne olduğu anlaşılmayacak bir değişim formülasyonu sunuyor. Bu nedenle, y ile ilgili veri analizini yapabilmek için daha fazla bilgi ya da düzeltmeye ihtiyaç var.
+
+- **Öneriler:**
+  - y değişkeninin yüzdesel değişim ifadesinin netleştirilmesi önerilir. Gerçekten bir yüzde oranı ifade ediyorsa, net bir değer verilmesi analizlerin doğruluğu açısından önemlidir.
+  - x ve y değişkenlerinin hangi veriye karşılık geldiğinden emin olunmalıdır. Bu, trendlerin ve değişimlerin daha net bir şekilde anlaşılmasını sağlar.
+
+Bu analiz, elde edilen sınırlı bilgilere dayanarak yapılmıştır. Daha detaylı verilerle daha kapsamlı bir analiz sunulabilir. 
+---
+Elasticities 
+Elasticity measures the "sensitivity" of one variable with respect to another. The elasticity of variable x with respect to variable y is 
+
+------Page 5------
+
+Types of Elasticities 
+1. own-price elasticity of demand (change in demand x1 with respect to change in p1) 
+2. cross-price elasticity of demand (change in demand x1 with respect to change in p2) 
+3. income elasticity of demand (change in demand x1 with respect to change in m) 
+4. own-price elasticity of supply (change in supply x1 with respect to change in p1) 
+5. cross-price elasticity of supply (change in supply x1 with respect to change in p2) 
+
+------Page 6------
+
+Why we need elasticity? 
+Why not just use the slope of a demand curve to measure the sensitivity of quantity demanded to a change in a commodity's own price? 

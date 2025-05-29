@@ -1,0 +1,1236 @@
+
+------Page 1------
+
+[Image 1]
+
+Description: Bu bir grafik değildir, bir rapor veya dokümanın kapak görselidir. Görselde, Bankacılık Düzenleme ve Denetleme Kurumu'na (BDDK) ait bir logonun yanı sıra "Türk Bankacılık Sektörü Temel Göstergeleri" başlığı yer almaktadır. Geri planda üç renkli, şekilsiz bir tasarım bulunmaktadır. Raporun bankacılık sektörüyle ilgili temel göstergelere dair bilgiler içerdiği izlenimi verilmektedir.
+---
+
+------Page 2------
+
+BANKACILIK DÜZENLEME VE DENETLEME KURUMU Veri ve Sistem Yönetimi Daire Başkanlığı Finanskent Mahallesi Finans Caddesi No:42/1 Ümraniye/İstanbul, Türkiye Tel: (+90 212) 214 50 00 Ana Sayfa: http://www.bddk.org.tr E-mail: bulten@bddk.org.tr 
+Kamuoyunu bilgilendirme amaçlı olarak hazırlanan bu doküman Mart 2025 verilerine dayanarak hazırlanmakla beraber, tüm içeriği BDDK veritabanında yer almaktadır. Bu dokümanda yer verilen bilgi ve verilere dayanarak alınacak kararların sonuçlarından BDDK sorumlu tutulamaz. 
+
+------Page 3------
+
+
+[Table 1]
+[0,0]: Banka, Şube ve Personel Sayıları 1
+[0,1]: Kolon 2
+[1,0]: Toplam Aktif Büyüklük
+[1,1]: 2
+[2,0]: Seçilmiş Bilanço Kalemleri
+[2,1]: 4
+[3,0]: Bilanço İçi Büyüklükler
+[3,1]: 6
+[4,0]: Yabancı Para Pozisyonu
+[4,1]: 7
+[5,0]: Likidite Durumu
+[5,1]: 8
+[6,0]: Sermaye Yeterliliği
+[6,1]: 10
+[7,0]: Kârlılık
+[7,1]: 12
+[8,0]: Krediler
+[8,1]: 14
+[9,0]: Kobi Kredileri
+[9,1]: 18
+[10,0]: Tüketici Kredileri
+[10,1]: 20
+[11,0]: Kredi Kartları
+[11,1]: 21
+[12,0]: Takipteki Alacaklar
+[12,1]: 23
+[13,0]: Menkul Kıymetler
+[13,1]: 27
+[14,0]: Mevduat
+[14,1]: 31
+[15,0]: Bankalara Borçlar ve Repo
+[15,1]: 34
+[16,0]: Özkaynaklar ve Kaldıraç Oranı
+[16,1]: 36
+[17,0]: Bilanço Dışı Büyüklükler
+[17,1]: 40
+[18,0]: Sürdürülebilirlik Kalkınma Göstergeleri.
+[18,1]: 41
+[19,0]: Açıklamalar
+[19,1]: 42
+[Description] = Bu tabloda, bankaların çeşitli finansal göstergeleri ve büyüklükleri hakkında bilgiler verilmiştir. Tablo, farklı finansal metriklerin farklı kategorilere göre sıralandığı bir liste gibi görünmektedir. Aşağıda bu metriklerin her biri için kısa ve detaylı yorumlar yapılmıştır:
+
+1. **Toplam Aktif Büyüklük (2)**: Bankaların toplam varlıklarının büyüklüğünü ifade eder. Bu gösterge, bankanın genel ekonomik aktivitelerdeki büyüklüğünü ve etkinliğini gösterir. Büyük aktif büyüklüğüne sahip bankalar genellikle piyasada daha güçlü bir etkisi olan ve daha fazla müşteri ile çalışan bankalardır.
+
+2. **Seçilmiş Bilanço Kalemleri (4)**: Bankanın bilançosunda öne çıkan kalemleri, önemli hesapları veya pozisyonları belirtir. Spesifik kalemlere odaklanılması, bankanın finansal sağlığını ve stratejik odaklarını anlamak için önemlidir.
+
+3. **Bilanço İçi Büyüklükler (6)**: Bankaların sahip olduğu varlıklar ve yükümlülükler arasındaki ilişki ve dağılımları gösterir. Bilanço içi büyüklüklerin analizi, bankaların likidite ve sermaye yapısını değerlendirmek için kritiktir.
+
+4. **Yabancı Para Pozisyonu (7)**: Bankanın yabancı para cinsinden varlık ve yükümlülükleri arasındaki farkı ifade eder. Bu pozisyon, döviz kuru riskini ve bankanın uluslararası finansal pazarlardaki risklerini ortaya koyar.
+
+5. **Likidite Durumu (8)**: Bankanın kısa vadeli yükümlülüklerini karşılayacak yeterli likit varlıklara sahip olup olmadığını gösterir. Likidite yönetimi, bir bankanın anında ödeme kapasitesini etkileyen kritik bir faktördür.
+
+6. **Sermaye Yeterliliği (10)**: Bir bankanın risk ağırlıklı varlıklarına oranla sahip olduğu sermaye miktarını ifade eder. Yüksek sermaye yeterliliği, bankanın finansal dayanıklılığını ve güvenilirliğini artırır.
+
+7. **Kârlılık (12)**: Bankaların kar marjlarını ve genel kârlılığı değerlendiren göstergedir. Stabil ve yüksek kârlılık, bankanın sağlıklı bir finansal yapıya sahip olduğunu gösterir.
+
+8. **Krediler (14)**, **Kobi Kredileri (18)**, **Tüketici Kredileri (20)**, **Kredi Kartları (21)**: Bankanın kredi dağılımını ve kredi türlerine göre aktivitesini belirtir. Bu veriler, bankanın kredi riskini ve politikasını anlamak için kullanılır.
+
+9. **Takipteki Alacaklar (23)**: Bankanın zamanında tahsil edemediği alacaklarının toplamını gösterir. Bu tür alacaklar, bankanın kredi riskinden ötürü karşılaşabileceği muhtemel zararları temsil eder.
+
+10. **Menkul Kıymetler (27)**: Bankanın yatırım yaptığı menkul kıymet portföyünün büyüklüğünü gösterir. Portföy yönetimi, kârlılığı artırmak ve riskleri yönetmek için kullanılır.
+
+11. **Mevduat (31)**: Bankanın müşteri tabanından topladığı mevduat miktarını ifade eder. Mevduat tabanı, bankanın nakit yönetimi ve kredi verme kapasitesi üzerinde doğrudan bir etkiye sahiptir.
+
+12. **Bankalara Borçlar ve Repo (34)**: Bankanın diğer finansal kurumlara olan borçlarının ve repo işle 
+---
+İÇİNDEKİLER 
+
+------Page 4------
+
+[Image 1]
+
+Description: Bu bir grafik görselidir. 
+
+Grafik türü: Geometrik arka plan
+
+Detaylı açıklama: Görsel, mavi renk tonlarından oluşan bir dizi üçgen ve çokgen şekiller ile kaplanmıştır. Şekiller, merkezden dağılan bir desen oluşturacak şekilde düzenlenmiş ve üç boyutlu bir görünüm efekti verilmiştir. Sol tarafta daha açıkken, sağ tarafa doğru gidildikçe tonlar koyulaşmaktadır. Bu tür grafikler, genellikle arka plan tasarımlarında veya soyut temalı görsel çalışmalarında kullanılır.
+---
+[Image 2]
+
+Description: Bu bir grafik. Görselde soyut bir ağaç figürü bulunuyor. Üç büyük daireyi andıran şekiller, ağacın yapraklarını temsil ediyor. Bu daireler bir dal gibi duran alt kısma bağlı ve birbirleriyle bitişik bir şekilde yerleştirilmiş. Şeklin tamamı siyah zemin üzerinde beyaz renkte tasarlanmış, bu da görüntünün minimalist bir tarzda olduğunu gösteriyor. Ağacın gövdesi, basit ve düz bir çizgi ile ifade edilmiştir. Grafik, soyut ve simetrik bir tasarımı yansıtıyor.
+---
+[Image 3]
+
+Description: Bu bir grafik. 
+
+Görselde, klasik bir kamu binasını veya bir tapınağı temsil eden simgesel bir ikon yer alıyor. İkon, üçgen bir çatı, dört sütun ve çatının üst kısmında yuvarlak bir açıklıktan oluşuyor. Genellikle bankalar, devlet binaları veya akademik kurumlarla ilişkilendirilir. Tasarım, sadeliği ve sembolik yapısıyla dikkat çeker.
+---
+
+[Table 1]
+[0,0]: Mevduat Bankaları
+[0,1]: Kolon 2
+[0,2]: 
+[0,3]: Katılım Bankaları
+[0,4]: Kolon 5
+[0,5]: 
+[0,6]: Kalkınma ve Yatırım Bankaları
+[0,7]: Kolon 8
+[1,0]: Banka Sayısı Kamu: 4 35 Yerli Özel: 9 Yabancı: 22
+[1,3]: Banka Sayısı 9
+[1,4]: Kamu: 3 Yerli Özel: 3 Yabancı: 3
+[1,6]: Banka Sayısı 20
+[1,7]: Kamu: 4 Yerli Özel: 13 Yabancı: 3
+[3,0]: Personel Sayısı
+[3,1]: 182.243 kişi Önceki Çeyreğe Göre Değişim 1.127 (kişi)
+[3,3]: Personel Sayısı
+[3,4]: 21.928 kişi Önceki Çeyreğe Göre Değişim 569 (kişi)
+[3,6]: Personel Sayısı
+[3,7]: 6.542 kişi Önceki Çeyreğe Göre Değişim 14 (kişi)
+[4,0]: Şube Sayısı
+[4,1]: 9.245 adet Önceki Çeyreğe Göre Değişim 0 :unselected: (adet)
+[4,4]: 1.520 adet Önceki Çeyreğe Göre Değişim 8 (adet)
+[4,7]: 76 adet Önceki Çeyreğe Göre Değişim 0 :unselected: (adet)
+[5,3]: Şube Sayısı
+[5,6]: Şube Sayısı
+[Description] = Tablo, Türkiye'deki farklı bankacılık türleri ile ilgili bazı istatistikleri ve değişimleri içermektedir. Her bir banka türü için, banka sayıları, personel sayıları ve şube sayıları verilmiştir. Ayrıca her bir metreke ait önceki çeyreğe göre değişimler belirtilmiştir.
+
+### 1. Banka Türlerine Göre Banka Sayıları
+
+#### Mevduat Bankaları:
+- **Toplam Banka Sayısı:** 35
+  - **Kamu Bankaları:** **3**
+  - **Yerel Özel Bankalar:** **9**
+  - **Yabancı Bankalar:** **22**
+
+#### Katılım Bankaları:
+- **Toplam Banka Sayısı:** 9
+  - **Kamu Bankaları:** **3**
+  - **Yerel Özel Bankalar:** **3**
+  - **Yabancı Bankalar:** **3**
+
+#### Kalkınma ve Yatırım Bankaları:
+- **Toplam Banka Sayısı:** 20
+  - **Kamu Bankaları:** **4**
+  - **Yerel Özel Bankalar:** **13**
+  - **Yabancı Bankalar:** **3**
+
+### 2. Personel Sayıları ve Değişimler
+
+- **Mevduat Bankaları:**
+  - **Toplam Personel:** **182,243 kişi**
+  - **Değişim:** **+1,127 kişi**
+  
+- **Katılım Bankaları:**
+  - **Toplam Personel:** **21,928 kişi**
+  - **Değişim:** **+569 kişi**
+  
+- **Kalkınma ve Yatırım Bankaları:**
+  - **Toplam Personel:** **6,542 kişi**
+  - **Değişim:** **+14 kişi**
+
+### 3. Şube Sayıları ve Değişimler
+
+- **Mevduat Bankaları:**
+  - **Toplam Şube Sayısı:** **9,245 adet**
+  - **Değişim:** **0** (değişim yok)
+
+- **Katılım Bankaları:**
+  - **Toplam Şube Sayısı:** **1,520 adet**
+  - **Değişim:** **+8 adet**
+  
+- **Kalkınma ve Yatırım Bankaları:**
+  - **Toplam Şube Sayısı:** **76 adet**
+  - **Değişim:** **0** (değişim yok)
+
+### Genel Yorumlar:
+
+- **Yabancı Dostluk:** Mevduat bankaları içinde yer alan yabancı banka sayısının 22 olması, bu tür bankacılık sisteminin uluslararası sermaye açısından yoğun olduğunu göstermektedir.
+  
+- **Kamu Katılımı:** Kamu bankaları her üç kategoride (mevduat, katılım, kalkınma ve yatırım) önemli bir oyunucu olarak dikkat çekmektedir.
+  
+- **Katılım Bankaları Büyüme:** Katılım bankalarının personel ve şube sayısı artışı, bu segmentin büyüme potansiyeline ve müşteri talebine verdiği yanıtı göstermektedir.
+
+- **Kalkınma ve Yatırım Bankaları:** Bu bankacılık türünde personel ve şube sayısında çok az bir değişiklik olması, belki de daha özel ve niş projelere odaklanan bir politika izlediklerini gösterebilir.
+
+Tablodaki veriler, Türkiye'deki bankaların çeşitliliğini ve finans sektörü içinde her bir segmentin önemini ortaya koymaktadır. Şube ve personel değişiklikleri, sektörün dinamikliğini ve büyüme potansiyelini de yansıtmaktadır. 
+---
+Banka, Şube ve Personel Sayıları 
+Türk Bankacılık Sektöründe Mart 2025 dönemi itibarıyla; 
+- Fonksiyon gruplarına göre 35 mevduat, 9 katılım ve 20 kalkınma ve yatırım bankası, 
+- Sahiplik gruplarına göre 11 kamu, 25 yerli özel ve 28 yabancı olmak üzere toplam 64 banka faaliyet göstermektedir. 
+- Toplam personel sayısı bir önceki çeyreğe göre 1.710 kişi artarak, 210.713 kişi olarak gerçekleşmiştir. 
+- Bankacılık sektörü toplam şube sayısı bir önceki çeyreğe göre 8 adet artmıştır. Sektörün toplam şube sayısı 10.841'dir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+1 
+
+------Page 5------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. 
+
+Geometrik bir soyutlama içeriyor. Grafik, mavi tonlar kullanılarak oluşturulmuş ve çeşitli üçgen şekillerin bir araya gelmesiyle tasarlanmış. Merkezden dışa doğru yayılan bir desen bulunuyor. Üçgenlerin farklı büyüklükleri ve tonlamaları sayesinde bir derinlik ve hareket hissi ortaya çıkıyor. Bu tür grafikler genellikle arka plan tasarımlarında veya estetik amaçlı kullanılan dijital sanat eserlerinde tercih edilir.
+---
+Toplam Aktif Büyüklük 
+Toplam Aktiflerin Banka Gruplarına Göre Dağılımı 
+Fonksiyon Grubuna Göre 
+Sahiplik Grubuna Göre 
+Mevduat 86% 
+Kalkınma ve Yatırım 6% 
+Kamu 46% 
+Yerli Özel 29% 
+Katılım 8% 
+Yabancı 25% 
+Mart 2025 dönemi itibarıyla bankacılık sektörünün toplam aktiflerine göre, mevduat bankaları %86, kalkınma ve yatırım bankaları %6 ve katılım bankaları %8 paya sahiptir. 
+Sahiplik grubu ayrımına göre; kamu bankaları %46, yerli özel bankalar %29 ve yabancı bankalar %25 paya sahiptir. 
+İlk 10 Banka 29.738 Milyar TL 
+İlk 40 Banka 
+35.965 Milyar TL 
+Toplam Aktifler 36.132 
+Milyar TL 
+İlk 20 Banka 34.083 Milyar TL 
+8,56% 
+Türk Bankacılık Sektörü'nün Herfindahl Endeksi 
+İlk 30 Banka 
+35.527 Milyar TL 
+Yukarıdaki şekilde, bankaların toplam aktif büyüklüklerinin büyükten küçüğe göre sıralanması sonucunda ilk 10, 20, 30 ve 40 bankanın aktif toplamları ile birlikte bankacılık sektörünün toplam aktif tutarı yer almaktadır. Mart 2025 dönemi itibarıyla Türk bankacılık sektörünün aktif toplamı 36.132 milyar TL'dir. 
+2025 yılı Mart ayı dönemi itibarıyla, bankacılık sektörünün toplam aktiflerine göre hesaplanan Herfindahl endeksi %8,56'dır. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+2 
+
+------Page 6------
+
+[Image 1]
+
+Description: Bu bir grafik görselidir. 
+
+Grafik soyut bir tasarıma sahiptir ve mavi tonlarında geometrik şekillerden oluşmaktadır. Görselde çeşitli üçgen ve çokgen formlar yer almakta, merkezden yayılan çizgiler dinamik bir etki yaratmaktadır. Renk geçişleri, derinlik ve üç boyutluluk hissi vermektedir. Tasarım, modern ve minimalist bir estetik taşımaktadır.
+---
+Toplam Aktifler 
+1,28 
+0,96 
+0,89 
+32.658 
+36.132 
+0,75 
+23.550 
+14.347 
+9.215 
+2021 
+2022 
+2023 
+2024 
+Mar.25 
+GSYH (Milyar TL) 
+Toplam Aktifler (Milyar TL) 
+Toplam Aktif/GSYH 
+Türk Bankacılık Sektörünün aktif büyüklüğünün GSYH'ye oranı 2024 yıl sonu itibarıyla 0,75 olarak gerçekleşmiştir. 
+Toplam Aktif Yıllık Büyüme Oranları (%) 
+92% 
+84% 
+84% 
+74% 
+69% 
+41% 
+19% 
+51% 
+34% 
+60% 
+54% 
+37% 
+45% 
+39% 
+44% 
+43% 
+40% 
+32% 
+2023-03 
+2023-06 
+2023-09 
+2023-12 
+2024-03 
+2024-06 
+2024-09 
+2024-12 
+2025-3 
++TP-Büyüme Oranı 
+-YP-Büyüme Oranı 
+2025 yılı Mart dönemi itibarıyla, bankacılık sektörünün bir önceki yılın aynı dönemine göre aktif toplamı Türk parasında (TP) %39 oranında artış, yabancı parada (YP) ise %40 oranında artış gerçekleşmiştir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+3 
+
+------Page 7------
+
+[Image 1]
+
+Description: Bu bir grafik. Görsel, düşük poli (low poly) tasarım tarzında oluşturulmuş geometrik şekillerden oluşuyor. Mavi tonlarda üçgen ve çokgen formlar kullanılarak soyut bir düzenleme yapılmış. Desenler, farklı yönlerde ve açılarda düzenlenerek dinamizm ve derinlik hissi yaratıyor. Arka planın sol tarafı daha düz bir mavi tonundayken, sağ tarafına doğru üç boyutlu şekil izlenimi veren köşeli geometrik yapılar gözleniyor. Bu tür grafikler genellikle modern ve teknolojik bir his vermek için kullanılır.
+---
+[Image 2]
+
+Description: Bu bir grafiktir. Görsel, farklı renklerdeki dikdörtgenlerden oluşan bir tür alan grafiği veya bir tür mozaik diyagramı gibi görünüyor. Her bir renkli dikdörtgen, belirli bir kategori veya değeri temsil edebilir.
+
+Grafiğin detaylı açıklaması:
+
+1. **Üstteki Mavi Dikdörtgen**: Görselin büyük bir bölümünü kaplıyor ve en fazla alanı temsil ediyor. Bu, en büyük değere veya en önemli kategoriye işaret edebilir.
+
+2. **Soldaki Yeşil Dikdörtgen**: Orta büyüklükte bir alan kaplıyor. İkinci büyük kategori veya değer olabilir.
+
+3. **Sağdaki Sarı Dikdörtgen**: Yeşil dikdörtgenle eş büyüklükte görünüyor, muhtemelen benzer bir değeri veya kategoriyi temsil ediyor.
+
+4. **Alttaki Kırmızı ve Mor Dikdörtgenler**: Daha küçük alanlar kaplıyorlar ve daha küçük değerleri veya kategorileri temsil edebilirler.
+
+Her bir dikdörtgenin alanı, grafik üzerinde hangi kategorinin veya değerin daha fazla yer kapladığını görsel olarak belirtmek için kullanılır. Görsel, bir veri setinin farklı bileşenlerini oranlarına göre temsil etmenin bir yolunu sunuyor.
+---
+
+[Table 1]
+[0,0]: TCMB ve Zorunlu Karşılıklar
+[0,1]: Menkul Kıymetler
+[0,2]: 
+[1,0]: 5.856 milyar TL 15,7% Yıl Sonuna Göre Değişim
+[1,1]: 5.766 milyar TL
+[1,2]: 10,3% Yıl Sonuna Göre Değişim
+[2,0]: Bankalardan Alacaklar 1.45 milyar TL 25,7% Yıl Sonuna Göre Değişim
+[2,1]: Diğer Kalemler 5.417 milyar TL
+[2,2]: 5,0% Yıl Sonuna Göre Değişim
+[Description] = Tabloyu incelediğimizde, finansal büyüklüklerin yıl sonuna göre değişim oranlarını ve miktarlarını görüyoruz. Analizde öne çıkan değerler ve yorumlar şöyle olabilir:
+
+1. **Menkul Kıymetler**: 
+   - Menkul kıymetlerin toplam değeri 5.856 milyar TL olarak gözüküyor. 
+   - Yıl sonuna göre değişim oranı %15,7 artış ile dikkat çekiyor. Bu, menkul kıymetlere olan talebin ya da bu varlıkların değerinde önemli bir artış olduğunu göstermektedir. Yatırımcılar açısından bu durum, menkul kıymetlerin getiri sağladığının veya bu alana yatırımın arttığının bir göstergesi olabilir.
+
+2. **Menkul Kıymetlerin Diğer Bir Değeri**:
+   - Aynı kategoride 5.766 milyar TL ile başka bir miktarın da olduğunu görüyoruz.
+   - Bu miktar için yıl sonuna göre değişim oranı %10,3 artış olarak verilmiş. İki farklı menkul kıymet kategorisinin yıl sonuna göre farklı artış oranlarına sahip olması ilginç. Bu durum, menkul kıymetlerin farklı alt segmentlerinde farklı performanslar olduğunu gösterebilir.
+
+3. **Bankalardan Alacaklar**:
+   - Bankalardan alacakların toplam değeri 1.45 milyar TL'dir.
+   - Yıl sonuna göre %25,7 gibi yüksek bir artış oranı var. Bu artış, bankaların borçlanma veya kredi geri ödemelerinde bir artış olduğuna işaret edebilir. Bu durum, finansal kuruluşların veya bankaların likidite yönetiminde değişiklikler yaptığını gösterebilir.
+
+4. **Diğer Kalemler**:
+   - Diğer kalemlerin toplam değeri 5.417 milyar TL olarak belirtilmiş.
+   - Yıl sonuna göre %5,0 değişim göstermiş. Bu, oldukça mütevazı bir artış oranı olup, bu kalemdeki değişimlerin diğerlerine kıyasla daha sabit olduğunu göstermektedir.
+
+Genel olarak, tablo yatırımcı ve finansal kuruluşlar için önemli bilgiler sunar. Menkul kıymetlerdeki ve bankalardan alacaklardaki artışlar, ekonomik dalgalanmaları ve yatırım trendlerini işaret ederken, diğer kalemlerin daha stabil kalması, bu alanlarda belli bir durgunluk veya az değişim olduğunu gösteriyor. Bu veriler, yatırımcılara ve ekonomiyle ilgilenen profesyonellere pazar trendlerini değerlendirme ve stratejik karar verme noktasında önemli bilgiler sunar. 
+---
+Seçilmiş Bilanço Kalemleri 
+Krediler 
+17.633 
+milyar TL 
+9,9% 
+Yıl Sonuna Göre Değişim 
+Mevduat 85% 
+Katılım 8% 
+Kamu 46% 
+Yabancı 25% 
+Fonksiyon Grubu 
+Sahiplik Grubu 
+Kalkınma ve Yatırım 7% 
+Yerli 
+Özel 
+29% 
+Türk Bankacılık Sektörünün toplam kredi tutarı, Mart 2025 dönemi itibarıyla bir önceki yıl sonuna göre %9,9 artarak 17.633 milyar TL olmuştur. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+4 
+
+------Page 8------
+
+[Image 1]
+
+Description: Bu bir grafik görselidir.
+
+Görsel, mavi tonlarında geometrik şekillerden oluşan bir arka plan tasarımı içeriyor. Grafik, çokgen ve prizmatik şekillerin birleşiminden meydana gelmiş ve merkezden dışarıya doğru yayılan bir desen oluşturuyor. Çeşitli mavi tonlardaki gölgeler, üç boyutlu bir etki yaratıyor ve görsele derinlik kazandırıyor. Desenler, keskin hatlara ve açılara sahip, bu da görselin modern ve dinamik bir his vermesini sağlıyor. Bu tür grafikler genellikle arka plan olarak ya da dekoratif amaçlarla kullanılır.
+---
+[Image 2]
+
+Description: Bu bir grafik. Türü, renk bloklarıyla oluşturulmuş soyut bir kompozisyon.
+
+Detaylı Açıklama:
+- Üst yarıda büyük bir mavi dikdörtgen bulunuyor. Bu, görselin en geniş bölümünü kaplıyor.
+- Alt yarıda ise, farklı boyutlarda beş dikdörtgen yer alıyor.
+  - Solda, üstte sırasıyla turuncu, mor ve koyu mavi renkli üç dikdörtgen var.
+  - Sağda, üstte açık mavi ve altta açık bej renkli iki dikdörtgen bulunuyor.
+- Dikdörtgenler birbirine yakın ve bir önerme veya veri içermeyen, soyut bir tasarım oluşturuyor.
+---
+
+[Table 1]
+[0,0]: Repo İşlemlerinden Sağlanan Fonlar
+[0,1]: Kolon 2
+[0,2]: Bankalara Borçlar
+[0,3]: 
+[1,0]: 2.322 milyar TL
+[1,1]: 3,5% Yıl Sonuna Göre Değişim
+[1,2]: 4.017 milyar TL
+[1,3]: 13,6% Yıl Sonuna Göre Değişim
+[2,0]: İhraç Edilen Menkul Kıymetler
+[3,0]: 1.19 milyar TL
+[3,1]: 14,5% Yıl Sonuna Göre Değişim
+:unselected:
+[3,2]: Özkaynaklar
+[4,0]: Diğer Yabancı Kaynaklar 4.363 milyar TL
+[4,1]: 8,2% Yıl Sonuna Göre Değişim
+[4,2]: 3.087 milyar TL
+[4,3]: 6,5% Yıl Sonuna Göre Değişim
+[Description] = Verilen tablo, farklı finansal enstrümanlardan sağlanan fonların miktarını ve yıl sonunda bu fonlardaki değişim oranlarını göstermektedir. Tablodaki veriler, ilgili enstrümanlar için sağlanan fon miktarlarını ve bunların yıllık değişim oranlarını içermektedir. İşte detaylı bir analiz ve yorum:
+
+### Repo İşlemlerinden Sağlanan Fonlar
+- **Bankalara Borçlar:** 
+  - **Başlangıç Miktarı:** 4.017 milyar TL
+  - **Yıl Sonu Değişim Oranı:** %13,6
+  - **Yorum:** Bankalara borçlar kısmı, %13,6 oranında yıllık bir artış göstermektedir. Bu, bankaların diğer finansal kurumlara veya merkez bankasına olan borçlarının önemli ölçüde arttığını gösterebilir.
+
+- **İhraç Edilen Menkul Kıymetler:**
+  - **Başlangıç Miktarı:** 1.19 milyar TL
+  - **Yıl Sonu Değişim Oranı:** %14,5
+  - **Yorum:** İhraç edilen menkul kıymetler kaleminde %14,5 gibi yüksek bir artış oranı bulunmaktadır. Bu da menkul kıymet ihraçlarının piyasada daha fazla tercih edildiğini veya daha fazla fon sağlandığını göstermektedir.
+
+### Özkaynaklar ve Diğer Yabancı Kaynaklar
+- **Özkaynaklar:**
+  - Bu kaleme ilişkin açık bir miktar sağlanmamış.
+- **Diğer Yabancı Kaynaklar:**
+  - **Başlangıç Miktarı:** 3.087 milyar TL
+  - **Yıl Sonu Değişim Oranı:** %6,5
+  - **Yorum:** Diğer yabancı kaynaklarda %6,5'lik sınırlı bir artış gözlemleniyor. Bu, bankaların veya şirketlerin yabancı kaynaklardan daha az finansman sağladığını ya da bu kaynaklardaki artışın daha yavaş olduğunu gösterebilir.
+
+### Öne Çıkan Değerler
+- **En Yüksek Değişim Oranı:** İhraç edilen menkul kıymetler %14,5 oranında bir değişim ile en yüksek yıllık artışı göstermektedir.
+- **En Düşük Değişim Oranı:** Diğer yabancı kaynaklar, %6,5 yıllık artış oranı ile en düşük büyümeyi yaşamaktadır.
+
+### Genel Yorum
+Bu tablo, özellikle menkul kıymet ihraçları ve bankaların borçlanmaları için olumlu bir artış trendi göstermektedir. Menkul kıymetler tarafında artan bir tercihin olduğunu söyleyebiliriz. Diğer yandan, genel olarak borçlanmaların artışı, piyasaların daha aktif olduğunu ve likiditeye ihtiyaç duyduğunu da gösteriyor. Diğer yabancı kaynaklar sınırlı bir büyüme sergilemekte, bu da bu kaynakların kullanımında bir azalmaya işaret edebilir veya bu kaynaklardan elde edilen fonlama maliyetlerinin diğer enstrümanlardan daha yüksek olduğunu gösterebilir. Genellikle, bu tür değişim oranları yatırımcıların ve ekonomistlerin piyasayı değerlendirmesi ve ekonomik kararları şekillendirmesi için kritik öneme sahiptir. 
+---
+Seçilmiş Bilanço Kalemleri 
+Mevduat / Katılım Fonu 
+21.145 
+milyar TL 
+Ticari ve Diğer Kuruluşlar Mevduatı/Katılım Fonu 37% 
+Resmi Kuruluşlar Mevduatı/Katılım 
+Fonu 2% 
+Mevduat Türü 
+11,9% Yıl Sonuna Göre Değişim 
+Kamu 46% 
+Gerçek Kişiler Mevduatı/Katılım 
+Fonu 61% 
+Banka Fonksiyon Grubu 
+Yabancı 26% 
+Yerli Özel 28% 
+Bankacılık Sektörünün en büyük fon kaynağı olan mevduat kalemi Mart 2025 dönemi itibarıyla, 2024 yıl sonuna göre % 11,9 oranında artışla 21.145 milyar TL olarak gerçekleşmiştir. 
+Özkaynaklar toplamı ise, 2024 yıl sonuna göre %6,5 oranında artışla 3.087 milyar TL olarak gerçekleşmiştir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+5 
+
+------Page 9------
+
+[Image 1]
+
+Description: Bu görsel bir grafik görselidir. 
+
+Görsel, geometrik şekillerle ve düz mavi tonlarda tasarlanmıştır. Sağ kısımda farklı boyutlardaki üçgen şekiller, merkeze odaklanan bir çizgiler sistemi oluşturarak derinlik hissi yaratmaktadır. Bu tür bir tasarım genellikle bir arka plan veya estetik bir unsur olarak kullanılır ve soyut bir tema taşır. Renk tonları aynı palet içindedir ve mavi renk hakimdir. Düz çizgiler ve keskin köşeler, görsele modern ve minimalistik bir görünüm kazandırıyor.
+---
+Bilanço İçi Büyüklükler 
+Varlıklar 
+Menkul Kıymetler 16% 
+TCMB ve Zorunlu 
+Karşılıklar 16% 
+Yükümlülükler 
+Özkaynaklar 9% 
+Bankalara Borçlar 11% 
+Krediler 
+49% 
+Diğer 14% 
+Nakit ve Nakit Benzeri Kalemler 
+1% 
+Bankalardan Alacaklar 4% 
+Mevduat 59% 
+Diğer 12% 
+Repodan 
+Sağlanan 
+Fonlar 
+6% 
+İhraç Edilen Menkul 
+Kıymetler 3% 
+Bankacılık sektörü bilançosunda, aktifler içerisinde krediler %49 ve pasif kalemler içerisinde mevduat % 59 ile en yüksek paya sahip kalemlerdir. 
+Bilanço Kalemleri Milyar TL 
+21.145 
+17.633 
+7.953 
+6.743 
+513 292 
+221 
+Nakit ve Nakit 
+Benzeri Kalemler 
+5.766 
+2.192 
+3.574 
+Menkul Kıymetler 
+5.856 
+3.101 
+2.755 
+TCMB ve Zorunlu Karşılıklar 
+10.890 
+Krediler 
+1.459 
+1.130 
+329 
+Bankalardan Alacaklar 
+4.904 
+700 
+4.204 
+Diğer 
+:selected: Türk Parası :selected: 
+13.193 
+Mevduat 
+4.017 
+3.377 
+639 
+Bankalara Borçlar 
+2.322 
+1.042 
+Repodan Sağlanan Fonlar 
+3.087 
+1 1.538 
+1.197 
+1.137 1.280 
+61 
+3.086 
+İhraç Edilen Özkaynaklar 
+Menkul Kıymetler 
+4.363 
+2.825 
+Diğer 
+Yabancı Para 
+Bilanço içerisindeki yabancı para varlıkların toplam varlıklara oranı %39, toplam yabancı para yükümlülüklerin toplam yükümlülüklere oranı %42 olarak gerçekleşmiştir. 
+Yabancı para kredilerin toplam krediler içerisindeki payı %38, yabancı para mevduatın toplam mevduata oranı %39'dir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+6 
+
+------Page 10------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. Grafik, mavi ağırlıklı geometrik şekillerden oluşan bir arka plan tasarımı gösteriyor. Üçgen ve çokgen formların bir araya gelmesiyle yaratılan bu tasarımda, şekiller farklı tonlarla derinlik ve hareket hissi vermek için dizilmiş. Bu tür grafikler genellikle arka plan veya dekoratif amaçlarla kullanılır.
+---
+Yabancı Para Pozisyonu 
+Yabancı Para Pozisyonu (Milyar TL) 
+1.794 
+1.017 
+689 
+687 
+755 
+108 
+73 
+74 
+44 
+89 
+Mar.24 
+Haz.24 
+Eyl.24 
+Ara.24 
+Mar.25 
+-616 
+-613 
+-711 
+-928 
+-1.686 
+Bilanço İçi Yabancı Para Pozisyonu -Bilanço Dışı Yabancı Para Pozisyonu -YP Net Genel Pozisyon 
+Mart 2025 dönemi itibarıyla, bankacılık sektörünün bilanço dışı yabancı para pozisyonu 1.017 milyar TL fazla, bilanço içi yabacı para pozisyonu 928 milyar TL açık pozisyonda olup, yabancı para net genel pozisyonu 89 milyar TL fazla olarak gerçekleşmiştir. 
+Yabancı Para Net Genel Pozisyonu / Özkaynak Oranları (%) 
+Kamu Bankaları 
+Yerli Özel Bankalar 
+Yabancı Bankalar 
+4,86 
+3,43 
+2,80 
+2,73 
+-0,14 
+0,66 
+-0,32 
+1,64 
+1,04 
+Eyl.24 
+Ara.24 
+Mar.25 
+Eyl.24 
+Ara.24 
+Mar.25 
+Eyl.24 
+Ara.24 
+Mar.25 
+2025 Mart dönemi itibarıyla, bir önceki yıl sonuna göre Yabancı Para Net Genel Pozisyonu / Özkaynak Oranı kamu, yabancı ve yerli özel banka grularında artış göstermektedir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+7 
+
+------Page 11------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. 
+
+Grafik, mavi tonlarında geometrik şekillerden oluşmuş bir tasarım içeriyor. Görselde üçgen ve çokgen biçimli formlar yer almakta ve bu şekiller, ışık ve gölge oyunlarıyla derinlik etkisi yaratıyor. Sağda şekillerin birleşim noktası bulunurken, solda ise daha açık mavi bir alan göze çarpıyor. Bu tür grafikler genellikle arka plan veya dekoratif amaçlarla kullanılabilir. Tasarım, modern ve soyut bir estetik izlenimi veriyor.
+---
+[Image 2]
+
+Description: Görsel bir diyagramdır. Bu bir olasılık ağacı diyagramı gibi görünüyor. Olasılık ağacı, belirli olasılıkları hesaplamak için kullanılır ve olayların dallara ayrıldığı bir yapıyı temsil eder.
+
+- **Başlangıç Noktası**: Sol üst köşede bulunur.
+- **Dallar**: Her bir dal, bir olay veya karar noktasını temsil eder ve dallar üzerine yazılan sayılar bu olayların olasılıklarını gösterir.
+- **Olaylar**: Her bir olay belirli bir olasılıkla gerçekleşir. Diyagramda her adımda iki veya daha fazla olasılık noktasına dağılan olaylar gösterilmiş.
+- **Sonuçlar**: En sağda, her bir dal kombinasyonunun sonucu yer alır. Bunlar, olası tüm olay dizilimlerinin sonucunu temsil eder.
+
+Olasılık ağaçları, karar analizi, risk değerlendirmesi ve olay olasılıklarının hesaplanması gibi alanlarda yaygın olarak kullanılır.
+---
+Likidite Karşılama Oranı - Toplam (%) 
+Likidite Karşılama Oranı - Yabancı Para (%) 
+Likidite Durumu 
+2022-12-30 
+2023-09-29 
+2024-02-16 
+2024-03-29 
+2024-06-21 
+2024-08-23 Katılım 
+2024-09-13 
+2024-11-01 
+· Mevduat 2024-11-22 son haftası itibarıyla; 
+2024-12-13 
+2025-02-14 
+--- Yasal Sınır 2025-03-21 
+254% 207% 
+80% 
+gerçekleşmiştir. üzerinde gerçekleşmiştir. 
+2022-12-30 2023-06-30 2023-11-10 2024-02-16 
+Bankaların Likidite Karşılama Oranının Hesaplanmasına İlişkin Yönetmelik çerçevesinde sınırlamalara tabi olan ve haftalık dönemlerde takip edilen mevduat ve katılım banka gruplarının 2025 yılı Mart ayının 
+2024-03-01 2024-03-15 
+2024-03-29 
+Katılım 
+2024-06-07 2024-06-21 
+2024-08-16 
+203% 
+- Yabancı para likidite karşılama oranları sırasıyla %254 ve %207 olup, yasal sınır olan %80'in 
+2024-08-30 
+2024-09-13 2024-09-27 
+Likidite Yeterlilik Oranı - Birinci Vade Dilimine 
+Mevduat 
+100% __ 
+Göre- (%) 
+167% 
+2024-11-15 
+2024-11-29 
+2024-12-13 2024-12-27 2025-03-07 2025-03-21 
+- Toplam likidite karşılama oranları sırasıyla %167 ve %203 olup, yasal sınır olan %100'ün üzerinde 
+--- Yasal Sınır 
+2023-02-24 2023-03-31 2023-05-19 
+2023-06-23 
+0-7 gün - TOP 
+2023-08-11 2023-09-22 2023-12-01 
+0-7 gün - YP 
+2024-02-09 2024-03-15 2024-06-14 
+2024-08-30 
+2024-11-08 
+-. Yasal Sınır - TOPLAM - - Yasal Sınır - YP 
+2024-12-13 
+2025-03-07 
+209% 
+172% 
+100% 
+80% 
+Likidite Yeterlilik Oranı - İkinci Vade Dilimine Göre 
+(%) 
+2023-02-17 2023-03-24 
+2023-04-28 2023-06-02 
+ve % 209 olup, yasal sınır olan %100'in üzerinde gerçekleşmiştir. 
+2023-07-07 2023-08-11 2023-09-15 
+sınırlamalara tabi olan kalkınma ve yatırım bankalarının 2025 yılı Mart ayının son haftası itibarıyla; Bankaların Likidite Yeterliliğinin Ölçülmesine ve Değerlendirilmesine İlişkin Yönetmelik çerçevesinde 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+2023-10-20 2023-11-24 
+163% 
+138% 
+ve %163 olup, yasal sınır olan %100'in üzerinde gerçekleşmiştir. 
+2023-12-29 2024-03-08 
+100% 
+2024-06-07 2024-08-23 
+80% 
+2024-09-27 
+- İkinci vade dilimine (0-31 gün) göre toplam ve yabancı para likidite yeterlilik oranları sırasıyla %385 - Birinci vade dilimine (0-7 gün) göre toplam ve yabancı para likidite yeterlilik oranları sırasıyla %172 0-31 gün - YP 
+0-31 gün - TOP - - Yasal Sınır - YP - . Yasal Sınır - TOPLAM 
+2024-12-06 2025-02-28 
+8 
+
+------Page 12------
+
+[Image 1]
+
+Description: Bu bir grafik görselidir. Görsel, mavi tonlarında geometrik şekillerden oluşan bir desene sahiptir. Üçgen ve çokgen şekiller, bir merkezden ışınlar gibi dışa doğru yayılıyor. Tasarım, düz ve soyut bir arka plan oluşturmuş. Bu tür grafikler, genellikle teknolojik veya çağdaş bir tema ile ilişkilendirilir. Grafik tasarımda kullanılan renk geçişleri ve perspektif etkisi, dinamik bir görünüm sağlar.
+---
+Kredi - Mevduat Oranı 
+Kredi / Mevduat (Katılım Fonu) Oranı (%) 
+Mevduat Bankaları 
+Katılım Bankaları 
+79% 
+80% 
+78% 
+66% 
+66% 
+69% 
+Eyl.24 
+Ara.24 
+Mar.25 
+Eyl.24 
+Ara.24 
+Mar.25 
+Toplam kredi* tutarının toplam mevduat/katılım fonu tutarına oranı, Mart 2025 dönemi itibarıyla mevduat ve katılım bankaları için sırasıyla %78 ve %69 olarak gerçekleşmiştir. 
+*Toplam Kredi tutarına, donuk alacaklar dâhil edilmemiştir. Bankalara kullandırılan krediler ile bankalar mevduatı dikkate alınmamıştır. 
+Kredi / Mevduat (Katılım Fonu) Oranı (%) 
+94,8 
+82,7 
+81,1 
+79,3 
+79,4 
+77,8 
+78,2 
+78,0 
+78,9 
+77,4 
+Mar.24 
+Haz.24 
+Eyl.24 
+Kredi/Mevduat (Toplam) 
+Ara.24 
+- Kredi/Mevduat (TL) 
+Mar.25 
+Bankacılık sektöründe, TL cinsinden kredi tutarının TL cinsinden mevduat/katılım fonu tutarına oranı, Mart 2025 dönemi itibarıyla %79 oranında gerçekleşmiştir. 
+* Kalkınma ve yatırım bankaları dahil edilmemiştir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+9 
+
+------Page 13------
+
+[Image 1]
+
+Description: Bu bir grafik. Görselin türü abstrakt/geometrik bir tasarım olup, katmanlar ve üçgenler formunda çeşitli mavi tonlarıyla oluşturulmuş. Perspektif etkisi yaratılarak, merkezden dışa doğru yayılan bir desen şeklinde düzenlenmiş. Gölgeler ve ton farklılıkları, derinlik hissi katmaktadır. Bu tür grafikler genellikle arka plan amacıyla kullanılır.
+---
+[Image 2]
+
+Description: Görsel bir grafiktir. Bu bir çubuk grafik.
+
+Çubuk Grafiğin Özellikleri:
+- Bu grafik, farklı kategorilere ait verileri görselleştirmek için kullanılır.
+- Yatay eksende birbirinden bağımsız kategoriler yer alırken, dikey eksen genellikle sayısal değerleri temsil eder.
+- Her çubuğun yüksekliği, o kategoriye ait değerin büyüklüğünü gösterir.
+- Verilen grafikte, daha yüksek çubuklar daha büyük değerleri ifade eder.
+
+Grafikte görüldüğü üzere, beş adet çubuk bulunmaktadır. Çubukların yükseklikleri farklılık gösteriyor ve bu da her bir kategorinin farklı bir değere sahip olduğunu göstermektedir. Çubuklar benzer renkte, turuncu tonlarında gösterilmiş. Çubukların sırasıyla alçaktan yükseğe doğru bir artış sergilediği gözlemlenebilir. Bu tür grafikler genellikle satışlar, popülasyonlar ya da başka ölçülebilir verileri göstermek için kullanılır.
+---
+[Image 3]
+
+Description: Bu bir grafik türüdür, sütun grafiğidir.
+
+**Açıklama:**
+
+- Yatay eksen kategorileri ya da grupları (A, B, C, D, E) temsil ederken, dikey eksen bu kategorilerin nicel değerlerini gösterir.
+- Her sütun farklı bir kategorinin değerini belirtiyor ve bunlar mavi renkle gösterilmiş.
+- Sütunların yüksekliğiyle temsil edilen değerler sırasıyla: A (15), B (30), C (45), D (10), E (50).
+- Grafik, farklı kategoriler arasında karşılaştırma yapmayı sağlar. Örneğin E kategorisi en yüksek değere sahipken, D kategorisi en düşük değere sahiptir. 
+- Bu tür grafikler, verilerin kolayca görselleştirilmesi ve karşılaştırılması için kullanılır.
+---
+[Image 4]
+
+Description: Bu bir grafik. Görsel, üç boyutlu bir düğme veya buton tasarımı gibi görünüyor. Dikdörtgen şekli ve kenarlardaki gölgelendirme ile bir derinlik hissi yaratılmış. Portakal rengi tonuna sahip olan bu grafik, kullanıcı arayüzü elemanları gibi görünebilir. Genellikle web sitelerinde veya yazılımlarda tıklanabilir butonlar olarak kullanılabilir.
+---
+[Image 5]
+
+Description: Bu görsel bir grafik. 
+
+Görsel, mavi bir düğme ya da butonu andırmaktadır. Dikdörtgen şeklindedir ve köşeleri hafifçe yuvarlatılmış gibi görünmektedir. Üst kısmı daha açık bir mavi tonuna sahip ve ışık yansıması varmış gibi parlamaktadır, bu da ona üç boyutlu bir görünüm kazandırmaktadır. Kenarlarındaki koyu renkli çerçeve, düğmenin gölgeli ve kabarık görünmesini sağlar. Genellikle web veya yazılım arayüzlerinde kullanılabilecek bir butonu temsil eder.
+---
+Sermaye Yeterliliği 
+Sermaye Yeterliliği Standart Oranının Gelişimi 
+Milyar TL 
+22.000 
+Yüzde 25 
+20.000 
+19,69 
+18.000 
+16.000 
+16,96 
+17,10 
+18,20 
+20 
+17,63 
+14.000 
+15 
+12.000 
+10.000 
+8.000 
+17.207 
+18.303 
+18.434 
+18.647 
+22.347 
+10 
+6.000 
+5 
+4.000 
+2.000 
+0 
+2.919 
+Mar.24 
+3.129 
+Haz.24 
+3.355 
+Eyl.24 
+3.672 
+Ara.24 
+3.939 
+0 
+Mar.25 
+Yasal Özkaynak 
+Risk Ağırlıklı Varlıklar 
+-Sermaye Yeterliliği Oranı (Sağ E.) 
+Türk Bankacılık Sektörünün sermaye yeterliliği standart oranı Mart 2025 döneminde %17,63 olarak gerçekleşmiştir. 
+Sermaye Yeterliliği Standart Oranı (%) 
+Sektör 17,63 
+16,19% 
+18,10% 
+19,50% 
+Kamu 
+Yerli Özel 
+Yabancı 
+Banka sahiplik grupları ayrımında, Mart 2025 dönemi itibarıyla yerli özel ve yabancı banka gruplarının sermaye yeterliliği standart oranları sırasıyla %18,10 ve %19,50 olup sektör ortalamasının üzerindedir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+10 
+
+------Page 14------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. Stilize bir biçimde mavi tonlardan oluşan geometrik şekiller içeriyor. Görsel, birbiriyle kesişen ve birleşen çokgenlerden oluşmuş bir desen sunuyor. Şekillerin perspektifi, üç boyutluluk hissi yaratıyor. Bu tarz grafikler genellikle modern ve soyut tasarımlarda arka plan olarak kullanılabilir.
+---
+Sermaye Yeterliliği 
+Ana Sermaye Yeterliliği Oranı (%) 
+Çekirdek Sermaye Yeterliliği Oranı (%) 
+21,1 
+20,3 
+16,0 15,0 
+14,5 
+14,4 
+13,75 
+13,2 
+Yasal Sınır 
+6,0 
+Yasal Sınır 3,0 
+Mar.2024 
+Haz.2024 
+Eyl.2024 
+Ara.2024 
+Mar.25 Mar.2024 
+Haz.2024 
+Eyl.2024 
+Ara.2024 
+Mar.25 
+Sektör 
+Mevduat -Katılım -Kalkınma ve Yatırım - Yasal Sınır 
+Sektor -Mevduat -Katılım -Kalkınma ve Yatırım - Yasal Sınır 
+Mart 2025 dönemi itibarıyla, mevduat, katılım ile kalkınma ve yatırım bankalarında sırasıyla; 
+- Ana sermaye yeterlilik oranları %14,4, %16,0 ve %21,1 
+- Çekirdek sermaye yeterlilik oranları %13,2, %14,5 ve %20,3 olarak gerçekleşmiştir. 
+Risk Ağırlıklı Varlıkların Dağılımı (%) 
+Operasyonel Riske Esas 
+Tutar 11% 
+Kredi Riskine Esas Tutar 86% 
+Piyasa Riskine Esas 
+Tutar 
+3% 
+Kredi Risk Ağırlıklı Varlıkların Dağılımı (Brüt) 
+Risk Ağırlığı %0 Olan Kalemler 36% 
+Risk Ağırlığı %20 Olan Kalemler 6% 
+Risk Ağırlığı %35 Olan Kalemler (G.menkul İpoteği ile Teminat.) 
+2% 
+Risk Ağırlığı %100 Olan Kalemler 31% 
+Risk Ağırlığı %50 
+Olan Kalemler 
+8% Diğer 1% 
+Risk Ağırlığı %75 
+Olan Kalemler 16% 
+Mart 2025 dönemi itibarıyla, sermaye yeterliliği hesaplamasında risk ağırlıklı varlıkların %86'sı kredi riskine esas tutardan, %11'i operasyonel riske esas tutardan ve %3'ü piyasa riskine esas tutardan oluşmaktadır. 
+Kredi riskine esas tutar hesaplanmasında yer alan brüt risk ağırlıklı varlıklardan, risk ağırlığı %100 olan kalemlerin payı %31, risk ağırlığı %0 olan kalemlerin payı %36'dır. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+11 
+
+------Page 15------
+
+[Image 1]
+
+Description: Görsel bir grafik. Görselde mavi tonlarında geometrik şekiller yer alıyor. Şekiller, üç boyutlu bir etki yaratan keskin açılara ve gölgelere sahip. Tasarım, simetrik ve dinamik bir düzen içinde yer alıyor ve soyut bir görünüm sunuyor. Bu tür grafikler genellikle arka plan veya dekoratif amaçlı kullanılır.
+---
+[Image 2]
+
+Description: Görsel bir grafiktir ve türü "şelale grafiği"dir.
+
+### Detaylı Açıklama:
+
+- **Başlangıç ve Bitiş Değerleri:**
+  - Koyu mavi sütun "Revenue" başlangıç değerini göstermektedir. Yüksek bir değerdir.
+  - Yeşil sütun "Net Income" bitiş değerini göstermektedir ve başlangıç değerine göre daha düşük bir seviyededir.
+
+- **Ara Değerler:**
+  - Kırmızı sütunlar, maliyet ve giderleri göstermektedir:
+    - "Cost of Goods Sold", başlangıç değerini düşürmektedir.
+    - "Operating Expenses", orta seviyede bir düşüş sağlamaktadır.
+    - "Interest", ise daha az bir düşüşe neden olmaktadır. 
+
+- **Net Etki:**
+  - Toplamda, maliyet ve giderlerin çıkarılmasından sonra ulaşılan değeri göstermektedir. 
+
+### Analiz:
+Bu şelale grafiği, bir şirketin finansal durumunu başlangıç noktası olan gelirden (revenue), çeşitli maliyet ve giderlerin (cost of goods, operating expenses, interest) düşülmesinden sonra elde edilen net gelir (net income) ile göstermektedir. Renkler, olumlu ve olumsuz etkileri görselleştirmektedir; mavi ve yeşil pozitif, kırmızı ise negatif etkiyi simgeler.
+---
+Kârlılık 
+Gelir Tablosu (Milyar TL) 
+I 
+17 
+-71 
+216 
+-48 
+Net Faiz (Kar Payı) Dışı Gelir/Gider 
+Özel Karşılık 
+Vergi Provizyonu 
+Dönem Net Kârı /Zararı 
+Bankacılık sektörünün gelir tablosunda net faiz geliri 318 milyar TL olarak gerçekleşmiştir.Mart 2025 dönemi itibarıyla Türk Bankacılık Sektörünün dönem net kârı 216 milyar TL'dir. 
+Gelir / Gider Kalemleri 
+Milyar TL 
+-Toplam Faiz (Kar Payı) Gelirleri 
+3.200.000 
+- - Toplam Faiz (Kar Payı) Giderleri 
+-Toplam Faiz Dışı (Kar Payı Dışındaki) Gelirler 
+- - Toplam Faiz Dışı (Kar Payı Dışındaki) Giderler 
+2.200.000 
+-Toplam Diğer Faiz Dışı (Kar Payı Dışındaki) Gelirler (Giderler) 
+1.200.000 
+200.000 
+Mar.2024 - Haz. 2024 
+Eyl.2024 
+Ara.2024 Mar.2025 
+-800.000 
+-1.800.000 
+-2.800.000 
+Bankacılık sektörünün 2025 yılı 1'inci çeyrek dönemi içerisindeki toplam faiz gelirleri 1.834 milyar TL olarak gerçekleşmiştir. 
+* Grafikte yer alan kalemler üçer aylık akım veriler kullanılarak üretilmiştir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+12 
+
+------Page 16------
+
+[Image 1]
+
+Description: Bu bir grafik görselidir. Görsel, geometrik şekillerden oluşan soyut bir deseni göstermektedir. Farklı tonlarda mavi renklerin kullanıldığı bu tasarım, üçgen ve çokgen formlara sahiptir. Desen, sağ tarafta kesişim noktasına doğru yoğunlaşmakta ve ışık-gölge efektleriyle derinlik hissi yaratmaktadır. Görsel, modern ve minimal bir estetiğe sahiptir.
+---
+Kârlılık 
+Dönem Net Kârı (Zararı)* Milyar TL 
+160 
+Mar.2024 
+154 
+Haz.2024 
+146 
+Eyl.2024 
+160 
+Ara.2024 
+Bankacılık sektörünün 2025 yılı 1'inci çeyrek dönemindeki dönem net kârı 216 milyar TL olarak gerçekleşmiştir. 
+1 
+* Grafikte yer alan kalemler üçer aylık akım veriler kullanılarak üretilmiştir. 
+Kamu Bankaları 
+Yerli Özel Bankalar 
+Yabancı Bankalar 
+Sektör 
+Dönem Net Kârı (Milyar TL) 
+Dönem Net Kârı (Milyar TL) 
+Dönem Net Kârı (Milyar TL) 
+Dönem Net Kârı (Milyar TL) 
+216 
+160 
+87 
+50 
+80 
+62 
+49 
+49 
+Mar.24 
+Mar.25 
+Mar.24 
+Mar.25 
+Mar.24 
+Mar.25 
+Mar.24 
+Mar.25 
+Aktif Kârlılığı (%) 
+Aktif Kârlılığı (%) 
+Aktif Kârlılığı (%) 
+Aktif Kârlılığı (%) 
+4,53 
+4,67 
+2,65 
+1,65 
+2,91 
+2,30 
+2,75 
+3,05 
+Mar.24 Mar.25 
+Mar.24 
+Mar.25 
+Mar.24 
+Mar.25 
+Mar.24 
+Mar.25 
+Özkaynak Karlılığı (%) Mart 2025 
+Mart 2024 
+24,53 
+30,30 
+Özkaynak Karlılığı (%) 
+Mart 2024 
+Mart 2025 Mart 2024 
+25,75 
+21,41 
+Özkaynak Karlılığı (%) 
+Mart 2025 
+42,38 
+37,51 
+Özkaynak Karlılığı (%) Mart 2025 
+Mart 2024 
+29,79 
+29,61 
+Mart 2025 dönemi aktif kârlılık oranı, 2024 yılının 1'inci çeyrek dönemine göre kamu ve yabancı banka gruplarında artış gösterirken yerli özel banka grubunda azalış göstermektedir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+13 
+
+------Page 17------
+
+[Image 1]
+
+Description: Bu bir grafik görselidir.
+
+Görsel, mavi tonlarında geometrik bir tasarım içeriyor. Arka planda koyu mavi bir zemin üzerine yerleştirilmiş çeşitli tonlarda mavi üçgen ve çokgen şekiller, derinlik ve perspektif hissi veren bir desen oluşturuyor. Şekillerin kesişme noktaları, dinamik bir merkezi odak noktası yaratıyor. Genel olarak, soyut ve modern bir tasarıma sahip ve genellikle arka plan çalışması ya da grafik tasarım projeleri için uygun bir stil taşıyor.
+---
+Krediler 
+Kredi Türlerinin Dağılımı (%) 
+Tüketici Kredileri ve Kredi Kartları 24% 
+Ticari ve Kurumsal Krediler 49% 
+17.633 
+Milyar TL 
+Mart 2025 dönemi itibarıyla, kredilerin içerisinde ticari ve kurumsal kredilerin payı %49, KOBİ kredilerinin payı %27 ve tüketici kredilerinin (kredi kartları dâhil) payı %24'tür. 
+Kobi Kredileri 27% 
+Toplam Kredilerin Banka Sahiplik Grubu Bazında Dağılımı 
+Toplam 
+Krediler 
+(Milyar TL) 
+Kamu 
+8.150 
+Yerli Özel 
+5.090 
+Yabancı 
+4.393 
+Mart 2025 dönemi itibarıyla, 17.633 milyar TL olan toplam kredi tutarının 5.090 milyar TL'si yerli özel bankalar, 8.150 milyar TL'si kamu banka grubu kredilerinden oluşmaktadır. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+14 
+
+------Page 18------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. 
+
+Grafikte mavi tonlarında geometrik şekiller yer alıyor. Tasarımda, düz yüzeyler ve üçgen biçimli keskin hatlar kullanılmış. Sağ tarafta yoğunlaşan şekiller, ortada bir perspektif etkisi yaratıyor ve şekillerin derinlik hissi var. Kullanılan renk ve şekiller, soyut ve modern bir görünüm sunuyor. Bu tarz grafikler genellikle arka plan veya dekoratif öğe olarak kullanılır.
+---
+
+[Table 1]
+[0,0]: Ticari Krediler - Orta/Uzun TP
+[0,1]: Ticari Krediler - Orta/Uzun YP 29%
+[0,2]: Ticari Krediler - Kısa YP
+[0,3]: Ticari Krediler - Orta/Uzun TP 8%
+[0,4]: Ticari Krediler - Orta/Uzun YP
+[0,5]: Ticari
+[0,6]: Ticari Krediler - Orta/Uzun TP 11%
+[0,7]: Ticari Krediler - Orta/Uzun YP
+[1,0]: 22%
+[1,2]: 15%
+[1,4]: 25%
+[1,5]: Krediler - Kısa YP
+[1,7]: 21%
+[Description] = Tablo, ticari kredilerin farklı kategorilerdeki (orta/uzun vadeli ve kısa vadeli) döviz türleri (TP: Türk Lirası, YP: Yabancı Para) ve bunların oranları hakkında bilgi sağlamaktadır. Genel bir analiz yapmak gerekirse:
+
+1. **Orta/Uzung Vadeli Krediler (TP vs. YP)**:
+   - Orta/Uzun vadeli Türk Lirası cinsinden kredi oranları, üç farklı değerde listelenmiştir: %8, %11 ve %29.
+   - Burada, TL cinsinden orta/uzun vadeli kredilerde %29'luk bir oran öne çıkmaktadır. Bu gösterge, TL kredileri içinde belirgin bir kısmın orta/uzun vadeye yayılmış olduğunu işaret edebilir.
+   - Yabancı para cinsinden orta/uzun vadeli kredi oranı direkt olarak verilmemiş, ancak bahsedilen yapıya göre en azından bir sefer listelendiği söylenebilir.
+
+2. **Kısa Vadeli Krediler (YP)**:
+   - Kısa vade için sadece YP kredilerinin oranları listelenmiştir: %15, %21 ve %22.
+   - %22 oranı en yüksek oran olarak dikkat çekiyor, bu da kısa vadeli kredilerde yabancı para kullanımının kısmen daha yaygın olduğunu gösterebilir.
+   
+3. **Genel Yorumlar**:
+   - Orta/uzun vadeli kredilerin TL oranlarındaki çeşitlilik (%8, %11, %29) farklı dönemlerde veya koşullarda kredi politikasındaki değişikliklere işaret edebilir.
+   - Kısa vadeli kredilerin yalnızca yabancı para cinsinden belirtilmiş olması, kısa vadeli kredi piyasasında TL'ye kıyasla daha fazla yabancı para kullanımının yaygın olabileceğine dair bir ipucu sunmaktadır.
+   - İki ayrı kategoride de en yüksek oranlarının (%29 ve %22) TL ve YP arasında paylaşıldığı dikkat çekicidir. Bu veri, kredi piyasasında her iki para biriminin belirgin roller oynamaya devam ettiğini vurguluyor olabilir.
+
+Bu bilgiler, ticari kredi piyasasındaki eğilimleri anlamada ve kredi portföylerinin yönetiminde önemli olabilir. Gözlemlerden, Türk lirası ile kredi kullanımının uzun vadede daha tercih edilebilir bir seçenek olduğu, ancak kısa vadede yabancı para kredilerinin önemli olduğu anlaşılabilir. Detaylar üzerinden sektör ve dönem spesifik analizler yapılarak daha derinlemesine içgörüler elde edilebilir. 
+---
+Krediler 
+Krediler (TP - YP) 
+17.633 
+15.014 
+16.052 
+12.930 
+34% 
+13.852 
+38% 
+37% 
+37% 
+36% 
+66% 
+64% 
+63% 
+63% 
+62% 
+Mar.2024 
+Haz.2024 
+Eyl.2024 
+Ara.2024 
+Mar.25 
+:selected: Türk Parası 
+:unselected: Yabancı Para 
+Mart 2025 dönemi itibarıyla, toplam kredi tutarının 10.890 milyar TL'si Türk parası kredilerden, 6.743 milyar TL'si yabancı para kredilerden oluşmaktadır. 
+Kredilerin Banka Sahiplik Grubu Bazında TP-YP Cinsinden Vade Dağılımı 
+Ticari Krediler - Kısa YP 11% 
+Kamu 
+Ticari Krediler - Kısa TP 
+28% 
+Tüketici Kredileri-Kısa 
+TP 5% 
+Tüketici Kredileri- Orta/Uzun 
+TP 
+5% 
+Yerli Özel 
+Ticari Krediler - Kısa TP 
+33% 
+Tüketici 
+Kredileri- 
+Kısa TP 10% 
+Tüketici Kredileri- 
+Orta/Uzun TP 
+9% 
+Yabancı 
+Ticari Krediler - Kısa TP 
+35% 
+Tüketici Kredileri- 
+Kısa TP 
+8% 
+Tüketici Kredileri- Orta/Uzun TP 8% 
+Mart 2025 döneminde, orta-uzun vadeli TP cinsi ticari kredilerin toplam krediler içerisindeki payı kamu, yerli özel ve yabancı banka gruplarında sırasıyla %22, %8 ve %11'den oluşmaktadır. 
+*Hesaplamaya bireysel ve kurumsal kredi kartları dahil edilmemiştir. Ticari kredilere Kobi kredileri dahil edilmiştir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+15 
+
+------Page 19------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. 
+
+Grafikte mavi tonlarında geometrik, çokgen şekiller ve üçgenler var. Görseldeki şekiller bir merkezden dışa doğru açılıyor gibi duruyor, bu da fütüristik bir his veriyor. Mavi tonları derinlik hissi veriyor ve keskin, soyut çizgiler genel estetiği oluşturuyor. Bu tür grafikler genellikle arka plan veya tasarım öğesi olarak kullanılır.
+---
+Krediler 
+Kredi Türlerinin Gelişimi Milyar TL 
+17.633 
+12.930 
+6.288 
+13.852 
+6.914 
+15.014 
+7.528 
+16.052 
+7.889 
+8.741 
+3.603 
+3.708 
+3.996 
+4.286 
+4.726 
+3.039 
+3.230 
+3.490 
+3.877 
+4.167 
+Mar.24 
+Haz.24 
+:selected: Tüketici Kredileri ve Bireysel Kredi Kartları 
+Eyl.24 
+Kobi Kredileri 
+Ara.24 
+Mar.25 
+Ticari Krediler ve Kurumsal Kredi Kartları 
+Mart 2025 döneminde; ticari krediler ve kurumsal kredi kartları 8.741 milyar TL, KOBİ kredileri 4.726 milyar TL ve tüketici kredileri ve kredi kartları 4.167 milyar TL olarak gerçekleşmiştir. 
+Kredi Türlerinin Banka Sahiplik Grubuna Göre Dağılımı Milyar TL 
+Ticari Krediler ve Kurumsal Kredi Kartları 
+1.846 
+2.246 
+4.650 
+Kobi Kredileri 
+1.153 
+1.170 
+2.402 
+Tüketici Kredileri ve Bireysel Kredi Kartları 
+1.098 
+1.377 
+1.692 
+:selected: Kamu 
+:selected: Yerli Özel 
+Yabancı :unselected: 
+Mart 2025 dönemi itibarıyla ticari krediler ve kurumsal kredi kartları; kamu bankalarında 4.650 milyar TL, yerli özel bankalarda 2.246 milyar TL ve yabancı bankalarda 1.846 milyar TL'dir. 
+BDDK, Veri ve Sistem Yönetimi Daire Ba kanlı 1 
+16 
+
+------Page 20------
+
+[Image 1]
+
+Description: Bu görsel bir grafik. 
+
+Grafikte, mavi tonlarının hâkim olduğu geometrik şekiller ve çokgenler yer almakta. Desenler, üç boyutlu bir görünüm elde etmek amacıyla farklı açılarla ve gölge efektleriyle yerleştirilmiş. Bu tarz grafikler genellikle arka plan olarak kullanılmakta olup, modern ve teknolojik bir estetik sunar. Desenler bir noktada birleşerek merkezden dışa doğru yayılma hissi veren bir yapı oluşturmuş.
+---
+Krediler 
+Kredilerin Coğrafi Dağılımı 

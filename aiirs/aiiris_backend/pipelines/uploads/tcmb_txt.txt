@@ -1,0 +1,152 @@
+
+------Page 1------
+
+[Image 1]
+
+Description: Bu görsel, sağa doğru yönelmiş büyük bir ok simgesini temsil ediyor. Okun önü sağdaki beyaz bir alanda yer alırken, arka kısmı gri bir tonla kaplı. Okun kendisi beyaz bir zeminle aynı renkte, bu da ok şeklinin belirgin bir şekilde ortaya çıkmasını sağlıyor. Okun üçgen şeklindeki ucu, keskin ve belirgin bir yapıya sahip. Görsel, genellikle ileriye doğru hareket, yönlendirme veya bir sonraki adıma geçiş gibi durumları simgelemek için kullanılabilir. Arka plan tamamen şeffaf veya beyaz renkte olabilir.
+---
+[Image 2]
+
+Description: Görsel, üst kısmı genişleyen ve alt kısımda daralan bir şekil sunuyor. Beyaz renkteki bu şekil, üstte bir üçgen veya geniş V harfi gibi başlıyor, aşağıya doğru daralarak sivriliyor. Arka plan ise siyah renkte, şekli belirginleştiriyor. Şeklin alt kısmı kavislenerek, uçları biraz yuvarlak bir şekilde son buluyor. Bu tasarım minimal ve soyut bir sanatsal ifade taşıyor.
+---
+[Image 3]
+
+Description: Görselde üç farklı kare şeklinde (elmas kesimli) imge yer alıyor. Üç imgenin arka planı beyaz ve sağ üstte Türkiye Cumhuriyeti Merkez Bankası'nın logosu bulunuyor.
+
+1. Üst Sağ: Üst üste dizilmiş 10 ve 100 Türk Lirası banknotları görülüyor. Her iki banknot üzerinde "MERKEZ BANKASI" ibaresi yer alıyor. Banknotların sol üst köşesinde kısmen görünen bir yüz tasviri mevcut.
+
+2. Sol Orta: Gökyüzüne doğru yükselen modern bir gökdelen binası tasviri var. Bina, etrafındaki mimari unsurlarla dikkat çekici bir şekilde sunulmuş ve bulutlarla çevrili bir arka plana sahip.
+
+3. Alt Sağ: Dünya haritası üzerinde, dijital ağ ve bağlantıları temsil eden bir görsel var. Üstünde TL sembolü yer alan bir hologram benzeri tasarım bulunuyor. Mor ve mavi tonları hakim.
+
+Bu imgeler genel olarak Türkiye'nin ekonomik unsurlarını, dijitalleşmeyi ve para birimiyle ilgili temaları ön plana çıkarıyor.
+---
+[Image 4]
+
+Description: Bu görselde, koyu mavi tonlarında bir şekil bulunmaktadır. Sol kenarı kavisli, sağ kısmı ise genişleyerek son bulan bir tasarıma sahiptir. Şekil, genel olarak bir ok veya işaretçiyi andırmakta ve grafik tasarım unsuru olarak kullanılabilir. Arka plan ise tek renkten oluşmaktadır ve bu da şeklin daha belirgin hale gelmesini sağlamaktadır. Görsel, minimal ve sade bir estetik sunmaktadır.
+---
+MART 2025 
+MB TÜRKİYE CUMHURİYET MERKEZ BANKASI 
+
+------Page 2------
+
+
+[Table 1]
+[0,0]: (Milyon ABD Doları)
+[0,1]: 2024
+[0,2]: 2025-Ç1
+[0,3]: 
+[0,4]: Miktar Değişim
+[0,5]: % Değişim
+[1,0]: [1,1]: [1,2]: [1,3]: [1,4]: [1,5]: 
+[2,0]: UYP, net (Varlıklar - Yükümlülükler)[2,1]: -295.261[2,2]: -270.105[2,3]: [2,4]: 25.156[2,5]: -8,5
+[3,0]: [3,1]: [3,2]: [3,3]: [3,4]: [3,5]: 
+[4,0]: A. Varlıklar[4,1]: 366.390[4,2]: 377.914[4,3]: 11.524[4,4]: [4,5]: 3,1
+[5,0]: 1. Doğrudan yatırımlar[5,1]: 71.188[5,2]: 73.336[5,3]: 2.148[5,4]: [5,5]: 3,0
+[6,0]: Portföy yatırımları[6,1]: 3.965[6,2]: 4.233[6,3]: [6,4]: 268[6,5]: 6,8
+[7,0]: Diğer yatırımlar
+WN[7,1]: 136.081[7,2]: 143.834[7,3]: [7,4]: 7.753[7,5]: 5,7
+[8,0]: Rezerv varlıklar
+A[8,1]: 155.156[8,2]: 156.511[8,3]: [8,4]: 1.355[8,5]: 0,9
+---
+Uluslararası Yatırım Pozisyonu Gelişmeleri | Mart 2025 
+1 
+Uluslararası Yatırım Pozisyonu İstatistikleri, Mart 2025 
+Türkiye'nin net Uluslararası Yatırım Pozisyonu 2025 yılı Mart ayı itibarıyla -270,1 milyar ABD doları olmuştur. 
+Mart ayı itibarıyla Türkiye'nin yurt dışı varlıkları, bir önceki çeyrek sonuna göre %3,1 oranında artışla 377,9 milyar ABD doları, yükümlülükleri ise %2,1 oranında azalışla 648,0 milyar ABD doları olarak gerçekleşmiştir. Böylelikle, aynı dönemde Türkiye'nin net Uluslararası Yatırım Pozisyonu yükümlülükleri 25,2 milyar ABD doları azalarak -270,1 milyar ABD doları olmuştur. 
+Grafik 1: Uluslararası Yatırım Pozisyonu (Stok, Milyar ABD Doları) 
+Varlıklar 
+:unselected: Yükümlülükler 
+600 
+-Net UYP 
+400 
+200 
+0 
+-200 
+-400 
+-600 
+-800 
+2015Ç1 2015Ç2 
+2015Ç3 2015Ç4 
+2016Ç1 
+2016Ç2 
+2016Ç3 
+2016Ç4 
+2017Ç1 
+2017Ç2 
+2017Ç3 2017Ç4 
+2018Ç1 
+2018Ç2 
+2018Ç3 2018Ç4 
+2019Ç1 
+2019Ç2 2019Ç3 
+2019Ç4 2020Ç1 
+2020Ç2 
+2020Ç3 2020Ç4 
+2021Ç1 2021Ç2 
+2021Ç3 2021Ç4 2022Ç1 
+2022Ç2 
+2022Ç3 2022Ç4 2023Ç1 
+2023Ç2 
+2023Ç3 
+2023Ç4 
+2024Ç1 
+2024Ç2 
+2024Ç3 
+2024Ç4 2025Ç1 
+Bankaların yabancı para cinsinden efektif ve mevduat varlıkları %13,6 oranında artarak 44,8 milyar ABD doları olmuştur. 
+Varlık kalemleri yıl sonuna göre incelendiğinde, doğrudan yatırımlar kalemi %3,0 oranında artarak 73,3 milyar ABD doları, portföy yatırımları kalemi %6,8 artarak 4,2 milyar ABD doları ve diğer yatırımlar kalemi ise %5,7 oranında artarak 143,8 milyar ABD doları olarak gerçekleşmiştir. Rezerv varlıklar kalemi %0,9 oranında artarak 156,5 milyar ABD doları olmuştur. 
+Tablo 1: Türkiye'nin Yurt Dışı Varlıkları (Stok, Milyon ABD Doları) 
+
+------Page 3------
+
+
+[Table 1]
+[0,0]: (Milyon ABD Doları)
+[0,1]: 2024
+[0,2]: 2025-Ç1
+[0,3]: 
+[0,4]: Miktar Değişim
+[0,5]: % Değişim
+[1,0]: [1,1]: [1,2]: [1,3]: [1,4]: [1,5]: 
+[2,0]: B. Yükümlülükler[2,1]: 661.651[2,2]: 648.019[2,3]: [2,4]: -13.632[2,5]: -2,1
+[3,0]: 1. Doğrudan yatırımlar[3,1]: 181.802[3,2]: 165.153[3,3]: [3,4]: -16.649[3,5]: -9,2
+[4,0]: 2. Portföy yatırımları[4,1]: 124.642[4,2]: 120.181[4,3]: [4,4]: -4.461[4,5]: -3,6
+[5,0]: 3. Diğer yatırımlar[5,1]: 355.207[5,2]: 362.685[5,3]: 7.478[5,4]: [5,5]: 2,1
+---
+Uluslararası Yatırım Pozisyonu Gelişmeleri | Mart 2025 
+2 
+Grafik 2: Diğer Varlık Kalemlerinin Kompozisyonu (Stok, Milyar ABD Doları) 
+75,6 
+57,9 
+6,3 
+2,4 
+1,6 
+Efektif ve Mevduatlar 
+Ticari Krediler 
+Krediler 
+Diğer Hisse Senedi ve 
+Katılım Payları 
+Diğer Varlıklar 
+Yükümlülükler altındaki diğer yatırımlar alt kalemlerinden Merkez Bankası'nın mevduat yükümlülükleri %13,3 oranında azalışla 30,1 milyar ABD doları olmuştur. 
+Yükümlülükler alt kalemleri yıl sonuna göre incelendiğinde, doğrudan yatırımlar kalemi, BIST 100 endeksindeki azalış ile döviz kurlarındaki artışın etkisiyle, 2024 yıl sonuna göre %9,2 oranında azalışla 165,2 milyar ABD doları seviyesinde gerçekleşmiştir. Portföy yatırımları kalemi %3,6 oranında azalarak 120,2 milyar ABD doları ve diğer yatırımlar kalemi %2,1 oranında artarak 362,7 milyar ABD doları seviyesinde gerçekleşmiştir. 
+Tablo 2: Türkiye'nin Yurt Dışı Yükümlülükleri (Stok, Milyon ABD Doları) 
+Grafik 3: Portföy Yükümlülüklerinin Kompozisyonu (Stok, Milyar ABD Doları) 
+42,6 
+29,2 
+17,9 
+15,8 
+14,6 
+Hazine Tahvil Stoku 
+Hisse Senedi 
+Borç Senetleri-Bankalar 
+DİBS 
+Borç Senetleri-Diğer Sektörler 
+Grafik 4: Diğer Yatırım Yükümlülüklerinin Kompozisyonu (Stok, Milyar ABD Doları) 
+201,0 
+93,0 
+61,4 
+Krediler 
+Ticari Krediler 
+SDR Tahsisatları 7,2 
+Efektif ve Mevduatlar 

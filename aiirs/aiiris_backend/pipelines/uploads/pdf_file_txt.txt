@@ -3,35 +3,69 @@
 
 [Image 1]
 
-Description: Bu görsel, bir organizasyonun veya etkinliğin tanıtımını yapmak için hazırlanmış bir afiş ya da broşür arka planı gibi görünüyor. Üst sağ köşede "TEKNOFEST" logosu bulunuyor. Logonun altında ise mavi ve kırmızı renklerde, "Havacılık, Uzay ve Teknoloji Festivali" ifadesi yer alıyor.
-
-Arka plan, oldukça sade, açık mavi tonlarında bir desenle süslenmiş ve beyaz ağırlıklı. Sol üst köşeye yakın bir bölgede, kanatları andıran bir şekil veya grafik elementi var. Alt kısımdaysa ince ve renk geçişleri olan yatay bir çizgi mevcut. Bu tasarım genel olarak sade ve modern bir estetik sunuyor, muhtemelen bir etkinliğin ilanı ya da katılımcı bilgileri için kullanılmak üzere ayarlanmış.
-***
+[Description] = Bu bir fotoğraf. Görselde "Teknofest" logosu yer alıyor ve arka planda bulanık bir desen bulunuyor. Detaylı bir açıklama yapmaya gerek yok çünkü grafik ya da finansal bir veri içermiyor.
+---
 [Image 2]
 
-Description: Görselde, merkezi bir roket figürüne sahip olan "TEKNOFEST" logosu yer alıyor. Logonun arka planı, mavi tonlarda bir uzay teması ile süslenmiş. Logonun üst kısmında "8. Yıl" yazısı ve uçan bir insan figürü bulunuyor. Sağ üst köşede "#Milli Teknoloji Hamlesi" ifadesi yer alıyor. 
-
-Logonun alt kısmında ise "Havacılık, Uzay ve Teknoloji Festivali" yazısı dikkat çekiyor. Arkadaki mavi ve beyaz renkler, uzay ve teknoloji temasını güçlendiriyor; dalgalı bir ışık deseni ve yıldızlar da bu temayı destekliyor. Genel olarak görsel, teknolojik ilerleme ve keşif duygusunu yansıtıyor.
-***
+[Description] = Bu görsel bir grafik. TEKNOFEST logosu ve temsili bir uzay teması sunulmuş. Logo, bir roket ve kanatlarla birlikte tasarlanmış. "Havacılık, Uzay ve Teknoloji Festivali" ifadesi, etkinliğin içeriğini ve temasını özetliyor. Arka planda ise uzay ve galaksi temalı bir görsel bulunmakta. Görsel, festivalin bilim ve teknoloji odaklı bir etkinlik olduğunu vurguluyor.
+---
 
 ------Page 2------
 
 
 [Table 1]
 [0,0]: İçindekiler
-[0,1]: 
-[1,0]: 1.Proje Özeti[1,1]: 1
-[2,0]: 2.Çözüm Ürettiği Sorun/İhtiyaç[2,1]: 1
-[3,0]: 3.İnovasyon ve Ticarileşme Potansiyeli[3,1]: 2
-[4,0]: 4.Kullanılacak Yöntem[4,1]: 2
+[1,0]: 1.Proje Özeti
+[1,1]: 1
+[2,0]: 2.Çözüm Ürettiği Sorun/İhtiyaç
+[2,1]: 1
+[3,0]: 3.İnovasyon ve Ticarileşme Potansiyeli
+[3,1]: 2
+[4,0]: 4.Kullanılacak Yöntem
+[4,1]: 2
 :unselected:
-[5,0]: 5.Hedef Kitle[5,1]: 3
+[5,0]: 5.Hedef Kitle
+[5,1]: 3
 :unselected:
-[6,0]: 6.Pazar Analizi[6,1]: 3
-[7,0]: 7.Risk Analizi[7,1]: 4
-[8,0]: 8.Proje Takvimi[8,1]: 5
-[9,0]: 9.Kaynakça[9,1]: 6
+[6,0]: 6.Pazar Analizi
+[6,1]: 3
+[7,0]: 7.Risk Analizi
+[7,1]: 4
+[8,0]: 8.Proje Takvimi
+[8,1]: 5
+[9,0]: 9.Kaynakça
+[9,1]: 6
+[Description] = Tablo, bir projenin detaylı bir içindekiler bölümünü temsil ediyor ve çeşitli bölümleri ve alt başlıkları içeriyor. Şimdi bu tabloyu detaylıca analiz edip yorumlayalım:
 
+### Genel Bakış:
+1. **İçindekiler** başlığı altında toplam 9 ana bölüm bulunuyor. 
+2. Bu bölümler, genellikle bir proje raporunda veya bir iş planında yer alan tipik başlıklar gibi görünüyor ve her biri önemli bilgi alanlarını kapsıyor.
+3. Her bir başlık numaralandırılmış ve bazılarına ait alt kategoriler veya detaylar da belirtilmiş.
+
+### Detaylı Yorumlar:
+- **1. Proje Özeti:** Bu bölüm, projenin genel tanıtımını ve amacını özetler. Genellikle proje hakkında hızlı bir bakış sağlar ve okuyucunun projeye dair genel bir fikir edinmesini amaçlar.
+  
+- **2. Çözüm Ürettiği Sorun/İhtiyaç:** Projenin hedef aldığı problemler veya çözümlenmesi gereken ihtiyaçlarla ilgili detaylar burada yer alıyor. Bu bölüm, projenin hangi spesifik sorunları ele aldığı veya hangi ihtiyaçları karşılamayı amaçladığı üzerine odaklanır. 
+
+- **3. İnovasyon ve Ticarileşme Potansiyeli:** Proje kapsamında geliştirilen yenilikçi yaklaşımlar ve bunların ticari değer taşıyıp taşımadığına ilişkin değerlendirmeler burada yapılır. Bu alan, projenin ne derece yenilikçi olduğunu ve pazara uygulanabilirliğini tespit etmeye çalışır.
+
+- **4. Kullanılacak Yöntem:** Projede kullanılacak metodolojiler veya yaklaşımlar burada belirtilmiş. Bu, projenin nasıl yürütüleceğini ve hangi stratejilerin izleneceğini açıklar. Ancak, bu bölümün içeriği işaretlenmemiş (": unsurlect"), bu da detaylarının henüz kararlaştırılmadığı ya da eksik olduğu anlamına gelebilir.
+
+- **5. Hedef Kitle:** Bu bölümde, projenin hitap ettiği veya etkilemeyi amaçladığı demografik veya pazar segmenti tanımlanır. Yine ": unsurlect" ifadesi burada mevcut, bu yüzden hedef kitle henüz yeterince tanımlanmamış olabilir.
+
+- **6. Pazar Analizi:** Projenin pazardaki konumu, rekabet durumu ve pazar büyüklüğü gibi önemli unsurların analiz edildiği bir bölümdür.
+
+- **7. Risk Analizi:** Proje ile ilgili potansiyel risklerin ve bu risklerin yönetimine ilişkin stratejilerin yer aldığı bölümdür.
+
+- **8. Proje Takvimi:** Projenin zaman planlaması ve önemli kilometre taşlarının belirtildiği bir bölümdür. Bu, projenin aşamalarını ve bu aşamaların zamanlamasını öngörür.
+
+- **9. Kaynakça:** Kullanılan kaynaklar ve referansların yer aldığı bölümdür. Projede faydalanılan literatür ve kaynakların listesi burada yer alır.
+
+### Öne Çıkanlar:
+- **Eksik veya Tamamlanmamış Bölümler:** "Kullanılacak Yöntem" ve "Hedef Kitle" bölümleri "unselect" olarak belirtildiği için eksik ya da henüz netleştirilmemiş olabilir. Bu, analistin veya proje yöneticisinin dikkat etmesi gereken bir husustur.
+- **Sistematik ve Detaylı Yaklaşım:** Tablonun kapsamı ve başlıkları, projenin her yönüyle detaylı bir şekilde ele alındığını gösteriyor 
+
+---
 1. PROJE ÖZETİ 
 Proje, finansal süreçlerde verimliliği arttırmayı amaçlayan bir yapay zeka destekli iş asistanı geliştirmeyi hedeflemektedir. Temel olarak, Retrieval-Augmented Generation (RAG) teknolojisi ile entegre edilen bu sistem, finansal belgelerden otomatik bilgi çıkarımı ve analiz yapmayı sağlayarak mali raporlamayı hızlandırmayı ve kolaylaştırmayı amaçlar. Proje, özellikle küçük ve orta ölçekli işletmeler (KOBİ'ler) olmak üzere farklı büyüklüklerdeki işletmelerde maliyetleri düşürmek, hataları azaltmak ve daha güvenilir finansal kararlar alınmasını sağlamak adına büyük bir potansiyele sahiptir. Yapay zeka destekli sistem, PDF, Excel gibi farklı formatlarda gelen verileri işlemekte, belgeler arasındaki ilişkileri anlamakta, kullanıcıya doğru ve hızlı analizler sunmaktadır. Sistemin sunduğu özellikler arasında otomatik veri doğrulama, el yazısı tanıma, dijital imza entegrasyonu ve gelişmiş belge organizasyonu yer alırken API entegrasyonu ile başka finansal araçlarla uyumlu hale getirilebilecektir. Bu çözüm, sektöründe esnek, yenilikçi ve düşük maliyetli bir alternatif olarak öne çıkmayı hedeflemektedir. 
 2. ÇÖZÜM ÜRETTİĞİ SORUN/İHTİYAÇ 
@@ -65,45 +99,19 @@ Türkiye'de yapay zeka benimsenmesinin erken aşamalarda olması, projemize ilk 
 
 [Image 1]
 
-Description: Bu görsel, bir projenin zaman çizelgesini gösteren bir tablo sunmaktadır. Projenin Mart ayından Eylül ayına kadar olan takvimine dair bilgi vermektedir. Tablo, iki ana eksene sahiptir: 
+[Description] = Bu bir tablodur. Proje sürecini aylara göre planlayan bir zaman çizelgesi şeklinde düzenlenmiştir. Her satır, farklı bir proje aşamasını veya görevini temsil eder; sütunlar ise Mart'tan Eylül'e kadar olan ayları kapsar. "X" işaretleri, belirli bir etkinliğin veya aşamanın hangi aylarda gerçekleşeceğini gösterir.
 
-- Yatay eksen projenin aylarını (Mart'tan Eylül'e) temsil eder.
-- Dikey eksen ise proje süreçlerini listeler.
+Örneğin:
 
-Tabloda belirtilen süreçler ve bu süreçlerin hangi aylarda aktif olduğu aşağıda detaylandırılmıştır:
+- "Proje Planlaması ve İhtiyaç Analizi" Mart ayında yapılacaktır.
+- "Teknik Altyapı ve Teknoloji Seçimi" Mart ve Nisan aylarında gerçekleşecektir.
+- "Veri Kaynağı ve API Entegrasyonu" Nisan ve Haziran aylarında planlanmıştır.
+- "Pilot Uygulama ve Test Aşaması" Eylül ayında öngörülmektedir.
 
-1. **Proje Planlaması ve İhtiyaç Analizi:**
-   - Mart ayında gerçekleştirilmiştir.
-
-2. **Teknik Altyapı ve Teknoloji Seçimi:**
-   - Mart ve Nisan aylarında gerçekleştirilmiştir.
-
-3. **Prototip Geliştirme:**
-   - Mart ve Nisan aylarında gerçekleştirilmiştir.
-
-4. **Veri Kaynağı ve API Entegrasyonu:**
-   - Nisan, Mayıs ve Haziran aylarında gerçekleştirilmiştir.
-
-5. **OCR ve Multimodal Veri İşleme Entegrasyonu:**
-   - Nisan ve Mayıs aylarında gerçekleştirilmiştir.
-
-6. **Sistem Güvenliği ve Gizlilik Önlemleri:**
-   - Mayıs ayında gerçekleştirilmiştir.
-
-7. **Kullanıcı Arayüzü Geliştirme:**
-   - Mayıs, Haziran, Temmuz ve Ağustos aylarında gerçekleştirilmiştir.
-
-8. **Makine Öğrenmesi ve Analiz Modülleri Geliştirme:**
-   - Haziran, Temmuz, Ağustos ve Eylül aylarında gerçekleştirilmiştir.
-
-9. **Pilot Uygulama ve Test Aşaması:**
-   - Eylül ayında gerçekleştirilmiştir.
-
-Bu tablo, projenin farklı süreçlerinin hangi zaman dilimlerinde aktif olduğunu açık bir şekilde göstermektedir. Bazı süreçler birden fazla ayda tamamlanırken, bazıları yalnızca bir ay ile sınırlıdır.
-***
+Bu tablo, projeyi organize etmek ve takip etmek için kullanılabilecek bir araçtır.
+---
 
 [Table 1]
-[0,0]: 
 [0,1]: Mart
 [0,2]: Nisan
 [0,3]: Mayıs
@@ -111,30 +119,126 @@ Bu tablo, projenin farklı süreçlerinin hangi zaman dilimlerinde aktif olduğu
 [0,5]: Temmuz
 [0,6]: Ağustos
 [0,7]: Eylül
-[1,0]: Proje Planlaması ve İhtiyaç Analizi[1,1]: X
-:selected:[1,2]: :unselected:[1,3]: :unselected:[1,4]: :unselected:[1,5]: :unselected:[1,6]: :unselected:[1,7]: :unselected:
-[2,0]: Teknik Altyapı ve Teknoloji Seçimi[2,1]: X
-:selected:[2,2]: :selected:[2,3]: :unselected:[2,4]: :unselected:[2,5]: :unselected:[2,6]: :unselected:[2,7]: :unselected:
-[3,0]: Prototip Geliştirme[3,1]: :selected:[3,2]: :selected:[3,3]: :unselected:[3,4]: :unselected:[3,5]: :unselected:[3,6]: :unselected:[3,7]: :unselected:
-[4,0]: Veri Kaynağı ve API Entegrasyonu[4,1]: :unselected:[4,2]: :selected:[4,3]: X
-:selected:[4,4]: :unselected:[4,5]: :unselected:[4,6]: :unselected:[4,7]: :unselected:
-[5,0]: OCR ve Multimodal Veri İşleme Entegrasyonu[5,1]: :unselected:[5,2]: x
-:selected:[5,3]: X
-:selected:[5,4]: :unselected:[5,5]: :unselected:[5,6]: :unselected:[5,7]: :unselected:
-[6,0]: Sistem Güvenliği ve Gizlilik Önlemleri[6,1]: :unselected:[6,2]: :unselected:[6,3]: ×
-:selected:[6,4]: :unselected:[6,5]: :unselected:[6,6]: :unselected:[6,7]: :unselected:
-[7,0]: Kullanıcı Arayüzü Geliştirme[7,1]: :unselected:[7,2]: :unselected:[7,3]: X
-:selected:[7,4]: X
-:selected:[7,5]: X
-:selected:[7,6]: :unselected:[7,7]: :unselected:
-[8,0]: Makine Öğrenmesi ve Analiz Modülleri Geliştirme[8,1]: :unselected:[8,2]: :unselected:[8,3]: :unselected:[8,4]: X
-:selected:[8,5]: ×
-:selected:[8,6]: ×
-:selected:[8,7]: :unselected:
-[9,0]: Pilot Uygulama ve Test Aşaması[9,1]: :unselected:[9,2]: :unselected:[9,3]: :unselected:[9,4]: :unselected:[9,5]: :unselected:[9,6]: X
-:selected:[9,7]: X
+[1,0]: Proje Planlaması ve İhtiyaç Analizi
+[1,1]: X
 :selected:
+[1,2]: :unselected:
+[1,3]: :unselected:
+[1,4]: :unselected:
+[1,5]: :unselected:
+[1,6]: :unselected:
+[1,7]: :unselected:
+[2,0]: Teknik Altyapı ve Teknoloji Seçimi
+[2,1]: X
+:selected:
+[2,2]: :selected:
+[2,3]: :unselected:
+[2,4]: :unselected:
+[2,5]: :unselected:
+[2,6]: :unselected:
+[2,7]: :unselected:
+[3,0]: Prototip Geliştirme
+[3,1]: :selected:
+[3,2]: :selected:
+[3,3]: :unselected:
+[3,4]: :unselected:
+[3,5]: :unselected:
+[3,6]: :unselected:
+[3,7]: :unselected:
+[4,0]: Veri Kaynağı ve API Entegrasyonu
+[4,1]: :unselected:
+[4,2]: :selected:
+[4,3]: X
+:selected:
+[4,4]: :unselected:
+[4,5]: :unselected:
+[4,6]: :unselected:
+[4,7]: :unselected:
+[5,0]: OCR ve Multimodal Veri İşleme Entegrasyonu
+[5,1]: :unselected:
+[5,2]: x
+:selected:
+[5,3]: X
+:selected:
+[5,4]: :unselected:
+[5,5]: :unselected:
+[5,6]: :unselected:
+[5,7]: :unselected:
+[6,0]: Sistem Güvenliği ve Gizlilik Önlemleri
+[6,1]: :unselected:
+[6,2]: :unselected:
+[6,3]: ×
+:selected:
+[6,4]: :unselected:
+[6,5]: :unselected:
+[6,6]: :unselected:
+[6,7]: :unselected:
+[7,0]: Kullanıcı Arayüzü Geliştirme
+[7,1]: :unselected:
+[7,2]: :unselected:
+[7,3]: X
+:selected:
+[7,4]: X
+:selected:
+[7,5]: X
+:selected:
+[7,6]: :unselected:
+[7,7]: :unselected:
+[8,0]: Makine Öğrenmesi ve Analiz Modülleri Geliştirme
+[8,1]: :unselected:
+[8,2]: :unselected:
+[8,3]: :unselected:
+[8,4]: X
+:selected:
+[8,5]: ×
+:selected:
+[8,6]: ×
+:selected:
+[8,7]: :unselected:
+[9,0]: Pilot Uygulama ve Test Aşaması
+[9,1]: :unselected:
+[9,2]: :unselected:
+[9,3]: :unselected:
+[9,4]: :unselected:
+[9,5]: :unselected:
+[9,6]: X
+:selected:
+[9,7]: X
+:selected:
+[Description] = Bu tablo, bir projenin farklı aşamalarının zaman çizelgesi ve her aşamanın ilerleme durumu hakkında bilgi veriyor gibi görünüyor. Tablo başlıkları, aylar ve altındaki kutular ise, belirli bir süre zarfında tamamlanması planlanan görevlerin durumunu gösteriyor. Kullanılan semboller ve kelimelerin durumu tanımladığı düşünülürse, "selected" ve "unselected" durumu belirtilmiş bölümlerle işaretlenmiş. Aşağıda her bir aşamanın analizi bulunmaktadır:
 
+1. **Proje Planlaması ve İhtiyaç Analizi:**
+   - Bu aşama mart ayında başlamış ve devam ettiğini gösteren bir işaret bulunmamakta. Bu da muhtemelen bu aşamanın Mart ayında tamamlandığını veya başlangıcını temsil eder.
+
+2. **Teknik Altyapı ve Teknoloji Seçimi:**
+   - Mart ve Nisan aylarında önemli bir ilerleme göstermiş. Bu süre zarfında gerekli teknoloji ve altyapı seçimlerinin yapıldığı anlaşılabilir.
+
+3. **Prototip Geliştirme:**
+   - Mart ve Nisan ayları boyunca yoğun bir faaliyet görüyoruz. Prototip geliştirme süreci bu aylar arasında çoğunlukla tamamlanmış gibi görünüyor.
+
+4. **Veri Kaynağı ve API Entegrasyonu:**
+   - Eğitici veya öğretici çalışmaların Nisan ayında başladığını ve bu dönemde yoğun olduğunu söyleyebiliriz. Mart ayında aktiviteler az görünüyor.
+
+5. **OCR ve Multimodal Veri İşleme Entegrasyonu:**
+   - Mart, Nisan ve Mayıs aylarında etkin faaliyetler gözlenmiş. Özellikle Mayıs ayı, bu aşamanın tamamlanışı veya önemli bir ilerleme sağlandığını gösterebilir.
+
+6. **Sistem Güvenliği ve Gizlilik Önlemleri:**
+   - Mayıs ayında faaliyet belirtilmiş, ancak bu aşamanın o ayda önemli bir bölümünün tamamlanmış olabileceğini veya sadece o ayda aktif çalışmalara başlandığını düşünebiliriz.
+
+7. **Kullanıcı Arayüzü Geliştirme:**
+   - Mayıs, Haziran ve Temmuz aylarında yoğun bir şekilde yürütülmüş. Bu dönemde, kullanıcı arayüzü üzerinde aktivite olduğu anlaşılmaktadır.
+
+8. **Makine Öğrenmesi ve Analiz Modülleri Geliştirme:**
+   - Haziran, Temmuz ve Ağustos aylarında seçilmiş, bu da önemli bir geliştirme sürecinin bu aylarda gerçekleştiğini gösteriyor.
+
+9. **Pilot Uygulama ve Test Aşaması:**
+   - Ağustos ve Eylül aylarında yürütülen bir süreç. Bu zaman aralığında, sistemin testleri yapıldığı ve pilot uygulamaların değerlendirildiği anlaşılabilir.
+
+Tabloda eksik olarak işaretlenmiş daha birçok ay ve dolayısıyla aşamanın durumları bulunmaktadır, bunlar "unselected" olarak tanımlanmış, bu da bu zaman dilimlerinde belirgin bir aktivite yapılmadığını gösterebilir.
+
+Genel değerlendirme: Projenin başlangıcından itibaren özellikle ilk altı ayda önemli bir ilerleme kaydedildiği düşünülüyor. Mart ve Nisan ayları, temel sistemlerin ve prototiplerin geliştirilmesi açısından yoğun geçmiş. Projenin ilerleyen aşamaları, daha gelişmiş modül geliştirme ve entegrasyon odaklı faaliyetler içeriyor ve bu süreç Ağustos ve Eylül'e kadar devam ettirilmiş. Bu tablo, projenin birtakım aşamalarının timelinelarının başlangıç ve bitişlerini kabaca çiziyor. 
+
+---
 sektöründe lider bir konuma ulaşmayı hedefliyoruz. Bu kapsamlı yaklaşım, hızla büyüyen finansal süreç otomasyonu pazarında güçlü bir rekabet avantajı elde etmemizi sağlayacaktır. 
 7. RİSK ANALİZİ 
 Veri güvenliği ve gizlilik, finansal sistemlerde önemli bir risk faktörüdür. Kullanıcıların sisteme duyduğu güveni sağlamak için Homomorphic Encryption teknolojisiyle veriler şifrelenerek analiz edilecektir. Ayrıca, PII Masking yöntemiyle kişisel bilgiler anonimleştirilerek veri gizliliği korunacaktır. Diğer bir risk, yapay zeka tabanlı hatalı bilgi üretimidir. RAG altyapısı ve büyük dil modelleri bazen hatalı veya tutarsız bilgi üretebilir, bu da finansal kararları olumsuz etkileyebilir. Bu riski azaltmak için Semantic Chunking gibi metotlarla doğruluk artırılacak ve kullanıcı geri bildirimleriyle sürekli iyileştirme sağlanacaktır (Bender et al., 2021). 
