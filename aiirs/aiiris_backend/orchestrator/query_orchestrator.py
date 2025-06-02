@@ -43,9 +43,11 @@ def run_orchestration(query: str) -> str:
 
     # 4. Retrieval + Reranking0
     retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
-    print("GELDİ")
+    print(type(retrieved_docs))
+    
     if should_use_web_search(preprocessed_query, retrieved_docs):
-        web_context = summarize_web_context(preprocessed_query)  
+        web_context =  summarize_web_context(preprocessed_query)  
+        print(f"Web Context: {web_context}")
     else:
         web_context = ""      
     
@@ -67,7 +69,7 @@ def run_orchestration(query: str) -> str:
         metadata_str += f"Date: {metadata.get('date')}\n"
         metadata_str += f"Category: {metadata.get('category')}\n"
         
-        context_entries.append(f"İçerik: {content}\n\nMetadata:\n{metadata_str}")
+        context_entries.append(f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}")
 
     if web_context:
         context_entries.append(f"Web Arama Sonuçları:\n{web_context}")

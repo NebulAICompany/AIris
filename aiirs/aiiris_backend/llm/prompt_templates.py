@@ -18,7 +18,9 @@ def create_rag_prompt(context: str, query: str, instruction:str = None) -> str:
 Soru: {query}{instruction_text}
 
 Yukarıdaki bağlam bilgisine dayanarak, soruyu yanıtla. Eğer cevap bağlamda yoksa, 
-bilmediğini söyle ve tahmin etme. Cevap verirken kullandığın bilginin metadatalarını 
+bilmediğini söyle ve tahmin etme. Eğer cevap local içerik içerisinde yoksa ama web bilgisi içerisinde
+varsa dahili belgelerde cevabın bulunamadığını ancak web araması yapılırken bulunduğunu verdiğin cevapta belirt.
+Cevap verirken kullandığın bilginin metadatalarını 
 aşağıdaki formatta final cevabın sonuna ekle:
 
 Kullanılan Bilgi Metadataları:

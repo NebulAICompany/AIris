@@ -1,0 +1,126 @@
+
+------Page 1------
+
+[Image 1]
+
+Description: Bu görselde, siyah renkli mürekkeple yazılmış kıvrımlı ve stilize bir imza yer alıyor. İmza, büyük harflerle başlamış gibi görünüyor ve ardından gelen kısımlar daha küçük ve akıcı bir şekilde devam ediyor. Yazı eğik ve hızlı bir şekilde atılmış izlenimi veriyor. İmzanın genel hatları yuvarlak ve dalgalı bir şekil oluşturuyor. Bu imzada belirgin olan kıvrımlar ve keskin dönüşler, kişinin özgün bir imza tarzına sahip olduğunu gösteriyor. İmzanın belirgin bir şekilde kişisel ve tanınabilir olması muhtemeldir.
+---
+[Image 2]
+
+Description: Görselde mavi mürekkeple atılmış bir imza yer alıyor. İmza, birkaç eğri ve keskin çizgiden oluşuyor. İlk bölümde yuvarlak döngüler ve kavisler dikkat çekerken, imzanın ilerleyen kısmında daha düz ve uzun bir çizgi ile tamamlanıyor. Son bölümde ise yukarı doğru yükselen keskin bir köşe göze çarpıyor. Genel olarak stilize ve dinamik bir görünüme sahip. İmza sahibinin kim olduğuyla ilgili bilgi vermek mümkün değil.
+---
+
+[Table 1]
+[0,0]: Başvuru Sahibi
+[0,1]: :|
+[0,2]: BEKİR ONUK (TC KİMLİK NO: 39868706984)
+[1,0]: Başvuran Vekili[1,1]: :[1,2]: Av. FATİH MEHMET ERCİYAS
+[2,0]: Sigorta Kuruluşu (Aynı uyuşmazlıkla ilgili birden fazla kuruluşla ilgili başvuru yapıldığında tüm kuruluşlar buraya yazılabilir)[2,1]: :[2,2]: TÜRKİYE (GÜNEŞ) SİGORTA ANONİM ŞİRKETİ
+[3,0]: Poliçe Türü (trafik, kasko, yangın, hayat branşı sağlık veya hastalık vb.)[3,1]: :[3,2]: ZMMS
+[4,0]: Uyuşmazlığa Konu Poliçe No[4,1]: :[4,2]: 574171337
+[5,0]: Talep Konusu (üstte bulunan poliçe türüne ek alt talep konusu örnek: - trafik - araç hasarı, trafik değer kaybı, trafik - destekten yoksun kalma, trafik- sürekli maluliyet veya geçici maluliyet vb.)[5,1]: :[5,2]: Değer Kaybı Bedeli
+[6,0]: Uyuşmazlık Tutarı (Sisteme girilen uyuşmazlık tutarı ile bu alana girilen uyuşmazlık tutarı aynı olmalıdır[6,1]: :[6,2]: Fazlaya dair haklarımız saklı kalmak kaydıyla şimdilik 10,00-TL Değer Kaybı
+[7,0]: Plaka No (başvuru sahibinin plakası)[7,1]: :[7,2]: 34 ELN 183
+[8,0]: Plaka No (karşı tarafın plakası varsa )[8,1]: :[8,2]: 34 HDN 316
+[9,0]: Riziko (hasar) tarihi[9,1]: :[9,2]: 21/10/2023
+[10,0]: Sigorta kuruluşu kısmi bir ödeme yaptı mı? Yapıldı ise yapılan ödeme tutarı ve ödeme tarihi[10,1]: :[10,2]: YOK
+[11,0]: Başvurunuzla ilgili olarak kusura ilişkin itirazınız var mı? (Sadece kusur tespiti komisyonumuzun görev kapsamı dışındadır.)[11,1]: :[11,2]: YOK
+
+UYUŞMAZLIK KONUSU : Zararın tazmini amacıyla uzman bilirkişiler tarafından hesaplandığında fazla çıkması halinde arttırılmak üzere (Fazlaya İlişkin Haklarımız Saklı Kalmak Kaydıyla - Kısmi Dava ) şimdilik 10,00 TL reel değer kaybı bedelinin temerrüt tarihinden itibaren tahsili talebimizdir. 
+NETİCE TALEP: 
+1- 10,00 TL REEL DEĞER KAYBI BEDELİNİN poliçe limitleri dahilinde davalı sigorta şirketinden temerrüt tarihinden itibaren avans faizi ile birlikte tazminine, 
+2- Baro pulu 60,50-TL ile her türlü başvuru ücreti, yargılama gideri, bilirkişi ücreti ve vekâlet ücretinin davalı tarafa yükletilmesine karar verilmesini saygılarımla vekâleten arz ve talep ederim. 
+DAVACI VEKİLİ AV. FATİH MEHMET ERCİYAS 
+1 
+
+------Page 2------
+
+[Image 1]
+
+Description: Görsel bir imzayı göstermektedir. İmza, hızlı ve akıcı bir el yazısıyla atılmıştır. İlk kısımda döngüsel ve kıvrımlı bir hat bulunurken, ikinci kısımda daha düz ve yatay bir çizgi öne çıkmaktadır. İmzanın genel formu dinamik ve stilize bir görünüme sahiptir, harfler belirgin bir şekilde ayırt edilememekte, kişisel bir işaret niteliği taşımaktadır. Siyah mürekkeple atıldığı görülüyor ve imza eğik bir açıya sahiptir.
+---
+
+[Table 1]
+[0,0]: DAVACI
+[0,1]: BEKİR ONUK (TC KİMLİK NO: 39868706984)
+[1,0]: VEKİLİ[1,1]: Barbaros Hayrettin Paşa Mah. 1075. Sk. No:10/3 Gaziosmanpaşa/İST
+[2,0]: [2,1]: : Av. Fatih Mehmet ERCIYAS
+[3,0]: [3,1]: Osmaniye Mah. Mine Sok. No:4 Emre Konutları A Blok K:6 D:28 Bakırköy/İSTANBUL
+[4,0]: DAVALI SIGORTA[4,1]: : TÜRKİYE (GÜNEŞ) SİGORTA ANONİM ŞİRKETİ Levent Mah. Çayır Çimen Sok. No:7 34330 Levent- Beşiktaş/İSTANBUL
+
+SİGORTA TAHKİM KOMİSYONU'NA 
+08/11/2023 TEMERRÜT TARİHİ 
+KONU : Zararın tazmini amacıyla uzman tarafından hesaplandığında fazla çıkması halinde arttırılmak üzere (Fazlaya İlişkin Haklarımız Saklı Kalmak Kaydıyla - Kısmi Dava ) şimdilik 10,00 TL reel değer kaybı bedelinin temerrüt tarihinden itibaren tahsili talebimizdir. 
+bilirkişiler 
+AÇIKLAMALAR : 
+1- TÜRKİYE (GÜNEŞ) SİGORTA ANONİM ŞİRKETİ' ne sigortalı TUNCAY TAŞCI'a ait 34 HDN 316 plakalı araç tarafından 21/10/2023 tarihinde müvekkile ait 34 ELN 183 plakalı araca çarpmak suretiyle maddi hasarlı trafik kazası meydana gelmiştir. Mevcut kazada davalıya sigortalı aracın sürücüsü kazanın meydana gelmesinde %100 asli kusurludur. 
+2- Müvekkilime ait araçta kaza sonucu oluşan reel değer kaybı bedeli için 120.000,00-TL'den az olmamak üzere reel değer kaybı bedeli ödenmesi talep edilmiş ancak davalı tarafından ödeme yapılmamıştır. 
+GÜNCEL ANAYASA MAHKEMESİ KARARINA İLİŞKİN AÇIKLAMA 
+1- Anayasa Mahkemesi 2021/82 E. 29/12/2022 tarih 2022/167 K. Sayılı kararında; 2918 sayılı Karayolları Trafik Kanunu'nun 90. Maddesinin birinci fıkrasına eklenen ikinci cümlenin Anayasa'ya aykırı bularak İPTALİNE karar vermiştir. İptal kararı, 14/02/2023 tarih ve 32104 sayılı Resmi Gazetede yayımlanmış ve böylece Karayolları Trafik Kanununun 90'ıncı maddesinin birinci fıkrasındaki ikinci cümle yürürlükten kalkmıştır. 
+2- Anayasa Mahkemesi, değer kaybı, destekten yoksun kalma ve sürekli sakatlık tazminatlarının belirlenme esaslarının düzenlendiği işbu fıkranın ikinci cümlesinin iptali kararı ile zorunlu mali sorumluluk sigortası 
+2 
+
+------Page 3------
+
+[Image 1]
+
+Description: Görselde, siyah renkle atılmış sanatsal ve kıvrımlı bir imza yer alıyor. İmza, birkaç büyük ve akıcı harften oluşuyor. Harfler, stilize bir şekilde yazılmış ve birbirine bağlanmış gibi görünüyor. İmzanın sol tarafı daha küçük ve daha yuvarlak şekilli, sağ tarafa doğru ise daha büyük ve sivri hatlarla bitiyor. Bu tür imzalar genellikle kişisel veya profesyonel belgelerde kimlik doğrulama amacıyla kullanılır. Görsel sadece imzayı içermekte, herhangi bir arka plan ya da ek süsleme yok.
+---
+
+[Table 1]
+[0,0]: Anayasa Mahkemesinin 09/10/2020 tarihli
+[0,1]: Resmi
+[0,2]: Gazetede
+[1,0]: yayımlanan 17/07/2020 tarihli ve 2019/40 E., 2020/40 K sayılı[1,1]: [1,2]: kararı ile
+[2,0]: Trafik Sigortası Genel Şartlarının bazı maddelerinin uygulanmasına yönelik[2,1]: [2,2]: 
+[3,0]: KTK 90. Maddesinin Genel Şartlara atıf yapan ibaresinin Anayasaya aykırı[3,1]: [3,2]: 
+[4,0]: olduğu gerekçesi ile iptaline karar verilmiş olup kararın derdest dosyalar[4,1]: [4,2]: 
+[5,0]: yönünden dikkate alınması da gerektiğinden araçta oluşan[5,1]: [5,2]: değer kaybı
+[6,0]: zararını Genel Şartlardaki formül yerine Yargıtay içtihatlarında olduğu gibi[6,1]: [6,2]: 
+
+bağlamındaki tazminatların esas ve usullerinin belirlenmesinde Genel Şartların değil, Kanun hükümlerinin uygulanmasının yolunu açmıştır. Böylece Karayolları Trafik Kanunu, Türk Ticaret Kanunu ve Türk Borclar Kanununun özellikle haksız fiile dayanan ve gerçek zararın tazminini öngören hükümlerinin uygulanmasının gerekliliği doğmuştur. 
+3- Anayasa Mahkemesi'nin iptal kararından sonra 2918 sayılı Karayolları Trafik Kanunu'nun 90. Maddesinin birinci fikrasindaki ikinci cumlesindeki değer kaybı tazminatının hesaplanması yönünde esas alınması gereken kuralların yasal dayanağı kalmamıştır. 
+4- 
+3- Anayasa Mahkemesi 2019/40 esas sayılı başvuruda; 2918 sayılı Karayolları Trafik Kanununun 90'ıncı maddesinin birinci cümlesinde geçen " ... ve bu Kanun çerçevesinde hazırlanan genel şartlarda ... " ibaresi ile ikinci cümlesinde yer alan " .... ve genel şartlarda ... " ibaresini, Anayasaya aykırı bularak iptaline karar vermiştir. İptal kararı, 09.10.2020 tarih ve 31269 sayılı Resmi Gazetede yayımlanmış ve böylece Karayolları Trafik Kanununun 90'ıncı maddesinde belirtilen ibareler yürürlükten kalkmıştır. 
+Bilindiği üzere, Anayasa'nın 153'üncü maddesi uyarınca anayasa mahkemesi kararları kesin olup yasama, yürütme ve yargı organlarını, idare makamlarını, gerçek ve tüzelkişileri bağlamaktadır. Anayasa Mahkemesi'nin verdiği iptal kararlarının, itiraz yoluna başvurulmasını isteyen kişi ya da kişiler tarafından açılan davaların yanı sıra, iptal edilen hüküm ya da hükümler esas alınarak hakkında uygulama yapılmış olan kişiler tarafından açılan ve görülmekte olan davalarda da uygulanması zorunludur. Danıştay 4. Dairesinin 09.05.2011 tarihli 2011/2546 E. ve 2011/3384 sayılı kararında vurgulandığı üzere, Anayasa Mahkemesi'nce bir kanun veya kanun hükmünde kararnamenin tümünün ya da bunların belirli hükümlerinin Anayasa'ya aykırı bulunarak iptal edildiğinin bilindiği halde görülmekte olan davaların Anayasa'ya aykırılığı saptanan kurallara göre görüşülüp çözümlenmesi, Anayasa'nın üstünlüğü prensibine ve hukuk devleti ilkesine aykırı düşeceği için uygun görülemez. 
+Yine Yargıtay 9 Hukuk Dairesinin 2016/19841 E. ve 2020/6786 sayılı kararında da açıkça belirtildiği üzere "İtiraz yoluyla yapılan başvuru üzerine iptal edilen hükmü, benzer işlerde uygulama durumunda bulunan başka mahkemeler de Anayasa Mahkemesi iptal kararına uymak zorunda olup, iptal edilen yasa maddesine dayanarak karar veremezler. İtiraz yoluna başvuran mahkemenin verilecek olan iptal kararı ile bağlı olması, diğer mahkemeler bakımından da aynı etkiyi haizdir. Sadece başvuran mahkeme açısından iptal kararının geriye yürüyeceğinin kabulü, uygulanacak olan norm bakımından mahkemeler arasında eşitsizlik doğuracaktır. Tüm mahkemelerin itiraz yoluna başvurması da beklenemeyeceğinden, 
+3 
+
+------Page 4------
+
+[Image 1]
+
+Description: Görsel, siyah mürekkeple atılmış bir imzayı göstermektedir. İmza, eğik ve akıcı bir şekilde atılmış olup, çeşitli kıvrımlar ve döngüler içermektedir. Sol tarafta daha küçük bir döngü, sağ tarafta ise daha geniş ve yukarı doğru bir kıvrım bulunmaktadır. İmzanın genel yapısı estetik ve imza sahibinin kişisel tarzını yansıtır şekilde karmaşık ve özgündür. İmzanın tam olarak kime ait olduğunu veya hangi harflerin bulunduğunu söylemek zordur.
+---
+uyuşmazlığa dair iptal kararının diğer mahkemelerde derdest olan davalar bakımından da uygulanması gerektiği sonucuna varılmıştır." 
+Anayasa Mahkemesi, genel şartlara atıf yapan ibarelerin iptali kararı ile zorunlu mali sorumluluk sigortası bağlamındaki tazminatların esas ve usullerinin belirlenmesinde Genel Şartların değil, Kanun hükümlerinin uygulanmasının yolunu açmıştır. Böylece Karayolları Trafik Kanunu, Türk Ticaret Kanunu ve Türk Borçlar Kanununun özellikle haksız fiile dayanan ve gerçek zararın tazminini öngören hükümlerinin uygulanmasının gerekliliği doğmuştur. 
+Türk Borçlar Kanunu md. 49 uyarınca "Kusurlu ve hukuka aykırı bir fiille başkasına zarar veren, bu zararı gidermekle yükümlüdür." 
+Türk Ticaret Kanunu md. 1409 gereğince "Sigortacı, sözleşmede öngörülen rizikonun gerçekleşmesinden doğan zarardan veya bedelden sorumludur." 
+Türk Ticaret Kanunu md. 1459 uyarınca "Sigortacı, sigortalının uğradığı zararı tazmin eder." 
+Görüleceği üzere, kanun koyucu "gerçek zarar" ilkesini açıkça ortaya koymuş olup, yerleşik yargı içtihatlarında da benimsendiği üzere davalı sigorta şirketi rizikonun gerçekleşmesinden doğan gerçek zararı tazmin etmekle yükümlüdür. 
+Değer kaybı hesaplanmasında Yargıtayın yerleşik içtihadına göre "aracın modeli, markası, özellikleri, hasarı, yapılan onarım işlemleri, kilometresi, olay tarihindeki yaşı, davacı tarafın iddiaları, davalı tarafın savunmaları ve tüm dosya kapsamı birlikte değerlendirilerek aracın kaza öncesi hasarsız ikinci el piyasa rayiç değeri ile kaza meydana geldikten ve tamir edildikten sonraki ikinci el piyasa rayiç değeri arasındaki farka göre" değer kaybı zararının belirlenmesi gerekmektedir. (Yargıtay 17. HD, 2017.E.980, 2018.K. 1219) 
+Açıklanan nedenlerle; tazminat hesabında gerçek zarar ilkesinden yola çıkarak meri mevzuat ve yargı içtihatları doğrultusunda karar verilmesi gerekmektedir. 
+YARGITAY 17. HUKUK DAİRESİ E. 2009/9892 K. 2010/3124 T. 5.4.2010 Kararında; 
+"Dava, trafik kazası sebebiyle araçta meydana gelen değer kaybı ve kazanç kaybı istemine ilişkindir. Trafik sigortacısı, karşı araçta meydana gelen gerçek zararı limit dahilinde teminat altına almıştır. Dava konusu trafik kazası sonucunda, davacıya ait aracın tamir süresince çalışamaması sebebiyle oluşan kazanç kaybı trafik sigortası teminatı dışında ise de, araçta meydana gelen değer kaybı gerçek zarar kalemleri arasında bulunmaktadır." 
+YARGITAY 4. HUKUK DAİRESİ E. 2010/8927 K. 2011/10635 T. 17.10.2011 Kararında; 
+"Dava, haksız eylem sebebiyle davacıya ait araçta oluşan hasar bedeliyle değer kaybının ödetilmesi istemine ilişkindir, yerel mahkemece istem reddedilmiştir. Yerel mahkemece benimsenen ve karara esas alınan bilirkişi raporunda ise, sadece araçta oluşan hasarın onarım bedeli belirlenmiş; ancak, bu hasar sebebiyle araçta değer kaybı olup olmayacağı yönünde herhangi bir inceleme ve değerlendirme yapılmamıştır. Davacı, hasar onarım bedeli isteğinin yanı sıra hasar ve onarım sebebiyle aracının değerinin düştüğünü ileri sürerek değer kaybı zararını da istemektedir. Sigorta şirketi tarafından davacıya hasar bedeli için ve değer kaybı sebebiyle ise herhangi bir ödeme yapılmadığı da anlaşılmaktadır. Mahkemece, yukarda açıklanan olgular gözetilerek araçta değer kaybı olup olmadığının belirlenmesi için bilirkişi incelemesi yaptırılması ve varılacak uygun sonuca göre bir karar verilmesi gerekir." 
+Yüksek Mahkeme kararları uyarınca da değer kaybı ZMM poliçesi kapsamında olup poliçe limitleri dahilinde ödenmesi gerekmektedir. 
+4 
+
+------Page 5------
+
+[Image 1]
+
+Description: Görselde bir el yazısı veya imza yer alıyor. Yazının stili oldukça akıcı ve kıvrımlı, sanatsal bir dokunuş taşıyor. İnce uçlu bir kalemle yazıldığı izlenimini veriyor. İmza, birkaç farklı kıvrımdan oluşuyor ve özgün bir tasarıma sahip. Harfler belirli bir düzen içerisinde sıralanmış, ancak hangileri olduğu tam olarak anlaşılmıyor. İmza genel olarak sade fakat etkileyici bir görünümde.
+---
+[Image 2]
+
+Description: Bu görsel, bir el yazısı ile atılmış imza örneğini göstermektedir. İmza, koyu mavi renkte olup, oldukça stilize ve akıcı bir yapıya sahiptir. İmza, birkaç eğri ve keskin çizginin birleşmesinden oluşuyor. Başlangıç kısmı, sola doğru küçük bir kıvrımla başlıyor, ardından büyük ve geniş bir yay çiziyor. Bu yay, düz bir çizgiyle sağ tarafa doğru ilerliyor ve orada keskin bir köşe oluşturarak yukarı doğru sonlanıyor. İmza genel olarak hızlı ve özgün bir şekilde atılmış gibi görünüyor.
+---
+4- Muhatap sigorta şirketine 08/11/2023 tarihinde reel değer kaybının ödenmesi için başvuru yapılmış ancak davalı tarafından değer kaybına ilişkin zararın tamamı ödenmemiştir. 
+5- Davalının söz konusu değer kaybı bedelini kabul etmemesi üzerine, reel değer kaybı bedelinin tazmini için tahkim komisyonuna başvurma zorunluluğu hasıl olmuştur. 
+İSTEM SONUCU : Yukarıda arz ve izah edilen nedenlerle taraflar arasındaki reel değer kaybı bedeline ilişkin uyuşmazlık sebebi ile talep edebileceğimiz miktarın bilirkişi marifeti ile tespit edilmesinden sonra fazlaya ilişkin haklarımız saklı kalmak kaydıyla, şimdilik ; 
+1) 10,00 TL REEL DEĞER KAYBI BEDELİNİN poliçe limitleri dahilinde davalı sigorta şirketinden temerrüt tarihinden itibaren avans faizi ile birlikte tazminine, 
+2)Baro pulu bedeli 60,50-TL ile her türlü başvuru, yargılama gideri bilirkişi ücreti ve vekalet ücretinin karşı tarafa yükletilmesine karar verilmesini saygılarımla vekaleten arz ve talep ederim. 29/11/2023 
+Davacı Vekili Av. Fatih Mehmet ERCIYAS 
+5 

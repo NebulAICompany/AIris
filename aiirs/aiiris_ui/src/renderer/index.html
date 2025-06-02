@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIris Desktop - AI-Powered Financial Document Processing</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/components.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div id="app" class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <div class="logo">
+              <i class="fas fa-brain"></i>
+              <span class="logo-text">AIris</span>
+              <span class="logo-subtitle">Financial AI</span>
+            </div>
+          </div>
+          <div class="header-right">
+            <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+              <i class="fas fa-moon"></i>
+            </button>
+            <div class="connection-status" id="connection-status">
+              <div class="status-indicator offline"></div>
+              <span>Connecting...</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="chat">
+              <i class="fas fa-comments"></i>
+              <span>Chat</span>
+            </button>
+            <button class="nav-item" data-tab="upload">
+              <i class="fas fa-upload"></i>
+              <span>Upload Files</span>
+            </button>
+            <button class="nav-item" data-tab="files">
+              <i class="fas fa-file-alt"></i>
+              <span>My Files</span>
+            </button>
+            <button class="nav-item" data-tab="analytics">
+              <i class="fas fa-chart-bar"></i>
+              <span>Analytics</span>
+            </button>
+            <button class="nav-item" data-tab="settings">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </button>
+          </nav>
+        </aside>
+
+        <!-- Content Area -->
+        <div class="content-area">
+          <!-- Chat Tab -->
+          <div id="chat-tab" class="tab-content active">
+            <div class="chat-container">
+              <div class="chat-header">
+                <h2>AI Financial Assistant</h2>
+                <p>
+                  Ask questions about your financial documents and get
+                  AI-powered insights
+                </p>
+              </div>
+
+              <div class="chat-messages" id="chat-messages">
+                <div class="welcome-message">
+                  <div class="welcome-icon">
+                    <i class="fas fa-robot"></i>
+                  </div>
+                  <h3>Welcome to AIris!</h3>
+                  <p>
+                    I'm your AI financial assistant. Upload some documents and
+                    start asking questions about your financial data.
+                  </p>
+                  <div class="suggestion-chips">
+                    <button class="suggestion-chip">
+                      What's in my latest report?
+                    </button>
+                    <button class="suggestion-chip">
+                      Analyze financial trends
+                    </button>
+                    <button class="suggestion-chip">Summary of expenses</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                  <textarea
+                    id="chat-input"
+                    class="chat-input"
+                    placeholder="Ask a question about your financial documents..."
+                    rows="1"
+                  ></textarea>
+                  <button id="send-button" class="send-button" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload Tab -->
+          <div id="upload-tab" class="tab-content">
+            <div class="upload-container">
+              <div class="upload-header">
+                <h2>Upload Documents</h2>
+                <p>Upload financial documents for AI analysis</p>
+              </div>
+
+              <div class="upload-area" id="upload-area">
+                <div class="upload-content">
+                  <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                  </div>
+                  <h3>Drag & Drop Files Here</h3>
+                  <p>
+                    or
+                    <button class="upload-browse-btn" id="browse-files">
+                      browse files
+                    </button>
+                  </p>
+                  <div class="supported-formats">
+                    <span>Supported: PDF, DOCX, XLSX, Images</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hidden file input -->
+              <input
+                type="file"
+                id="file-input"
+                multiple
+                accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
+                style="display: none"
+              />
+
+              <div class="upload-queue" id="file-queue"></div>
+
+              <div
+                class="upload-actions"
+                style="text-align: center; margin-top: 1rem"
+              >
+                <button id="upload-button" class="btn btn-primary" disabled>
+                  <i class="fas fa-upload"></i> Upload Files
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Files Tab -->
+          <div id="files-tab" class="tab-content">
+            <div class="files-container">
+              <div class="files-header">
+                <h2>Document Library</h2>
+                <p>Manage your uploaded financial documents</p>
+              </div>
+
+              <div class="files-grid" id="files-grid">
+                <div class="empty-state">
+                  <i class="fas fa-folder-open"></i>
+                  <h3>No documents yet</h3>
+                  <p>Upload some documents to get started</p>
+                  <button class="cta-button" data-tab="upload">
+                    Upload Files
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Analytics Tab -->
+          <div id="analytics-tab" class="tab-content">
+            <div class="analytics-container">
+              <div class="analytics-header">
+                <h2>System Analytics</h2>
+                <p>Monitor system performance and usage statistics</p>
+              </div>
+
+              <div class="analytics-grid">
+                <div class="analytics-card">
+                  <div class="card-header">
+                    <h3>API Requests</h3>
+                    <i class="fas fa-exchange-alt"></i>
+                  </div>
+                  <div class="card-content">
+                    <div class="metric-value" id="api-requests">-</div>
+                    <div class="metric-label">Total Requests</div>
+                  </div>
+                </div>
+
+                <div class="analytics-card">
+                  <div class="card-header">
+                    <h3>Response Time</h3>
+                    <i class="fas fa-clock"></i>
+                  </div>
+                  <div class="card-content">
+                    <div class="metric-value" id="response-time">-</div>
+                    <div class="metric-label">Average (ms)</div>
+                  </div>
+                </div>
+
+                <div class="analytics-card">
+                  <div class="card-header">
+                    <h3>Documents</h3>
+                    <i class="fas fa-file-alt"></i>
+                  </div>
+                  <div class="card-content">
+                    <div class="metric-value" id="document-count">-</div>
+                    <div class="metric-label">Processed</div>
+                  </div>
+                </div>
+
+                <div class="analytics-card">
+                  <div class="card-header">
+                    <h3>System Health</h3>
+                    <i class="fas fa-heartbeat"></i>
+                  </div>
+                  <div class="card-content">
+                    <div class="metric-value" id="system-health">-</div>
+                    <div class="metric-label">Status</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings Tab -->
+          <div id="settings-tab" class="tab-content">
+            <div class="settings-container">
+              <div class="settings-header">
+                <h2>Settings</h2>
+                <p>Configure your AIris desktop application</p>
+              </div>
+
+              <div class="settings-sections">
+                <div class="settings-section">
+                  <h3>Backend Configuration</h3>
+                  <div class="setting-item">
+                    <label for="api-url">API Base URL</label>
+                    <input
+                      type="text"
+                      id="api-url"
+                      value="http://localhost:8000"
+                    />
+                  </div>
+                  <div class="setting-item">
+                    <label for="timeout">Request Timeout (ms)</label>
+                    <input type="number" id="timeout" value="30000" />
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <h3>Interface Preferences</h3>
+                  <div class="setting-item">
+                    <label for="theme-setting">Theme</label>
+                    <select id="theme-setting">
+                      <option value="auto">Auto</option>
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                    </select>
+                  </div>
+                  <div class="setting-item">
+                    <label for="auto-scroll">Auto-scroll chat</label>
+                    <input type="checkbox" id="auto-scroll" checked />
+                  </div>
+                </div>
+
+                <div class="settings-section">
+                  <h3>About</h3>
+                  <div class="about-info" id="about-info">
+                    <p>
+                      <strong>Version:</strong>
+                      <span id="app-version">Loading...</span>
+                    </p>
+                    <p>
+                      <strong>Platform:</strong>
+                      <span id="app-platform">Loading...</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+      </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+    <!-- Scripts -->
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Application Scripts -->
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/components.js"></script>
+    <script src="scripts/app.js"></script>
+  </body>
+</html>

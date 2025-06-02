@@ -18,8 +18,10 @@ def should_use_web_search(query: str, local_docs: List[str]) -> bool:
     # Lokal içerik özetlerini hazırla (en fazla 3 içerik, ilk 200 karakter)
     doc_summaries = []
     for i, doc in enumerate(local_docs[:3]):
-        summary = doc[:200].replace('\n', ' ').strip()
+        doc_con = doc.get("content", "")
+        summary = doc_con[:200].replace('\n', ' ').strip()
         if summary:
+            print(f"Document {i+1} Summary: {summary}")
             doc_summaries.append(f"{i+1}. {summary}...")
     
     # Eğer lokal döküman yoksa web araması gerekli
@@ -32,11 +34,11 @@ def should_use_web_search(query: str, local_docs: List[str]) -> bool:
 Lokal içerik özetleri:
 {chr(10).join(doc_summaries)}
 
-Bu içerikler soruya yeterli mi? Yoksa güncel web bilgisi de gerekli mi? Lütfen sadece 'Evet' veya 'Hayır' olarak cevapla."""
+Bu içerikler soruya yeterli mi? Yoksa güncel web bilgisi de gerekli mi? Lütfen sadece 'Evet' veya 'Hayır' olarak cevapla. Web araması gerekli ise 'Evet' yazın, değilse 'Hayır' yazın. Eğer web araması gerekli ise, lütfen neden gerekli olduğunu da belirtin."""
     
     # LLM'den cevap al
     answer = generate_answer(prompt).strip().lower()
-    
+    print(f"LLM Answer if web search bla bla ...: {answer}")
     # "evet" içeriyorsa web araması gerekli
     return "evet" in answer
 
