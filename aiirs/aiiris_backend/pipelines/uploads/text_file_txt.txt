@@ -1,5 +1,0 @@
-bu file bir txt dosyası
-boş bir satır vardı onu atlamalısın
-*0987654!'^+%&/()= gibi karakterler\n
-bakalım önceki satırdaki satır atlamayı nasıl okudun
-Bu kadar yazdıklarım

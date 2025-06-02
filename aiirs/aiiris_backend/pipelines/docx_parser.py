@@ -4,19 +4,23 @@
 # from docx import Document
 from pathlib import Path
 import openai
+
 # from docx.oxml.ns import qn
 from docx2pdf import convert
+
 
 class DocxParser:
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = openai.OpenAI(api_key="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")
+        self.client = openai.OpenAI(
+            api_key="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"
+        )
 
     def run(self):
         from aiiris_backend.pipelines.uploadpipe import UploadPipeline
         from pathlib import Path
 
-        output_dir = Path("uploads")
+        output_dir = Path(__file__).resolve().parent.parent / "uploads"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(self.file_path).stem + ".pdf")
         self.convert_docx_to_pdf(self.file_path, str(output_pdf))
@@ -32,11 +36,10 @@ class DocxParser:
                 Path(file_path).unlink()
             except Exception as e:
                 print(f"{file_path} silinemedi: {e}")
-        
-        
-    def convert_docx_to_pdf(self,input_path, output_dir):
+
+    def convert_docx_to_pdf(self, input_path, output_dir):
         convert(input_path, output_dir)
-        
+
         # doc = Document(self.file_path)
         # save_dir = Path(__file__).resolve().parent / "uploads"
         # save_dir.mkdir(parents=True, exist_ok=True)
@@ -86,9 +89,8 @@ class DocxParser:
         #                 for cell in row.xpath(".//w:tc"):
         #                     texts = [t.text for t in cell.xpath(".//w:t") if t.text]
         #                     f.write(" | ".join(texts) + "\n")
-                
-        #         f.write("\n")
 
+        #         f.write("\n")
 
     # def describe_image(self, image_bytes):
     #     try:
