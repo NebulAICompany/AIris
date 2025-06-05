@@ -130,6 +130,11 @@ class Utils {
     return size <= maxSize;
   }
 
+  // Validate file (combines type and size validation)
+  static validateFile(file, maxSizeMB = 50) {
+    return this.isValidFileType(file.name) && this.isValidFileSize(file.size, maxSizeMB);
+  }
+
   // Sanitize filename
   static sanitizeFilename(filename) {
     return filename.replace(/[^a-z0-9.-]/gi, "_");

@@ -412,10 +412,19 @@ class UIComponents {
     progressElement.style.display = "block";
 
     try {
-      const response = await window.airisAPI.uploadFile(file, (progress) => {
-        progressFill.style.width = `${progress}%`;
-        progressText.textContent = `${Math.round(progress)}%`;
-      });
+      // Convert File to ArrayBuffer for IPC communication
+      const fileBuffer = await file.arrayBuffer();
+      
+      // Simulate progress during file reading
+      progressFill.style.width = "25%";
+      progressText.textContent = "25%";
+
+      // Call IPC with fileData and fileName separately
+      const response = await window.airisAPI.uploadFile(fileBuffer, file.name);
+
+      // Update progress to complete
+      progressFill.style.width = "100%";
+      progressText.textContent = "100%";
 
       // Success
       fileItem.classList.add("upload-success");

@@ -2,7 +2,7 @@ import os
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from .pii_deneme import pii_mask
+from pii_deneme import pii_mask
 import json
 
 
@@ -18,11 +18,14 @@ class VectorStorePipeline:
 
     def run(self, uploads_path: str, save_path: str):
         try:
+<<<<<<< Updated upstream
+            # Check if uploads directory is empty
+            files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
+=======
             files = [
                 f for f in os.listdir(uploads_path) if f.endswith((".txt", ".pdf"))
             ]
-            # Check if uploads directory is empty
-            files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
+>>>>>>> Stashed changes
             if not files:
                 print("No text files found in uploads directory")
                 return
@@ -43,7 +46,7 @@ class VectorStorePipeline:
                     self.embeddings,
                     allow_dangerous_deserialization=True,
                 )
-                print(f"Loaded {vectorstore.index.ntotal} existing chunks")
+                print(f"Loaded {len(vectorstore)} existing chunks")
             else:
                 print("Creating new vector store...")
                 vectorstore = None
@@ -110,6 +113,78 @@ class VectorStorePipeline:
             print(f"Error in vector store pipeline: {str(e)}")
             raise
 
+<<<<<<< Updated upstream
+=======
+from langchain_community.vectorstores import FAISS
+from openai import OpenAI
+from langchain_openai.embeddings import OpenAIEmbeddings
+
+
+class QueryPipeline:
+    def __init__(self, query: str, vectorstore_path: str):
+        self.query = query
+        self.vectorstore_path = vectorstore_path
+
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    def find_similar_chunks(self):
+        # Use the same embedding model as used for indexing
+        vectorstore = FAISS.load_local(
+            f"{self.vectorstore_path}",
+            embeddings=OpenAIEmbeddings(model="text-embedding-3-small"),
+            allow_dangerous_deserialization=True,
+        )
+        chunks_query_retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
+        similar_chunks = chunks_query_retriever.invoke(self.query)
+        return similar_chunks
+
+    def __generate_prompt(self):
+        relevant_chunks = "\n".join(
+            [chunk.page_content for chunk in self.find_similar_chunks()]
+        )
+        prompt = f"""Aşağıdaki verilen context'i KESİNLİKLE kullanarak, soruya **TÜM CEVABI MARKDOWN SYNTAXI İLE** formatla:
+        - Başlıkları `##` ile oluştur
+        - **Kalın** ve *italik* metin kullan
+        - **Kalın** Yazdığın listelerden önce - işareti kullanma
+        - Listeler için `.` veya `1.` gibi işaretler kullan
+        - Context dışına çıkma!
+       
+        Context:
+        {' '.join(relevant_chunks)}
+
+        Soru: {self.query}
+
+        Cevap:"""
+        return prompt
+
+    def generate_response(self):
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # GPT-4 modelini kullan (daha iyi Markdown desteği için)
+            messages=[
+                {
+                    "role": "system",
+                    "content": "TÜM CEVAPLARINI MARKDOWN İLE YAZ. Format: ## Başlık, **kalın**, *italik*, - liste.",
+                },
+                {"role": "user", "content": self.__generate_prompt()},
+            ],
+            temperature=0.3,
+        )
+        return response.choices[0].message.content
+
+    # def save(self, similar_chunks: dict, save_path: str):
+    #     if save_path is None:
+    #         save_path = "query_results.txt"
+    #     with open(save_path, "w", encoding="utf-8") as f:
+    #         for chunk in similar_chunks:
+    #             f.write(f"Chunk: {chunk['text']}\n")
+    #             f.write(f"Similarity: {chunk['score']}\n\n")
+
+    #     print(f"\n✅ Query complete! Saved to '{save_path}'")
+
+>>>>>>> Stashed changes
 
 import os
 

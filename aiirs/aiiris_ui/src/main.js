@@ -164,13 +164,13 @@ class AIrisApp {
       try {
         const formData = new FormData();
 
-        // Create a File object from the file data
+        // Create a Blob from the file data (Blob is available in Node.js with fetch)
         const uint8Array = new Uint8Array(fileData);
-        const file = new File([uint8Array], fileName, {
+        const blob = new Blob([uint8Array], {
           type: this.getMimeType(fileName),
         });
 
-        formData.append("file", file);
+        formData.append("file", blob, fileName);
 
         const response = await fetch("http://localhost:8000/api/upload", {
           method: "POST",

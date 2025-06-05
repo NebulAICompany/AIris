@@ -3,6 +3,11 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 import os, fitz, nltk, base64, openai
 from pathlib import Path
 
+# Download required NLTK data
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
 
 class PdfParser:
     def __init__(self, pdf_path: str):

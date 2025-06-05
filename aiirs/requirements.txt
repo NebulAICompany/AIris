@@ -16,7 +16,11 @@ msrest
 python-pptx
 pillow
 python-docx
+docx2pdf
 numpy
 pymupdf
 transformers
 pandas
+tokenizers
+duckduckgo-search
+python-multipart
