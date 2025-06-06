@@ -1,9 +1,7 @@
 from pathlib import Path
 import os
 import logging
-
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
-
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
@@ -11,9 +9,6 @@ from aiiris_backend.pipelines.docx_parser import DocxParser
 from aiiris_backend.pipelines.excel_parser import ExcelParser
 from aiiris_backend.pipelines.pdf_parser import PdfParser
 from aiiris_backend.pipelines.txt_parser import TxtParser
-
-
-
 import traceback
 
 class UploadPipeline:
@@ -46,7 +41,6 @@ def main():
     #file_path = "aiiris_backend/files/TUFE.xlsx"
     #file_path = "aiiris_backend/files/VeriSeti.xlsx"
     #file_path = "aiiris_backend/files/İkt.docx"
-    #file_path = "aiiris_backend/files/analiz.docx"
     #file_path = "aiiris_backend/files/text_file.txt"
 
     if not os.path.exists(file_path):

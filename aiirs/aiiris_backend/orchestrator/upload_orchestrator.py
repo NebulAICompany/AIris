@@ -15,14 +15,13 @@ import aiiris_backend.pipelines.vectorpipe as vectorpipe
 # Vector store path
 VECTOR_STORE_PATH = "aiiris_backend/vectorstore"
 
-
 def process_file(file_path: str) -> dict:
     """
     Process an uploaded file synchronously.
-
+    
     Args:
         file_path: Path to the uploaded file
-
+        
     Returns:
         Dictionary with processing results
     """
@@ -30,9 +29,9 @@ def process_file(file_path: str) -> dict:
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     _, ext = os.path.splitext(file_path)
-
-    if ext.lower() != ".pdf":
-        raise ValueError(f"Unsupported file format: {ext}")
+    
+    # if ext.lower() != '.pdf':
+    #     raise ValueError(f"Unsupported file format: {ext}")
 
     try:
         # Step 1: Create UploadPipeline
@@ -41,14 +40,13 @@ def process_file(file_path: str) -> dict:
         pipeline.run()
         save_dir = Path(__file__).resolve().parent.parent / "uploads"
         # Step 2: Create or update vector store
-        vectorpipe.VectorStorePipeline().run(
-            uploads_path=save_dir, save_path=VECTOR_STORE_PATH
-        )
+        vectorpipe.VectorStorePipeline(
+        ).run(uploads_path=save_dir, save_path=VECTOR_STORE_PATH)
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTOR_STORE_PATH,
+            "vector_store_path": VECTOR_STORE_PATH
         }
     except Exception as e:
         print(f"Error processing file: {str(e)}")

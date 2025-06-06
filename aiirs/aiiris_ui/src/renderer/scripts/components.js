@@ -108,8 +108,7 @@ class UIComponents {
     });
 
     const activeNavItem = document.querySelector(
-      `.nav-item[data-tab="${tabId}"]`
-    );
+      `.nav-item[data-tab="${tabId}"]` );
     if (activeNavItem) {
       activeNavItem.classList.add("active");
     }
@@ -414,7 +413,7 @@ class UIComponents {
     try {
       // Convert File to ArrayBuffer for IPC communication
       const fileBuffer = await file.arrayBuffer();
-      
+
       // Simulate progress during file reading
       progressFill.style.width = "25%";
       progressText.textContent = "25%";
@@ -450,7 +449,7 @@ class UIComponents {
   }
 
   async loadFileLibrary() {
-    const fileList = document.getElementById("file-list");
+    const fileList = document.getElementById("files-grid");
     if (!fileList) return;
 
     try {

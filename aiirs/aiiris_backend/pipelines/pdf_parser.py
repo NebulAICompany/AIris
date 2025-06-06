@@ -1,3 +1,4 @@
+import io
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 import os, fitz, nltk, base64, openai
@@ -34,11 +35,10 @@ class PdfParser:
 
     def run(self):
         # PDF dosyasını analiz et ve sonuçları al
-        extracted_data = self.analyze_pdf_at_once()
+        extracted_data = self.process_pages_in_memory(2)
         return extracted_data
 
-    def analyze_pdf_at_once(self):
-
+    def process_pages_in_memory(self, pages_per_part=2):
         pdf = fitz.open(self.pdf_path)
         num_pages = len(pdf)
         save_dir = Path(__file__).resolve().parent.parent / "uploads"
@@ -46,258 +46,244 @@ class PdfParser:
         pdf_stem = Path(self.pdf_path).stem
         txt_output_path = save_dir / f"{pdf_stem}_txt.txt"
 
-        # Process entire PDF in a single API call
-        with open(self.pdf_path, "rb") as f:
-            poller = self.document_analysis_client.begin_analyze_document(
-                "prebuilt-layout", document=f
-            )
-            result = poller.result()
-
-        print("Azure Document Intelligence analysis completed!")
-
         with open(txt_output_path, "w", encoding="utf-8") as dosya:
-            # Process each page using the single analysis result
-            for page_num in range(num_pages):
-                page = pdf.load_page(page_num)
-                dosya.write(f"\n------Page {page_num + 1}------\n\n")
+            for start_page in range(0, num_pages, pages_per_part):
+                end_page = min(start_page + pages_per_part, num_pages)
 
-                # Bounding boxes trackers
-                occupied_boxes = []
+                # Sayfaları bellekte yeni bir PDF olarak oluştur
+                temp_pdf = fitz.open()
+                for page_num in range(start_page, end_page):
+                    temp_pdf.insert_pdf(pdf, from_page=page_num, to_page=page_num)
 
-                ## 1️⃣ Images
-                images = page.get_images(full=True)
-                for img_index, img in enumerate(images):
-                    try:
-                        img_xref = img[0]
-                        img_bbox = page.get_image_bbox(img)
-                        img_polygon = [
-                            (img_bbox.x0, img_bbox.y0),
-                            (img_bbox.x1, img_bbox.y0),
-                            (img_bbox.x1, img_bbox.y1),
-                            (img_bbox.x0, img_bbox.y1),
-                        ]
-                        base_image = pdf.extract_image(img_xref)
-                        image_bytes = base_image["image"]
-                        description = self.describe_image(image_bytes)
+                # Bellekte PDF byte'larını al
+                pdf_bytes = temp_pdf.tobytes()
+                temp_pdf.close()
 
-                        dosya.write(
-                            f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n"
-                        )
-                        occupied_boxes.append(img_polygon)
+                # Azure Document Intelligence ile analiz et
+                poller = self.document_analysis_client.begin_analyze_document(
+                    "prebuilt-layout", document=io.BytesIO(pdf_bytes)
+                )
+                result = poller.result()
 
-                    except Exception as e:
-                        print(f"Error processing image {img_index}: {e}")
-                        continue
+                # Sayfa sayfa işleme
+                for local_page_num, page_num in enumerate(range(start_page, end_page)):
+                    page = pdf.load_page(page_num)
+                    dosya.write(f"\n------Page {page_num + 1}------\n\n")
 
-                ## 2️⃣ Tables
-                page_tables = [
-                    t
-                    for t in result.tables
-                    if t.bounding_regions
-                    and t.bounding_regions[0].page_number == (page_num + 1)
-                ]
-                for table_counter, table in enumerate(page_tables):
-                    # Check if this table overlaps any occupied area (image)
-                    table_regions = [
-                        region.polygon for region in table.bounding_regions
+                    occupied_boxes = []
+
+                    # Görselleri işle
+                    images = page.get_images(full=True)
+                    for img_index, img in enumerate(images):
+                        try:
+                            img_xref = img[0]
+                            img_bbox = page.get_image_bbox(img)
+                            img_polygon = [
+                                (img_bbox.x0, img_bbox.y0),
+                                (img_bbox.x1, img_bbox.y0),
+                                (img_bbox.x1, img_bbox.y1),
+                                (img_bbox.x0, img_bbox.y1),
+                            ]
+                            base_image = pdf.extract_image(img_xref)
+                            image_bytes = base_image["image"]
+                            description = self.describe_image(image_bytes)
+
+                            dosya.write(f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n")
+                            occupied_boxes.append(img_polygon)
+
+                        except Exception as e:
+                            print(f"Error processing image {img_index}: {e}")
+                            continue
+
+                    # Tabloları işle
+                    page_tables = [
+                        t for t in result.tables
+                        if t.bounding_regions and t.bounding_regions[0].page_number == (local_page_num + 1)
                     ]
-                    if any(
-                        self.check_overlap(region, occ)
-                        for region in table_regions
-                        for occ in occupied_boxes
-                    ):
-                        continue
+                    for table_counter, table in enumerate(page_tables):
+                        table_regions = [region.polygon for region in table.bounding_regions]
+                        if any(self.check_overlap(region, occ) for region in table_regions for occ in occupied_boxes):
+                            continue
 
-                    dosya.write(f"\n[Table {table_counter + 1}]\n")
-                    table_content = []
+                        dosya.write(f"\n[Table {table_counter + 1}]\n")
+                        table_content = []
+                        max_col = max(cell.column_index for cell in table.cells)
+                        max_row = max(cell.row_index for cell in table.cells)
 
-                    max_col = max(cell.column_index for cell in table.cells)
-                    max_row = max(cell.row_index for cell in table.cells)
+                        for row_index in range(max_row + 1):
+                            for col_index in range(max_col + 1):
+                                cell = next(
+                                    (cell for cell in table.cells if cell.row_index == row_index and cell.column_index == col_index),
+                                    None
+                                )
+                                content = cell.content if cell else ""
+                                if content:
+                                    dosya.write(f"[{row_index},{col_index}]: {content}\n")
+                                    table_content.append(content)
 
-                    for row_index in range(max_row + 1):
-                        for col_index in range(max_col + 1):
-                            cell = next(
-                                (
-                                    cell
-                                    for cell in table.cells
-                                    if cell.row_index == row_index
-                                    and cell.column_index == col_index
-                                ),
-                                None,
-                            )
-                            content = cell.content if cell else ""
-                            if not content == "":
-                                dosya.write(f"[{row_index},{col_index}]: {content}\n")
-                                table_content.append(content)
+                        table_description = self.describe_table(table_content)
+                        dosya.write(f"[Description] = {table_description}\n")
+                        occupied_boxes.extend(table_regions)
 
-                    table_description = self.describe_table(table_content)
-                    dosya.write(f"[Description] = {table_description} \n")
-                    # Append all table regions to occupied_boxes
-                    occupied_boxes.extend(table_regions)
+                    if page_tables:
+                        dosya.write("\n---\n")
 
-                if page_tables:
-                    dosya.write("\n---\n")
+                    # Paragrafları işle
+                    page_paragraphs = [
+                        p for p in result.paragraphs
+                        if p.bounding_regions and p.bounding_regions[0].page_number == (local_page_num + 1)
+                    ]
+                    for paragraph in page_paragraphs:
+                        para_region = paragraph.bounding_regions[0].polygon
+                        if any(self.check_overlap(para_region, box) for box in occupied_boxes):
+                            continue
+                        sentences = nltk.sent_tokenize(paragraph.content)
+                        for sentence in sentences:
+                            dosya.write(sentence + " ")
+                        dosya.write("\n")
 
-                ## 3️⃣ Paragraphs
-                page_paragraphs = [
-                    p
-                    for p in result.paragraphs
-                    if p.bounding_regions
-                    and p.bounding_regions[0].page_number == (page_num + 1)
-                ]
-                for paragraph in page_paragraphs:
-                    para_region = paragraph.bounding_regions[0].polygon
-                    if any(
-                        self.check_overlap(para_region, box) for box in occupied_boxes
-                    ):
-                        continue
-                    sentences = nltk.sent_tokenize(paragraph.content)
-                    for sentence in sentences:
-                        dosya.write(sentence + " ")
-                    dosya.write("\n")
-
-                print(f"Page {page_num + 1} processed.")
+                print(f"{start_page+1}-{end_page}. sayfalar bellekte işlendi.")
 
         pdf.close()
-        print(f"✅ All {num_pages} pages processed successfully!")
+        print(f"Tüm PDF {pdf_stem}_txt.txt dosyasına kaydedildi.")
 
-    # def analyze_pdf_in_parts_and_collect_results(self, pages_per_part=2):
-    #     pdf = fitz.open(self.pdf_path)
-    #     num_pages = len(pdf)
-    #     save_dir = Path(__file__).resolve().parent.parent / "uploads"
-    #     save_dir.mkdir(parents=True, exist_ok=True)
-    #     pdf_stem = Path(self.pdf_path).stem
-    #     txt_output_path = save_dir / f"{pdf_stem}_txt.txt"
+    def analyze_pdf_in_parts_and_collect_results(self, pages_per_part=2):
+        pdf = fitz.open(self.pdf_path)
+        num_pages = len(pdf)
+        save_dir = Path(__file__).resolve().parent.parent / "uploads"
+        save_dir.mkdir(parents=True, exist_ok=True)
+        pdf_stem = Path(self.pdf_path).stem
+        txt_output_path = save_dir / f"{pdf_stem}_txt.txt"
 
-    #     with open(txt_output_path, "w", encoding="utf-8") as dosya:
-    #         for start_page in range(0, num_pages, pages_per_part):
-    #             end_page = min(start_page + pages_per_part, num_pages)
-    #             temp_pdf_path = (
-    #                 save_dir / f"{pdf_stem}_part_{start_page+1}_to_{end_page}.pdf"
-    #             )
-    #             temp_pdf = fitz.open()
+        with open(txt_output_path, "w", encoding="utf-8") as dosya:
+            for start_page in range(0, num_pages, pages_per_part):
+                end_page = min(start_page + pages_per_part, num_pages)
+                temp_pdf_path = (
+                    save_dir / f"{pdf_stem}_part_{start_page+1}_to_{end_page}.pdf"
+                )
+                temp_pdf = fitz.open()
 
-    #             for page_num in range(start_page, end_page):
-    #                 temp_pdf.insert_pdf(pdf, from_page=page_num, to_page=page_num)
+                for page_num in range(start_page, end_page):
+                    temp_pdf.insert_pdf(pdf, from_page=page_num, to_page=page_num)
 
-    #             temp_pdf.save(temp_pdf_path)
-    #             temp_pdf.close()
+                temp_pdf.save(temp_pdf_path)
+                temp_pdf.close()
 
-    #             with open(temp_pdf_path, "rb") as f:
-    #                 poller = self.document_analysis_client.begin_analyze_document(
-    #                     "prebuilt-layout", document=f
-    #                 )
-    #                 result = poller.result()
+                with open(temp_pdf_path, "rb") as f:
+                    poller = self.document_analysis_client.begin_analyze_document(
+                        "prebuilt-layout", document=f
+                    )
+                    result = poller.result()
 
-    #             os.remove(temp_pdf_path)
+                os.remove(temp_pdf_path)
 
-    #             for page_num in range(start_page, end_page):
-    #                 page = pdf.load_page(page_num)
-    #                 dosya.write(f"\n------Page {page_num + 1}------\n\n")
+                for page_num in range(start_page, end_page):
+                    page = pdf.load_page(page_num)
+                    dosya.write(f"\n------Page {page_num + 1}------\n\n")
 
-    #                 # Bounding boxes trackers
-    #                 occupied_boxes = []
+                    # Bounding boxes trackers
+                    occupied_boxes = []
 
-    #                 ## 1️⃣ Images
-    #                 images = page.get_images(full=True)
-    #                 for img_index, img in enumerate(images):
-    #                     try:
-    #                         img_xref = img[0]
-    #                         img_bbox = page.get_image_bbox(img)
-    #                         img_polygon = [
-    #                             (img_bbox.x0, img_bbox.y0),
-    #                             (img_bbox.x1, img_bbox.y0),
-    #                             (img_bbox.x1, img_bbox.y1),
-    #                             (img_bbox.x0, img_bbox.y1),
-    #                         ]
-    #                         base_image = pdf.extract_image(img_xref)
-    #                         image_bytes = base_image["image"]
-    #                         description = self.describe_image(image_bytes)
+                    ## 1️⃣ Images
+                    images = page.get_images(full=True)
+                    for img_index, img in enumerate(images):
+                        try:
+                            img_xref = img[0]
+                            img_bbox = page.get_image_bbox(img)
+                            img_polygon = [
+                                (img_bbox.x0, img_bbox.y0),
+                                (img_bbox.x1, img_bbox.y0),
+                                (img_bbox.x1, img_bbox.y1),
+                                (img_bbox.x0, img_bbox.y1),
+                            ]
+                            base_image = pdf.extract_image(img_xref)
+                            image_bytes = base_image["image"]
+                            description = self.describe_image(image_bytes)
 
-    #                         dosya.write(
-    #                             f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n"
-    #                         )
-    #                         occupied_boxes.append(img_polygon)
+                            dosya.write(
+                                f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n"
+                            )
+                            occupied_boxes.append(img_polygon)
 
-    #                     except Exception as e:
-    #                         print(f"Error processing image {img_index}: {e}")
-    #                         continue
+                        except Exception as e:
+                            print(f"Error processing image {img_index}: {e}")
+                            continue
 
-    #                 ## 2️⃣ Tables
-    #                 page_tables = [
-    #                     t
-    #                     for t in result.tables
-    #                     if t.bounding_regions
-    #                     and t.bounding_regions[0].page_number
-    #                     == (page_num - start_page + 1)
-    #                 ]
-    #                 for table_counter, table in enumerate(page_tables):
-    #                     # Check if this table overlaps any occupied area (image)
-    #                     table_regions = [
-    #                         region.polygon for region in table.bounding_regions
-    #                     ]
-    #                     if any(
-    #                         self.check_overlap(region, occ)
-    #                         for region in table_regions
-    #                         for occ in occupied_boxes
-    #                     ):
-    #                         continue
+                    ## 2️⃣ Tables
+                    page_tables = [
+                        t
+                        for t in result.tables
+                        if t.bounding_regions
+                        and t.bounding_regions[0].page_number
+                        == (page_num - start_page + 1)
+                    ]
+                    for table_counter, table in enumerate(page_tables):
+                        # Check if this table overlaps any occupied area (image)
+                        table_regions = [
+                            region.polygon for region in table.bounding_regions
+                        ]
+                        if any(
+                            self.check_overlap(region, occ)
+                            for region in table_regions
+                            for occ in occupied_boxes
+                        ):
+                            continue
 
-    #                     dosya.write(f"\n[Table {table_counter + 1}]\n")
-    #                     table_content = []
+                        dosya.write(f"\n[Table {table_counter + 1}]\n")
+                        table_content = []
 
-    #                     max_col = max(cell.column_index for cell in table.cells)
-    #                     max_row = max(cell.row_index for cell in table.cells)
+                        max_col = max(cell.column_index for cell in table.cells)
+                        max_row = max(cell.row_index for cell in table.cells)
 
-    #                     for row_index in range(max_row + 1):
-    #                         for col_index in range(max_col + 1):
-    #                             cell = next(
-    #                                 (
-    #                                     cell
-    #                                     for cell in table.cells
-    #                                     if cell.row_index == row_index
-    #                                     and cell.column_index == col_index
-    #                                 ),
-    #                                 None,
-    #                             )
-    #                             content = cell.content if cell else ""
-    #                             if not content == "":
-    #                                 dosya.write(
-    #                                     f"[{row_index},{col_index}]: {content}\n"
-    #                                 )
-    #                                 table_content.append(content)
+                        for row_index in range(max_row + 1):
+                            for col_index in range(max_col + 1):
+                                cell = next(
+                                    (
+                                        cell
+                                        for cell in table.cells
+                                        if cell.row_index == row_index
+                                        and cell.column_index == col_index
+                                    ),
+                                    None,
+                                )
+                                content = cell.content if cell else ""
+                                if not content == "":
+                                    dosya.write(
+                                        f"[{row_index},{col_index}]: {content}\n"
+                                    )
+                                    table_content.append(content)
 
-    #                     table_description = self.describe_table(table_content)
-    #                     dosya.write(f"[Description] = {table_description} \n")
-    #                     # Append all table regions to occupied_boxes
-    #                     occupied_boxes.extend(table_regions)
+                        table_description = self.describe_table(table_content)
+                        dosya.write(f"[Description] = {table_description} \n")
+                        # Append all table regions to occupied_boxes
+                        occupied_boxes.extend(table_regions)
 
-    #                 if page_tables:
-    #                     dosya.write("\n---\n")
+                    if page_tables:
+                        dosya.write("\n---\n")
 
-    #                 ## 3️⃣ Paragraphs
-    #                 page_paragraphs = [
-    #                     p
-    #                     for p in result.paragraphs
-    #                     if p.bounding_regions
-    #                     and p.bounding_regions[0].page_number
-    #                     == (page_num - start_page + 1)
-    #                 ]
-    #                 for paragraph in page_paragraphs:
-    #                     para_region = paragraph.bounding_regions[0].polygon
-    #                     if any(
-    #                         self.check_overlap(para_region, box)
-    #                         for box in occupied_boxes
-    #                     ):
-    #                         continue
-    #                     sentences = nltk.sent_tokenize(paragraph.content)
-    #                     for sentence in sentences:
-    #                         dosya.write(sentence + " ")
-    #                     dosya.write("\n")
+                    ## 3️⃣ Paragraphs
+                    page_paragraphs = [
+                        p
+                        for p in result.paragraphs
+                        if p.bounding_regions
+                        and p.bounding_regions[0].page_number
+                        == (page_num - start_page + 1)
+                    ]
+                    for paragraph in page_paragraphs:
+                        para_region = paragraph.bounding_regions[0].polygon
+                        if any(
+                            self.check_overlap(para_region, box)
+                            for box in occupied_boxes
+                        ):
+                            continue
+                        sentences = nltk.sent_tokenize(paragraph.content)
+                        for sentence in sentences:
+                            dosya.write(sentence + " ")
+                        dosya.write("\n")
 
-    #             print(f"{start_page+1}-{end_page}. sayfalar işlendi.")
+                print(f"{start_page+1}-{end_page}. sayfalar işlendi.")
 
-    #     pdf.close()
+        pdf.close()
 
     def describe_image(self, image_bytes):
         try:
