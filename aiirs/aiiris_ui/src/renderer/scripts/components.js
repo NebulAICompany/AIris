@@ -10,6 +10,8 @@ class UIComponents {
     this.uploadedFiles = [];
     this.isProcessing = false;
     this.isDarkMode = false;
+    this.themeMode = "auto";
+    this.autoScroll = true;
 
     this.init();
   }
@@ -77,6 +79,22 @@ class UIComponents {
     const themeToggle = document.getElementById("theme-toggle");
     if (themeToggle) {
       themeToggle.addEventListener("click", () => this.toggleTheme());
+    }
+
+    // Theme select in settings
+    const themeSelect = document.getElementById("theme-setting");
+    if (themeSelect) {
+      themeSelect.addEventListener("change", () => {
+        this.themeMode = themeSelect.value;
+        this.applyTheme();
+      });
+    }
+
+    const autoScrollInput = document.getElementById("auto-scroll");
+    if (autoScrollInput) {
+      autoScrollInput.addEventListener("change", () => {
+        this.autoScroll = autoScrollInput.checked;
+      });
     }
 
     // Clear chat
@@ -233,7 +251,9 @@ class UIComponents {
     }
 
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (this.autoScroll) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 
     // Apply syntax highlighting
     messageDiv.querySelectorAll("pre code").forEach((block) => {
@@ -263,7 +283,9 @@ class UIComponents {
         `;
 
     chatMessages.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (this.autoScroll) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
   }
 
   hideTypingIndicator() {
@@ -597,18 +619,27 @@ class UIComponents {
 
   // Theme management
   loadTheme() {
-    const savedTheme = localStorage.getItem("airis-theme") || "light";
-    this.isDarkMode = savedTheme === "dark";
+    const savedTheme = localStorage.getItem("airis-theme") || "auto";
+    this.themeMode = savedTheme;
     this.applyTheme();
   }
 
   toggleTheme() {
     this.isDarkMode = !this.isDarkMode;
+    this.themeMode = this.isDarkMode ? "dark" : "light";
     this.applyTheme();
-    localStorage.setItem("airis-theme", this.isDarkMode ? "dark" : "light");
+    localStorage.setItem("airis-theme", this.themeMode);
   }
 
   applyTheme() {
+    if (this.themeMode === "auto") {
+      this.isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } else if (this.themeMode === "dark") {
+      this.isDarkMode = true;
+    } else if (this.themeMode === "light") {
+      this.isDarkMode = false;
+    }
+
     document.body.classList.toggle("dark-theme", this.isDarkMode);
 
     const themeToggle = document.getElementById("theme-toggle");
@@ -622,15 +653,25 @@ class UIComponents {
   // Settings management
   saveSettings() {
     const settings = {
-      apiEndpoint:
-        document.getElementById("api-endpoint")?.value ||
-        "http://localhost:8000",
-      maxFileSize: document.getElementById("max-file-size")?.value || "50",
-      autoSave: document.getElementById("auto-save")?.checked || false,
-      notifications: document.getElementById("notifications")?.checked || true,
+      apiUrl:
+        document.getElementById("api-url")?.value || "http://localhost:8000",
+      timeout: parseInt(
+        document.getElementById("timeout")?.value || "30000",
+        10
+      ),
+      theme: document.getElementById("theme-setting")?.value || "auto",
+      autoScroll: document.getElementById("auto-scroll")?.checked ?? true,
     };
 
     localStorage.setItem("airis-settings", JSON.stringify(settings));
+
+    this.themeMode = settings.theme;
+    this.autoScroll = settings.autoScroll;
+    window.apiService.updateConfig({
+      baseURL: settings.apiUrl,
+      timeout: settings.timeout,
+    });
+    this.applyTheme();
 
     // Show success message
     this.showNotification("Settings saved successfully!", "success");
@@ -642,22 +683,29 @@ class UIComponents {
         localStorage.getItem("airis-settings") || "{}"
       );
 
-      if (document.getElementById("api-endpoint")) {
-        document.getElementById("api-endpoint").value =
-          settings.apiEndpoint || "http://localhost:8000";
+      if (document.getElementById("api-url")) {
+        document.getElementById("api-url").value =
+          settings.apiUrl || "http://localhost:8000";
       }
-      if (document.getElementById("max-file-size")) {
-        document.getElementById("max-file-size").value =
-          settings.maxFileSize || "50";
+      if (document.getElementById("timeout")) {
+        document.getElementById("timeout").value = settings.timeout || 30000;
       }
-      if (document.getElementById("auto-save")) {
-        document.getElementById("auto-save").checked =
-          settings.autoSave || false;
+      if (document.getElementById("theme-setting")) {
+        document.getElementById("theme-setting").value =
+          settings.theme || "auto";
       }
-      if (document.getElementById("notifications")) {
-        document.getElementById("notifications").checked =
-          settings.notifications !== false;
+      if (document.getElementById("auto-scroll")) {
+        document.getElementById("auto-scroll").checked =
+          settings.autoScroll !== false;
       }
+
+      this.themeMode = settings.theme || "auto";
+      this.autoScroll = settings.autoScroll !== false;
+      window.apiService.updateConfig({
+        baseURL: settings.apiUrl || "http://localhost:8000",
+        timeout: settings.timeout || 30000,
+      });
+      this.applyTheme();
     } catch (error) {
       console.error("Error loading settings:", error);
     }
