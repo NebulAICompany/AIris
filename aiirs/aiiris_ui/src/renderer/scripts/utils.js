@@ -30,6 +30,23 @@ class Utils {
     return date.toLocaleDateString();
   }
 
+  // Format date to readable string
+  static formatDate(dateString) {
+    if (!dateString) return "Unknown";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (error) {
+      return "Invalid date";
+    }
+  }
+
   // Get file icon based on extension
   static getFileIcon(fileName) {
     const ext = fileName.split(".").pop().toLowerCase();

@@ -462,6 +462,12 @@
 .file-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--accent-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.file-card:active {
+  transform: translateY(0);
 }
 
 .file-card-header {
@@ -565,6 +571,73 @@
 .metric-label {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* Recent Activity Section */
+.recent-activity-section {
+  margin-top: 32px;
+}
+
+.recent-activity-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.activity-list {
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-title {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.no-activity {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 24px;
+  font-style: italic;
 }
 
 /* Settings Components */

@@ -90,6 +90,13 @@ class UIComponents {
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
     }
+
+    // Event delegation for dynamic buttons
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
+        this.switchTab(e.target.dataset.tab);
+      }
+    });
   }
 
   handleNavigation(e) {
@@ -456,34 +463,69 @@ class UIComponents {
       const data = await response.json();
       const files = data.files || [];
       // Get the file library container
-      const fileLibrary = document.getElementById("file-library");
+      const fileLibrary = document.getElementById("files-grid");
       if (!fileLibrary) return;
       fileLibrary.innerHTML = "";
 
       if (files.length === 0) {
-        fileLibrary.innerHTML = `<div class="no-files">No files uploaded yet.</div>`;
+        fileLibrary.innerHTML = `<div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <h3>No documents yet</h3>
+          <p>Upload some documents to get started</p>
+          <button class="cta-button" data-tab="upload">Upload Files</button>
+        </div>`;
         return;
       }
 
       // Render each file with metadata
       files.forEach((file) => {
         const fileItem = document.createElement("div");
-        fileItem.className = "file-library-item";
+        fileItem.className = "file-card";
+        fileItem.style.cursor = "pointer";
+        fileItem.dataset.fileName = file.name;
         fileItem.innerHTML = `
-          <div class="file-metadata">
-            <div class="file-name"><i class="${Utils.getFileIcon(file.name)}"></i> ${Utils.escapeHtml(file.name)}</div>
-            <div class="file-size">${Utils.formatFileSize(file.size)}</div>
-            <div class="file-date">Uploaded: ${Utils.formatDate(file.created_at)}</div>
+          <div class="file-card-header">
+            <div class="file-card-icon">
+              <i class="${Utils.getFileIcon(file.name)}"></i>
+            </div>
+            <div class="file-card-info">
+              <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
+              <div class="file-card-details">${Utils.formatFileSize(file.size)} • ${Utils.formatDate(file.created_at)}</div>
+            </div>
           </div>
         `;
+        
+        // Add click handler to open file
+        fileItem.addEventListener('click', () => {
+          this.openFile(file.name);
+        });
+        
         fileLibrary.appendChild(fileItem);
       });
     } catch (error) {
-      const fileLibrary = document.getElementById("file-library");
+      const fileLibrary = document.getElementById("files-grid");
       if (fileLibrary) {
-        fileLibrary.innerHTML = `<div class="error">Failed to load files. Please try again later.</div>`;
+        fileLibrary.innerHTML = `<div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Error loading files</h3>
+          <p>Failed to load files. Please try again later.</p>
+        </div>`;
       }
       console.error("Error loading file library:", error);
+    }
+  }
+
+  async openFile(fileName) {
+    try {
+      // Request the main process to open the file
+      const result = await window.airisAPI.openFile(fileName);
+      
+      if (!result.success) {
+        this.showNotification(`Failed to open file: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error opening file:', error);
+      this.showNotification('Failed to open file. Please try again.', 'error');
     }
   }
 
@@ -550,20 +592,61 @@ class UIComponents {
     try {
       const metrics = await window.airisAPI.getMetrics();
       this.updateAnalyticsDashboard(metrics);
+      
+      // Set up auto-refresh every 30 seconds when on analytics tab
+      if (this.currentTab === "analytics") {
+        if (this.analyticsRefreshTimer) {
+          clearInterval(this.analyticsRefreshTimer);
+        }
+        this.analyticsRefreshTimer = setInterval(async () => {
+          if (this.currentTab === "analytics") {
+            try {
+              const updatedMetrics = await window.airisAPI.getMetrics();
+              this.updateAnalyticsDashboard(updatedMetrics);
+            } catch (error) {
+              console.error("Analytics refresh error:", error);
+            }
+          } else {
+            clearInterval(this.analyticsRefreshTimer);
+          }
+        }, 30000); // Refresh every 30 seconds
+      }
     } catch (error) {
       console.error("Analytics error:", error);
+      // Show fallback data
+      this.updateAnalyticsDashboard({
+        totalQueries: 0,
+        totalDocuments: 0,
+        avgResponseTime: "N/A",
+        systemHealth: "Error",
+        recentActivity: []
+      });
     }
   }
 
   updateAnalyticsDashboard(metrics) {
-    // Update metric cards
-    const metricCards = document.querySelectorAll(".metric-card .metric-value");
-    if (metricCards.length >= 4) {
-      metricCards[0].textContent = metrics.totalQueries || "0";
-      metricCards[1].textContent =
-        metrics.totalDocuments || this.uploadedFiles.length;
-      metricCards[2].textContent = metrics.avgResponseTime || "0.5s";
-      metricCards[3].textContent = metrics.successRate || "99%";
+    // Update metric cards using the correct IDs from HTML
+    const apiRequests = document.getElementById("api-requests");
+    const responseTime = document.getElementById("response-time");
+    const documentCount = document.getElementById("document-count");
+    const systemHealth = document.getElementById("system-health");
+
+    if (apiRequests) {
+      apiRequests.textContent = metrics.totalQueries || "0";
+    }
+    if (responseTime) {
+      responseTime.textContent = metrics.avgResponseTime || "N/A";
+    }
+    if (documentCount) {
+      documentCount.textContent = metrics.totalDocuments || "0";
+    }
+    if (systemHealth) {
+      systemHealth.textContent = metrics.systemHealth || "Unknown";
+      // Color code the health status
+      systemHealth.style.color = 
+        metrics.systemHealth === "Healthy" ? "var(--success)" : 
+        metrics.systemHealth === "Disconnected" ? "var(--error)" : 
+        "var(--text-secondary)";
     }
 
     // Update recent activity

@@ -9,6 +9,9 @@ from datetime import datetime
 
 router = APIRouter()
 
+# Simple request counter
+request_counter = 0
+
 class QueryRequest(BaseModel):
     query: str
     
@@ -21,7 +24,11 @@ def handle_query(request: QueryRequest):
     Kullanıcının gönderdiği sorguyu alır,
     orchestrator üzerinden işler ve LLM yanıtını döner.
     """
+    global request_counter
     try:
+        # Increment simple counter
+        request_counter += 1
+        
         query = request.query
         answer = run_orchestration(query)
         api_requests_total.labels(status="success").inc()
@@ -32,7 +39,10 @@ def handle_query(request: QueryRequest):
 
 @router.post("/upload")    
 def handle_upload(file: UploadFile = File(...)):
+    global request_counter
     try:
+        # Increment simple counter
+        request_counter += 1
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(__file__).parent.parent / "uploads"
         uploads_dir.mkdir(parents=True, exist_ok=True)
@@ -81,6 +91,57 @@ def list_files():
     except Exception as e:
         error_message = str(e)
         raise HTTPException(status_code=500, detail=f"Error listing files: {error_message}")
+
+@router.get("/metrics")
+def get_metrics():
+    """
+    Returns system metrics and analytics data.
+    """
+    try:
+        # Get file count
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        file_count = len([f for f in uploads_dir.iterdir() if f.is_file()]) if uploads_dir.exists() else 0
+        
+        # Get vector store info
+        vectorstore_dir = Path(__file__).parent.parent / "vectorstore"
+        vectorstore_exists = vectorstore_dir.exists() and (vectorstore_dir / "index.faiss").exists()
+        
+        # Simple request counter - use module variable
+        global request_counter
+        total_requests = request_counter
+        
+        # Mock some metrics for demo
+        import time
+        current_time = time.time()
+        
+        return {
+            "totalQueries": int(total_requests),
+            "totalDocuments": file_count,
+            "avgResponseTime": "1.2s",
+            "systemHealth": "Healthy" if vectorstore_exists else "No Data",
+            "vectorStoreStatus": "Active" if vectorstore_exists else "Empty",
+            "lastUpdated": datetime.now().isoformat(),
+            "recentActivity": [
+                {
+                    "title": "Document processed",
+                    "time": "2 minutes ago",
+                    "icon": "fas fa-file-upload"
+                },
+                {
+                    "title": "Query answered",
+                    "time": "5 minutes ago", 
+                    "icon": "fas fa-comment"
+                },
+                {
+                    "title": "System started",
+                    "time": "1 hour ago",
+                    "icon": "fas fa-power-off"
+                }
+            ]
+        }
+    except Exception as e:
+        error_message = str(e)
+        raise HTTPException(status_code=500, detail=f"Error fetching metrics: {error_message}")
     
 if __name__ == "__main__":
     file_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/Esra/pdf_file.pdf" # Change this to your file path

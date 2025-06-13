@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld("airisAPI", {
   uploadFile: (fileData, fileName) =>
     ipcRenderer.invoke("upload-file", fileData, fileName),
   selectFile: () => ipcRenderer.invoke("select-file"),
+  openFile: (fileName) => ipcRenderer.invoke("open-file", fileName),
 
   // Health and monitoring
   checkHealth: () => ipcRenderer.invoke("check-health"),

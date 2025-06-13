@@ -121,6 +121,70 @@ class AIrisApp {
       }
     });
 
+    // Handle file opening
+    ipcMain.handle("open-file", async (event, fileName) => {
+      try {
+        const { shell } = require("electron");
+        const path = require("path");
+        
+        // Construct the file path
+        const uploadsDir = path.join(__dirname, "..", "..", "aiiris_backend", "uploads");
+        const filePath = path.join(uploadsDir, fileName);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+          return {
+            success: false,
+            error: "File not found"
+          };
+        }
+        
+        // Open file with default application
+        const result = await shell.openPath(filePath);
+        
+        if (result) {
+          // If result is not empty, there was an error
+          return {
+            success: false,
+            error: result
+          };
+        }
+        
+        return {
+          success: true
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    });
+
+    // Handle metrics requests
+    ipcMain.handle("get-metrics", async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/metrics");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const metrics = await response.json();
+        return metrics;
+      } catch (error) {
+        console.error("Failed to fetch metrics:", error);
+        // Return fallback metrics
+        return {
+          totalQueries: 0,
+          totalDocuments: 0,
+          avgResponseTime: "N/A",
+          systemHealth: "Disconnected",
+          vectorStoreStatus: "Unknown",
+          lastUpdated: new Date().toISOString(),
+          recentActivity: []
+        };
+      }
+    });
+
     // Handle app info requests
     ipcMain.handle("get-app-info", () => {
       return {
