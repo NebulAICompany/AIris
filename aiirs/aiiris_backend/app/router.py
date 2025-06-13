@@ -5,6 +5,7 @@ from aiiris_backend.monitoring.metrics import api_requests_total
 import shutil
 from pathlib import Path
 import os
+from datetime import datetime
 
 router = APIRouter()
 
@@ -32,8 +33,8 @@ def handle_query(request: QueryRequest):
 @router.post("/upload")    
 def handle_upload(file: UploadFile = File(...)):
     try:
-        # Ensure uploads directory exists
-        uploads_dir = Path("aiiris_backend/uploads")
+        # Ensure uploads directory exists (use absolute path)
+        uploads_dir = Path(__file__).parent.parent / "uploads"
         uploads_dir.mkdir(parents=True, exist_ok=True)
         
         # Save uploaded file
@@ -55,6 +56,31 @@ def handle_upload(file: UploadFile = File(...)):
     except Exception as e:
         error_message = str(e)
         raise HTTPException(status_code=500, detail=f"Dosya yükleme hatası: {error_message}")
+    
+@router.get("/files")
+def list_files():
+    """
+    Returns a list of files in the uploads directory with metadata.
+    """
+    try:
+        #uploads_dir = Path("uploads")
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        if not uploads_dir.exists():
+            return {"files": []}  # Return an empty list if the directory doesn't exist
+
+        files = []
+        for file in uploads_dir.iterdir():
+            if file.is_file():
+                files.append({
+                    "name": file.name,
+                    "size": file.stat().st_size,  # File size in bytes
+                    "created_at": datetime.fromtimestamp(file.stat().st_ctime).isoformat(),  # Creation time in ISO 8601
+                    "modified_at": datetime.fromtimestamp(file.stat().st_mtime).isoformat()  # Last modification time in ISO 8601
+                })
+        return {"files": files}
+    except Exception as e:
+        error_message = str(e)
+        raise HTTPException(status_code=500, detail=f"Error listing files: {error_message}")
     
 if __name__ == "__main__":
     file_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/Esra/pdf_file.pdf" # Change this to your file path

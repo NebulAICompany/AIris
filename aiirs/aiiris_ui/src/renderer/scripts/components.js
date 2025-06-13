@@ -449,34 +449,41 @@ class UIComponents {
   }
 
   async loadFileLibrary() {
-    const fileList = document.getElementById("files-grid");
-    if (!fileList) return;
-
     try {
-      // For now, use local storage. In a real app, this would come from the backend
-      const files = this.uploadedFiles;
-
-      fileList.innerHTML = "";
+      // Fetch the file list with metadata from the backend
+      const response = await fetch("http://localhost:8000/api/files");
+      if (!response.ok) throw new Error("Failed to fetch file list");
+      const data = await response.json();
+      const files = data.files || [];
+      // Get the file library container
+      const fileLibrary = document.getElementById("file-library");
+      if (!fileLibrary) return;
+      fileLibrary.innerHTML = "";
 
       if (files.length === 0) {
-        fileList.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-folder-open"></i>
-                        <h3>No documents yet</h3>
-                        <p>Upload your first document to get started</p>
-                    </div>
-                `;
+        fileLibrary.innerHTML = `<div class="no-files">No files uploaded yet.</div>`;
         return;
       }
 
+      // Render each file with metadata
       files.forEach((file) => {
-        const fileElement = this.createFileLibraryItem(file);
-        fileList.appendChild(fileElement);
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-library-item";
+        fileItem.innerHTML = `
+          <div class="file-metadata">
+            <div class="file-name"><i class="${Utils.getFileIcon(file.name)}"></i> ${Utils.escapeHtml(file.name)}</div>
+            <div class="file-size">${Utils.formatFileSize(file.size)}</div>
+            <div class="file-date">Uploaded: ${Utils.formatDate(file.created_at)}</div>
+          </div>
+        `;
+        fileLibrary.appendChild(fileItem);
       });
     } catch (error) {
+      const fileLibrary = document.getElementById("file-library");
+      if (fileLibrary) {
+        fileLibrary.innerHTML = `<div class="error">Failed to load files. Please try again later.</div>`;
+      }
       console.error("Error loading file library:", error);
-      fileList.innerHTML =
-        '<div class="error-message">Failed to load file library</div>';
     }
   }
 

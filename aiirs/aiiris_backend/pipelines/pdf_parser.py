@@ -15,9 +15,9 @@ class PdfParser:
     def __init__(self, pdf_path: str):
         self.pdf_path = pdf_path
         self.azure_endpoint_doc_intel = (
-            "https://docaiiriswork.cognitiveservices.azure.com/"
+            "https://aiirisworkmate.cognitiveservices.azure.com/" #"https://docaiiriswork.cognitiveservices.azure.com/"
         )
-        self.azure_key_doc_intel = "1Ab3Lpd2qh8sEtMCOZZLoW6QFqtBOVOYgwzcbo8I9BxBY9J3vtEcJQQJ99BEACYeBjFXJ3w3AAALACOG22i3"
+        self.azure_key_doc_intel = "AvSWJySp25R8Q4L2b3VzMdgkqoGAx0ZdVFxRn5qKXPy50bL1kOsbJQQJ99BFACfhMk5XJ3w3AAALACOGV3L3" #1Ab3Lpd2qh8sEtMCOZZLoW6QFqtBOVOYgwzcbo8I9BxBY9J3vtEcJQQJ99BEACYeBjFXJ3w3AAALACOG22i3"
         self.client = openai.OpenAI(
             api_key="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"
         )
