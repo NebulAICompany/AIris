@@ -122,5 +122,6 @@ os.environ["OPENAI_API_KEY"] = (
 # )
 # print(QueryPipeline(
 #     query="Proje özetini açıkla",
+#     query="Proje özetini açıkla",
 #     vectorstore_path="D:/GitHub/vectorrag/Yusuf/vectorstore",
 # ).find_similar_chunks())
