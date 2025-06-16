@@ -49,8 +49,8 @@ def run_orchestration(query: str) -> str:
         web_context =  summarize_web_context(preprocessed_query)  
         print(f"Web Context: {web_context}")
     else:
-        web_context = ""      
-    
+        web_context = ""
+
     # Extract only the content from the retrieved docs before reranking
     doc_contents = [{"content" : doc["content"] ,"metadata": doc["metadata"]} for doc in retrieved_docs]
     reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=3)

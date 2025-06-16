@@ -298,6 +298,15 @@ class Utils {
       requestAnimationFrame(step);
     },
   };
+
+  // Web Search toggle flag helpers
+  static setWebSearchEnabled(enabled) {
+    this.storage.set("webSearchEnabled", !!enabled);
+  }
+
+  static isWebSearchEnabled() {
+    return this.storage.get("webSearchEnabled", false);
+  }
 }
 
 // Export for use in other modules

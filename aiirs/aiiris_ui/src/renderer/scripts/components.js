@@ -10,6 +10,8 @@ class UIComponents {
     this.uploadedFiles = [];
     this.isProcessing = false;
     this.isDarkMode = false;
+    // Add webSearchEnabled flag, initialize from storage or default to false
+    this.webSearchEnabled = Utils.isWebSearchEnabled();
 
     this.init();
   }
@@ -18,6 +20,11 @@ class UIComponents {
     this.setupEventListeners();
     this.loadTheme();
     this.initializeComponents();
+    // Set toggle state on load
+    const webSearchToggle = document.getElementById("web-search-toggle");
+    if (webSearchToggle) {
+      webSearchToggle.checked = this.webSearchEnabled;
+    }
   }
 
   setupEventListeners() {
@@ -89,6 +96,18 @@ class UIComponents {
     const saveSettingsButton = document.getElementById("save-settings");
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
+    }
+
+    // Web Search toggle event
+    const webSearchToggle = document.getElementById("web-search-toggle");
+    if (webSearchToggle) {
+      webSearchToggle.addEventListener("change", (e) => {
+        this.webSearchEnabled = e.target.checked;
+        Utils.setWebSearchEnabled(this.webSearchEnabled);
+        // Optionally, notify backend here if needed
+        // Example: window.airisAPI.setWebSearchEnabled?.(this.webSearchEnabled);
+      })
+      console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
     // Event delegation for dynamic buttons
@@ -794,6 +813,11 @@ class UIComponents {
 
     // Load initial tab data
     this.loadTabData(this.currentTab);
+  }
+
+  // Example method to get the flag for backend communication
+  isWebSearchEnabled() {
+    return this.webSearchEnabled;
   }
 }
 

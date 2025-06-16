@@ -272,50 +272,6 @@ class AIrisApp {
       }
     });
 
-    // Handle metrics requests
-    ipcMain.handle("get-metrics", async () => {
-      try {
-        const response = await fetch("http://localhost:8000/", {
-          method: "GET",
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const metricsText = await response.text();
-
-        // Basic metrics parsing for Prometheus format
-        const metrics = {
-          totalQueries: "0",
-          totalDocuments: "0",
-          avgResponseTime: "0.5s",
-          successRate: "99%",
-          recentActivity: [],
-        };
-
-        // Extract some basic metrics from Prometheus output
-        const lines = metricsText.split("\n");
-        for (const line of lines) {
-          if (line.includes("query_total")) {
-            const match = line.match(/(\d+)$/);
-            if (match) metrics.totalQueries = match[1];
-          }
-        }
-
-        return metrics;
-      } catch (error) {
-        // Return default metrics if backend is unavailable
-        return {
-          totalQueries: "0",
-          totalDocuments: "0",
-          avgResponseTime: "N/A",
-          successRate: "N/A",
-          recentActivity: [],
-        };
-      }
-    });
-
     // Handle dev tools requests
     ipcMain.handle("open-dev-tools", () => {
       if (this.mainWindow && this.mainWindow.webContents) {

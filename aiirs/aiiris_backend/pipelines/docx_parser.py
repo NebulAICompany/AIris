@@ -13,7 +13,7 @@ class DocxParser:
         from aiiris_backend.pipelines.uploadpipe import UploadPipeline
         from pathlib import Path
 
-        output_dir = Path(__file__).resolve().parent.parent / "uploads"
+        output_dir = Path(__file__).resolve().parent / "uploads"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(self.file_path).stem + ".pdf")
         self.convert_docx_to_pdf(self.file_path, str(output_pdf))
@@ -21,6 +21,7 @@ class DocxParser:
         file_path = str(output_pdf)
         if not Path(file_path).exists():
             print(f"PDF dosyası bulunamadı: {file_path}")
+            return None
         else:
             pipe = UploadPipeline(file_path)
             pipe.run()

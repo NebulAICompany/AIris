@@ -29,16 +29,13 @@ def process_file(file_path: str) -> dict:
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     _, ext = os.path.splitext(file_path)
-    
-    # if ext.lower() != '.pdf':
-    #     raise ValueError(f"Unsupported file format: {ext}")
 
     try:
         # Step 1: Create UploadPipeline
         pipeline = UploadPipeline(file_path=file_path)
 
         pipeline.run()
-        save_dir = Path(__file__).resolve().parent.parent / "uploads"
+        save_dir = Path(__file__).resolve().parent.parent / "pipelines/uploads"
         # Step 2: Create or update vector store
         vectorpipe.VectorStorePipeline(
         ).run(uploads_path=save_dir, save_path=VECTOR_STORE_PATH)

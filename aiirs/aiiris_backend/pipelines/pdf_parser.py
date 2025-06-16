@@ -41,7 +41,7 @@ class PdfParser:
     def process_pages_in_memory(self, pages_per_part=2):
         pdf = fitz.open(self.pdf_path)
         num_pages = len(pdf)
-        save_dir = Path(__file__).resolve().parent.parent / "uploads"
+        save_dir = Path(__file__).resolve().parent / "uploads"
         save_dir.mkdir(parents=True, exist_ok=True)
         pdf_stem = Path(self.pdf_path).stem
         txt_output_path = save_dir / f"{pdf_stem}_txt.txt"
