@@ -14,7 +14,7 @@ class AIrisApp {
 
   async init() {
     try {
-      console.log("Initializing AIris App...");
+      logger.info("Initializing AIris App...", 'APP');
 
       // Wait for DOM to be ready
       if (document.readyState === "loading") {
@@ -23,7 +23,7 @@ class AIrisApp {
         await this.start();
       }
     } catch (error) {
-      console.error("Failed to initialize app:", error);
+      logger.error(`Failed to initialize app: ${error.message}`, 'APP');
       this.showErrorScreen(error);
     }
   }
@@ -50,12 +50,12 @@ class AIrisApp {
       this.hideLoadingScreen();
 
       this.isInitialized = true;
-      console.log("AIris App initialized successfully");
+      logger.info("AIris App initialized successfully", 'APP');
 
       // Show connection status
       this.updateConnectionStatus(this.backendConnected);
     } catch (error) {
-      console.error("Failed to start app:", error);
+      logger.error(`Failed to start app: ${error.message}`, 'APP');
       this.showErrorScreen(error);
     }
   }

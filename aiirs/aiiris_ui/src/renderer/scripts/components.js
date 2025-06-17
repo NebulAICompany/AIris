@@ -96,6 +96,17 @@ class UIComponents {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
         this.switchTab(e.target.dataset.tab);
       }
+      
+      // Handle delete button clicks
+      if (e.target.closest('.delete-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const deleteBtn = e.target.closest('.delete-btn');
+        const fileName = deleteBtn.dataset.filename;
+        if (fileName) {
+          this.deleteFile(fileName);
+        }
+      }
     });
   }
 
@@ -485,19 +496,29 @@ class UIComponents {
         fileItem.dataset.fileName = file.name;
         fileItem.innerHTML = `
           <div class="file-card-header">
-            <div class="file-card-icon">
-              <i class="${Utils.getFileIcon(file.name)}"></i>
+            <div class="file-card-main">
+              <div class="file-card-icon">
+                <i class="${Utils.getFileIcon(file.name)}"></i>
+              </div>
+              <div class="file-card-info">
+                <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
+                <div class="file-card-details">${Utils.formatFileSize(file.size)} • ${Utils.formatDate(file.created_at)}</div>
+              </div>
             </div>
-            <div class="file-card-info">
-              <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
-              <div class="file-card-details">${Utils.formatFileSize(file.size)} • ${Utils.formatDate(file.created_at)}</div>
+            <div class="file-card-actions">
+              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(file.name)}" title="Delete file">
+                <i class="fas fa-trash"></i>
+              </button>
             </div>
           </div>
         `;
         
-        // Add click handler to open file
-        fileItem.addEventListener('click', () => {
-          this.openFile(file.name);
+        // Add click handler to open file (but not on action buttons)
+        fileItem.addEventListener('click', (e) => {
+          // Don't open file if clicking on action buttons
+          if (!e.target.closest('.file-card-actions')) {
+            this.openFile(file.name);
+          }
         });
         
         fileLibrary.appendChild(fileItem);
@@ -526,6 +547,48 @@ class UIComponents {
     } catch (error) {
       console.error('Error opening file:', error);
       this.showNotification('Failed to open file. Please try again.', 'error');
+    }
+  }
+
+  async deleteFile(fileName) {
+    console.log("🗑️ Frontend: deleteFile called for:", fileName);
+    
+    try {
+      // Show confirmation dialog
+      console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
+      const confirmed = confirm(`Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`);
+      
+      if (!confirmed) {
+        console.log("❌ Frontend: User cancelled deletion for:", fileName);
+        return;
+      }
+      
+      console.log("✅ Frontend: User confirmed deletion for:", fileName);
+      
+      // Show loading state
+      this.showNotification('Deleting file...', 'info');
+      
+      console.log("🚀 Frontend: Calling API to delete file:", fileName);
+      
+      // Request the main process to delete the file
+      const result = await window.airisAPI.deleteFile(fileName);
+      
+      console.log("📋 Frontend: API response received:", result);
+      
+      if (result.success) {
+        console.log("✅ Frontend: Deletion successful, showing success message");
+        this.showNotification(`File "${fileName}" deleted successfully`, 'success');
+        // Refresh the file list
+        console.log("🔄 Frontend: Refreshing file list");
+        this.loadFileLibrary();
+      } else {
+        console.error("❌ Frontend: Deletion failed:", result.error);
+        this.showNotification(`Failed to delete file: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('❌ Frontend: Error deleting file:', error);
+      console.error('❌ Frontend: Error details:', error.message, error.stack);
+      this.showNotification('Failed to delete file. Please try again.', 'error');
     }
   }
 
