@@ -1,21 +1,17 @@
-def create_rag_prompt(context: str, query: str, instruction:str = None) -> str:
-    """
-    Creates a RAG prompt by combining retrieved context with user query.
-    
-    Args:
-        context (str): Retrieved documents joined as text
-        query (str): User's question
-        
-    Returns:
-        str: Formatted prompt for LLM
-    """
-    instruction_text = ""
-    if instruction : 
-        instruction_text = f"\n\nÖzel Talimat: {instruction}"
-    prompt = f"""Context:
+from agents import Agent, Runner
+from agents.mcp.server import MCPServerStdio
+import asyncio
+from typing import List
+
+
+def create_agentic_prompt(
+    context: str, query: str, instruction: str = None, mcp_servers: List = None
+) -> Agent:
+
+    agent_instructions = f"""Context:
 {context}
 
-Soru: {query}{instruction_text}
+Soru: {query}{f"\n\nÖzel Talimat: {instruction}" if instruction else ""}
 
 Yukarıdaki bağlam bilgisine dayanarak, soruyu yanıtla. Eğer cevap bağlamda yoksa, 
 bilmediğini söyle ve tahmin etme. Eğer cevap local içerik içerisinde yoksa ama web bilgisi içerisinde
@@ -27,7 +23,13 @@ Kullanılan Bilgi Metadataları:
 - Kaynak: [Source]
 - Tarih: [Date]
 - Kategori: [Category]"""
-    
-    return prompt
 
+    # MCP entegrasyonu ile ajanı oluştur
+    agent = Agent(
+        name="RAG_Assistant",
+        instructions=agent_instructions,
+        model="gpt-4.1",
+        mcp_servers=mcp_servers or [],  # Yapılandırmada tanımlı MCP sunucularını kullan
+    )
 
+    return agent
