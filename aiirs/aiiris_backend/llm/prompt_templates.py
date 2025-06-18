@@ -1,14 +1,15 @@
 from agents import Agent
 from typing import List
-from aiiris_backend.agents.web_search_agent import web_search_agent
 
 
 def create_rag_agent(
-    context: str, query: str, instruction: str = None, mcp_servers: List = None
+    local_context: str, web_context: str, query: str, instruction: str = None, mcp_servers: List = None
 ) -> Agent:
 
-    agent_instructions = f"""Context:
-{context}
+    agent_instructions = f"""Local Context:
+{local_context}
+
+Web Context: {web_context}
 
 Soru: {query}{f"\n\nÖzel Talimat: {instruction}" if instruction else ""}
 
@@ -28,7 +29,7 @@ Kullanılan Bilgi Metadataları:
         name="RAG_Assistant",
         instructions=agent_instructions,
         model="gpt-4.1",
-        tools=[web_search_agent],  # Yapılandırmada tanımlı MCP sunucularını kullan
+        tools=[],  # Yapılandırmada tanımlı MCP sunucularını kullan
     )
 
     return agent

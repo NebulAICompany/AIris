@@ -1,3 +1,4 @@
+from typing import List
 from aiiris_backend.retrieval.reranker import rerank
 from aiiris_backend.orchestrator.query_utils import (
     clean_query,
@@ -20,6 +21,8 @@ from aiiris_backend.retrieval.web_search import (
     should_use_web_search,
     summarize_web_context,
 )
+from agents import Runner  # Import the Runner class
+from aiiris_backend.agent_mcps.web_search_agent import web_search_agent
 import sys
 import subprocess
 
@@ -57,7 +60,7 @@ def preprocess_query(query: str):
     return corrected, lang, intent
 
 
-async def run_orchestration(query: str) -> str:
+async def run_orchestration(query: str, web_search_enabled: bool = False) -> str:
     # MCP sunucusunu ayrı bir işlemde başlat (sadece Windows için)
     if sys.platform == "win32":
         setup_mcp_filesystem_server()
@@ -76,17 +79,20 @@ async def run_orchestration(query: str) -> str:
 
     # 3. Hassas bilgileri maskele
     masked_query, pii_map = mask_pii(preprocessed_query)
-    print(f"Masked Query: {masked_query}")
-
-    # 4. Retrieval + Reranking0
+    print(f"Masked Query: {masked_query}")    # 4. Retrieval + Reranking
     retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
     print(type(retrieved_docs))
 
-    # if should_use_web_search(preprocessed_query, retrieved_docs):
-    #     web_context = summarize_web_context(preprocessed_query)
-    #     print(f"Web Context: {web_context}")
-    # else:
-    #     web_context = ""
+    # 5. Web Search Control - Check if Web Search toggle is enabled
+    web_context = ""
+    if web_search_enabled:
+        print("🌐 Web Search toggle is ENABLED - will perform web search")
+        # TODO: Add web search implementation here
+        agent = web_search_agent()
+        web_context = await Runner.run(agent, query)
+    else:
+        print("🔒 Web Search toggle is DISABLED - using only local documents")
+        
 
     # Extract only the content from the retrieved docs before reranking
     doc_contents = [
@@ -119,7 +125,7 @@ async def run_orchestration(query: str) -> str:
     context = "\n\n---\n\n".join(context_entries)
 
     # Create the agent without MCP server for now
-    agent = create_rag_agent(context=context, query=masked_query, mcp_servers=[])
+    agent = create_rag_agent(local_context=context, web_context= web_context, query=masked_query, mcp_servers=[])
 
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
@@ -138,7 +144,5 @@ async def run_orchestration(query: str) -> str:
 
     # 8. Maske çöz
     final_answer = unmask_pii(final_answer, pii_map)
-
-    # 9. Office Entegrasyonu
 
     return final_answer

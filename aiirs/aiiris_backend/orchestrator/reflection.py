@@ -1,7 +1,6 @@
 from agents import Agent, Runner
 from typing import Callable
 
-
 async def reflect_and_retry(
     prompt: str, initial_answer: str, agent: Agent, max_retries: int = 2
 ) -> str:

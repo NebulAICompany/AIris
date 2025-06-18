@@ -104,12 +104,12 @@ class APIService {
       };
     }
   }
-
   // Send query to AI system
-  async sendQuery(query) {
+  async sendQuery(query, webSearchEnabled = false) {
     try {
       const response = await this.api.post("/api/query", {
         query: query.trim(),
+        webSearchEnabled: webSearchEnabled,
       });
 
       return {

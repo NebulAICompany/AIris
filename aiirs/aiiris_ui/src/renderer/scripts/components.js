@@ -190,10 +190,8 @@ class UIComponents {
 
     try {
       // Show typing indicator
-      this.showTypingIndicator();
-
-      // Send to backend
-      const response = await window.airisAPI.sendQuery(message); // Remove typing indicator
+      this.showTypingIndicator();      // Send to backend
+      const response = await window.airisAPI.sendQuery(message, this.webSearchEnabled);// Remove typing indicator
       this.hideTypingIndicator();
 
       // Add AI response to chat

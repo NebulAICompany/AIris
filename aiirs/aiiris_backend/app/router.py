@@ -15,6 +15,7 @@ request_counter = 0
 
 class QueryRequest(BaseModel):
     query: str
+    webSearchEnabled: bool = False
 
 
 class UploadRequest(BaseModel):
@@ -28,12 +29,12 @@ async def handle_query(request: QueryRequest):
     orchestrator üzerinden işler ve LLM yanıtını döner.
     """
     global request_counter
-    try:
-        # Increment simple counter
+    try:        # Increment simple counter
         request_counter += 1
 
         query = request.query
-        answer = await run_orchestration(query)
+        web_search_enabled = request.webSearchEnabled
+        answer = await run_orchestration(query, web_search_enabled)
         api_requests_total.labels(status="success").inc()
         return {"response": answer}
     except Exception as e:
