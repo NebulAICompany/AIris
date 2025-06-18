@@ -1,10 +1,9 @@
-from agents import Agent, Runner
-from agents.mcp.server import MCPServerStdio
-import asyncio
+from agents import Agent
 from typing import List
+from aiiris_backend.agents.web_search_agent import web_search_agent
 
 
-def create_agentic_prompt(
+def create_rag_agent(
     context: str, query: str, instruction: str = None, mcp_servers: List = None
 ) -> Agent:
 
@@ -29,7 +28,7 @@ Kullanılan Bilgi Metadataları:
         name="RAG_Assistant",
         instructions=agent_instructions,
         model="gpt-4.1",
-        mcp_servers=mcp_servers or [],  # Yapılandırmada tanımlı MCP sunucularını kullan
+        tools=[web_search_agent],  # Yapılandırmada tanımlı MCP sunucularını kullan
     )
 
     return agent

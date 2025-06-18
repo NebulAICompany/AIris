@@ -1,4 +1,3 @@
-from typing import List
 from aiiris_backend.retrieval.reranker import rerank
 from aiiris_backend.orchestrator.query_utils import (
     clean_query,
@@ -7,7 +6,7 @@ from aiiris_backend.orchestrator.query_utils import (
     detect_intent,
 )
 from aiiris_backend.llm.llm_engine import generate_answer
-from aiiris_backend.llm.prompt_templates import create_agentic_prompt
+from aiiris_backend.llm.prompt_templates import create_rag_agent
 from aiiris_backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from aiiris_backend.guardrails.pii_masker import mask_pii, unmask_pii
 from aiiris_backend.guardrails.filters import (
@@ -21,7 +20,6 @@ from aiiris_backend.retrieval.web_search import (
     should_use_web_search,
     summarize_web_context,
 )
-from agents.mcp.server import MCPServerStdio
 import sys
 import subprocess
 
@@ -121,7 +119,7 @@ async def run_orchestration(query: str) -> str:
     context = "\n\n---\n\n".join(context_entries)
 
     # Create the agent without MCP server for now
-    agent = create_agentic_prompt(context=context, query=masked_query, mcp_servers=[])
+    agent = create_rag_agent(context=context, query=masked_query, mcp_servers=[])
 
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
@@ -140,5 +138,7 @@ async def run_orchestration(query: str) -> str:
 
     # 8. Maske çöz
     final_answer = unmask_pii(final_answer, pii_map)
+
+    # 9. Office Entegrasyonu
 
     return final_answer
