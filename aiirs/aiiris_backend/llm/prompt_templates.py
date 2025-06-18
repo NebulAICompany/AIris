@@ -3,15 +3,20 @@ from typing import List
 
 
 def create_rag_agent(
-    local_context: str, web_context: str, query: str, instruction: str = None, mcp_servers: List = None
+    local_context: str,
+    web_context: str,
+    query: str,
+    instruction: str = None,
+    mcp_servers: List = None,
 ) -> Agent:
 
+    instruction_part = f"\n\nÖzel Talimat: {instruction}" if instruction else ""
     agent_instructions = f"""Local Context:
 {local_context}
 
 Web Context: {web_context}
 
-Soru: {query}{f"\n\nÖzel Talimat: {instruction}" if instruction else ""}
+Soru: {query}{instruction_part}
 
 Yukarıdaki bağlam bilgisine dayanarak, soruyu yanıtla. Eğer cevap bağlamda yoksa, 
 bilmediğini söyle ve tahmin etme. Eğer cevap local içerik içerisinde yoksa ama web bilgisi içerisinde
