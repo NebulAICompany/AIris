@@ -46,6 +46,9 @@ class AIrisApp {
       // Setup app-level shortcuts
       this.setupKeyboardShortcuts();
 
+      // Initialize currency service
+      this.initializeCurrencyService();
+
       // Hide loading screen and show app
       this.hideLoadingScreen();
 
@@ -62,15 +65,15 @@ class AIrisApp {
 
   async checkBackendConnection() {
     try {
-      console.log("Checking backend connection...");
+      logger.info("Checking backend connection...", 'APP');
 
       // Try to connect to the backend
       const health = await window.airisAPI.checkHealth();
       this.backendConnected = true;
 
-      console.log("Backend connection successful:", health);
+      logger.info("Backend connection successful", 'APP');
     } catch (error) {
-      console.warn("Backend connection failed:", error);
+      logger.warn(`Backend connection failed: ${error.message}`, 'APP');
       this.backendConnected = false;
 
       // Show warning but don't block the app
@@ -179,13 +182,13 @@ class AIrisApp {
   setupErrorHandling() {
     // Global error handler
     window.addEventListener("error", (event) => {
-      console.error("Global error:", event.error);
+      logger.error(`Global error: ${event.error?.message}`, 'APP');
       this.handleError(event.error);
     });
 
     // Promise rejection handler
     window.addEventListener("unhandledrejection", (event) => {
-      console.error("Unhandled promise rejection:", event.reason);
+      logger.error(`Unhandled promise rejection: ${event.reason}`, 'APP');
       this.handleError(event.reason);
     });
   }
@@ -278,7 +281,7 @@ class AIrisApp {
 
       return this.backendConnected;
     } catch (error) {
-      console.error("Reconnection failed:", error);
+      logger.error(`Reconnection failed: ${error.message}`, 'APP');
       return false;
     }
   }
@@ -304,6 +307,84 @@ class AIrisApp {
     }
   }
 
+  initializeCurrencyService() {
+    logger.info("Initializing currency service", 'APP');
+    
+    // Start the currency service with update callback
+    window.currencyService.start((data) => {
+      this.updateCurrencyDisplay(data);
+    });
+    
+    // Handle app cleanup
+    window.addEventListener('beforeunload', () => {
+      window.currencyService.stop();
+    });
+  }
+  
+  updateCurrencyDisplay(data) {
+    try {
+      const { currencies, gold, lastUpdate, isStale } = data;
+      
+      if (currencies) {
+        // Update USD/TRY
+        const usdTryElement = document.getElementById('usd-try');
+        if (usdTryElement) {
+          usdTryElement.textContent = window.currencyService.formatNumber(currencies.usdTry, 2);
+        }
+        
+        // Update EUR/TRY
+        const eurTryElement = document.getElementById('eur-try');
+        if (eurTryElement) {
+          eurTryElement.textContent = window.currencyService.formatNumber(currencies.eurTry, 2);
+        }
+        
+        // Update USD/EUR
+        const usdEurElement = document.getElementById('usd-eur');
+        if (usdEurElement) {
+          usdEurElement.textContent = window.currencyService.formatNumber(currencies.usdEur, 4);
+        }
+      }
+      
+      if (gold) {
+        // Update Gold price
+        const goldElement = document.getElementById('gold-price');
+        if (goldElement) {
+          goldElement.textContent = `$${window.currencyService.formatNumber(gold.price, 0)}`;
+        }
+      }
+      
+      // Update status indicator
+      const statusElement = document.getElementById('currency-status');
+      if (statusElement) {
+        const statusIcon = statusElement.querySelector('i');
+        const statusText = statusElement.querySelector('.status-text');
+        
+        if (isStale) {
+          statusElement.className = 'currency-status stale';
+          statusText.textContent = 'Cached';
+        } else {
+          statusElement.className = 'currency-status live';
+          statusText.textContent = 'Live';
+        }
+      }
+      
+      logger.debug('Currency display updated', 'APP');
+      
+    } catch (error) {
+      logger.error(`Failed to update currency display: ${error.message}`, 'APP');
+      
+      // Show error state
+      const statusElement = document.getElementById('currency-status');
+      if (statusElement) {
+        statusElement.className = 'currency-status error';
+        const statusText = statusElement.querySelector('.status-text');
+        if (statusText) {
+          statusText.textContent = 'Error';
+        }
+      }
+    }
+  }
+
   // Development helpers
   getDebugInfo() {
     return {
@@ -313,6 +394,7 @@ class AIrisApp {
       chatHistory: this.uiComponents?.chatHistory?.length || 0,
       uploadedFiles: this.uiComponents?.uploadedFiles?.length || 0,
       theme: this.uiComponents?.isDarkMode ? "dark" : "light",
+      currencyService: window.currencyService?.getCurrentData() || null,
     };
   }
 }
@@ -338,4 +420,4 @@ window.getDebugInfo = () =>
   window.airisApp?.getDebugInfo() || "App not initialized";
 window.reconnectBackend = () => window.airisApp?.reconnectBackend();
 
-console.log("AIris App script loaded successfully");
+logger.info("AIris App script loaded successfully", 'APP');
