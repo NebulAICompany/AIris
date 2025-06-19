@@ -25,3 +25,4 @@ tokenizers
 duckduckgo-search
 python-multipart
 openai-agents
+colorama

@@ -484,6 +484,59 @@ body {
   flex-wrap: wrap;
 }
 
+/* Currency Ticker */
+.currency-ticker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  font-size: 13px;
+  border-left: 1px solid var(--border-color);
+  min-height: 40px;
+  margin-left: auto;
+}
+
+.currency-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.currency-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.currency-value {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.currency-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.currency-status.status-live {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+}
+
+.currency-status.status-cached {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning);
+}
+
+.currency-status.status-offline {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+}
+
 /* Connection Warning */
 .connection-warning {
   position: fixed;
