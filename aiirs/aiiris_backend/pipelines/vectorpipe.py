@@ -19,10 +19,8 @@ class VectorStorePipeline:
     def run(self, uploads_path: str, save_path: str):
         try:
             files = [
-                f for f in os.listdir(uploads_path) if f.endswith((".txt", ".pdf"))
+                f for f in os.listdir(uploads_path) if f.endswith((".txt"))
             ]
-            # Check if uploads directory is empty
-            files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
             if not files:
                 print("No text files found in uploads directory")
                 return

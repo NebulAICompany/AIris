@@ -135,6 +135,11 @@
   border-color: var(--accent-primary);
 }
 
+.suggestion-chip:active {
+  transform: scale(0.98);
+  background-color: var(--accent-secondary);
+}
+
 .message {
   margin-bottom: 16px;
   display: flex;
@@ -918,4 +923,45 @@
 
 .markdown-content td {
   color: var(--text-secondary);
+}
+
+/* Toggle Switch for Web Search */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-tertiary, #ccc);
+  transition: 0.3s;
+  border-radius: 22px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .slider {
+  background-color: var(--accent-primary, #2563eb);
+}
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(18px);
 }

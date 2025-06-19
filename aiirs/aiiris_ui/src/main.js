@@ -261,22 +261,25 @@ class AIrisApp {
         platform: process.platform,
         arch: process.arch,
       };
-    });     // Handle query requests
-    ipcMain.handle("send-query", async (event, query) => {
+    });    
+
+    // Handle query requests
+    ipcMain.handle("send-query", async (event, { query, webSearchEnabled = false }) => {
       try {
-        logger.info(`Sending query: ${query.substring(0, 100)}...`, 'IPC');
+        logger.info(`Sending query: ${query.substring(0, 100)}...`, 'IPC', "Web search enabled:", webSearchEnabled);
         const response = await fetch("http://localhost:8000/api/query", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ query, webSearchEnabled }),
         });
 
         logger.debug(`Query response status: ${response.status}`, 'IPC');
 
         if (!response.ok) {
+        console.log("Response status:", response.status);        if (!response.ok) {
           const errorText = await response.text();
           logger.error(`API Error Response: ${errorText}`, 'IPC');
           throw new Error(
@@ -342,50 +345,6 @@ class AIrisApp {
         };
       } catch (error) {
         throw new Error(`Health check failed: ${error.message}`);
-      }
-    });
-
-    // Handle metrics requests
-    ipcMain.handle("get-metrics", async () => {
-      try {
-        const response = await fetch("http://localhost:8000/", {
-          method: "GET",
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const metricsText = await response.text();
-
-        // Basic metrics parsing for Prometheus format
-        const metrics = {
-          totalQueries: "0",
-          totalDocuments: "0",
-          avgResponseTime: "0.5s",
-          successRate: "99%",
-          recentActivity: [],
-        };
-
-        // Extract some basic metrics from Prometheus output
-        const lines = metricsText.split("\n");
-        for (const line of lines) {
-          if (line.includes("query_total")) {
-            const match = line.match(/(\d+)$/);
-            if (match) metrics.totalQueries = match[1];
-          }
-        }
-
-        return metrics;
-      } catch (error) {
-        // Return default metrics if backend is unavailable
-        return {
-          totalQueries: "0",
-          totalDocuments: "0",
-          avgResponseTime: "N/A",
-          successRate: "N/A",
-          recentActivity: [],
-        };
       }
     });
 

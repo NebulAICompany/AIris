@@ -10,6 +10,8 @@ class UIComponents {
     this.uploadedFiles = [];
     this.isProcessing = false;
     this.isDarkMode = false;
+    // Add webSearchEnabled flag, initialize from storage or default to false
+    this.webSearchEnabled = Utils.isWebSearchEnabled();
 
     this.init();
   }
@@ -18,6 +20,11 @@ class UIComponents {
     this.setupEventListeners();
     this.loadTheme();
     this.initializeComponents();
+    // Set toggle state on load
+    const webSearchToggle = document.getElementById("web-search-toggle");
+    if (webSearchToggle) {
+      webSearchToggle.checked = this.webSearchEnabled;
+    }
   }
 
   setupEventListeners() {
@@ -44,6 +51,8 @@ class UIComponents {
 
       sendButton.addEventListener("click", () => this.sendMessage());
     }
+    // Suggestion chips
+    this.setupSuggestionChips();
 
     // File upload
     const uploadArea = document.getElementById("upload-area");
@@ -89,6 +98,17 @@ class UIComponents {
     const saveSettingsButton = document.getElementById("save-settings");
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
+    }    // Web Search toggle event
+    const webSearchToggle = document.getElementById("web-search-toggle");
+    if (webSearchToggle) {
+      webSearchToggle.addEventListener("change", (e) => {
+        this.webSearchEnabled = e.target.checked;
+        Utils.setWebSearchEnabled(this.webSearchEnabled);
+        console.log("Web search enabled:", this.webSearchEnabled);
+        // Optionally, notify backend here if needed
+        // Example: window.airisAPI.setWebSearchEnabled?.(this.webSearchEnabled);
+      });
+      console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
     // Event delegation for dynamic buttons
@@ -153,7 +173,52 @@ class UIComponents {
         break;
       case "analytics":
         await this.loadAnalytics();
-        break;
+        break;    }
+  }
+
+  setupSuggestionChips() {
+    const suggestionChips = document.querySelectorAll(".suggestion-chip");
+    
+    suggestionChips.forEach((chip) => {
+      chip.addEventListener("click", (e) => {
+        const chipText = e.target.textContent.trim();
+        this.handleSuggestionChipClick(chipText);
+      });
+    });
+  }
+
+  handleSuggestionChipClick(chipText) {
+    const chatInput = document.getElementById("chat-input");
+    
+    // Define the queries for each suggestion chip
+    const chipQueries = {
+      "What's in my latest report?": "Please provide an overview of my most recently uploaded files and their key contents. What financial documents do I have and what information do they contain?",
+      "Analyze financial trends": "Analyze the financial trends and patterns in my uploaded documents. Show me any significant changes, growth patterns, or important financial insights from the data.",
+      "Summary of expenses": "Provide a comprehensive summary of all expenses found in my documents. Break down the expenses by category, time period, and highlight any significant spending patterns."
+    };
+
+    const query = chipQueries[chipText];
+    
+    if (query && chatInput) {
+      // Set the query in the input field
+      chatInput.value = query;
+      
+      // Auto-send the message
+      this.sendMessage();
+      
+      // Hide the welcome message with chips since user has started chatting
+      this.hideWelcomeMessage();
+    }
+  }
+
+  hideWelcomeMessage() {
+    const welcomeMessage = document.querySelector(".chat-messages .message");
+    if (welcomeMessage && welcomeMessage.classList.contains("assistant")) {
+      // Check if this is the welcome message by looking for suggestion chips
+      const hasSuggestionChips = welcomeMessage.querySelector(".suggestion-chips");
+      if (hasSuggestionChips) {
+        welcomeMessage.style.display = "none";
+      }
     }
   }
 
@@ -182,10 +247,8 @@ class UIComponents {
 
     try {
       // Show typing indicator
-      this.showTypingIndicator();
-
-      // Send to backend
-      const response = await window.airisAPI.sendQuery(message); // Remove typing indicator
+      this.showTypingIndicator();      // Send to backend
+      const response = await window.airisAPI.sendQuery(message, this.webSearchEnabled);// Remove typing indicator
       this.hideTypingIndicator();
 
       // Add AI response to chat
@@ -857,6 +920,11 @@ class UIComponents {
 
     // Load initial tab data
     this.loadTabData(this.currentTab);
+  }
+
+  // Example method to get the flag for backend communication
+  isWebSearchEnabled() {
+    return this.webSearchEnabled;
   }
 }
 

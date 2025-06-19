@@ -7,7 +7,6 @@ package-lock.json
 yarn.lock
 
 # Python
-__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -42,3 +41,6 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db 
+.env
+**/__pycache__/**
+*.pyc

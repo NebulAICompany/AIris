@@ -13,12 +13,12 @@ class ImageParser:
     def run(self):
         if not Path(self.file_path).exists():
             print(f"Görsel dosyası bulunamadı: {self.file_path}")
-            return
+            return None
 
         with open(self.file_path, "rb") as f:
             image_bytes = f.read()
 
-        save_dir = Path(__file__).resolve().parent.parent / "uploads"
+        save_dir = Path(__file__).resolve().parent / "uploads"
         save_dir.mkdir(parents=True, exist_ok=True)
         file_stem = Path(self.file_path).stem
         txt_output_path = save_dir / f"{file_stem}_txt.txt"

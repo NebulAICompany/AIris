@@ -8,7 +8,7 @@ class TxtParser:
 
     def run(self):
         # Dosya adı ve uploads klasörünü ayarla
-        save_dir = Path(__file__).resolve().parent.parent / "uploads"
+        save_dir = Path(__file__).resolve().parent / "uploads"
         save_dir.mkdir(parents=True, exist_ok=True)
         txt_stem = Path(self.file_path).stem
         output_path = save_dir / f"{txt_stem}_txt.txt"
@@ -20,5 +20,4 @@ class TxtParser:
                 if line.strip():  # satır boş değilse
                     outfile.write(line)
 
-        print(f"Boş olmayan satırlar {output_path} dosyasına yazıldı.")
         return output_path
