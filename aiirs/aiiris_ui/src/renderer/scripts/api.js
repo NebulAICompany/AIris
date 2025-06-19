@@ -105,11 +105,12 @@ class APIService {
     }
   }
   // Send query to AI system
-  async sendQuery(query, webSearchEnabled = false) {
+  async sendQuery(query, webSearchEnabled = false, wolframEnabled = false) {
     try {
       const response = await this.api.post("/api/query", {
         query: query.trim(),
         webSearchEnabled: webSearchEnabled,
+        wolframEnabled: wolframEnabled,
       });
 
       return {

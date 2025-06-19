@@ -154,3 +154,66 @@ PII Mappings Analysis:
 2025-06-17 23:50:21 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
 2025-06-18 22:01:23 - root - INFO - Logging system initialized
 2025-06-18 22:01:23 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-19 23:17:30 - root - INFO - Logging system initialized
+2025-06-19 23:17:30 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-19 23:17:31 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-19 23:17:31 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-19 23:17:31 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-19 23:17:31 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-19 23:17:31 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-19 23:19:08 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-19 23:19:08 - root - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-19 23:19:09 - root - INFO - Model loaded: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-19 23:19:12 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:19:15 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:19:16 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:19:16 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:19:18 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:19:18 - aiiris_backend.app.router - INFO - Processing query: 8 üssü 3 nedir ?...
+2025-06-19 23:19:18 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-19 23:19:23 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:25:54 - root - INFO - Logging system initialized
+2025-06-19 23:25:54 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-19 23:25:54 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-19 23:25:54 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-19 23:25:54 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-19 23:25:54 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-19 23:25:54 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-19 23:26:42 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-19 23:26:42 - root - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-19 23:26:44 - root - INFO - Model loaded: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-19 23:26:49 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:26:56 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:26:59 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:26:59 - aiiris_backend.app.router - INFO - Processing query: Please provide an overview of my most recently uploaded files and their key contents. What financial...
+2025-06-19 23:26:59 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-19 23:27:00 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:29:38 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-19 23:29:40 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:29:41 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:29:43 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:29:46 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:29:51 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:29:52 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:29:55 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:29:55 - aiiris_backend.app.router - INFO - Processing query: EL...
+2025-06-19 23:29:55 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-19 23:29:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:30:09 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-19 23:30:10 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:30:14 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:30:16 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:30:19 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:30:19 - aiiris_backend.app.router - INFO - Processing query: Elindeki finansal verilere göre euronun dolara oraný ne kadardýr....
+2025-06-19 23:30:19 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-19 23:30:20 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:31:08 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-19 23:31:12 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:31:16 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:31:17 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-19 23:31:19 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-19 23:31:19 - aiiris_backend.app.router - INFO - Processing query: euro þu an ne kadar...
+2025-06-19 23:31:19 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-19 23:31:23 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"

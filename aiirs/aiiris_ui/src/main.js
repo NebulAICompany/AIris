@@ -24,7 +24,7 @@ class AIrisApp {
 
   init() {
     logger.info("Initializing AIris Desktop Application");
-    
+
     // Handle app ready
     app.whenReady().then(() => {
       logger.info("App is ready, creating window");
@@ -53,7 +53,7 @@ class AIrisApp {
 
   createWindow() {
     logger.info("Creating main window");
-    
+
     this.mainWindow = new BrowserWindow({
       width: 1400,
       height: 900,
@@ -105,7 +105,7 @@ class AIrisApp {
     ipcMain.removeAllListeners("upload-file");
     ipcMain.removeAllListeners("check-health");
     ipcMain.removeAllListeners("open-dev-tools");
-    
+
     // Handle file selection dialog
     ipcMain.handle("select-file", async () => {
       const result = await dialog.showOpenDialog(this.mainWindow, {
@@ -152,37 +152,43 @@ class AIrisApp {
       try {
         const { shell } = require("electron");
         const path = require("path");
-        
+
         // Construct the file path
-        const uploadsDir = path.join(__dirname, "..", "..", "aiiris_backend", "uploads");
+        const uploadsDir = path.join(
+          __dirname,
+          "..",
+          "..",
+          "aiiris_backend",
+          "uploads"
+        );
         const filePath = path.join(uploadsDir, fileName);
-        
+
         // Check if file exists
         if (!fs.existsSync(filePath)) {
           return {
             success: false,
-            error: "File not found"
+            error: "File not found",
           };
         }
-        
+
         // Open file with default application
         const result = await shell.openPath(filePath);
-        
+
         if (result) {
           // If result is not empty, there was an error
           return {
             success: false,
-            error: result
+            error: result,
           };
         }
-        
+
         return {
-          success: true
+          success: true,
         };
       } catch (error) {
         return {
           success: false,
-          error: error.message
+          error: error.message,
         };
       }
     });
@@ -197,7 +203,7 @@ class AIrisApp {
         const metrics = await response.json();
         return metrics;
       } catch (error) {
-        logger.warn(`Failed to fetch metrics: ${error.message}`, 'IPC');
+        logger.warn(`Failed to fetch metrics: ${error.message}`, "IPC");
         // Return fallback metrics
         return {
           totalQueries: 0,
@@ -206,49 +212,59 @@ class AIrisApp {
           systemHealth: "Disconnected",
           vectorStoreStatus: "Unknown",
           lastUpdated: new Date().toISOString(),
-          recentActivity: []
+          recentActivity: [],
         };
       }
     });
 
     // Handle file deletion
     ipcMain.handle("delete-file", async (event, fileName) => {
-      logger.info(`Delete file request received: ${fileName}`, 'IPC');
-      
+      logger.info(`Delete file request received: ${fileName}`, "IPC");
+
       try {
-        const url = `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`;
-        logger.debug(`Sending DELETE request to: ${url}`, 'IPC');
-        
+        const url = `http://localhost:8000/api/files/${encodeURIComponent(
+          fileName
+        )}`;
+        logger.debug(`Sending DELETE request to: ${url}`, "IPC");
+
         const response = await fetch(url, {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
-        
-        logger.debug(`Response status: ${response.status}, ok: ${response.ok}`, 'IPC');
-        
+
+        logger.debug(
+          `Response status: ${response.status}, ok: ${response.ok}`,
+          "IPC"
+        );
+
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-          logger.error(`Delete request failed: ${JSON.stringify(errorData)}`, 'IPC');
+          const errorData = await response
+            .json()
+            .catch(() => ({ detail: "Unknown error" }));
+          logger.error(
+            `Delete request failed: ${JSON.stringify(errorData)}`,
+            "IPC"
+          );
           return {
             success: false,
-            error: errorData.detail || `HTTP error! status: ${response.status}`
+            error: errorData.detail || `HTTP error! status: ${response.status}`,
           };
         }
-        
+
         const result = await response.json();
-        logger.info(`File deleted successfully: ${fileName}`, 'IPC');
+        logger.info(`File deleted successfully: ${fileName}`, "IPC");
         return {
           success: true,
-          data: result
+          data: result,
         };
       } catch (error) {
-        logger.error(`Failed to delete file: ${error.message}`, 'IPC');
-        logger.debug(`Error details: ${error.stack}`, 'IPC');
+        logger.error(`Failed to delete file: ${error.message}`, "IPC");
+        logger.debug(`Error details: ${error.stack}`, "IPC");
         return {
           success: false,
-          error: error.message
+          error: error.message,
         };
       }
     });
@@ -261,44 +277,56 @@ class AIrisApp {
         platform: process.platform,
         arch: process.arch,
       };
-    });    
+    });
 
     // Handle query requests
-    ipcMain.handle("send-query", async (event, { query, webSearchEnabled = false }) => {
-      try {
-        logger.info(`Sending query: ${query.substring(0, 100)}...`, 'IPC', "Web search enabled:", webSearchEnabled);
-        const response = await fetch("http://localhost:8000/api/query", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ query, webSearchEnabled }),
-        });
-
-        logger.debug(`Query response status: ${response.status}`, 'IPC');
-
-        if (!response.ok) {
-        console.log("Response status:", response.status);        if (!response.ok) {
-          const errorText = await response.text();
-          logger.error(`API Error Response: ${errorText}`, 'IPC');
-          throw new Error(
-            `HTTP error! status: ${response.status}, message: ${errorText}`
+    ipcMain.handle(
+      "send-query",
+      async (
+        event,
+        { query, webSearchEnabled = false, wolframEnabled = false }
+      ) => {
+        try {
+          logger.info(
+            `Sending query: ${query.substring(0, 100)}...`,
+            "IPC",
+            "Web search enabled:",
+            webSearchEnabled,
+            "Wolfram enabled:",
+            wolframEnabled
           );
-        }
+          const response = await fetch("http://localhost:8000/api/query", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({ query, webSearchEnabled, wolframEnabled }),
+          });
 
-        const result = await response.json();
-        logger.info("Query processed successfully", 'IPC');
-        return result;
-      } catch (error) {
-        logger.error(`Query error: ${error.message}`, 'IPC');
-        throw new Error(`Failed to send query: ${error.message}`);
+          logger.debug(`Query response status: ${response.status}`, "IPC");
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            logger.error(`API Error Response: ${errorText}`, "IPC");
+            throw new Error(
+              `HTTP error! status: ${response.status}, message: ${errorText}`
+            );
+          }
+
+          const result = await response.json();
+          logger.info("Query processed successfully", "IPC");
+          return result;
+        } catch (error) {
+          logger.error(`Query error: ${error.message}`, "IPC");
+          throw new Error(`Failed to send query: ${error.message}`);
+        }
       }
-    });     // Handle file upload requests
+    ); // Handle file upload requests
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
       try {
-        logger.info(`Starting file upload: ${fileName}`, 'IPC');
-        
+        logger.info(`Starting file upload: ${fileName}`, "IPC");
+
         const formData = new FormData();
 
         // Create a Blob from the file data (Blob is available in Node.js with fetch)
@@ -309,7 +337,7 @@ class AIrisApp {
 
         formData.append("file", blob, fileName);
 
-        logger.debug("Sending upload request to backend", 'IPC');
+        logger.debug("Sending upload request to backend", "IPC");
         const response = await fetch("http://localhost:8000/api/upload", {
           method: "POST",
           body: formData,
@@ -317,16 +345,19 @@ class AIrisApp {
 
         if (!response.ok) {
           const errorText = await response.text();
-          logger.error(`Upload failed: HTTP ${response.status}: ${errorText}`, 'IPC');
+          logger.error(
+            `Upload failed: HTTP ${response.status}: ${errorText}`,
+            "IPC"
+          );
           throw new Error(
             `HTTP error! status: ${response.status}, message: ${errorText}`
           );
         }
 
-        logger.info(`File uploaded successfully: ${fileName}`, 'IPC');
+        logger.info(`File uploaded successfully: ${fileName}`, "IPC");
         return await response.json();
       } catch (error) {
-        logger.error(`Upload error: ${error.message}`, 'IPC');
+        logger.error(`Upload error: ${error.message}`, "IPC");
         throw new Error(`Failed to upload file: ${error.message}`);
       }
     });
