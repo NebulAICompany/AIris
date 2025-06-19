@@ -145,6 +145,87 @@ body {
   font-weight: 400;
 }
 
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.currency-ticker {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.currency-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 60px;
+}
+
+.currency-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.currency-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.currency-value.positive {
+  color: var(--success);
+}
+
+.currency-value.negative {
+  color: var(--error);
+}
+
+.currency-value.loading {
+  color: var(--text-muted);
+  animation: pulse 1.5s infinite;
+}
+
+.currency-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-color);
+}
+
+.currency-status i {
+  font-size: 8px;
+}
+
+.currency-status.live {
+  color: var(--success);
+}
+
+.currency-status.stale {
+  color: var(--warning);
+}
+
+.currency-status.error {
+  color: var(--error);
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -687,6 +768,53 @@ body.dark-theme {
     0 4px 6px -4px rgb(0 0 0 / 0.3);
 }
 
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .currency-ticker {
+    gap: 16px;
+    padding: 6px 12px;
+  }
+  
+  .currency-item {
+    min-width: 50px;
+  }
+  
+  .currency-label {
+    font-size: 9px;
+  }
+  
+  .currency-value {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+  
+  .header {
+    height: auto;
+    min-height: var(--header-height);
+  }
+  
+  .currency-ticker {
+    gap: 12px;
+    padding: 4px 8px;
+    margin: 0;
+  }
+  
+  .currency-item {
+    min-width: 40px;
+  }
+  
+  .currency-status {
+    display: none; /* Hide status on mobile */
+  }
+}
+
 @media (max-width: 480px) {
   .header-content {
     padding: 0 16px;
@@ -705,6 +833,23 @@ body.dark-theme {
     left: 1rem;
     right: 1rem;
     max-width: none;
+  }
+  
+  .currency-ticker {
+    gap: 8px;
+    padding: 4px 6px;
+  }
+  
+  .currency-item {
+    min-width: 35px;
+  }
+  
+  .currency-label {
+    font-size: 8px;
+  }
+  
+  .currency-value {
+    font-size: 11px;
   }
 }
 

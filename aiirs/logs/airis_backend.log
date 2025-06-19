@@ -1,0 +1,156 @@
+2025-06-17 22:57:20 - root - INFO - Logging system initialized
+2025-06-17 22:57:20 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-17 23:05:41 - root - INFO - Logging system initialized
+2025-06-17 23:05:41 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-17 23:30:28 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-17 23:30:28 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-17 23:30:28 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-06-17 23:30:33 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-17 23:30:35 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:30:35 - root - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-17 23:30:40 - root - INFO - Model loaded: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-17 23:30:47 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:30:48 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:30:52 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:30:53 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:30:53 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-17 23:38:14 - root - INFO - Logging system initialized
+2025-06-17 23:38:14 - __main__ - INFO - Starting vectorstore contents test
+2025-06-17 23:38:14 - __main__ - INFO - ============================================================
+2025-06-17 23:38:19 - __main__ - INFO - Loading vectorstore from: aiiris_backend\vectorstore
+2025-06-17 23:38:19 - __main__ - ERROR - Failed to load vectorstore: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+2025-06-17 23:38:19 - __main__ - ERROR - Cannot continue without vectorstore
+2025-06-17 23:40:33 - root - INFO - Logging system initialized
+2025-06-17 23:40:33 - __main__ - INFO - Starting simple vectorstore contents test
+2025-06-17 23:40:33 - __main__ - INFO - ============================================================
+2025-06-17 23:40:33 - __main__ - INFO - Reading pickle file: aiiris_backend\vectorstore\index.pkl
+2025-06-17 23:40:34 - __main__ - INFO - Pickle file loaded successfully
+2025-06-17 23:40:34 - __main__ - INFO - Analyzing pickle data structure...
+2025-06-17 23:40:34 - __main__ - INFO - Type: <class 'tuple'>
+2025-06-17 23:40:34 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-17 23:40:34 - __main__ - INFO -   Total PII chunk entries: 136
+2025-06-17 23:40:34 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-17 23:40:34 - __main__ - INFO - 
+============================================================
+2025-06-17 23:40:34 - __main__ - INFO - Simple vectorstore contents test completed
+2025-06-17 23:40:34 - __main__ - INFO - ============================================================
+2025-06-17 23:41:33 - root - INFO - Logging system initialized
+2025-06-17 23:41:33 - __main__ - INFO - Starting simple vectorstore contents test
+2025-06-17 23:41:33 - __main__ - INFO - ============================================================
+2025-06-17 23:41:33 - __main__ - INFO - Reading pickle file: aiiris_backend\vectorstore\index.pkl
+2025-06-17 23:41:34 - __main__ - INFO - Pickle file loaded successfully
+2025-06-17 23:41:34 - __main__ - INFO - Analyzing pickle data structure...
+2025-06-17 23:41:34 - __main__ - INFO - Type: <class 'tuple'>
+2025-06-17 23:41:34 - __main__ - INFO - Tuple with 2 elements:
+2025-06-17 23:41:34 - __main__ - INFO -   Element 0: <class 'langchain_community.docstore.in_memory.InMemoryDocstore'>
+2025-06-17 23:41:34 - __main__ - INFO -   Element 1: <class 'dict'>
+2025-06-17 23:41:34 - __main__ - WARNING - Could not find docstore structure in the data
+2025-06-17 23:41:34 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-17 23:41:34 - __main__ - INFO -   Total PII chunk entries: 136
+2025-06-17 23:41:34 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-17 23:41:34 - __main__ - INFO - 
+============================================================
+2025-06-17 23:41:34 - __main__ - INFO - Simple vectorstore contents test completed
+2025-06-17 23:41:34 - __main__ - INFO - ============================================================
+2025-06-17 23:41:59 - root - INFO - Logging system initialized
+2025-06-17 23:41:59 - __main__ - INFO - Starting simple vectorstore contents test
+2025-06-17 23:41:59 - __main__ - INFO - ============================================================
+2025-06-17 23:41:59 - __main__ - INFO - Reading pickle file: aiiris_backend\vectorstore\index.pkl
+2025-06-17 23:42:00 - __main__ - INFO - Pickle file loaded successfully
+2025-06-17 23:42:00 - __main__ - INFO - Analyzing pickle data structure...
+2025-06-17 23:42:00 - __main__ - INFO - Type: <class 'tuple'>
+2025-06-17 23:42:00 - __main__ - INFO - Tuple with 2 elements:
+2025-06-17 23:42:00 - __main__ - INFO -   Element 0: <class 'langchain_community.docstore.in_memory.InMemoryDocstore'>
+2025-06-17 23:42:00 - __main__ - INFO -   Found docstore-like object in element 0
+2025-06-17 23:42:00 - __main__ - INFO - Docstore type: <class 'langchain_community.docstore.in_memory.InMemoryDocstore'>
+2025-06-17 23:42:00 - __main__ - INFO - Total documents in docstore: 228
+2025-06-17 23:42:00 - __main__ - INFO - Analyzing document contents...
+2025-06-17 23:42:00 - __main__ - INFO - 
+============================================================
+2025-06-17 23:42:00 - __main__ - INFO - FILE ANALYSIS RESULTS
+2025-06-17 23:42:00 - __main__ - INFO - ============================================================
+2025-06-17 23:42:00 - __main__ - INFO - 
+File: END_395_Spring_2025_Project_updated_txt.txt
+2025-06-17 23:42:00 - __main__ - INFO -   Chunks: 27
+2025-06-17 23:42:00 - __main__ - INFO -   Total characters: 16,969
+2025-06-17 23:42:00 - __main__ - INFO -   Average chunk size: 628 chars
+2025-06-17 23:42:00 - __main__ - INFO -   Doc IDs: ['065ff389-54aa-4778-b842-82d86e01264f', '21854b96-79ed-4f2b-840f-795027d3e0ad', 'c68b88bc-b69f-466e-84a9-650d309c5687', '4fe4528f-f9af-4c40-bf9d-b29b9d49ae8b', 'e69ed4ba-01f7-4700-b7d3-8f2bc8de9c84']...
+2025-06-17 23:42:00 - __main__ - INFO - 
+File: bütçe_txt.txt
+2025-06-17 23:42:00 - __main__ - INFO -   Chunks: 136
+2025-06-17 23:42:00 - __main__ - INFO -   Total characters: 71,858
+2025-06-17 23:42:00 - __main__ - INFO -   Average chunk size: 528 chars
+2025-06-17 23:42:00 - __main__ - INFO -   Doc IDs: ['0a7c0a49-e8e3-4de7-b01d-c66f65a0184a', '85b06fc4-ba91-4341-aed7-1d1377b46d24', '149a187c-211b-4db6-980f-67fd6b150ec9', '6052588a-d1d2-4eb5-915f-ed0b293bd06d', 'a9c6cfba-0259-4e54-b747-b0960e224163']...
+2025-06-17 23:42:00 - __main__ - INFO - 
+File: tcmb_txt.txt
+2025-06-17 23:42:00 - __main__ - INFO -   Chunks: 21
+2025-06-17 23:42:00 - __main__ - INFO -   Total characters: 11,281
+2025-06-17 23:42:00 - __main__ - INFO -   Average chunk size: 537 chars
+2025-06-17 23:42:00 - __main__ - INFO -   Doc IDs: ['08df5a0a-76f0-466b-b510-af09c55c53c7', 'd26a8546-2857-4cb7-b2d0-388ab46e0a63', 'de0e5b3d-1702-4095-9c57-68241cc7dba3', '67f88fa4-7bd8-467b-abfa-0d7322f67c5a', '186d5caa-c2b2-4340-83ea-2ecbcbe68722']...
+2025-06-17 23:42:00 - __main__ - INFO -   Chunks: 44
+2025-06-17 23:42:00 - __main__ - INFO -   Total characters: 23,879
+2025-06-17 23:42:00 - __main__ - INFO -   Average chunk size: 542 chars
+2025-06-17 23:42:00 - __main__ - INFO -   Doc IDs: ['261b9beb-d038-4655-8af0-ee7fac674c3d', '9c1e2e38-26ed-42ce-a544-454c4e3506c2', 'd6c687ea-04aa-4f63-8053-801d82b5669f', 'd8c219a6-ea7d-43f0-b4a5-1761df530714', '237df361-cc14-4108-b679-7967b733549b']...
+2025-06-17 23:42:00 - __main__ - INFO - 
+Metadata fields found: ['chunk_id', 'file_name']
+2025-06-17 23:42:00 - __main__ - INFO - 
+Showing 3 sample documents:
+2025-06-17 23:42:00 - __main__ - INFO - --------------------------------------------------
+2025-06-17 23:42:00 - __main__ - INFO - 
+Sample 1:
+2025-06-17 23:42:00 - __main__ - INFO -   Doc ID: 065ff389-54aa-4778-b842-82d86e01264f
+2025-06-17 23:42:00 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': 'END_395_Spring_2025_Project_updated_txt.txt'}
+2025-06-17 23:42:00 - __main__ - INFO -   Content preview: '\n------Page 1------\n\nEND395 Operations Research II Term Project Spring 2025 \nIn this project, you will work on the multi-period shipment planning problem of a pharmaceutical company that must coordina...'
+2025-06-17 23:42:00 - __main__ - INFO -   Full content length: 427 characters
+2025-06-17 23:42:00 - __main__ - INFO - 
+Sample 2:
+2025-06-17 23:42:00 - __main__ - INFO -   Doc ID: 21854b96-79ed-4f2b-840f-795027d3e0ad
+2025-06-17 23:42:00 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_1', 'file_name': 'END_395_Spring_2025_Project_updated_txt.txt'}
+2025-06-17 23:42:00 - __main__ - INFO -   Content preview: 'Your task is to develop a comprehensive mathematical model to optimize this process and improve efficiency. One of the key logistics challenges pharmaceutical companies face is managing the delivery o...'
+2025-06-17 23:42:00 - __main__ - INFO -   Full content length: 2381 characters
+2025-06-17 23:42:00 - __main__ - INFO - 
+Sample 3:
+2025-06-17 23:42:00 - __main__ - INFO -   Doc ID: c68b88bc-b69f-466e-84a9-650d309c5687
+2025-06-17 23:42:00 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_2', 'file_name': 'END_395_Spring_2025_Project_updated_txt.txt'}
+2025-06-17 23:42:00 - __main__ - INFO -   Content preview: 'The size of the pallet is indicated by the parameter Si, where si = 1 corresponds to 100×120 and si = 2 corresponds to 80x120. Let O represent the set \n1 \n\n------Page 2------\n\n\n[Table 1]\n[0,0]: Pallet...'
+2025-06-17 23:42:00 - __main__ - INFO -   Full content length: 1927 characters
+2025-06-17 23:42:00 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-17 23:42:00 - __main__ - INFO -   Total PII chunk entries: 136
+2025-06-17 23:42:00 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-17 23:42:00 - __main__ - INFO - 
+============================================================
+2025-06-17 23:42:00 - __main__ - INFO - Simple vectorstore contents test completed
+2025-06-17 23:42:00 - __main__ - INFO - ============================================================
+2025-06-17 23:45:31 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-17 23:45:32 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:45:44 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:45:44 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:45:44 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-17 23:47:16 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-17 23:47:17 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:47:30 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:47:31 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:47:36 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:47:38 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:47:38 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-17 23:47:57 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-17 23:47:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:48:03 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:48:03 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:48:06 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:48:07 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:48:07 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-17 23:48:53 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-17 23:48:54 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:49:01 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:49:01 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:49:05 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:49:06 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-17 23:49:06 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-17 23:50:21 - root - INFO - Logging system initialized
+2025-06-17 23:50:21 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-18 22:01:23 - root - INFO - Logging system initialized
+2025-06-18 22:01:23 - aiiris_backend.app.main - INFO - Starting AIris Backend API...

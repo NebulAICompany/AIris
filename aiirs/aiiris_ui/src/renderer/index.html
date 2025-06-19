@@ -32,6 +32,30 @@
               <span class="logo-subtitle">Financial AI</span>
             </div>
           </div>
+          <div class="header-center">
+            <div class="currency-ticker" id="currency-ticker">
+              <div class="currency-item">
+                <span class="currency-label">USD/TRY</span>
+                <span class="currency-value" id="usd-try">--</span>
+              </div>
+              <div class="currency-item">
+                <span class="currency-label">EUR/TRY</span>
+                <span class="currency-value" id="eur-try">--</span>
+              </div>
+              <div class="currency-item">
+                <span class="currency-label">USD/EUR</span>
+                <span class="currency-value" id="usd-eur">--</span>
+              </div>
+              <div class="currency-item">
+                <span class="currency-label">Gold</span>
+                <span class="currency-value" id="gold-price">--</span>
+              </div>
+              <div class="currency-status" id="currency-status">
+                <i class="fas fa-circle"></i>
+                <span class="status-text">Loading...</span>
+              </div>
+            </div>
+          </div>
           <div class="header-right">
             <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
               <i class="fas fa-moon"></i>
@@ -355,6 +379,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
     <!-- Application Scripts -->
+    <script src="scripts/renderer-logger.js"></script>
+    <script src="scripts/currency-service.js"></script>
     <script src="scripts/utils.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/components.js"></script>

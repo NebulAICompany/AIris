@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const logger = require("./logger");
 
 // Use undici for modern fetch support
 const { fetch, FormData, File } = require("undici");
@@ -22,28 +23,37 @@ class AIrisApp {
   }
 
   init() {
+    logger.info("Initializing AIris Desktop Application");
+    
     // Handle app ready
     app.whenReady().then(() => {
+      logger.info("App is ready, creating window");
       this.createWindow();
       this.setupIPC();
     });
 
     // Handle all windows closed
     app.on("window-all-closed", () => {
+      logger.info("All windows closed");
       if (process.platform !== "darwin") {
+        logger.info("Quitting application");
         app.quit();
       }
     });
 
     // Handle activate (macOS)
     app.on("activate", () => {
+      logger.debug("App activated");
       if (BrowserWindow.getAllWindows().length === 0) {
+        logger.info("No windows open, creating new window");
         this.createWindow();
       }
     });
   }
 
   createWindow() {
+    logger.info("Creating main window");
+    
     this.mainWindow = new BrowserWindow({
       width: 1400,
       height: 900,
@@ -61,25 +71,41 @@ class AIrisApp {
     });
 
     // Load the main HTML file
+    logger.debug("Loading main HTML file");
     this.mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
 
     // Show window when ready to prevent visual flash
     this.mainWindow.once("ready-to-show", () => {
+      logger.info("Main window ready to show");
       this.mainWindow.show();
     });
 
     // Open DevTools in development
     if (process.argv.includes("--dev")) {
+      logger.debug("Opening DevTools for development");
       this.mainWindow.webContents.openDevTools();
     }
 
     // Handle window closed
     this.mainWindow.on("closed", () => {
+      logger.info("Main window closed");
       this.mainWindow = null;
     });
   }
 
   setupIPC() {
+    // Clear any existing handlers to prevent duplicates
+    ipcMain.removeAllListeners("select-file");
+    ipcMain.removeAllListeners("read-file");
+    ipcMain.removeAllListeners("open-file");
+    ipcMain.removeAllListeners("get-metrics");
+    ipcMain.removeAllListeners("delete-file");
+    ipcMain.removeAllListeners("get-app-info");
+    ipcMain.removeAllListeners("send-query");
+    ipcMain.removeAllListeners("upload-file");
+    ipcMain.removeAllListeners("check-health");
+    ipcMain.removeAllListeners("open-dev-tools");
+    
     // Handle file selection dialog
     ipcMain.handle("select-file", async () => {
       const result = await dialog.showOpenDialog(this.mainWindow, {
@@ -171,7 +197,7 @@ class AIrisApp {
         const metrics = await response.json();
         return metrics;
       } catch (error) {
-        console.error("Failed to fetch metrics:", error);
+        logger.warn(`Failed to fetch metrics: ${error.message}`, 'IPC');
         // Return fallback metrics
         return {
           totalQueries: 0,
@@ -183,7 +209,51 @@ class AIrisApp {
           recentActivity: []
         };
       }
-    });    // Handle app info requests
+    });
+
+    // Handle file deletion
+    ipcMain.handle("delete-file", async (event, fileName) => {
+      logger.info(`Delete file request received: ${fileName}`, 'IPC');
+      
+      try {
+        const url = `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`;
+        logger.debug(`Sending DELETE request to: ${url}`, 'IPC');
+        
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        logger.debug(`Response status: ${response.status}, ok: ${response.ok}`, 'IPC');
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+          logger.error(`Delete request failed: ${JSON.stringify(errorData)}`, 'IPC');
+          return {
+            success: false,
+            error: errorData.detail || `HTTP error! status: ${response.status}`
+          };
+        }
+        
+        const result = await response.json();
+        logger.info(`File deleted successfully: ${fileName}`, 'IPC');
+        return {
+          success: true,
+          data: result
+        };
+      } catch (error) {
+        logger.error(`Failed to delete file: ${error.message}`, 'IPC');
+        logger.debug(`Error details: ${error.stack}`, 'IPC');
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    });
+
+    // Handle app info requests
     ipcMain.handle("get-app-info", () => {
       return {
         name: app.getName(),
@@ -191,12 +261,12 @@ class AIrisApp {
         platform: process.platform,
         arch: process.arch,
       };
-    });
+    });    
 
     // Handle query requests
     ipcMain.handle("send-query", async (event, { query, webSearchEnabled = false }) => {
       try {
-        console.log("Sending query:", query, "Web search enabled:", webSearchEnabled);
+        logger.info(`Sending query: ${query.substring(0, 100)}...`, 'IPC', "Web search enabled:", webSearchEnabled);
         const response = await fetch("http://localhost:8000/api/query", {
           method: "POST",
           headers: {
@@ -206,26 +276,29 @@ class AIrisApp {
           body: JSON.stringify({ query, webSearchEnabled }),
         });
 
+        logger.debug(`Query response status: ${response.status}`, 'IPC');
+
+        if (!response.ok) {
         console.log("Response status:", response.status);        if (!response.ok) {
           const errorText = await response.text();
-          console.error("API Error Response:", errorText);
+          logger.error(`API Error Response: ${errorText}`, 'IPC');
           throw new Error(
             `HTTP error! status: ${response.status}, message: ${errorText}`
           );
         }
 
         const result = await response.json();
-        console.log("Query result:", result);
+        logger.info("Query processed successfully", 'IPC');
         return result;
       } catch (error) {
-        console.error("Query error:", error);
+        logger.error(`Query error: ${error.message}`, 'IPC');
         throw new Error(`Failed to send query: ${error.message}`);
       }
-    });
-
-    // Handle file upload requests
+    });     // Handle file upload requests
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
       try {
+        logger.info(`Starting file upload: ${fileName}`, 'IPC');
+        
         const formData = new FormData();
 
         // Create a Blob from the file data (Blob is available in Node.js with fetch)
@@ -236,6 +309,7 @@ class AIrisApp {
 
         formData.append("file", blob, fileName);
 
+        logger.debug("Sending upload request to backend", 'IPC');
         const response = await fetch("http://localhost:8000/api/upload", {
           method: "POST",
           body: formData,
@@ -243,14 +317,16 @@ class AIrisApp {
 
         if (!response.ok) {
           const errorText = await response.text();
+          logger.error(`Upload failed: HTTP ${response.status}: ${errorText}`, 'IPC');
           throw new Error(
             `HTTP error! status: ${response.status}, message: ${errorText}`
           );
         }
 
+        logger.info(`File uploaded successfully: ${fileName}`, 'IPC');
         return await response.json();
       } catch (error) {
-        console.error("Upload error:", error);
+        logger.error(`Upload error: ${error.message}`, 'IPC');
         throw new Error(`Failed to upload file: ${error.message}`);
       }
     });
