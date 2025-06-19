@@ -1,9 +1,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 // Expose AIris-specific API to the renderer process
-contextBridge.exposeInMainWorld("airisAPI", {
-  // Query operations
-  sendQuery: (query) => ipcRenderer.invoke("send-query", query),
+contextBridge.exposeInMainWorld("airisAPI", {  // Query operations
+  sendQuery: (query, webSearchEnabled) => ipcRenderer.invoke("send-query", { query, webSearchEnabled }),
 
   // File operations
   uploadFile: (fileData, fileName) =>

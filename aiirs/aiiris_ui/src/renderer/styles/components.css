@@ -135,6 +135,11 @@
   border-color: var(--accent-primary);
 }
 
+.suggestion-chip:active {
+  transform: scale(0.98);
+  background-color: var(--accent-secondary);
+}
+
 .message {
   margin-bottom: 16px;
   display: flex;

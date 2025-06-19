@@ -34,6 +34,11 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
+        
+        print(f"📝 API Router received:")
+        print(f"   - Query: {query}")
+        print(f"   - Web Search Enabled: {web_search_enabled}")
+        
         answer = await run_orchestration(query, web_search_enabled)
         api_requests_total.labels(status="success").inc()
         return {"response": answer}

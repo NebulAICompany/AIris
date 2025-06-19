@@ -183,9 +183,7 @@ class AIrisApp {
           recentActivity: []
         };
       }
-    });
-
-    // Handle app info requests
+    });    // Handle app info requests
     ipcMain.handle("get-app-info", () => {
       return {
         name: app.getName(),
@@ -193,22 +191,22 @@ class AIrisApp {
         platform: process.platform,
         arch: process.arch,
       };
-    }); // Handle query requests
-    ipcMain.handle("send-query", async (event, query) => {
+    });
+
+    // Handle query requests
+    ipcMain.handle("send-query", async (event, { query, webSearchEnabled = false }) => {
       try {
-        console.log("Sending query:", query);
+        console.log("Sending query:", query, "Web search enabled:", webSearchEnabled);
         const response = await fetch("http://localhost:8000/api/query", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ query, webSearchEnabled }),
         });
 
-        console.log("Response status:", response.status);
-
-        if (!response.ok) {
+        console.log("Response status:", response.status);        if (!response.ok) {
           const errorText = await response.text();
           console.error("API Error Response:", errorText);
           throw new Error(
@@ -223,7 +221,9 @@ class AIrisApp {
         console.error("Query error:", error);
         throw new Error(`Failed to send query: ${error.message}`);
       }
-    }); // Handle file upload requests
+    });
+
+    // Handle file upload requests
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
       try {
         const formData = new FormData();
