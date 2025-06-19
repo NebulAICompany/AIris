@@ -9,6 +9,7 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from aiiris_backend.app.router import router as query_router
 from aiiris_backend.monitoring.metrics import expose_metrics
+from aiiris_backend.libs.logger import setup_logging, get_logger
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles
 from aiiris_backend.retrieval.retriever import load_vectorstore
@@ -17,12 +18,18 @@ from aiiris_backend.retrieval.retriever import load_vectorstore
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VECTORSTORE_PATH = os.path.join(BASE_DIR, "vectorstore")
 
+# Initialize logging first
+setup_logging()
+logger = get_logger(__name__)
+
 # Fast API app start
 app = FastAPI(
     title="AIris Yerel RAG API",
     version="0.1.0",
     description="Generative AI for Local Data",
 )
+
+logger.info("Starting AIris Backend API...")
 
 
 @app.on_event("startup")

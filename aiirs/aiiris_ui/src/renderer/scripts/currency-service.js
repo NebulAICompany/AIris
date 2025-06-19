@@ -4,10 +4,8 @@
  * Updated with working APIs as of June 2025
  * 
  * FREE GOLD API SETUP:
- * 1. MetalpriceAPI.com - Sign up at https://metalpriceapi.com/ for FREE API key
  * 2. API Ninjas - Sign up at https://www.api-ninjas.com/ for FREE API key  
- * 3. Zyla API Hub - Sign up at https://zylalabs.com/ for 7-day FREE trial (50 requests)
- * 
+
  * Replace 'YOUR_FREE_API_KEY' with your actual API keys below.
  */
 class CurrencyService {
