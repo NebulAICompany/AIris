@@ -26,3 +26,5 @@ duckduckgo-search
 python-multipart
 openai-agents
 colorama
+feedparser
+python-dateutil

@@ -279,12 +279,13 @@ class AIrisApp {
         logger.debug(`Query response status: ${response.status}`, 'IPC');
 
         if (!response.ok) {
-        console.log("Response status:", response.status);        if (!response.ok) {
-          const errorText = await response.text();
-          logger.error(`API Error Response: ${errorText}`, 'IPC');
-          throw new Error(
-            `HTTP error! status: ${response.status}, message: ${errorText}`
-          );
+          console.log("Response status:", response.status);        if (!response.ok) {
+            const errorText = await response.text();
+            logger.error(`API Error Response: ${errorText}`, 'IPC');
+            throw new Error(
+              `HTTP error! status: ${response.status}, message: ${errorText}`
+            );
+          }
         }
 
         const result = await response.json();
@@ -294,7 +295,7 @@ class AIrisApp {
         logger.error(`Query error: ${error.message}`, 'IPC');
         throw new Error(`Failed to send query: ${error.message}`);
       }
-    });     // Handle file upload requests
+    }); // Handle file upload requests
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
       try {
         logger.info(`Starting file upload: ${fileName}`, 'IPC');
