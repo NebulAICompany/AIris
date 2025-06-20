@@ -17,15 +17,6 @@ from aiiris_backend.guardrails.filters import (
 )
 from .reflection import reflect_and_retry
 import os
-from aiiris_backend.retrieval.web_search import (
-    should_use_web_search,
-    summarize_web_context,
-)
-from agents import Runner  # Import the Runner class
-
-# from aiiris_backend.agent_mcps.web_search_agent import web_search_agent
-import sys
-import subprocess
 
 VECTORSTORE_PATH = "aiiris_backend/vectorstore"
 FILES_PATH = "aiiris_backend/files"
@@ -46,9 +37,10 @@ def preprocess_query(query: str):
 async def run_orchestration(
     query: str, web_search_enabled: bool, wolfram_enabled: bool = False
 ) -> str:
-    print(f"🔍 Query Orchestrator started with:")
+    print(f"🔍 Query Orchestrator started:")
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
+    print(f"   - Wolfram Enabled: {wolfram_enabled}")
 
     # Vectorstore'ı yükle
     if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
@@ -66,21 +58,25 @@ async def run_orchestration(
     # 3. Hassas bilgileri maskele
     masked_query, pii_map = mask_pii(preprocessed_query)
     print(f"Masked Query: {masked_query}")
-    # 4. Retrieval + Reranking
-    retrieved_docs = retrieve_top_k(preprocessed_query, k=10)
+
+    # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
+    retrieved_docs = retrieve_top_k(
+        preprocessed_query, k=15
+    )  # Get more docs for better reranking
     print(type(retrieved_docs))
+
+    if not retrieved_docs:
+        return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
     # Extract only the content from the retrieved docs before reranking
     doc_contents = [
         {"content": doc["content"], "metadata": doc["metadata"]}
         for doc in retrieved_docs
     ]
-    reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=3)
+
+    reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=5)
 
     context_entries = []
-
-    # if web_context:
-    #     context_entries.append(f"[WEB BİLGİSİ]\n{web_context.strip()}")
 
     for doc in reranked_docs:
         content = doc["content"]
@@ -93,10 +89,12 @@ async def run_orchestration(
 
         context_entries.append(
             f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
-        )  # 6. Prompt oluştur
+        )
+
     local_context = "\n\n---\n\n".join(context_entries)
 
     print("using web search ?= ", web_search_enabled)
+
     # Create the agent with web context if available
     agent = create_rag_agent(
         local_context=local_context,

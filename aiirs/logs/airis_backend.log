@@ -217,3 +217,351 @@ ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
 2025-06-19 23:31:19 - aiiris_backend.app.router - INFO - Processing query: euro þu an ne kadar...
 2025-06-19 23:31:19 - aiiris_backend.app.router - INFO - Query processed successfully
 2025-06-19 23:31:23 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:29:02 - root - INFO - Logging system initialized
+2025-06-20 23:29:02 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-20 23:29:02 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-20 23:29:02 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-20 23:29:02 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-20 23:29:02 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-20 23:29:02 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-20 23:39:56 - root - INFO - Logging system initialized
+2025-06-20 23:39:56 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-20 23:39:56 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-20 23:39:56 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-20 23:39:56 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-20 23:39:56 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-20 23:39:56 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-20 23:41:19 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:41:19 - root - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-20 23:41:21 - root - INFO - Model loaded: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-20 23:41:24 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-20 23:41:26 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-20 23:41:26 - aiiris_backend.app.router - INFO - Processing query: selam...
+2025-06-20 23:41:26 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-20 23:41:27 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:41:55 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:42:00 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:42:05 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-20 23:42:11 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:42:12 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-20 23:42:12 - aiiris_backend.app.router - INFO - Processing query: Elindeki belgeler nelerden bahsediyor...
+2025-06-20 23:42:12 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-20 23:42:17 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:43:14 - root - INFO - Logging system initialized
+2025-06-20 23:43:14 - aiiris_backend.app.main - INFO - Starting AIris Backend API...
+2025-06-20 23:44:01 - aiiris_backend.app.router - INFO - Starting file upload: 231401013_YAÐIZ CAN_AKAY.pdf (application/pdf)
+2025-06-20 23:44:01 - aiiris_backend.app.router - INFO - File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAÐIZ CAN_AKAY.pdf
+2025-06-20 23:44:06 - aiiris_backend.app.router - INFO - Processing uploaded file...
+2025-06-20 23:44:16 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:44:20 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:44:21 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:44:33 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:44:54 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:44:56 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:44:59 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:45:02 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-20 23:45:03 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:45:03 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-20 23:45:03 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-20 23:45:03 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-20 23:45:03 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-20 23:45:03 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-20 23:45:03 - aiiris_backend.app.router - INFO - File processed successfully: 231401013_YAÐIZ CAN_AKAY.pdf
+2025-06-20 23:45:57 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:45:57 - root - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-20 23:45:58 - root - INFO - Model loaded: cross-encoder/ms-marco-MiniLM-L-6-v2
+2025-06-20 23:46:04 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-20 23:46:05 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:46:05 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:46:11 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/responses "HTTP/1.1 200 OK"
+2025-06-20 23:46:11 - aiiris_backend.app.router - INFO - Processing query: Elindeki belgeler nelerden bahsediyor...
+2025-06-20 23:46:11 - aiiris_backend.app.router - INFO - Query processed successfully
+2025-06-20 23:46:17 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/traces/ingest "HTTP/1.1 204 No Content"
+2025-06-20 23:47:40 - root - INFO - Logging system initialized
+2025-06-20 23:47:40 - __main__ - INFO - Starting vectorstore contents test
+2025-06-20 23:47:40 - __main__ - INFO - ============================================================
+2025-06-20 23:47:40 - __main__ - INFO - Loading vectorstore from: aiiris_backend\vectorstore
+2025-06-20 23:47:41 - __main__ - INFO - Trying OpenAI embeddings...
+2025-06-20 23:47:41 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-20 23:47:41 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-20 23:47:41 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-20 23:47:41 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-20 23:47:41 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-20 23:47:41 - __main__ - INFO - Vectorstore loaded successfully
+2025-06-20 23:47:41 - __main__ - INFO - Starting vectorstore content analysis...
+2025-06-20 23:47:41 - __main__ - INFO - Total documents in vectorstore: 19
+2025-06-20 23:47:41 - __main__ - INFO - Analyzing document metadata and content...
+2025-06-20 23:47:41 - __main__ - INFO - 
+============================================================
+2025-06-20 23:47:41 - __main__ - INFO - FILE ANALYSIS RESULTS
+2025-06-20 23:47:41 - __main__ - INFO - ============================================================
+2025-06-20 23:47:41 - __main__ - INFO - 
+File: 231401013_YAÐIZ CAN_AKAY_txt.txt
+2025-06-20 23:47:41 - __main__ - INFO -   Chunks: 19
+2025-06-20 23:47:41 - __main__ - INFO -   Total characters: 7,548
+2025-06-20 23:47:41 - __main__ - INFO -   Average chunk size: 397 chars
+2025-06-20 23:47:41 - __main__ - INFO -   Doc IDs: ['40abf649-aa34-4f96-a766-ca902edd1ef4', 'd8c1ea40-0690-43de-bd84-a47a9007f44f', '6ca2c775-3c65-4c96-b482-03f6838d906c', '7df7f852-8b27-4ec3-9a89-e4396b030910', '49b6e1e0-ca69-4ff0-9793-5761e1e53511']...
+2025-06-20 23:47:41 - __main__ - INFO - 
+Metadata fields found: ['chunk_id', 'content_type', 'file_name', 'hypothesis_index', 'original_chunk_id']
+2025-06-20 23:47:41 - __main__ - INFO - 
+Chunk size statistics:
+2025-06-20 23:47:41 - __main__ - INFO -   Average: 397 characters
+2025-06-20 23:47:41 - __main__ - INFO -   Minimum: 51 characters
+2025-06-20 23:47:41 - __main__ - INFO -   Maximum: 1016 characters
+2025-06-20 23:47:41 - __main__ - INFO - 
+Showing 3 sample documents:
+2025-06-20 23:47:41 - __main__ - INFO - --------------------------------------------------
+2025-06-20 23:47:41 - __main__ - INFO - 
+Sample 1:
+2025-06-20 23:47:41 - __main__ - INFO -   Doc ID: 40abf649-aa34-4f96-a766-ca902edd1ef4
+2025-06-20 23:47:41 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:47:41 - __main__ - INFO -   Content preview: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosu ve isminin bulunduðu bir tasarýmdýr. Logo, üniv...'
+2025-06-20 23:47:41 - __main__ - INFO -   Full content length: 557 characters
+2025-06-20 23:47:41 - __main__ - INFO - 
+Sample 2:
+2025-06-20 23:47:41 - __main__ - INFO -   Doc ID: d8c1ea40-0690-43de-bd84-a47a9007f44f
+2025-06-20 23:47:41 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 0}
+2025-06-20 23:47:41 - __main__ - INFO -   Content preview: "[Image 1]\n\n[Açýklama] = Bu görsel, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi'nin kurumsal logosunu içermektedir. Logo, üniversitenin marka kimliðini yansýtan bir tasarýmdýr...."
+2025-06-20 23:47:41 - __main__ - INFO -   Full content length: 773 characters
+2025-06-20 23:47:41 - __main__ - INFO - 
+Sample 3:
+2025-06-20 23:47:41 - __main__ - INFO -   Doc ID: 6ca2c775-3c65-4c96-b482-03f6838d906c
+2025-06-20 23:47:41 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_1', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 1}
+2025-06-20 23:47:41 - __main__ - INFO -   Content preview: '[Image 1]\n\n[Açýklama] = Bu, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosunu gösteren bir grafik tasarýmdýr. Logolar, bir kurumun görsel kimliðini yansýtan ve ona özgü...'
+2025-06-20 23:47:41 - __main__ - INFO -   Full content length: 685 characters
+2025-06-20 23:47:41 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-20 23:47:41 - __main__ - INFO -   Total PII chunk entries: 19
+2025-06-20 23:47:41 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-20 23:47:41 - __main__ - INFO - 
+Testing search functionality with query: 'financial'
+2025-06-20 23:47:42 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:47:42 - __main__ - INFO - Found 3 results:
+2025-06-20 23:47:42 - __main__ - INFO - 
+Result 1:
+2025-06-20 23:47:42 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_3_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_3', 'hypothesis_index': 0}
+2025-06-20 23:47:42 - __main__ - INFO -   Content: 'Size bu durumu aktarýrken, ilginiz ve saðladýðýnýz katkýlar için minnettarlýðýmýzý ifade etmek isteriz.'
+2025-06-20 23:47:42 - __main__ - INFO - 
+Result 2:
+2025-06-20 23:47:42 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:47:42 - __main__ - INFO -   Content: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logo...'
+2025-06-20 23:47:42 - __main__ - INFO - 
+Result 3:
+2025-06-20 23:47:42 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_2_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_2', 'hypothesis_index': 0}
+2025-06-20 23:47:42 - __main__ - INFO -   Content: 'Üniversitemiz, ilgili yönetmeliklerin (b) bendine uygun olarak gerekli düzenlemeleri yapacaktýr.'
+2025-06-20 23:47:42 - __main__ - INFO - 
+============================================================
+2025-06-20 23:47:42 - __main__ - INFO - Vectorstore contents test completed
+2025-06-20 23:47:42 - __main__ - INFO - ============================================================
+2025-06-20 23:50:54 - root - INFO - Logging system initialized
+2025-06-20 23:50:54 - __main__ - INFO - Starting vectorstore contents test
+2025-06-20 23:50:54 - __main__ - INFO - ============================================================
+2025-06-20 23:50:54 - __main__ - INFO - Loading vectorstore from: aiiris_backend\vectorstore
+2025-06-20 23:50:54 - __main__ - INFO - Trying OpenAI embeddings...
+2025-06-20 23:50:55 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-20 23:50:55 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-20 23:50:55 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-20 23:50:55 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-20 23:50:55 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-20 23:50:55 - __main__ - INFO - Vectorstore loaded successfully
+2025-06-20 23:50:55 - __main__ - INFO - Starting vectorstore content analysis...
+2025-06-20 23:50:55 - __main__ - INFO - Total documents in vectorstore: 19
+2025-06-20 23:50:55 - __main__ - INFO - Analyzing document metadata and content...
+2025-06-20 23:50:55 - __main__ - INFO - 
+============================================================
+2025-06-20 23:50:55 - __main__ - INFO - FILE ANALYSIS RESULTS
+2025-06-20 23:50:55 - __main__ - INFO - ============================================================
+2025-06-20 23:50:55 - __main__ - INFO - 
+File: 231401013_YAÐIZ CAN_AKAY_txt.txt
+2025-06-20 23:50:55 - __main__ - INFO -   Chunks: 19
+2025-06-20 23:50:55 - __main__ - INFO -   Total characters: 7,548
+2025-06-20 23:50:55 - __main__ - INFO -   Average chunk size: 397 chars
+2025-06-20 23:50:55 - __main__ - INFO -   Doc IDs: ['40abf649-aa34-4f96-a766-ca902edd1ef4', 'd8c1ea40-0690-43de-bd84-a47a9007f44f', '6ca2c775-3c65-4c96-b482-03f6838d906c', '7df7f852-8b27-4ec3-9a89-e4396b030910', '49b6e1e0-ca69-4ff0-9793-5761e1e53511']...
+2025-06-20 23:50:55 - __main__ - INFO - 
+Metadata fields found: ['chunk_id', 'content_type', 'file_name', 'hypothesis_index', 'original_chunk_id']
+2025-06-20 23:50:55 - __main__ - INFO - 
+Chunk size statistics:
+2025-06-20 23:50:55 - __main__ - INFO -   Average: 397 characters
+2025-06-20 23:50:55 - __main__ - INFO -   Minimum: 51 characters
+2025-06-20 23:50:55 - __main__ - INFO -   Maximum: 1016 characters
+2025-06-20 23:50:55 - __main__ - INFO - 
+Showing 3 sample documents:
+2025-06-20 23:50:55 - __main__ - INFO - --------------------------------------------------
+2025-06-20 23:50:55 - __main__ - INFO - 
+Sample 1:
+2025-06-20 23:50:55 - __main__ - INFO -   Doc ID: 40abf649-aa34-4f96-a766-ca902edd1ef4
+2025-06-20 23:50:55 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:50:55 - __main__ - INFO -   Content preview: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosu ve isminin bulunduðu bir tasarýmdýr. Logo, üniv...'
+2025-06-20 23:50:55 - __main__ - INFO -   Full content length: 557 characters
+2025-06-20 23:50:55 - __main__ - INFO - 
+Sample 2:
+2025-06-20 23:50:55 - __main__ - INFO -   Doc ID: d8c1ea40-0690-43de-bd84-a47a9007f44f
+2025-06-20 23:50:55 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 0}
+2025-06-20 23:50:55 - __main__ - INFO -   Content preview: "[Image 1]\n\n[Açýklama] = Bu görsel, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi'nin kurumsal logosunu içermektedir. Logo, üniversitenin marka kimliðini yansýtan bir tasarýmdýr...."
+2025-06-20 23:50:55 - __main__ - INFO -   Full content length: 773 characters
+2025-06-20 23:50:55 - __main__ - INFO - 
+Sample 3:
+2025-06-20 23:50:55 - __main__ - INFO -   Doc ID: 6ca2c775-3c65-4c96-b482-03f6838d906c
+2025-06-20 23:50:55 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_1', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 1}
+2025-06-20 23:50:55 - __main__ - INFO -   Content preview: '[Image 1]\n\n[Açýklama] = Bu, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosunu gösteren bir grafik tasarýmdýr. Logolar, bir kurumun görsel kimliðini yansýtan ve ona özgü...'
+2025-06-20 23:50:55 - __main__ - INFO -   Full content length: 685 characters
+2025-06-20 23:50:55 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-20 23:50:55 - __main__ - INFO -   Total PII chunk entries: 19
+2025-06-20 23:50:55 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-20 23:50:55 - __main__ - INFO - 
+Testing search functionality with query: 'financial'
+2025-06-20 23:50:56 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:50:56 - __main__ - INFO - Found 3 results:
+2025-06-20 23:50:56 - __main__ - INFO - 
+Result 1:
+2025-06-20 23:50:56 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_3_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_3', 'hypothesis_index': 0}
+2025-06-20 23:50:56 - __main__ - INFO -   Content: 'Size bu durumu aktarýrken, ilginiz ve saðladýðýnýz katkýlar için minnettarlýðýmýzý ifade etmek isteriz.'
+2025-06-20 23:50:56 - __main__ - INFO - 
+Result 2:
+2025-06-20 23:50:56 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:50:56 - __main__ - INFO -   Content: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logo...'
+2025-06-20 23:50:56 - __main__ - INFO - 
+Result 3:
+2025-06-20 23:50:56 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_2_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_2', 'hypothesis_index': 0}
+2025-06-20 23:50:56 - __main__ - INFO -   Content: 'Üniversitemiz, ilgili yönetmeliklerin (b) bendine uygun olarak gerekli düzenlemeleri yapacaktýr.'
+2025-06-20 23:50:56 - __main__ - INFO - 
+============================================================
+2025-06-20 23:50:56 - __main__ - INFO - Vectorstore contents test completed
+2025-06-20 23:50:56 - __main__ - INFO - ============================================================
+2025-06-20 23:51:37 - root - INFO - Logging system initialized
+2025-06-20 23:51:37 - __main__ - INFO - Starting vectorstore contents test
+2025-06-20 23:51:37 - __main__ - INFO - ============================================================
+2025-06-20 23:51:38 - __main__ - INFO - Loading vectorstore from: aiiris_backend\vectorstore
+2025-06-20 23:51:38 - __main__ - INFO - Trying OpenAI embeddings...
+2025-06-20 23:51:38 - faiss.loader - INFO - Loading faiss with AVX512 support.
+2025-06-20 23:51:38 - faiss.loader - INFO - Could not load library with AVX512 support due to:
+ModuleNotFoundError("No module named 'faiss.swigfaiss_avx512'")
+2025-06-20 23:51:38 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-06-20 23:51:38 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-06-20 23:51:38 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes. This is only an error if you're trying to use GPU Faiss.
+2025-06-20 23:51:38 - __main__ - INFO - Vectorstore loaded successfully
+2025-06-20 23:51:38 - __main__ - INFO - Starting vectorstore content analysis...
+2025-06-20 23:51:38 - __main__ - INFO - Total documents in vectorstore: 19
+2025-06-20 23:51:38 - __main__ - INFO - Analyzing document metadata and content...
+2025-06-20 23:51:38 - __main__ - INFO - 
+============================================================
+2025-06-20 23:51:38 - __main__ - INFO - FILE ANALYSIS RESULTS
+2025-06-20 23:51:38 - __main__ - INFO - ============================================================
+2025-06-20 23:51:38 - __main__ - INFO - 
+File: 231401013_YAÐIZ CAN_AKAY_txt.txt
+2025-06-20 23:51:38 - __main__ - INFO -   Chunks: 19
+2025-06-20 23:51:38 - __main__ - INFO -   Total characters: 7,548
+2025-06-20 23:51:38 - __main__ - INFO -   Average chunk size: 397 chars
+2025-06-20 23:51:38 - __main__ - INFO -   Doc IDs: ['40abf649-aa34-4f96-a766-ca902edd1ef4', 'd8c1ea40-0690-43de-bd84-a47a9007f44f', '6ca2c775-3c65-4c96-b482-03f6838d906c', '7df7f852-8b27-4ec3-9a89-e4396b030910', '49b6e1e0-ca69-4ff0-9793-5761e1e53511']...
+2025-06-20 23:51:38 - __main__ - INFO - 
+Metadata fields found: ['chunk_id', 'content_type', 'file_name', 'hypothesis_index', 'original_chunk_id']
+2025-06-20 23:51:38 - __main__ - INFO - 
+Chunk size statistics:
+2025-06-20 23:51:38 - __main__ - INFO -   Average: 397 characters
+2025-06-20 23:51:38 - __main__ - INFO -   Minimum: 51 characters
+2025-06-20 23:51:38 - __main__ - INFO -   Maximum: 1016 characters
+2025-06-20 23:51:38 - __main__ - INFO - 
+Showing 3 sample documents:
+2025-06-20 23:51:38 - __main__ - INFO - --------------------------------------------------
+2025-06-20 23:51:38 - __main__ - INFO - 
+Sample 1:
+2025-06-20 23:51:38 - __main__ - INFO -   Doc ID: 40abf649-aa34-4f96-a766-ca902edd1ef4
+2025-06-20 23:51:38 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:51:38 - __main__ - INFO -   Content preview: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosu ve isminin bulunduðu bir tasarýmdýr. Logo, üniv...'
+2025-06-20 23:51:38 - __main__ - INFO -   Full content length: 557 characters
+2025-06-20 23:51:38 - __main__ - INFO - 
+Sample 2:
+2025-06-20 23:51:38 - __main__ - INFO -   Doc ID: d8c1ea40-0690-43de-bd84-a47a9007f44f
+2025-06-20 23:51:38 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 0}
+2025-06-20 23:51:38 - __main__ - INFO -   Content preview: "[Image 1]\n\n[Açýklama] = Bu görsel, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi'nin kurumsal logosunu içermektedir. Logo, üniversitenin marka kimliðini yansýtan bir tasarýmdýr...."
+2025-06-20 23:51:38 - __main__ - INFO -   Full content length: 773 characters
+2025-06-20 23:51:38 - __main__ - INFO - 
+Sample 3:
+2025-06-20 23:51:38 - __main__ - INFO -   Doc ID: 6ca2c775-3c65-4c96-b482-03f6838d906c
+2025-06-20 23:51:38 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_1', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 1}
+2025-06-20 23:51:38 - __main__ - INFO -   Content preview: '[Image 1]\n\n[Açýklama] = Bu, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosunu gösteren bir grafik tasarýmdýr. Logolar, bir kurumun görsel kimliðini yansýtan ve ona özgü...'
+2025-06-20 23:51:38 - __main__ - INFO -   Full content length: 685 characters
+2025-06-20 23:51:38 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-20 23:51:38 - __main__ - INFO -   Total PII chunk entries: 19
+2025-06-20 23:51:38 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-20 23:51:38 - __main__ - INFO - 
+Testing search functionality with query: 'financial'
+2025-06-20 23:51:39 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-20 23:51:39 - __main__ - INFO - Found 3 results:
+2025-06-20 23:51:39 - __main__ - INFO - 
+Result 1:
+2025-06-20 23:51:39 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_3_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_3', 'hypothesis_index': 0}
+2025-06-20 23:51:39 - __main__ - INFO -   Content: 'Size bu durumu aktarýrken, ilginiz ve saðladýðýnýz katkýlar için minnettarlýðýmýzý ifade etmek isteriz.'
+2025-06-20 23:51:39 - __main__ - INFO - 
+Result 2:
+2025-06-20 23:51:39 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:51:39 - __main__ - INFO -   Content: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logo...'
+2025-06-20 23:51:39 - __main__ - INFO - 
+Result 3:
+2025-06-20 23:51:39 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_2_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_2', 'hypothesis_index': 0}
+2025-06-20 23:51:39 - __main__ - INFO -   Content: 'Üniversitemiz, ilgili yönetmeliklerin (b) bendine uygun olarak gerekli düzenlemeleri yapacaktýr.'
+2025-06-20 23:51:39 - __main__ - INFO - 
+============================================================
+2025-06-20 23:51:39 - __main__ - INFO - Vectorstore contents test completed
+2025-06-20 23:51:39 - __main__ - INFO - ============================================================
+2025-06-20 23:52:12 - root - INFO - Logging system initialized
+2025-06-20 23:52:12 - __main__ - INFO - Starting simple vectorstore contents test
+2025-06-20 23:52:12 - __main__ - INFO - ============================================================
+2025-06-20 23:52:12 - __main__ - INFO - Reading pickle file: aiiris_backend\vectorstore\index.pkl
+2025-06-20 23:52:12 - __main__ - INFO - Pickle file loaded successfully
+2025-06-20 23:52:12 - __main__ - INFO - Analyzing pickle data structure...
+2025-06-20 23:52:12 - __main__ - INFO - Type: <class 'tuple'>
+2025-06-20 23:52:12 - __main__ - INFO - Tuple with 2 elements:
+2025-06-20 23:52:12 - __main__ - INFO -   Element 0: <class 'langchain_community.docstore.in_memory.InMemoryDocstore'>
+2025-06-20 23:52:12 - __main__ - INFO -   Found docstore-like object in element 0
+2025-06-20 23:52:12 - __main__ - INFO - Docstore type: <class 'langchain_community.docstore.in_memory.InMemoryDocstore'>
+2025-06-20 23:52:12 - __main__ - INFO - Total documents in docstore: 19
+2025-06-20 23:52:12 - __main__ - INFO - Analyzing document contents...
+2025-06-20 23:52:12 - __main__ - INFO - 
+============================================================
+2025-06-20 23:52:12 - __main__ - INFO - FILE ANALYSIS RESULTS
+2025-06-20 23:52:12 - __main__ - INFO - ============================================================
+2025-06-20 23:52:12 - __main__ - INFO - 
+File: 231401013_YAÐIZ CAN_AKAY_txt.txt
+2025-06-20 23:52:12 - __main__ - INFO -   Chunks: 19
+2025-06-20 23:52:12 - __main__ - INFO -   Total characters: 7,548
+2025-06-20 23:52:12 - __main__ - INFO -   Average chunk size: 397 chars
+2025-06-20 23:52:12 - __main__ - INFO -   Doc IDs: ['40abf649-aa34-4f96-a766-ca902edd1ef4', 'd8c1ea40-0690-43de-bd84-a47a9007f44f', '6ca2c775-3c65-4c96-b482-03f6838d906c', '7df7f852-8b27-4ec3-9a89-e4396b030910', '49b6e1e0-ca69-4ff0-9793-5761e1e53511']...
+2025-06-20 23:52:12 - __main__ - INFO - 
+Metadata fields found: ['chunk_id', 'content_type', 'file_name', 'hypothesis_index', 'original_chunk_id']
+2025-06-20 23:52:12 - __main__ - INFO - 
+Showing 3 sample documents:
+2025-06-20 23:52:12 - __main__ - INFO - --------------------------------------------------
+2025-06-20 23:52:12 - __main__ - INFO - 
+Sample 1:
+2025-06-20 23:52:12 - __main__ - INFO -   Doc ID: 40abf649-aa34-4f96-a766-ca902edd1ef4
+2025-06-20 23:52:12 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'original'}
+2025-06-20 23:52:12 - __main__ - INFO -   Content preview: '\n------Page 1------\n\n[Image 1]\n\n[Description] = Bu bir grafik görüntüsü. TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosu ve isminin bulunduðu bir tasarýmdýr. Logo, üniv...'
+2025-06-20 23:52:12 - __main__ - INFO -   Full content length: 557 characters
+2025-06-20 23:52:12 - __main__ - INFO - 
+Sample 2:
+2025-06-20 23:52:12 - __main__ - INFO -   Doc ID: d8c1ea40-0690-43de-bd84-a47a9007f44f
+2025-06-20 23:52:12 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_0', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 0}
+2025-06-20 23:52:12 - __main__ - INFO -   Content preview: "[Image 1]\n\n[Açýklama] = Bu görsel, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi'nin kurumsal logosunu içermektedir. Logo, üniversitenin marka kimliðini yansýtan bir tasarýmdýr...."
+2025-06-20 23:52:12 - __main__ - INFO -   Full content length: 773 characters
+2025-06-20 23:52:12 - __main__ - INFO - 
+Sample 3:
+2025-06-20 23:52:12 - __main__ - INFO -   Doc ID: 6ca2c775-3c65-4c96-b482-03f6838d906c
+2025-06-20 23:52:12 - __main__ - INFO -   Metadata: {'chunk_id': 'chunk_0_hyp_1', 'file_name': '231401013_YAÐIZ CAN_AKAY_txt.txt', 'content_type': 'hypothetical', 'original_chunk_id': 'chunk_0', 'hypothesis_index': 1}
+2025-06-20 23:52:12 - __main__ - INFO -   Content preview: '[Image 1]\n\n[Açýklama] = Bu, TÜRKÝYE Odalar ve Borsalar Birliði Ekonomi ve Teknoloji Üniversitesi’nin logosunu gösteren bir grafik tasarýmdýr. Logolar, bir kurumun görsel kimliðini yansýtan ve ona özgü...'
+2025-06-20 23:52:12 - __main__ - INFO -   Full content length: 685 characters
+2025-06-20 23:52:12 - __main__ - INFO - 
+PII Mappings Analysis:
+2025-06-20 23:52:12 - __main__ - INFO -   Total PII chunk entries: 19
+2025-06-20 23:52:12 - __main__ - INFO -   Non-empty PII mappings: 0
+2025-06-20 23:52:12 - __main__ - INFO - 
+============================================================
+2025-06-20 23:52:12 - __main__ - INFO - Simple vectorstore contents test completed
+2025-06-20 23:52:12 - __main__ - INFO - ============================================================

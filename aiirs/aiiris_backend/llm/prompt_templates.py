@@ -75,7 +75,7 @@ Kullanılan Bilgi Metadataları:
     agent = Agent(
         name="RAG_Assistant",
         instructions=agent_instructions,
-        model="gpt-4o",  # 4.1 olması gerekiyorsa çevrilsin.
+        model="gpt-4.1",  # 4.1 olması gerekiyorsa çevrilsin.
         tools=tools,
     )
 
