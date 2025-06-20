@@ -89,3 +89,6 @@
 2025-06-20 23:27:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
 2025-06-20 23:27:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
 2025-06-20 23:27:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-20 23:28:36 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-20 23:28:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-20 23:28:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
