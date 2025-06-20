@@ -12,9 +12,14 @@ class UIComponents {
     this.isDarkMode = false;
     // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
+
+    // Add wolframEnabled flag, initialize from storage or default to false
+    this.wolframEnabled = Utils.isWolframEnabled();
+
     // Finance news properties
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
+
 
     this.init();
   }
@@ -27,6 +32,11 @@ class UIComponents {
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
       webSearchToggle.checked = this.webSearchEnabled;
+    }
+
+    const wolframToggle = document.getElementById("wolfram-toggle");
+    if (wolframToggle) {
+      wolframToggle.checked = this.wolframEnabled;
     }
   }
 
@@ -101,7 +111,7 @@ class UIComponents {
     const saveSettingsButton = document.getElementById("save-settings");
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
-    }    // Web Search toggle event
+    } // Web Search toggle event
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
       webSearchToggle.addEventListener("change", (e) => {
@@ -114,10 +124,24 @@ class UIComponents {
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
+
+    // Wolfram Alpha toggle event
+    const wolframToggle = document.getElementById("wolfram-toggle");
+    if (wolframToggle) {
+      wolframToggle.addEventListener("change", (e) => {
+        this.wolframEnabled = e.target.checked;
+        Utils.setWolframEnabled(this.wolframEnabled);
+        console.log("Wolfram Alpha enabled:", this.wolframEnabled);
+        // Optionally, notify backend here if needed
+        // Example: window.airisAPI.setWolframEnabled?.(this.wolframEnabled);
+      });
+      console.log("wolframEnabled: ", this.wolframEnabled);
+
     // Finance News refresh button
     const refreshNewsButton = document.getElementById("refresh-news");
     if (refreshNewsButton) {
       refreshNewsButton.addEventListener("click", () => this.loadFinanceNews(true));
+
     }
 
     // Event delegation for dynamic buttons
@@ -125,12 +149,12 @@ class UIComponents {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
         this.switchTab(e.target.dataset.tab);
       }
-      
+
       // Handle delete button clicks
-      if (e.target.closest('.delete-btn')) {
+      if (e.target.closest(".delete-btn")) {
         e.preventDefault();
         e.stopPropagation();
-        const deleteBtn = e.target.closest('.delete-btn');
+        const deleteBtn = e.target.closest(".delete-btn");
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
           this.deleteFile(fileName);
@@ -164,7 +188,8 @@ class UIComponents {
     });
 
     const activeNavItem = document.querySelector(
-      `.nav-item[data-tab="${tabId}"]` );
+      `.nav-item[data-tab="${tabId}"]`
+    );
     if (activeNavItem) {
       activeNavItem.classList.add("active");
     }
@@ -195,12 +220,13 @@ class UIComponents {
       case "news":
         await this.loadFinanceNews();
         break;
+
     }
   }
 
   setupSuggestionChips() {
     const suggestionChips = document.querySelectorAll(".suggestion-chip");
-    
+
     suggestionChips.forEach((chip) => {
       chip.addEventListener("click", (e) => {
         const chipText = e.target.textContent.trim();
@@ -211,23 +237,26 @@ class UIComponents {
 
   handleSuggestionChipClick(chipText) {
     const chatInput = document.getElementById("chat-input");
-    
+
     // Define the queries for each suggestion chip
     const chipQueries = {
-      "What's in my latest report?": "Please provide an overview of my most recently uploaded files and their key contents. What financial documents do I have and what information do they contain?",
-      "Analyze financial trends": "Analyze the financial trends and patterns in my uploaded documents. Show me any significant changes, growth patterns, or important financial insights from the data.",
-      "Summary of expenses": "Provide a comprehensive summary of all expenses found in my documents. Break down the expenses by category, time period, and highlight any significant spending patterns."
+      "What's in my latest report?":
+        "Please provide an overview of my most recently uploaded files and their key contents. What financial documents do I have and what information do they contain?",
+      "Analyze financial trends":
+        "Analyze the financial trends and patterns in my uploaded documents. Show me any significant changes, growth patterns, or important financial insights from the data.",
+      "Summary of expenses":
+        "Provide a comprehensive summary of all expenses found in my documents. Break down the expenses by category, time period, and highlight any significant spending patterns.",
     };
 
     const query = chipQueries[chipText];
-    
+
     if (query && chatInput) {
       // Set the query in the input field
       chatInput.value = query;
-      
+
       // Auto-send the message
       this.sendMessage();
-      
+
       // Hide the welcome message with chips since user has started chatting
       this.hideWelcomeMessage();
     }
@@ -237,7 +266,8 @@ class UIComponents {
     const welcomeMessage = document.querySelector(".chat-messages .message");
     if (welcomeMessage && welcomeMessage.classList.contains("assistant")) {
       // Check if this is the welcome message by looking for suggestion chips
-      const hasSuggestionChips = welcomeMessage.querySelector(".suggestion-chips");
+      const hasSuggestionChips =
+        welcomeMessage.querySelector(".suggestion-chips");
       if (hasSuggestionChips) {
         welcomeMessage.style.display = "none";
       }
@@ -269,8 +299,12 @@ class UIComponents {
 
     try {
       // Show typing indicator
-      this.showTypingIndicator();      // Send to backend
-      const response = await window.airisAPI.sendQuery(message, this.webSearchEnabled);// Remove typing indicator
+      this.showTypingIndicator(); // Send to backend
+      const response = await window.airisAPI.sendQuery(
+        message,
+        this.webSearchEnabled,
+        this.wolframEnabled
+      ); // Remove typing indicator
       this.hideTypingIndicator();
 
       // Add AI response to chat
@@ -587,25 +621,29 @@ class UIComponents {
               </div>
               <div class="file-card-info">
                 <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
-                <div class="file-card-details">${Utils.formatFileSize(file.size)} • ${Utils.formatDate(file.created_at)}</div>
+                <div class="file-card-details">${Utils.formatFileSize(
+                  file.size
+                )} • ${Utils.formatDate(file.created_at)}</div>
               </div>
             </div>
             <div class="file-card-actions">
-              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(file.name)}" title="Delete file">
+              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
+                file.name
+              )}" title="Delete file">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
         `;
-        
+
         // Add click handler to open file (but not on action buttons)
-        fileItem.addEventListener('click', (e) => {
+        fileItem.addEventListener("click", (e) => {
           // Don't open file if clicking on action buttons
-          if (!e.target.closest('.file-card-actions')) {
+          if (!e.target.closest(".file-card-actions")) {
             this.openFile(file.name);
           }
         });
-        
+
         fileLibrary.appendChild(fileItem);
       });
     } catch (error) {
@@ -625,55 +663,68 @@ class UIComponents {
     try {
       // Request the main process to open the file
       const result = await window.airisAPI.openFile(fileName);
-      
+
       if (!result.success) {
-        this.showNotification(`Failed to open file: ${result.error}`, 'error');
+        this.showNotification(`Failed to open file: ${result.error}`, "error");
       }
     } catch (error) {
-      console.error('Error opening file:', error);
-      this.showNotification('Failed to open file. Please try again.', 'error');
+      console.error("Error opening file:", error);
+      this.showNotification("Failed to open file. Please try again.", "error");
     }
   }
 
   async deleteFile(fileName) {
     console.log("🗑️ Frontend: deleteFile called for:", fileName);
-    
+
     try {
       // Show confirmation dialog
       console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
-      const confirmed = confirm(`Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`);
-      
+      const confirmed = confirm(
+        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`
+      );
+
       if (!confirmed) {
         console.log("❌ Frontend: User cancelled deletion for:", fileName);
         return;
       }
-      
+
       console.log("✅ Frontend: User confirmed deletion for:", fileName);
-      
+
       // Show loading state
-      this.showNotification('Deleting file...', 'info');
-      
+      this.showNotification("Deleting file...", "info");
+
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
-      
+
       // Request the main process to delete the file
       const result = await window.airisAPI.deleteFile(fileName);
-      
+
       console.log("📋 Frontend: API response received:", result);
-      
+
       if (result.success) {
-        console.log("✅ Frontend: Deletion successful, showing success message");
-        this.showNotification(`File "${fileName}" deleted successfully`, 'success');
+        console.log(
+          "✅ Frontend: Deletion successful, showing success message"
+        );
+        this.showNotification(
+          `File "${fileName}" deleted successfully`,
+          "success"
+        );
         // Refresh the file list
         console.log("🔄 Frontend: Refreshing file list");
         this.loadFileLibrary();
       } else {
         console.error("❌ Frontend: Deletion failed:", result.error);
-        this.showNotification(`Failed to delete file: ${result.error}`, 'error');
+        this.showNotification(
+          `Failed to delete file: ${result.error}`,
+          "error"
+        );
       }
     } catch (error) {
-      console.error('❌ Frontend: Error deleting file:', error);
-      console.error('❌ Frontend: Error details:', error.message, error.stack);
-      this.showNotification('Failed to delete file. Please try again.', 'error');
+      console.error("❌ Frontend: Error deleting file:", error);
+      console.error("❌ Frontend: Error details:", error.message, error.stack);
+      this.showNotification(
+        "Failed to delete file. Please try again.",
+        "error"
+      );
     }
   }
 
@@ -740,7 +791,7 @@ class UIComponents {
     try {
       const metrics = await window.airisAPI.getMetrics();
       this.updateAnalyticsDashboard(metrics);
-      
+
       // Set up auto-refresh every 30 seconds when on analytics tab
       if (this.currentTab === "analytics") {
         if (this.analyticsRefreshTimer) {
@@ -767,7 +818,7 @@ class UIComponents {
         totalDocuments: 0,
         avgResponseTime: "N/A",
         systemHealth: "Error",
-        recentActivity: []
+        recentActivity: [],
       });
     }
   }
@@ -791,10 +842,12 @@ class UIComponents {
     if (systemHealth) {
       systemHealth.textContent = metrics.systemHealth || "Unknown";
       // Color code the health status
-      systemHealth.style.color = 
-        metrics.systemHealth === "Healthy" ? "var(--success)" : 
-        metrics.systemHealth === "Disconnected" ? "var(--error)" : 
-        "var(--text-secondary)";
+      systemHealth.style.color =
+        metrics.systemHealth === "Healthy"
+          ? "var(--success)"
+          : metrics.systemHealth === "Disconnected"
+          ? "var(--error)"
+          : "var(--text-secondary)";
     }
 
     // Update recent activity
@@ -949,6 +1002,9 @@ class UIComponents {
     return this.webSearchEnabled;
   }
 
+  // Example method to get the flag for backend communication
+  isWolframEnabled() {
+    return this.wolframEnabled;
   // Finance News functionality
   async loadFinanceNews(forceRefresh = false) {
     const newsGrid = document.getElementById("news-grid");
@@ -1109,6 +1165,7 @@ class UIComponents {
       clearInterval(this.newsRefreshInterval);
       this.newsRefreshInterval = null;
     }
+
   }
 }
 

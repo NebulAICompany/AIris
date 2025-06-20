@@ -40,7 +40,7 @@ class Utils {
         month: "short",
         day: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
       });
     } catch (error) {
       return "Invalid date";
@@ -149,7 +149,10 @@ class Utils {
 
   // Validate file (combines type and size validation)
   static validateFile(file, maxSizeMB = 50) {
-    return this.isValidFileType(file.name) && this.isValidFileSize(file.size, maxSizeMB);
+    return (
+      this.isValidFileType(file.name) &&
+      this.isValidFileSize(file.size, maxSizeMB)
+    );
   }
 
   // Sanitize filename
@@ -306,6 +309,15 @@ class Utils {
 
   static isWebSearchEnabled() {
     return this.storage.get("webSearchEnabled", false);
+  }
+
+  // Wolfram Alpha toggle flag helpers
+  static setWolframEnabled(enabled) {
+    this.storage.set("wolframEnabled", !!enabled);
+  }
+
+  static isWolframEnabled() {
+    return this.storage.get("wolframEnabled", false);
   }
 }
 

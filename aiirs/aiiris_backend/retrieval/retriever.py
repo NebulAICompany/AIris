@@ -8,55 +8,114 @@ from langchain_core.embeddings import Embeddings
 
 _vectorstore = None
 
+
 def _get_embeddings() -> Embeddings:
-    try : 
+    try:
         from langchain_openai import OpenAIEmbeddings
-        return OpenAIEmbeddings(model="text-embedding-3-small", api_key="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")
-    except (ImportError,Exception) as e:
+
+        return OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            api_key="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",
+        )
+    except (ImportError, Exception) as e:
         try:
             from langchain_huggingface import HuggingFaceEmbeddings
-            return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", api_key = "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")
-        except (ImportError,Exception) as e:
-            raise ImportError("No suitable embeddings found. Please install either langchain_openai or langchain_community.") from e
+
+            return HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                api_key="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",
+            )
+        except (ImportError, Exception) as e:
+            raise ImportError(
+                "No suitable embeddings found. Please install either langchain_openai or langchain_community."
+            ) from e
 
 
 def load_vectorstore(path: str) -> FAISS:
-    
     global _vectorstore
-    
+
     if not os.path.exists(path):
         raise FileNotFoundError(f"Vectorstore file not found: {path}")
-    
+
     embeddings = _get_embeddings()
-    
+
     try:
-        _vectorstore = FAISS.load_local(folder_path= path,
-                                        embeddings= embeddings,
-                                        allow_dangerous_deserialization= True)
-        print(f"Vectorstore loaded from {path}")
+        _vectorstore = FAISS.load_local(
+            folder_path=path,
+            embeddings=embeddings,
+            allow_dangerous_deserialization=True,
+        )
+        print(f"✅ Vectorstore loaded from {path}")
+        print(
+            f"📦 Contains {_vectorstore.index.ntotal} document chunks (including HyPE prompt expansions)"
+        )
         return _vectorstore
     except Exception as e:
         raise RuntimeError(f"Failed to load vectorstore from {path}: {e}") from e
-    
-def retrieve_top_k(query: str, k: int = 2) -> List[str]:
-    
+
+
+def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
     global _vectorstore
-    
+
     if _vectorstore is None:
         raise ValueError("Vectorstore not loaded. Please load the vectorstore first.")
-    
 
     try:
-        print(f"Retrieving top {k} documents for query: {query}")
-        print(_vectorstore)
+        print(f"🔍 Retrieving top {k} documents for query: {query}")
+        print(
+            f"📊 Searching through {_vectorstore.index.ntotal} document chunks (original + HyPE prompt expansions)"
+        )
         docs_with_scores = _vectorstore.similarity_search_with_score(query, k=k)
-        print(f"Retrieved {len(docs_with_scores)} documents")   
-        return [{
-                "content": doc[0].page_content,
-                "score": doc[1],
-                "metadata": doc[0].metadata,
-            } for doc in docs_with_scores]
+        print(
+            f"✅ Retrieved {len(docs_with_scores)} documents from HyPE-enhanced vectorstore"
+        )
+
+        results = []
+        for doc, score in docs_with_scores:
+            content_type = doc.metadata.get("content_type", "original")
+
+            # If this is a hypothetical prompt match, we want to return the original content
+            # but note that it was found via a prompt match
+            if content_type == "hypothetical_prompt":
+                # Extract the original content and show the matching prompt
+                original_content = doc.metadata.get(
+                    "original_content", doc.page_content
+                )
+                hypothetical_prompt = doc.metadata.get("hypothetical_prompt", "")
+
+                results.append(
+                    {
+                        "content": original_content,
+                        "score": score,
+                        "metadata": {
+                            **doc.metadata,
+                            "match_type": "prompt_match",
+                            "matching_prompt": hypothetical_prompt,
+                        },
+                    }
+                )
+            else:
+                results.append(
+                    {
+                        "content": doc.page_content,
+                        "score": score,
+                        "metadata": {**doc.metadata, "match_type": "content_match"},
+                    }
+                )
+
+        # Show breakdown of results
+        original_count = sum(
+            1 for r in results if r["metadata"].get("content_type") == "original"
+        )
+        prompt_match_count = sum(
+            1 for r in results if r["metadata"].get("match_type") == "prompt_match"
+        )
+        print(
+            f"📈 Results breakdown: {original_count} direct content matches + {prompt_match_count} prompt-based matches"
+        )
+
+        return results
 
     except Exception as e:
-        print(f"Error during retrieval: {e}")
+        print(f"❌ Error during retrieval: {e}")
         return []
