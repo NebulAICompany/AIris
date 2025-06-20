@@ -280,6 +280,7 @@ class AIrisApp {
     });
 
     // Handle query requests
+
     ipcMain.handle(
       "send-query",
       async (
@@ -320,9 +321,11 @@ class AIrisApp {
         } catch (error) {
           logger.error(`Query error: ${error.message}`, "IPC");
           throw new Error(`Failed to send query: ${error.message}`);
+
         }
       }
     ); // Handle file upload requests
+
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
       try {
         logger.info(`Starting file upload: ${fileName}`, "IPC");

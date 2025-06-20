@@ -27,3 +27,6 @@ python-multipart
 openai-agents
 wolframalpha
 requests
+colorama
+feedparser
+python-dateutil

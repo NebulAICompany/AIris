@@ -109,6 +109,11 @@
               >Wolfram Alpha</span
             >
           </div>
+
+          <!-- Currency Ticker -->
+          <!-- <div id="currency-ticker" class="currency-ticker">
+            <span class="currency-status">Loading...</span>
+          </div> -->
         </div>
       </header>
 
@@ -128,6 +133,10 @@
             <button class="nav-item" data-tab="files">
               <i class="fas fa-file-alt"></i>
               <span>My Files</span>
+            </button>
+            <button class="nav-item" data-tab="news">
+              <i class="fas fa-newspaper"></i>
+              <span>Finance News</span>
             </button>
             <button class="nav-item" data-tab="analytics">
               <i class="fas fa-chart-bar"></i>
@@ -255,6 +264,31 @@
                   <button class="cta-button" data-tab="upload">
                     Upload Files
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Finance News Tab -->
+          <div id="news-tab" class="tab-content">
+            <div class="news-container">
+              <div class="news-header">
+                <h2>Finance News</h2>
+                <p>Latest financial news and market updates</p>
+                <div class="news-controls">
+                  <button id="refresh-news" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                  </button>
+                  <div class="news-status">
+                    <span id="news-last-updated">Loading...</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="news-grid" id="news-grid">
+                <div class="loading-state">
+                  <div class="loading-spinner"></div>
+                  <p>Loading latest finance news...</p>
                 </div>
               </div>
             </div>

@@ -6,72 +6,92 @@ class APIService {
     this.baseURL = "http://localhost:8000";
     this.timeout = 30000;
 
+    // Always set up axios for API calls, regardless of environment
+    this.setupAxios();
+
     if (!this.isElectron) {
       console.warn("Running in browser mode - some features may not work");
-      this.setupAxios();
     }
   }
 
   setupAxios() {
-    // Create axios instance for browser fallback
-    this.api = axios.create({
-      baseURL: this.baseURL,
-      timeout: this.timeout,
+    // Set up fetch-based API client
+    this.api = {
+      get: async (url, config = {}) => {
+        return this.makeRequest(url, 'GET', null, config);
+      },
+      post: async (url, data, config = {}) => {
+        return this.makeRequest(url, 'POST', data, config);
+      },
+      defaults: {
+        baseURL: this.baseURL,
+        timeout: this.timeout
+      }
+    };
+  }
+
+  async makeRequest(url, method = 'GET', data = null, config = {}) {
+    const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+    
+    console.log(`[API] ${method.toUpperCase()} ${fullUrl}`);
+
+    const requestOptions = {
+      method,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
+        ...config.headers
       },
-    });
+      signal: AbortSignal.timeout(config.timeout || this.timeout)
+    };
 
-    // Request interceptor
-    this.api.interceptors.request.use(
-      (config) => {
-        console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
-        return config;
-      },
-      (error) => {
-        console.error("[API] Request error:", error);
-        return Promise.reject(error);
+    if (data) {
+      if (data instanceof FormData) {
+        // Remove Content-Type header for FormData (browser will set it with boundary)
+        delete requestOptions.headers['Content-Type'];
+        requestOptions.body = data;
+      } else {
+        requestOptions.body = JSON.stringify(data);
       }
-    );
+    }
 
-    // Response interceptor
-    this.api.interceptors.response.use(
-      (response) => {
-        console.log(
-          `[API] Response: ${response.status} ${response.config.url}`
-        );
-        return response;
-      },
-      (error) => {
-        console.error("[API] Response error:", error);
+    try {
+      const response = await fetch(fullUrl, requestOptions);
+      
+      console.log(`[API] Response: ${response.status} ${fullUrl}`);
 
-        if (error.code === "ECONNABORTED") {
-          throw new Error("Request timeout - please try again");
+      if (!response.ok) {
+        const errorData = await response.text();
+        let errorMessage;
+        
+        try {
+          const parsed = JSON.parse(errorData);
+          errorMessage = parsed.message || parsed.detail || `HTTP ${response.status}`;
+        } catch {
+          errorMessage = errorData || `HTTP ${response.status}`;
         }
 
-        if (error.response) {
-          // Server responded with error status
-          const status = error.response.status;
-          const message =
-            error.response.data?.message ||
-            error.response.data?.detail ||
-            "Server error";
-
-          if (status >= 500) {
-            throw new Error(`Server error (${status}): ${message}`);
-          } else if (status >= 400) {
-            throw new Error(`Client error (${status}): ${message}`);
-          }
-        } else if (error.request) {
-          // No response received
-          throw new Error(
-            "Unable to connect to server. Please check if the backend is running."
-          );
+        if (response.status >= 500) {
+          throw new Error(`Server error (${response.status}): ${errorMessage}`);
+        } else if (response.status >= 400) {
+          throw new Error(`Client error (${response.status}): ${errorMessage}`);
         }
-
-        throw error;
       }
-    );
+
+      const responseData = await response.json();
+      return { data: responseData, status: response.status, config: { url: fullUrl } };
+    } catch (error) {
+      console.error("[API] Request error:", error);
+      
+      if (error.name === 'AbortError') {
+        throw new Error("Request timeout - please try again");
+      }
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error("Unable to connect to server. Please check if the backend is running.");
+      }
+      
+      throw error;
+    }
   }
 
   // Update configuration
@@ -133,21 +153,20 @@ class APIService {
       formData.append("file", file);
 
       const config = {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         timeout: 120000, // 2 minutes for file uploads
-        onUploadProgress: (progressEvent) => {
-          if (progressCallback && progressEvent.lengthComputable) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            progressCallback(percentCompleted);
-          }
-        },
       };
 
+      // Note: Fetch API doesn't support upload progress natively
+      // For now, we'll call the progress callback with indeterminate progress
+      if (progressCallback) {
+        progressCallback(0);
+      }
+
       const response = await this.api.post("/api/upload", formData, config);
+
+      if (progressCallback) {
+        progressCallback(100);
+      }
 
       return {
         success: true,
@@ -376,6 +395,26 @@ class APIService {
       };
     } catch (error) {
       throw new Error(`Health check failed: ${error.message}`);
+    }
+  }
+
+  // Get finance news
+  async getFinanceNews() {
+    try {
+      const response = await this.api.get("/api/finance-news");
+
+      return {
+        success: response.data.status === "success",
+        data: response.data,
+        articles: response.data.articles || [],
+        lastUpdated: response.data.last_updated,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        articles: [],
+      };
     }
   }
 

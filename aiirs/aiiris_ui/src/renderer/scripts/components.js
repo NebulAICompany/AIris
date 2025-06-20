@@ -12,8 +12,14 @@ class UIComponents {
     this.isDarkMode = false;
     // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
+
     // Add wolframEnabled flag, initialize from storage or default to false
     this.wolframEnabled = Utils.isWolframEnabled();
+
+    // Finance news properties
+    this.newsRefreshInterval = null;
+    this.lastNewsUpdate = null;
+
 
     this.init();
   }
@@ -118,6 +124,7 @@ class UIComponents {
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
+
     // Wolfram Alpha toggle event
     const wolframToggle = document.getElementById("wolfram-toggle");
     if (wolframToggle) {
@@ -129,6 +136,12 @@ class UIComponents {
         // Example: window.airisAPI.setWolframEnabled?.(this.wolframEnabled);
       });
       console.log("wolframEnabled: ", this.wolframEnabled);
+
+    // Finance News refresh button
+    const refreshNewsButton = document.getElementById("refresh-news");
+    if (refreshNewsButton) {
+      refreshNewsButton.addEventListener("click", () => this.loadFinanceNews(true));
+
     }
 
     // Event delegation for dynamic buttons
@@ -145,6 +158,15 @@ class UIComponents {
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
           this.deleteFile(fileName);
+        }
+      }
+
+      // Handle news article clicks
+      if (e.target.closest('.news-item')) {
+        const newsItem = e.target.closest('.news-item');
+        const link = newsItem.dataset.link;
+        if (link) {
+          window.open(link, '_blank');
         }
       }
     });
@@ -195,6 +217,10 @@ class UIComponents {
       case "analytics":
         await this.loadAnalytics();
         break;
+      case "news":
+        await this.loadFinanceNews();
+        break;
+
     }
   }
 
@@ -979,6 +1005,167 @@ class UIComponents {
   // Example method to get the flag for backend communication
   isWolframEnabled() {
     return this.wolframEnabled;
+  // Finance News functionality
+  async loadFinanceNews(forceRefresh = false) {
+    const newsGrid = document.getElementById("news-grid");
+    const newsLastUpdated = document.getElementById("news-last-updated");
+    const refreshButton = document.getElementById("refresh-news");
+
+    if (!newsGrid) return;
+
+    // Show loading state if forcing refresh or no news loaded
+    if (forceRefresh || !this.lastNewsUpdate) {
+      newsGrid.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Loading latest finance news...</p>
+        </div>
+      `;
+      
+      if (refreshButton) {
+        refreshButton.disabled = true;
+        refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
+      }
+    }
+
+    try {
+      const result = await window.apiService.getFinanceNews();
+
+      if (result.success && result.articles.length > 0) {
+        this.renderFinanceNews(result.articles);
+        this.lastNewsUpdate = new Date().toISOString();
+        
+        if (newsLastUpdated) {
+          newsLastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        // Set up auto-refresh interval (1 minute)
+        this.startNewsAutoRefresh();
+      } else {
+        throw new Error(result.error || "Failed to load news");
+      }
+    } catch (error) {
+      console.error("Failed to load finance news:", error);
+      newsGrid.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Failed to load news</h3>
+          <p>${error.message || "Unable to fetch finance news. Please try again."}</p>
+          <button class="btn btn-primary" onclick="window.uiComponents.loadFinanceNews(true)">
+            <i class="fas fa-retry"></i> Retry
+          </button>
+        </div>
+      `;
+      
+      if (newsLastUpdated) {
+        newsLastUpdated.textContent = "Failed to update";
+      }
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled = false;
+        refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+      }
+    }
+  }
+
+  renderFinanceNews(articles) {
+    const newsGrid = document.getElementById("news-grid");
+    if (!newsGrid) return;
+
+    // Sort articles by publication date (newest first) as a backup
+    const sortedArticles = [...articles].sort((a, b) => {
+      try {
+        const dateA = new Date(a.published);
+        const dateB = new Date(b.published);
+        return dateB - dateA; // Newest first
+      } catch (error) {
+        console.warn("Error sorting articles by date:", error);
+        return 0;
+      }
+    });
+
+    newsGrid.innerHTML = sortedArticles.map(article => this.createNewsItem(article)).join('');
+  }
+
+  createNewsItem(article) {
+    const publishedDate = new Date(article.published);
+    const timeAgo = this.getTimeAgo(publishedDate);
+    
+    // Create image HTML if image URL is available
+    const imageHtml = article.image_url ? `
+      <div class="news-image">
+        <img src="${Utils.escapeHtml(article.image_url)}" 
+             alt="${Utils.escapeHtml(article.title)}"
+             loading="lazy"
+             onerror="this.style.display='none'"
+             ${article.image_width ? `width="${article.image_width}"` : ''}
+             ${article.image_height ? `height="${article.image_height}"` : ''}
+        />
+      </div>
+    ` : '';
+    
+    return `
+      <div class="news-item" data-link="${article.link}">
+        ${imageHtml}
+        <div class="news-content">
+          <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
+          <p class="news-summary">${Utils.escapeHtml(article.summary || '')}</p>
+          <div class="news-meta">
+            <span class="news-source">
+              <i class="fas fa-building"></i>
+              ${Utils.escapeHtml(article.source)}
+            </span>
+            <span class="news-time">
+              <i class="fas fa-clock"></i>
+              ${timeAgo}
+            </span>
+          </div>
+        </div>
+        <div class="news-actions">
+          <button class="news-link-btn" title="Open article">
+            <i class="fas fa-external-link-alt"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  getTimeAgo(date) {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else {
+      return `${days}d ago`;
+    }
+  }
+
+  startNewsAutoRefresh() {
+    // Clear existing interval
+    if (this.newsRefreshInterval) {
+      clearInterval(this.newsRefreshInterval);
+    }
+
+    // Set up new interval for 1 minute (60000 ms)
+    this.newsRefreshInterval = setInterval(() => {
+      if (this.currentTab === "news") {
+        this.loadFinanceNews(true);
+      }
+    }, 60000);
+  }
+
+  stopNewsAutoRefresh() {
+    if (this.newsRefreshInterval) {
+      clearInterval(this.newsRefreshInterval);
+      this.newsRefreshInterval = null;
+    }
+
   }
 }
 

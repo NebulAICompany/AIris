@@ -40,6 +40,12 @@ class AIrisApp {
       this.uiComponents = new UIComponents();
       window.uiComponents = this.uiComponents; // Global access for HTML event handlers
 
+      // Initialize currency service
+      logger.info('Initializing currency service...', 'APP');
+      this.currencyService = new CurrencyService();
+      window.currencyService = this.currencyService; // Global access
+      await this.currencyService.start();
+
       // Setup global error handling
       this.setupErrorHandling();
 
@@ -53,7 +59,7 @@ class AIrisApp {
       this.hideLoadingScreen();
 
       this.isInitialized = true;
-      logger.info("AIris App initialized successfully", 'APP');
+      logger.info('AIris App initialized successfully', 'APP');
 
       // Show connection status
       this.updateConnectionStatus(this.backendConnected);
@@ -295,6 +301,12 @@ class AIrisApp {
       if (chatHistory.length > 0) {
         localStorage.setItem("airis-chat-history", JSON.stringify(chatHistory));
       }
+    }
+    
+    // Stop currency service
+    if (this.currencyService) {
+      this.currencyService.stop();
+      logger.info('Currency service stopped', 'APP');
     }
   }
 
