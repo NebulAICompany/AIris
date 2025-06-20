@@ -13,6 +13,13 @@ class UIComponents {
     // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
 
+    // Add wolframEnabled flag, initialize from storage or default to false
+    this.wolframEnabled = Utils.isWolframEnabled();
+
+    // Finance news properties
+    this.newsRefreshInterval = null;
+    this.lastNewsUpdate = null;
+
     this.init();
   }
 
@@ -24,6 +31,11 @@ class UIComponents {
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
       webSearchToggle.checked = this.webSearchEnabled;
+    }
+
+    const wolframToggle = document.getElementById("wolfram-toggle");
+    if (wolframToggle) {
+      wolframToggle.checked = this.wolframEnabled;
     }
   }
 
@@ -98,7 +110,7 @@ class UIComponents {
     const saveSettingsButton = document.getElementById("save-settings");
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
-    }    // Web Search toggle event
+    } // Web Search toggle event
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
       webSearchToggle.addEventListener("change", (e) => {
@@ -111,20 +123,50 @@ class UIComponents {
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
+    // Wolfram Alpha toggle event
+    const wolframToggle = document.getElementById("wolfram-toggle");
+    if (wolframToggle) {
+      wolframToggle.addEventListener("change", (e) => {
+        this.wolframEnabled = e.target.checked;
+        Utils.setWolframEnabled(this.wolframEnabled);
+        console.log("Wolfram Alpha enabled:", this.wolframEnabled);
+        // Optionally, notify backend here if needed
+        // Example: window.airisAPI.setWolframEnabled?.(this.wolframEnabled);
+      });
+      console.log("wolframEnabled: ", this.wolframEnabled);
+    }
+
+    // Finance News refresh button
+    const refreshNewsButton = document.getElementById("refresh-news");
+    if (refreshNewsButton) {
+      refreshNewsButton.addEventListener("click", () =>
+        this.loadFinanceNews(true)
+      );
+    }
+
     // Event delegation for dynamic buttons
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
         this.switchTab(e.target.dataset.tab);
       }
-      
+
       // Handle delete button clicks
-      if (e.target.closest('.delete-btn')) {
+      if (e.target.closest(".delete-btn")) {
         e.preventDefault();
         e.stopPropagation();
-        const deleteBtn = e.target.closest('.delete-btn');
+        const deleteBtn = e.target.closest(".delete-btn");
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
           this.deleteFile(fileName);
+        }
+      }
+
+      // Handle news article clicks
+      if (e.target.closest(".news-item")) {
+        const newsItem = e.target.closest(".news-item");
+        const link = newsItem.dataset.link;
+        if (link) {
+          window.open(link, "_blank");
         }
       }
     });
@@ -146,7 +188,8 @@ class UIComponents {
     });
 
     const activeNavItem = document.querySelector(
-      `.nav-item[data-tab="${tabId}"]` );
+      `.nav-item[data-tab="${tabId}"]`
+    );
     if (activeNavItem) {
       activeNavItem.classList.add("active");
     }
@@ -173,12 +216,16 @@ class UIComponents {
         break;
       case "analytics":
         await this.loadAnalytics();
-        break;    }
+        break;
+      case "news":
+        await this.loadFinanceNews();
+        break;
+    }
   }
 
   setupSuggestionChips() {
     const suggestionChips = document.querySelectorAll(".suggestion-chip");
-    
+
     suggestionChips.forEach((chip) => {
       chip.addEventListener("click", (e) => {
         const chipText = e.target.textContent.trim();
@@ -189,23 +236,26 @@ class UIComponents {
 
   handleSuggestionChipClick(chipText) {
     const chatInput = document.getElementById("chat-input");
-    
+
     // Define the queries for each suggestion chip
     const chipQueries = {
-      "What's in my latest report?": "Please provide an overview of my most recently uploaded files and their key contents. What financial documents do I have and what information do they contain?",
-      "Analyze financial trends": "Analyze the financial trends and patterns in my uploaded documents. Show me any significant changes, growth patterns, or important financial insights from the data.",
-      "Summary of expenses": "Provide a comprehensive summary of all expenses found in my documents. Break down the expenses by category, time period, and highlight any significant spending patterns."
+      "What's in my latest report?":
+        "Please provide an overview of my most recently uploaded files and their key contents. What financial documents do I have and what information do they contain?",
+      "Analyze financial trends":
+        "Analyze the financial trends and patterns in my uploaded documents. Show me any significant changes, growth patterns, or important financial insights from the data.",
+      "Summary of expenses":
+        "Provide a comprehensive summary of all expenses found in my documents. Break down the expenses by category, time period, and highlight any significant spending patterns.",
     };
 
     const query = chipQueries[chipText];
-    
+
     if (query && chatInput) {
       // Set the query in the input field
       chatInput.value = query;
-      
+
       // Auto-send the message
       this.sendMessage();
-      
+
       // Hide the welcome message with chips since user has started chatting
       this.hideWelcomeMessage();
     }
@@ -215,7 +265,8 @@ class UIComponents {
     const welcomeMessage = document.querySelector(".chat-messages .message");
     if (welcomeMessage && welcomeMessage.classList.contains("assistant")) {
       // Check if this is the welcome message by looking for suggestion chips
-      const hasSuggestionChips = welcomeMessage.querySelector(".suggestion-chips");
+      const hasSuggestionChips =
+        welcomeMessage.querySelector(".suggestion-chips");
       if (hasSuggestionChips) {
         welcomeMessage.style.display = "none";
       }
@@ -247,8 +298,12 @@ class UIComponents {
 
     try {
       // Show typing indicator
-      this.showTypingIndicator();      // Send to backend
-      const response = await window.airisAPI.sendQuery(message, this.webSearchEnabled);// Remove typing indicator
+      this.showTypingIndicator(); // Send to backend
+      const response = await window.airisAPI.sendQuery(
+        message,
+        this.webSearchEnabled,
+        this.wolframEnabled
+      ); // Remove typing indicator
       this.hideTypingIndicator();
 
       // Add AI response to chat
@@ -565,25 +620,29 @@ class UIComponents {
               </div>
               <div class="file-card-info">
                 <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
-                <div class="file-card-details">${Utils.formatFileSize(file.size)} • ${Utils.formatDate(file.created_at)}</div>
+                <div class="file-card-details">${Utils.formatFileSize(
+                  file.size
+                )} • ${Utils.formatDate(file.created_at)}</div>
               </div>
             </div>
             <div class="file-card-actions">
-              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(file.name)}" title="Delete file">
+              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
+                file.name
+              )}" title="Delete file">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
         `;
-        
+
         // Add click handler to open file (but not on action buttons)
-        fileItem.addEventListener('click', (e) => {
+        fileItem.addEventListener("click", (e) => {
           // Don't open file if clicking on action buttons
-          if (!e.target.closest('.file-card-actions')) {
+          if (!e.target.closest(".file-card-actions")) {
             this.openFile(file.name);
           }
         });
-        
+
         fileLibrary.appendChild(fileItem);
       });
     } catch (error) {
@@ -603,55 +662,68 @@ class UIComponents {
     try {
       // Request the main process to open the file
       const result = await window.airisAPI.openFile(fileName);
-      
+
       if (!result.success) {
-        this.showNotification(`Failed to open file: ${result.error}`, 'error');
+        this.showNotification(`Failed to open file: ${result.error}`, "error");
       }
     } catch (error) {
-      console.error('Error opening file:', error);
-      this.showNotification('Failed to open file. Please try again.', 'error');
+      console.error("Error opening file:", error);
+      this.showNotification("Failed to open file. Please try again.", "error");
     }
   }
 
   async deleteFile(fileName) {
     console.log("🗑️ Frontend: deleteFile called for:", fileName);
-    
+
     try {
       // Show confirmation dialog
       console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
-      const confirmed = confirm(`Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`);
-      
+      const confirmed = confirm(
+        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`
+      );
+
       if (!confirmed) {
         console.log("❌ Frontend: User cancelled deletion for:", fileName);
         return;
       }
-      
+
       console.log("✅ Frontend: User confirmed deletion for:", fileName);
-      
+
       // Show loading state
-      this.showNotification('Deleting file...', 'info');
-      
+      this.showNotification("Deleting file...", "info");
+
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
-      
+
       // Request the main process to delete the file
       const result = await window.airisAPI.deleteFile(fileName);
-      
+
       console.log("📋 Frontend: API response received:", result);
-      
+
       if (result.success) {
-        console.log("✅ Frontend: Deletion successful, showing success message");
-        this.showNotification(`File "${fileName}" deleted successfully`, 'success');
+        console.log(
+          "✅ Frontend: Deletion successful, showing success message"
+        );
+        this.showNotification(
+          `File "${fileName}" deleted successfully`,
+          "success"
+        );
         // Refresh the file list
         console.log("🔄 Frontend: Refreshing file list");
         this.loadFileLibrary();
       } else {
         console.error("❌ Frontend: Deletion failed:", result.error);
-        this.showNotification(`Failed to delete file: ${result.error}`, 'error');
+        this.showNotification(
+          `Failed to delete file: ${result.error}`,
+          "error"
+        );
       }
     } catch (error) {
-      console.error('❌ Frontend: Error deleting file:', error);
-      console.error('❌ Frontend: Error details:', error.message, error.stack);
-      this.showNotification('Failed to delete file. Please try again.', 'error');
+      console.error("❌ Frontend: Error deleting file:", error);
+      console.error("❌ Frontend: Error details:", error.message, error.stack);
+      this.showNotification(
+        "Failed to delete file. Please try again.",
+        "error"
+      );
     }
   }
 
@@ -718,7 +790,7 @@ class UIComponents {
     try {
       const metrics = await window.airisAPI.getMetrics();
       this.updateAnalyticsDashboard(metrics);
-      
+
       // Set up auto-refresh every 30 seconds when on analytics tab
       if (this.currentTab === "analytics") {
         if (this.analyticsRefreshTimer) {
@@ -745,7 +817,7 @@ class UIComponents {
         totalDocuments: 0,
         avgResponseTime: "N/A",
         systemHealth: "Error",
-        recentActivity: []
+        recentActivity: [],
       });
     }
   }
@@ -769,10 +841,12 @@ class UIComponents {
     if (systemHealth) {
       systemHealth.textContent = metrics.systemHealth || "Unknown";
       // Color code the health status
-      systemHealth.style.color = 
-        metrics.systemHealth === "Healthy" ? "var(--success)" : 
-        metrics.systemHealth === "Disconnected" ? "var(--error)" : 
-        "var(--text-secondary)";
+      systemHealth.style.color =
+        metrics.systemHealth === "Healthy"
+          ? "var(--success)"
+          : metrics.systemHealth === "Disconnected"
+          ? "var(--error)"
+          : "var(--text-secondary)";
     }
 
     // Update recent activity
@@ -925,6 +999,180 @@ class UIComponents {
   // Example method to get the flag for backend communication
   isWebSearchEnabled() {
     return this.webSearchEnabled;
+  }
+
+  // Example method to get the flag for backend communication
+  isWolframEnabled() {
+    return this.wolframEnabled;
+  }
+
+  // Finance News functionality
+  async loadFinanceNews(forceRefresh = false) {
+    const newsGrid = document.getElementById("news-grid");
+    const newsLastUpdated = document.getElementById("news-last-updated");
+    const refreshButton = document.getElementById("refresh-news");
+
+    if (!newsGrid) return;
+
+    // Show loading state if forcing refresh or no news loaded
+    if (forceRefresh || !this.lastNewsUpdate) {
+      newsGrid.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Loading latest finance news...</p>
+        </div>
+      `;
+
+      if (refreshButton) {
+        refreshButton.disabled = true;
+        refreshButton.innerHTML =
+          '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
+      }
+    }
+
+    try {
+      const result = await window.apiService.getFinanceNews();
+
+      if (result.success && result.articles.length > 0) {
+        this.renderFinanceNews(result.articles);
+        this.lastNewsUpdate = new Date().toISOString();
+
+        if (newsLastUpdated) {
+          newsLastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+
+        // Set up auto-refresh interval (1 minute)
+        this.startNewsAutoRefresh();
+      } else {
+        throw new Error(result.error || "Failed to load news");
+      }
+    } catch (error) {
+      console.error("Failed to load finance news:", error);
+      newsGrid.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Failed to load news</h3>
+          <p>${
+            error.message || "Unable to fetch finance news. Please try again."
+          }</p>
+          <button class="btn btn-primary" onclick="window.uiComponents.loadFinanceNews(true)">
+            <i class="fas fa-retry"></i> Retry
+          </button>
+        </div>
+      `;
+
+      if (newsLastUpdated) {
+        newsLastUpdated.textContent = "Failed to update";
+      }
+    } finally {
+      if (refreshButton) {
+        refreshButton.disabled = false;
+        refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+      }
+    }
+  }
+
+  renderFinanceNews(articles) {
+    const newsGrid = document.getElementById("news-grid");
+    if (!newsGrid) return;
+
+    // Sort articles by publication date (newest first) as a backup
+    const sortedArticles = [...articles].sort((a, b) => {
+      try {
+        const dateA = new Date(a.published);
+        const dateB = new Date(b.published);
+        return dateB - dateA; // Newest first
+      } catch (error) {
+        console.warn("Error sorting articles by date:", error);
+        return 0;
+      }
+    });
+
+    newsGrid.innerHTML = sortedArticles
+      .map((article) => this.createNewsItem(article))
+      .join("");
+  }
+
+  createNewsItem(article) {
+    const publishedDate = new Date(article.published);
+    const timeAgo = this.getTimeAgo(publishedDate);
+
+    // Create image HTML if image URL is available
+    const imageHtml = article.image_url
+      ? `
+      <div class="news-image">
+        <img src="${Utils.escapeHtml(article.image_url)}" 
+             alt="${Utils.escapeHtml(article.title)}"
+             loading="lazy"
+             onerror="this.style.display='none'"
+             ${article.image_width ? `width="${article.image_width}"` : ""}
+             ${article.image_height ? `height="${article.image_height}"` : ""}
+        />
+      </div>
+    `
+      : "";
+
+    return `
+      <div class="news-item" data-link="${article.link}">
+        ${imageHtml}
+        <div class="news-content">
+          <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
+          <p class="news-summary">${Utils.escapeHtml(article.summary || "")}</p>
+          <div class="news-meta">
+            <span class="news-source">
+              <i class="fas fa-building"></i>
+              ${Utils.escapeHtml(article.source)}
+            </span>
+            <span class="news-time">
+              <i class="fas fa-clock"></i>
+              ${timeAgo}
+            </span>
+          </div>
+        </div>
+        <div class="news-actions">
+          <button class="news-link-btn" title="Open article">
+            <i class="fas fa-external-link-alt"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  getTimeAgo(date) {
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else {
+      return `${days}d ago`;
+    }
+  }
+
+  startNewsAutoRefresh() {
+    // Clear existing interval
+    if (this.newsRefreshInterval) {
+      clearInterval(this.newsRefreshInterval);
+    }
+
+    // Set up new interval for 1 minute (60000 ms)
+    this.newsRefreshInterval = setInterval(() => {
+      if (this.currentTab === "news") {
+        this.loadFinanceNews(true);
+      }
+    }, 60000);
+  }
+
+  stopNewsAutoRefresh() {
+    if (this.newsRefreshInterval) {
+      clearInterval(this.newsRefreshInterval);
+      this.newsRefreshInterval = null;
+    }
   }
 }
 
