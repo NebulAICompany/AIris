@@ -70,8 +70,6 @@ Elindeki wolfram_alpha_query fonksiyonunu kullanarak matematiksel hesaplamalar, 
 
 🔍 **Web Arama Durumu:** {web_context_part}
 
-{office_context_part}
-
 ❓ **Mevcut Sorgu:**
 {query}{instruction_part}
 
@@ -87,12 +85,9 @@ Elindeki wolfram_alpha_query fonksiyonunu kullanarak matematiksel hesaplamalar, 
 
 **🏢 Office İşlemleri İçin:**
 Aşağıdaki durumlardan herhangi birinde route_to_office_agent'ı kullan:
-- "Word belgesi oluştur/düzenle/dönüştür"
-- "Excel dosyası hazırla/analiz et"
-- "PDF'ye çevir"
-- "Tablo çıkar/düzenle"
-- "Dosya formatını değiştir"
-- Herhangi bir office uygulaması gerektiren işlem
+- "Word belgesi oluştur"
+- "Excel dosyası oluştur"
+- Herhangi bir office uygulaması gerektiren işlem olursa route_to_office_agent fonksiyonunu çağır
 
 
 📐 **Kalite Standartları:**
