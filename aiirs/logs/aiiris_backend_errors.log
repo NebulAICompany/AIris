@@ -1,0 +1,1 @@
+2025-06-20 23:19:23 - aiiris_backend.aiiris_backend.app.router - ERROR - [aiiris_backend.app.main] Error processing query: run_orchestration() missing 1 required positional argument: 'web_search_enabled'
