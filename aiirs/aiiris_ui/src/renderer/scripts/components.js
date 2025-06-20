@@ -20,7 +20,6 @@ class UIComponents {
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
 
-
     this.init();
   }
 
@@ -124,7 +123,6 @@ class UIComponents {
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
-
     // Wolfram Alpha toggle event
     const wolframToggle = document.getElementById("wolfram-toggle");
     if (wolframToggle) {
@@ -136,12 +134,14 @@ class UIComponents {
         // Example: window.airisAPI.setWolframEnabled?.(this.wolframEnabled);
       });
       console.log("wolframEnabled: ", this.wolframEnabled);
+    }
 
     // Finance News refresh button
     const refreshNewsButton = document.getElementById("refresh-news");
     if (refreshNewsButton) {
-      refreshNewsButton.addEventListener("click", () => this.loadFinanceNews(true));
-
+      refreshNewsButton.addEventListener("click", () =>
+        this.loadFinanceNews(true)
+      );
     }
 
     // Event delegation for dynamic buttons
@@ -162,11 +162,11 @@ class UIComponents {
       }
 
       // Handle news article clicks
-      if (e.target.closest('.news-item')) {
-        const newsItem = e.target.closest('.news-item');
+      if (e.target.closest(".news-item")) {
+        const newsItem = e.target.closest(".news-item");
         const link = newsItem.dataset.link;
         if (link) {
-          window.open(link, '_blank');
+          window.open(link, "_blank");
         }
       }
     });
@@ -220,7 +220,6 @@ class UIComponents {
       case "news":
         await this.loadFinanceNews();
         break;
-
     }
   }
 
@@ -1005,6 +1004,8 @@ class UIComponents {
   // Example method to get the flag for backend communication
   isWolframEnabled() {
     return this.wolframEnabled;
+  }
+
   // Finance News functionality
   async loadFinanceNews(forceRefresh = false) {
     const newsGrid = document.getElementById("news-grid");
@@ -1021,10 +1022,11 @@ class UIComponents {
           <p>Loading latest finance news...</p>
         </div>
       `;
-      
+
       if (refreshButton) {
         refreshButton.disabled = true;
-        refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
+        refreshButton.innerHTML =
+          '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
       }
     }
 
@@ -1034,7 +1036,7 @@ class UIComponents {
       if (result.success && result.articles.length > 0) {
         this.renderFinanceNews(result.articles);
         this.lastNewsUpdate = new Date().toISOString();
-        
+
         if (newsLastUpdated) {
           newsLastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
         }
@@ -1050,13 +1052,15 @@ class UIComponents {
         <div class="error-state">
           <i class="fas fa-exclamation-triangle"></i>
           <h3>Failed to load news</h3>
-          <p>${error.message || "Unable to fetch finance news. Please try again."}</p>
+          <p>${
+            error.message || "Unable to fetch finance news. Please try again."
+          }</p>
           <button class="btn btn-primary" onclick="window.uiComponents.loadFinanceNews(true)">
             <i class="fas fa-retry"></i> Retry
           </button>
         </div>
       `;
-      
+
       if (newsLastUpdated) {
         newsLastUpdated.textContent = "Failed to update";
       }
@@ -1084,32 +1088,36 @@ class UIComponents {
       }
     });
 
-    newsGrid.innerHTML = sortedArticles.map(article => this.createNewsItem(article)).join('');
+    newsGrid.innerHTML = sortedArticles
+      .map((article) => this.createNewsItem(article))
+      .join("");
   }
 
   createNewsItem(article) {
     const publishedDate = new Date(article.published);
     const timeAgo = this.getTimeAgo(publishedDate);
-    
+
     // Create image HTML if image URL is available
-    const imageHtml = article.image_url ? `
+    const imageHtml = article.image_url
+      ? `
       <div class="news-image">
         <img src="${Utils.escapeHtml(article.image_url)}" 
              alt="${Utils.escapeHtml(article.title)}"
              loading="lazy"
              onerror="this.style.display='none'"
-             ${article.image_width ? `width="${article.image_width}"` : ''}
-             ${article.image_height ? `height="${article.image_height}"` : ''}
+             ${article.image_width ? `width="${article.image_width}"` : ""}
+             ${article.image_height ? `height="${article.image_height}"` : ""}
         />
       </div>
-    ` : '';
-    
+    `
+      : "";
+
     return `
       <div class="news-item" data-link="${article.link}">
         ${imageHtml}
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
-          <p class="news-summary">${Utils.escapeHtml(article.summary || '')}</p>
+          <p class="news-summary">${Utils.escapeHtml(article.summary || "")}</p>
           <div class="news-meta">
             <span class="news-source">
               <i class="fas fa-building"></i>
@@ -1165,7 +1173,6 @@ class UIComponents {
       clearInterval(this.newsRefreshInterval);
       this.newsRefreshInterval = null;
     }
-
   }
 }
 
