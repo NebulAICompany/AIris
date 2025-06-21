@@ -2,11 +2,13 @@ import openpyxl
 from pathlib import Path
 import openai
 import base64
+import os
+
 
 class ExcelParser:
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = openai.OpenAI(api_key="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")
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def run(self):
         wb_obj = openpyxl.load_workbook(self.file_path)
@@ -19,9 +21,9 @@ class ExcelParser:
             for sheet in wb_obj.sheetnames:
                 f.write(f"--- Sheet: {sheet} ---\n")
                 worksheet = wb_obj[sheet]
-                
+
                 # Eğer bu bir normal worksheet ise
-                if isinstance(worksheet, openpyxl.worksheet.worksheet.Worksheet): 
+                if isinstance(worksheet, openpyxl.worksheet.worksheet.Worksheet):
                     for row in worksheet.iter_rows():
                         for cell in row:
                             row_number = cell.row
@@ -36,26 +38,32 @@ class ExcelParser:
                         image_bytes = image._data()  # Resmin byte datası
                         result = self.describe_image(image_bytes)
                         f.write(f"[Image {idx}]\n[Description] = {result}\n")
-               
+
                 if hasattr(worksheet, "_charts") and worksheet._charts:
                     for idx, chart in enumerate(worksheet._charts, start=1):
                         chart_data = []
-    
+
                         f.write(f"[Chart {idx}] = {chart.title}\n")
                         f.write(f"Chart type: {type(chart).__name__}\n")
                         chart_data.append(f"[Chart {idx}] = {chart.title}\n")
                         f.write(f"\nChart data\n")
-                        
+
                         for s in chart.series:
-                            
+
                             f.write(f"Seri adı: {s.title.strRef.strCache.pt[0].v}\n")
-                            chart_data.append(f"Seri adı: {s.title.strRef.strCache.pt[0].v}\n")
+                            chart_data.append(
+                                f"Seri adı: {s.title.strRef.strCache.pt[0].v}\n"
+                            )
                             # Değerler
                             values = []
                             if hasattr(s, "values"):
                                 # Bazı eski openpyxl sürümlerinde olabilir
                                 values = [v.value for v in s.values]
-                            elif hasattr(s, "val") and hasattr(s.val, "numRef") and hasattr(s.val.numRef, "numCache"):
+                            elif (
+                                hasattr(s, "val")
+                                and hasattr(s.val, "numRef")
+                                and hasattr(s.val.numRef, "numCache")
+                            ):
                                 num_cache = s.val.numRef.numCache
                                 values = [p.v for p in getattr(num_cache, "pt", [])]
                             if values:
@@ -65,7 +73,11 @@ class ExcelParser:
                             categories = []
                             if hasattr(s, "categories"):
                                 categories = [c.value for c in s.categories]
-                            elif hasattr(s, "cat") and hasattr(s.cat, "strRef") and hasattr(s.cat.strRef, "strCache"):
+                            elif (
+                                hasattr(s, "cat")
+                                and hasattr(s.cat, "strRef")
+                                and hasattr(s.cat.strRef, "strCache")
+                            ):
                                 str_cache = s.cat.strRef.strCache
                                 categories = [p.v for p in getattr(str_cache, "pt", [])]
                             if categories:
@@ -97,15 +109,15 @@ class ExcelParser:
                             "Sen bir veri analizi uzmanısın. Aşağıda verilen grafik bilgilerini analiz edip "
                             "anlaşılır ve detaylı bir Türkçe özet oluştur. Grafiğin türünü, gösterdiği verileri, "
                             "eğilimleri ve dikkat çeken noktaları açıkla. Grafik başlığına özellikle dikkat et."
-                        )
+                        ),
                     },
                     {
                         "role": "user",
-                        "content": f"Bu grafik verilerini analiz edip Türkçe açıklama yapar mısın?\n\n{chart_text}"
-                    }
+                        "content": f"Bu grafik verilerini analiz edip Türkçe açıklama yapar mısın?\n\n{chart_text}",
+                    },
                 ],
                 max_tokens=2000,
-                temperature=0.7
+                temperature=0.7,
             )
             description = response.choices[0].message.content
             return description
@@ -115,23 +127,32 @@ class ExcelParser:
 
     def describe_image(self, image_bytes):
         try:
-            client = openai.OpenAI(api_key="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")
-
             base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
-            response = client.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla."},
+                    {
+                        "role": "system",
+                        "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla.",
+                    },
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla."},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                        ]
-                    }
+                            {
+                                "type": "text",
+                                "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla.",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                },
+                            },
+                        ],
+                    },
                 ],
-                max_tokens=700
+                max_tokens=700,
             )
             description = response.choices[0].message.content
             return description

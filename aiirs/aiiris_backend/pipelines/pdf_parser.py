@@ -14,13 +14,11 @@ except LookupError:
 class PdfParser:
     def __init__(self, pdf_path: str):
         self.pdf_path = pdf_path
-        self.azure_endpoint_doc_intel = (
-            "https://aiirisworkmate.cognitiveservices.azure.com/" #"https://docaiiriswork.cognitiveservices.azure.com/"
+        self.azure_endpoint_doc_intel = os.getenv(
+            "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"
         )
-        self.azure_key_doc_intel = "AvSWJySp25R8Q4L2b3VzMdgkqoGAx0ZdVFxRn5qKXPy50bL1kOsbJQQJ99BFACfhMk5XJ3w3AAALACOGV3L3" #1Ab3Lpd2qh8sEtMCOZZLoW6QFqtBOVOYgwzcbo8I9BxBY9J3vtEcJQQJ99BEACYeBjFXJ3w3AAALACOG22i3"
-        self.client = openai.OpenAI(
-            api_key="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"
-        )
+        self.azure_key_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
         if not self.azure_endpoint_doc_intel or not self.azure_key_doc_intel:
             raise ValueError(
@@ -88,7 +86,9 @@ class PdfParser:
                             image_bytes = base_image["image"]
                             description = self.describe_image(image_bytes)
 
-                            dosya.write(f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n")
+                            dosya.write(
+                                f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n"
+                            )
                             occupied_boxes.append(img_polygon)
 
                         except Exception as e:
@@ -97,12 +97,20 @@ class PdfParser:
 
                     # Tabloları işle
                     page_tables = [
-                        t for t in result.tables
-                        if t.bounding_regions and t.bounding_regions[0].page_number == (local_page_num + 1)
+                        t
+                        for t in result.tables
+                        if t.bounding_regions
+                        and t.bounding_regions[0].page_number == (local_page_num + 1)
                     ]
                     for table_counter, table in enumerate(page_tables):
-                        table_regions = [region.polygon for region in table.bounding_regions]
-                        if any(self.check_overlap(region, occ) for region in table_regions for occ in occupied_boxes):
+                        table_regions = [
+                            region.polygon for region in table.bounding_regions
+                        ]
+                        if any(
+                            self.check_overlap(region, occ)
+                            for region in table_regions
+                            for occ in occupied_boxes
+                        ):
                             continue
 
                         dosya.write(f"\n[Table {table_counter + 1}]\n")
@@ -113,12 +121,19 @@ class PdfParser:
                         for row_index in range(max_row + 1):
                             for col_index in range(max_col + 1):
                                 cell = next(
-                                    (cell for cell in table.cells if cell.row_index == row_index and cell.column_index == col_index),
-                                    None
+                                    (
+                                        cell
+                                        for cell in table.cells
+                                        if cell.row_index == row_index
+                                        and cell.column_index == col_index
+                                    ),
+                                    None,
                                 )
                                 content = cell.content if cell else ""
                                 if content:
-                                    dosya.write(f"[{row_index},{col_index}]: {content}\n")
+                                    dosya.write(
+                                        f"[{row_index},{col_index}]: {content}\n"
+                                    )
                                     table_content.append(content)
 
                         table_description = self.describe_table(table_content)
@@ -130,12 +145,17 @@ class PdfParser:
 
                     # Paragrafları işle
                     page_paragraphs = [
-                        p for p in result.paragraphs
-                        if p.bounding_regions and p.bounding_regions[0].page_number == (local_page_num + 1)
+                        p
+                        for p in result.paragraphs
+                        if p.bounding_regions
+                        and p.bounding_regions[0].page_number == (local_page_num + 1)
                     ]
                     for paragraph in page_paragraphs:
                         para_region = paragraph.bounding_regions[0].polygon
-                        if any(self.check_overlap(para_region, box) for box in occupied_boxes):
+                        if any(
+                            self.check_overlap(para_region, box)
+                            for box in occupied_boxes
+                        ):
                             continue
                         sentences = nltk.sent_tokenize(paragraph.content)
                         for sentence in sentences:

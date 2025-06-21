@@ -30,3 +30,5 @@ requests
 colorama
 feedparser
 python-dateutil
+cohere
+python-dotenv

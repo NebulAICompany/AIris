@@ -9,7 +9,8 @@ from aiiris_backend.orchestrator.query_utils import (
 from aiiris_backend.llm.llm_engine import generate_answer
 from aiiris_backend.llm.prompt_templates import create_rag_agent
 from aiiris_backend.retrieval.retriever import retrieve_top_k, load_vectorstore
-from aiiris_backend.guardrails.pii_masker import mask_pii, unmask_pii
+from aiiris_backend.guardrails.pii_masker import mask_pii
+from aiiris_backend.guardrails.pii_deneme import pii_unmask
 from aiiris_backend.guardrails.filters import (
     check_input_violations,
     check_output_violations,
@@ -83,9 +84,7 @@ async def run_orchestration(
         metadata = doc["metadata"]
 
         metadata_str = ""
-        metadata_str += f"Source: {metadata.get('source')}\n"
-        metadata_str += f"Date: {metadata.get('date')}\n"
-        metadata_str += f"Category: {metadata.get('category')}\n"
+        metadata_str += f"Source: {metadata.get('file_name')}\n"
 
         context_entries.append(
             f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
@@ -120,6 +119,6 @@ async def run_orchestration(
         )  # tüm zararlıları sansürle
 
     # 7. Maske çöz
-    final_answer = unmask_pii(final_answer, pii_map)
+    final_answer = pii_unmask(final_answer, pii_map)
 
     return final_answer
