@@ -15,7 +15,7 @@ def _get_embeddings() -> Embeddings:
 
         return OpenAIEmbeddings(
             model="text-embedding-3-small",
-            api_key="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",
+            api_key=os.getenv("OPENAI_API_KEY"),
         )
     except (ImportError, Exception) as e:
         try:
@@ -23,7 +23,7 @@ def _get_embeddings() -> Embeddings:
 
             return HuggingFaceEmbeddings(
                 model_name="sentence-transformers/all-MiniLM-L6-v2",
-                api_key="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",
+                api_key=os.getenv("HUGGINGFACE_API_KEY"),
             )
         except (ImportError, Exception) as e:
             raise ImportError(

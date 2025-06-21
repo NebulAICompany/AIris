@@ -3,12 +3,18 @@ from typing import Tuple, Dict
 import json
 import hashlib
 
-# Example PII patterns (add more as needed)
-PII_PATTERNS = [
-    (r'\b\d{3}-\d{2}-\d{4}\b', 'SSN'),  # US Social Security Number
-    (r'\b\d{10}\b', 'PHONE'),           # 10-digit phone number
-    (r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b', 'EMAIL'),  # Email
-]
+PII_PATTERNS = {
+    "EMAIL": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b",
+    "TC": r"\b[1-9][0-9]{10}\b",  # 11-haneli TC Kimlik No, ilk rakam 0 olamaz
+    "IBAN": r"\bTR\d{2}(?:\s?\d{4}){4,5}\b",  # TR ile başlayan, 26 haneli IBAN, boşluk opsiyonel
+    "PHONE": r"\b(?:\+90|0)?\s?(?:\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{2}[-.\s]?\d{2}|\d{3}[-.\s]?\d{3}[-.\s]?\d{4})\b",  # Türkçe telefon formatları
+    "VERGI_NO": r"\b\d{10}\b",  # 10-haneli vergi numarası
+    "CREDIT_CARD": r"\b(?:\d[ -]*?){13,16}\b",  # Kredi kartı numarası (13-16 hane, boşluk/tire olabilir)
+    "PASSPORT": r"\b[A-Z][0-9]{7,8}\b",  # Türk pasaport numarası (örnek: U1234567)
+    "ADDRESS": r"\b(?:Mah\.|Sok\.|Cad\.|Blok|Apt\.|No:?\s?\d+)\b",  # Basit adres anahtar kelimeleri
+    # Daha fazla PII türü eklenebilir...
+}
+
 
 def pii_mask(text: str, mapping_json_path: str = None) -> Tuple[str, Dict[str, str]]:
     """
@@ -19,10 +25,11 @@ def pii_mask(text: str, mapping_json_path: str = None) -> Tuple[str, Dict[str, s
     def make_mask_func(pii_type):
         def mask_match(match):
             pii_value = match.group(0)
-            hash_digest = hashlib.sha256(pii_value.encode('utf-8')).hexdigest()[:10]
+            hash_digest = hashlib.sha256(pii_value.encode("utf-8")).hexdigest()[:10]
             key = f"<{pii_type}_{hash_digest}>"
             mapping[key] = pii_value
             return key
+
         return mask_match
 
     masked_text = text
@@ -34,15 +41,20 @@ def pii_mask(text: str, mapping_json_path: str = None) -> Tuple[str, Dict[str, s
 
     return masked_text, mapping
 
+
 def save_mapping_to_json(mapping: Dict[str, str], filepath: str):
-    with open(filepath, 'w', encoding='utf-8') as f:
+    with open(filepath, "w", encoding="utf-8") as f:
         json.dump(mapping, f, ensure_ascii=False, indent=2)
 
+
 def load_mapping_from_json(filepath: str) -> Dict[str, str]:
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def pii_unmask(masked_text: str, mapping: Dict[str, str] = None, mapping_json_path: str = None) -> str:
+
+def pii_unmask(
+    masked_text: str, mapping: Dict[str, str] = None, mapping_json_path: str = None
+) -> str:
     """
     Replaces mask tokens in the text with the original PII using the mapping.
     If mapping is not provided, loads it from mapping_json_path.
@@ -54,6 +66,7 @@ def pii_unmask(masked_text: str, mapping: Dict[str, str] = None, mapping_json_pa
     for key, value in mapping.items():
         unmasked_text = unmasked_text.replace(key, value)
     return unmasked_text
+
 
 # Example usage:
 if __name__ == "__main__":

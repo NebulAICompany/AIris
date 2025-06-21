@@ -7,8 +7,7 @@ from .pii_deneme import pii_mask
 import json
 from openai import OpenAI
 from pathlib import Path
-import asyncio
-from typing import List, Dict, Any
+from typing import List, Dict
 import time
 from aiiris_backend.monitoring.metrics import (
     hype_indexing_duration_seconds,
@@ -39,9 +38,7 @@ class HyPEVectorStorePipeline:
             breakpoint_threshold_type="percentile",
             breakpoint_threshold_amount=80,  # Lower threshold to create more chunks
         )
-        self.client = OpenAI(
-            api_key="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"
-        )
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def generate_hypothetical_prompts(
         self, original_chunk: str, chunk_metadata: Dict
@@ -89,10 +86,10 @@ Her soruyu ||| ile ayır. Sadece soruları ver, açıklama yapma."""
             user_prompt = f"""Belge içeriği:
 {original_chunk}
 
-Bu belge içeriği için kullanıcıların sorabileceği 5 farklı hipotetik soru/sorgu üret:"""
+Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik soru/sorgu üret:"""
 
             response = self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4.1",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
@@ -313,11 +310,7 @@ class VectorStorePipeline(HyPEVectorStorePipeline):
     pass
 
 
-import os
-
-os.environ["OPENAI_API_KEY"] = (
-    "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"  # Replace with your OpenAI key
-)
+# Remove hardcoded API key - now uses environment variable
 # VectorStorePipeline().run(
 #     uploads_path="D:/GitHub/vectorrag/Yusuf/uploads",
 #     save_path="D:/GitHub/vectorrag/Yusuf/vectorstore",
