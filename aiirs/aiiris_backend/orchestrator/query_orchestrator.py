@@ -60,22 +60,33 @@ async def run_orchestration(
     masked_query, pii_map = mask_pii(preprocessed_query)
     print(f"Masked Query: {masked_query}")
 
-    # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
-    retrieved_docs = retrieve_top_k(
-        preprocessed_query, k=15
-    )  # Get more docs for better reranking
-    print(type(retrieved_docs))
+    # # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
+    # retrieved_docs = retrieve_top_k(
+    #     preprocessed_query, k=15
+    # )  # Get more docs for better reranking
+    # print(type(retrieved_docs))
 
-    if not retrieved_docs:
+    # if not retrieved_docs:
+    #   return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+
+    # # Extract only the content from the retrieved docs before reranking
+    # doc_contents = [
+    #     {"content": doc["content"], "metadata": doc["metadata"]}
+    #     for doc in retrieved_docs
+    # ]
+    # reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=5)
+
+    # 4. Enhanced Retrieval with RSE (Relevant Segment Extraction)
+    from aiiris_backend.retrieval.rse import retrieve_with_rse
+    
+    rse_chunks, rse_scores = retrieve_with_rse(preprocessed_query, k=15, preset="balanced")
+    
+    if not rse_chunks:
         return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
-
-    # Extract only the content from the retrieved docs before reranking
-    doc_contents = [
-        {"content": doc["content"], "metadata": doc["metadata"]}
-        for doc in retrieved_docs
-    ]
-
-    reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=5)
+    #print(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
+    
+    # Use RSE-enhanced chunks directly (they're already optimized)
+    reranked_docs = rse_chunks[:5]  # Take top 5 RSE segments
 
     context_entries = []
 
