@@ -134,6 +134,10 @@
               <i class="fas fa-file-alt"></i>
               <span>My Files</span>
             </button>
+            <button class="nav-item" data-tab="verification">
+              <i class="fas fa-shield-alt"></i>
+              <span>Document Verification</span>
+            </button>
             <button class="nav-item" data-tab="news">
               <i class="fas fa-newspaper"></i>
               <span>Finance News</span>
@@ -264,6 +268,202 @@
                   <button class="cta-button" data-tab="upload">
                     Upload Files
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Verification Tab -->
+          <div id="verification-tab" class="tab-content">
+            <div class="verification-container">
+              <div class="verification-header">
+                <h2>Document Verification</h2>
+                <p>Verify the authenticity and compliance of your financial documents</p>
+              </div>
+
+              <div class="verification-form">
+                <div class="verification-upload-area" id="verification-upload-area">
+                  <div class="verification-upload-content">
+                    <div class="upload-icon">
+                      <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Upload Document for Verification</h3>
+                    <p>
+                      or
+                      <button class="upload-browse-btn" id="browse-verification-files">
+                        browse files
+                      </button>
+                    </p>
+                    <div class="supported-formats">
+                      <span>Supported: PDF, JPG, PNG, TIFF</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden file input for verification -->
+                <input
+                  type="file"
+                  id="verification-file-input"
+                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.bmp"
+                  style="display: none"
+                />
+
+                <div class="verification-options">
+                  <div class="verification-type-selection">
+                    <label for="verification-type">Document Type:</label>
+                    <select id="verification-type" class="verification-type-select">
+                      <option value="auto">Auto-detect</option>
+                      <option value="invoice">Fatura</option>
+                      <option value="receipt">Fiş/Makbuz</option>
+                      <option value="bank_statement">Banka Ekstresi</option>
+                      <option value="payslip">Maaş Bordrosu</option>
+                      <option value="contract">Sözleşme</option>
+                      <option value="tax_declaration">Vergi Beyannamesi</option>
+                      <option value="expense_voucher">Gider Pusulası</option>
+                      <option value="other">Diğer</option>
+                    </select>
+                  </div>
+
+                  <div class="verification-actions">
+                    <button id="verify-button" class="btn btn-primary" disabled>
+                      <i class="fas fa-shield-alt"></i> Verify Document
+                    </button>
+                    <button id="clear-verification" class="btn btn-secondary">
+                      <i class="fas fa-times"></i> Clear
+                    </button>
+                  </div>
+                </div>
+
+                <div class="selected-file-display" id="verification-selected-file" style="display: none;">
+                  <div class="file-info">
+                    <i class="fas fa-file"></i>
+                    <span class="file-name"></span>
+                    <span class="file-size"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Verification Results -->
+              <div class="verification-results" id="verification-results" style="display: none;">
+                <div class="verification-results-header">
+                  <h3>Verification Results</h3>
+                  <div class="verification-status" id="verification-status">
+                    <span class="status-indicator"></span>
+                    <span class="status-text"></span>
+                  </div>
+                </div>
+
+                <div class="verification-summary">
+                  <div class="summary-item">
+                    <label>Document Type:</label>
+                    <span id="result-document-type">-</span>
+                  </div>
+                  <div class="summary-item">
+                    <label>Confidence Score:</label>
+                    <span id="result-confidence-score">-</span>
+                  </div>
+                  <div class="summary-item">
+                    <label>Verification Date:</label>
+                    <span id="result-timestamp">-</span>
+                  </div>
+                </div>
+
+                <div class="verification-stages" id="verification-stages">
+                  <h4>Verification Stages</h4>
+                  <div class="stages-grid">
+                    <div class="stage-item" data-stage="quality_control">
+                      <div class="stage-icon">
+                        <i class="fas fa-search"></i>
+                      </div>
+                      <div class="stage-content">
+                        <h5>Quality Control</h5>
+                        <div class="stage-status">
+                          <span class="stage-indicator"></span>
+                          <span class="stage-text">Not started</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stage-item" data-stage="classification">
+                      <div class="stage-icon">
+                        <i class="fas fa-tags"></i>
+                      </div>
+                      <div class="stage-content">
+                        <h5>Document Classification</h5>
+                        <div class="stage-status">
+                          <span class="stage-indicator"></span>
+                          <span class="stage-text">Not started</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stage-item" data-stage="text_extraction">
+                      <div class="stage-icon">
+                        <i class="fas fa-text-width"></i>
+                      </div>
+                      <div class="stage-content">
+                        <h5>Text Extraction</h5>
+                        <div class="stage-status">
+                          <span class="stage-indicator"></span>
+                          <span class="stage-text">Not started</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stage-item" data-stage="template_validation">
+                      <div class="stage-icon">
+                        <i class="fas fa-check-square"></i>
+                      </div>
+                      <div class="stage-content">
+                        <h5>Template Validation</h5>
+                        <div class="stage-status">
+                          <span class="stage-indicator"></span>
+                          <span class="stage-text">Not started</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stage-item" data-stage="data_consistency">
+                      <div class="stage-icon">
+                        <i class="fas fa-balance-scale"></i>
+                      </div>
+                      <div class="stage-content">
+                        <h5>Data Consistency</h5>
+                        <div class="stage-status">
+                          <span class="stage-indicator"></span>
+                          <span class="stage-text">Not started</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stage-item" data-stage="fraud_analysis">
+                      <div class="stage-icon">
+                        <i class="fas fa-shield-alt"></i>
+                      </div>
+                      <div class="stage-content">
+                        <h5>Fraud Analysis</h5>
+                        <div class="stage-status">
+                          <span class="stage-indicator"></span>
+                          <span class="stage-text">Not started</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="verification-details" id="verification-details">
+                  <h4>Detailed Results</h4>
+                  <div class="details-content">
+                    <div class="warnings-section" id="warnings-section" style="display: none;">
+                      <h5><i class="fas fa-exclamation-triangle"></i> Warnings</h5>
+                      <ul id="warnings-list"></ul>
+                    </div>
+                    
+                    <div class="errors-section" id="errors-section" style="display: none;">
+                      <h5><i class="fas fa-times-circle"></i> Errors</h5>
+                      <ul id="errors-list"></ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

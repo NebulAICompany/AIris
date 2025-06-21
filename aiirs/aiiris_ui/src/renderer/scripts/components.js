@@ -144,6 +144,9 @@ class UIComponents {
       );
     }
 
+    // Document Verification functionality
+    this.setupVerificationListeners();
+
     // Event delegation for dynamic buttons
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
@@ -1172,6 +1175,441 @@ class UIComponents {
     if (this.newsRefreshInterval) {
       clearInterval(this.newsRefreshInterval);
       this.newsRefreshInterval = null;
+    }
+  }
+
+  // Document Verification Methods
+  setupVerificationListeners() {
+    // Verification upload area
+    const verificationUploadArea = document.getElementById("verification-upload-area");
+    const verificationFileInput = document.getElementById("verification-file-input");
+    const browseVerificationButton = document.getElementById("browse-verification-files");
+    const verifyButton = document.getElementById("verify-button");
+    const clearVerificationButton = document.getElementById("clear-verification");
+
+    if (verificationUploadArea) {
+      verificationUploadArea.addEventListener("dragover", (e) => this.handleVerificationDragOver(e));
+      verificationUploadArea.addEventListener("dragleave", (e) => this.handleVerificationDragLeave(e));
+      verificationUploadArea.addEventListener("drop", (e) => this.handleVerificationFileDrop(e));
+      verificationUploadArea.addEventListener("click", () => verificationFileInput?.click());
+    }
+
+    if (browseVerificationButton) {
+      browseVerificationButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        verificationFileInput?.click();
+      });
+    }
+
+    if (verificationFileInput) {
+      verificationFileInput.addEventListener("change", (e) => this.handleVerificationFileSelect(e));
+    }
+
+    if (verifyButton) {
+      verifyButton.addEventListener("click", () => this.runDocumentVerification());
+    }
+
+    if (clearVerificationButton) {
+      clearVerificationButton.addEventListener("click", () => this.clearVerification());
+    }
+  }
+
+  handleVerificationDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add("dragover");
+  }
+
+  handleVerificationDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove("dragover");
+  }
+
+  handleVerificationFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove("dragover");
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      this.selectVerificationFile(files[0]);
+    }
+  }
+
+  handleVerificationFileSelect(e) {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      this.selectVerificationFile(files[0]);
+    }
+  }
+
+  selectVerificationFile(file) {
+    // Validate file type
+    const supportedFormats = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.bmp'];
+    const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    
+    if (!supportedFormats.includes(fileExt)) {
+      this.showNotification("Unsupported file format. Please select a PDF, JPG, PNG, or TIFF file.", "error");
+      return;
+    }
+
+    // Check file size (max 10MB for verification)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      this.showNotification("File too large. Please select a file smaller than 10MB.", "error");
+      return;
+    }
+
+    // Store the selected file
+    this.selectedVerificationFile = file;
+
+    // Show selected file
+    this.displaySelectedVerificationFile(file);
+
+    // Enable verify button
+    const verifyButton = document.getElementById("verify-button");
+    if (verifyButton) {
+      verifyButton.disabled = false;
+    }
+  }
+
+  displaySelectedVerificationFile(file) {
+    const selectedFileDisplay = document.getElementById("verification-selected-file");
+    const fileName = selectedFileDisplay?.querySelector(".file-name");
+    const fileSize = selectedFileDisplay?.querySelector(".file-size");
+
+    if (selectedFileDisplay && fileName && fileSize) {
+      fileName.textContent = file.name;
+      fileSize.textContent = Utils.formatFileSize(file.size);
+      selectedFileDisplay.style.display = "block";
+    }
+  }
+
+  async runDocumentVerification() {
+    if (!this.selectedVerificationFile) {
+      this.showNotification("Please select a file first.", "error");
+      return;
+    }
+
+    const verifyButton = document.getElementById("verify-button");
+    const verificationTypeSelect = document.getElementById("verification-type");
+    const verificationResults = document.getElementById("verification-results");
+
+    try {
+      // Disable verify button and show loading
+      if (verifyButton) {
+        verifyButton.disabled = true;
+        verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+      }
+
+      // Get selected verification type
+      const verificationType = verificationTypeSelect?.value || "auto";
+
+      // Show processing state
+      this.showVerificationProcessing();
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', this.selectedVerificationFile);
+      formData.append('verification_type', verificationType);
+
+      // Call verification API
+      const result = await window.apiService.verifyDocument(formData);
+
+      if (result.success) {
+        // Display verification results
+        this.displayVerificationResults(result.data);
+        
+        // Show results section
+        if (verificationResults) {
+          verificationResults.style.display = "block";
+        }
+
+        this.showNotification("Document verification completed!", "success");
+      } else {
+        throw new Error(result.error || "Verification failed");
+      }
+
+    } catch (error) {
+      console.error("Verification error:", error);
+      this.showNotification(`Verification failed: ${error.message}`, "error");
+      this.hideVerificationResults();
+    } finally {
+      // Re-enable verify button
+      if (verifyButton) {
+        verifyButton.disabled = false;
+        verifyButton.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Document';
+      }
+    }
+  }
+
+  showVerificationProcessing() {
+    const verificationResults = document.getElementById("verification-results");
+    const verificationStatus = document.getElementById("verification-status");
+
+    if (verificationResults) {
+      verificationResults.style.display = "block";
+    }
+
+    if (verificationStatus) {
+      verificationStatus.className = "verification-status processing";
+      verificationStatus.innerHTML = `
+        <span class="status-indicator"></span>
+        <span class="status-text">Processing...</span>
+      `;
+    }
+
+    // Reset all stages to processing state
+    this.resetVerificationStages();
+  }
+
+  resetVerificationStages() {
+    const stageItems = document.querySelectorAll(".stage-item");
+    stageItems.forEach(stage => {
+      stage.className = "stage-item processing";
+      const stageText = stage.querySelector(".stage-text");
+      if (stageText) {
+        stageText.textContent = "Processing...";
+      }
+    });
+  }
+
+  displayVerificationResults(results) {
+    // Update overall status
+    this.updateVerificationStatus(results.status, results.confidence_score);
+
+    // Update summary
+    this.updateVerificationSummary(results);
+
+    // Update stages
+    this.updateVerificationStages(results.stages);
+
+    // Update warnings and errors
+    this.updateVerificationDetails(results.warnings, results.errors);
+  }
+
+  updateVerificationStatus(status, confidenceScore) {
+    const verificationStatus = document.getElementById("verification-status");
+
+    if (verificationStatus) {
+      let statusText = "";
+      let statusClass = "";
+
+      switch (status) {
+        case "verified":
+          statusText = "Verified";
+          statusClass = "verified";
+          break;
+        case "review_required":
+          statusText = "Review Required";
+          statusClass = "review_required";
+          break;
+        case "rejected":
+          statusText = "Rejected";
+          statusClass = "rejected";
+          break;
+        default:
+          statusText = "Unknown";
+          statusClass = "error";
+      }
+
+      verificationStatus.className = `verification-status ${statusClass}`;
+      verificationStatus.innerHTML = `
+        <span class="status-indicator"></span>
+        <span class="status-text">${statusText}</span>
+      `;
+    }
+  }
+
+  updateVerificationSummary(results) {
+    const documentType = document.getElementById("result-document-type");
+    const confidenceScore = document.getElementById("result-confidence-score");
+    const timestamp = document.getElementById("result-timestamp");
+
+    if (documentType) {
+      const typeDisplay = this.getVerificationTypeDisplay(results.verification_type);
+      documentType.textContent = typeDisplay;
+    }
+
+    if (confidenceScore) {
+      const score = Math.round(results.confidence_score * 100);
+      confidenceScore.textContent = `${score}%`;
+      
+      // Color code the confidence score
+      if (score >= 80) {
+        confidenceScore.style.color = "var(--success)";
+      } else if (score >= 60) {
+        confidenceScore.style.color = "var(--warning)";
+      } else {
+        confidenceScore.style.color = "var(--error)";
+      }
+    }
+
+    if (timestamp) {
+      const date = new Date(results.timestamp);
+      timestamp.textContent = date.toLocaleString();
+    }
+  }
+
+  getVerificationTypeDisplay(type) {
+    const types = {
+      "invoice": "Fatura",
+      "receipt": "Fiş/Makbuz",
+      "bank_statement": "Banka Ekstresi",
+      "payslip": "Maaş Bordrosu",
+      "contract": "Sözleşme",
+      "tax_declaration": "Vergi Beyannamesi",
+      "expense_voucher": "Gider Pusulası",
+      "other": "Diğer",
+      "unknown": "Bilinmiyor"
+    };
+    return types[type] || type;
+  }
+
+  updateVerificationStages(stages) {
+    const stageElements = {
+      "quality_control": document.querySelector('[data-stage="quality_control"]'),
+      "classification": document.querySelector('[data-stage="classification"]'),
+      "text_extraction": document.querySelector('[data-stage="text_extraction"]'),
+      "template_validation": document.querySelector('[data-stage="template_validation"]'),
+      "data_consistency": document.querySelector('[data-stage="data_consistency"]'),
+      "fraud_analysis": document.querySelector('[data-stage="fraud_analysis"]')
+    };
+
+    Object.keys(stages).forEach(stageName => {
+      const stageData = stages[stageName];
+      const stageElement = stageElements[stageName];
+
+      if (stageElement && stageData) {
+        const stageText = stageElement.querySelector(".stage-text");
+        let stageClass = "stage-item";
+        let statusText = "";
+
+        // Determine stage status based on stage data
+        if (stageName === "quality_control") {
+          if (stageData.passed) {
+            stageClass += " success";
+            statusText = "Passed";
+          } else {
+            stageClass += " error";
+            statusText = "Failed";
+          }
+        } else if (stageName === "classification") {
+          if (stageData.confidence > 0.7) {
+            stageClass += " success";
+            statusText = "Completed";
+          } else if (stageData.confidence > 0.4) {
+            stageClass += " warning";
+            statusText = "Low confidence";
+          } else {
+            stageClass += " error";
+            statusText = "Failed";
+          }
+        } else if (stageName === "template_validation") {
+          if (stageData.valid) {
+            stageClass += " success";
+            statusText = "Valid";
+          } else {
+            stageClass += " error";
+            statusText = "Invalid";
+          }
+        } else if (stageName === "data_consistency") {
+          if (stageData.consistent) {
+            stageClass += " success";
+            statusText = "Consistent";
+          } else {
+            stageClass += " error";
+            statusText = "Issues found";
+          }
+        } else if (stageName === "fraud_analysis") {
+          if (stageData.risk_level === "low") {
+            stageClass += " success";
+            statusText = "Low risk";
+          } else if (stageData.risk_level === "medium") {
+            stageClass += " warning";
+            statusText = "Medium risk";
+          } else {
+            stageClass += " error";
+            statusText = "High risk";
+          }
+        } else {
+          // Default handling for other stages
+          stageClass += " success";
+          statusText = "Completed";
+        }
+
+        stageElement.className = stageClass;
+        if (stageText) {
+          stageText.textContent = statusText;
+        }
+      }
+    });
+  }
+
+  updateVerificationDetails(warnings, errors) {
+    const warningsSection = document.getElementById("warnings-section");
+    const errorsSection = document.getElementById("errors-section");
+    const warningsList = document.getElementById("warnings-list");
+    const errorsList = document.getElementById("errors-list");
+
+    // Handle warnings
+    if (warnings && warnings.length > 0 && warningsSection && warningsList) {
+      warningsList.innerHTML = warnings.map(warning => 
+        `<li>${Utils.escapeHtml(warning)}</li>`
+      ).join('');
+      warningsSection.style.display = "block";
+    } else if (warningsSection) {
+      warningsSection.style.display = "none";
+    }
+
+    // Handle errors
+    if (errors && errors.length > 0 && errorsSection && errorsList) {
+      errorsList.innerHTML = errors.map(error => 
+        `<li>${Utils.escapeHtml(error)}</li>`
+      ).join('');
+      errorsSection.style.display = "block";
+    } else if (errorsSection) {
+      errorsSection.style.display = "none";
+    }
+  }
+
+  clearVerification() {
+    // Clear selected file
+    this.selectedVerificationFile = null;
+
+    // Hide selected file display
+    const selectedFileDisplay = document.getElementById("verification-selected-file");
+    if (selectedFileDisplay) {
+      selectedFileDisplay.style.display = "none";
+    }
+
+    // Reset file input
+    const verificationFileInput = document.getElementById("verification-file-input");
+    if (verificationFileInput) {
+      verificationFileInput.value = "";
+    }
+
+    // Reset verification type to auto
+    const verificationTypeSelect = document.getElementById("verification-type");
+    if (verificationTypeSelect) {
+      verificationTypeSelect.value = "auto";
+    }
+
+    // Disable verify button
+    const verifyButton = document.getElementById("verify-button");
+    if (verifyButton) {
+      verifyButton.disabled = true;
+    }
+
+    // Hide results
+    this.hideVerificationResults();
+  }
+
+  hideVerificationResults() {
+    const verificationResults = document.getElementById("verification-results");
+    if (verificationResults) {
+      verificationResults.style.display = "none";
     }
   }
 }

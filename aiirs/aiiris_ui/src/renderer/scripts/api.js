@@ -418,6 +418,49 @@ class APIService {
     }
   }
 
+  // Document verification
+  async verifyDocument(formData) {
+    try {
+      const config = {
+        timeout: 120000, // 2 minutes for verification
+      };
+
+      const response = await this.api.post("/api/verify", formData, config);
+
+      return {
+        success: true,
+        data: response.data,
+        message: "Document verification completed",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  // Get verification types
+  async getVerificationTypes() {
+    try {
+      const response = await this.api.get("/api/verification-types");
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        data: {
+          verification_types: {},
+          supported_formats: []
+        }
+      };
+    }
+  }
+
   // Dev tools (handled by main process)
   openDevTools() {
     if (window.airisAPI && window.airisAPI.openDevTools) {

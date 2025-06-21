@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from aiiris_backend.orchestrator.query_orchestrator import run_orchestration
 from aiiris_backend.monitoring.metrics import api_requests_total
 from aiiris_backend.libs.logger import get_logger
+from aiiris_backend.pipelines.document_verification import verification_pipeline
 import shutil
 from pathlib import Path
 import os
@@ -192,6 +193,21 @@ class UploadRequest(BaseModel):
     file: str
 
 
+class VerificationRequest(BaseModel):
+    verification_type: str = "auto"
+
+
+class VerificationResponse(BaseModel):
+    file_name: str
+    verification_type: str
+    status: str
+    confidence_score: float
+    timestamp: str
+    stages: Dict[str, Any]
+    warnings: List[str] = []
+    errors: List[str] = []
+
+
 @router.post("/query")
 async def handle_query(request: QueryRequest):
     """
@@ -265,6 +281,80 @@ def handle_upload(file: UploadFile = File(...)):
         logger.error(f"File upload error for {file.filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
+        )
+
+
+@router.post("/verify")
+def handle_verification(file: UploadFile = File(...), verification_type: str = "auto"):
+    """
+    Handle document verification requests.
+    Upload a document and verify its authenticity and compliance.
+    """
+    global request_counter
+    try:
+        # Increment simple counter
+        request_counter += 1
+
+        logger.info(f"Starting verification for: {file.filename} (type: {verification_type})")
+
+        # Ensure verification uploads directory exists
+        verification_dir = Path(__file__).parent.parent / "verification_uploads"
+        verification_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save uploaded file temporarily
+        file_path = verification_dir / file.filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        logger.info(f"File saved for verification: {file_path}")
+
+        # Run document verification
+        verification_result = verification_pipeline.verify_document(
+            str(file_path), 
+            verification_type
+        )
+
+        # Clean up the temporary file
+        try:
+            file_path.unlink()
+        except Exception as cleanup_error:
+            logger.warning(f"Failed to cleanup verification file: {cleanup_error}")
+
+        logger.info(f"Verification completed for {file.filename}: {verification_result['status']}")
+
+        return verification_result
+
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Verification error for {file.filename}: {error_message}")
+        
+        # Clean up file on error
+        try:
+            if 'file_path' in locals():
+                file_path.unlink()
+        except:
+            pass
+            
+        raise HTTPException(
+            status_code=500, detail=f"Doküman doğrulama hatası: {error_message}"
+        )
+
+
+@router.get("/verification-types")
+def get_verification_types():
+    """
+    Get available document verification types.
+    """
+    try:
+        return {
+            "verification_types": verification_pipeline.verification_types,
+            "supported_formats": verification_pipeline.supported_formats
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error fetching verification types: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching verification types: {error_message}"
         )
 
 

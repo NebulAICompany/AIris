@@ -1,0 +1,75 @@
+MİGROS SATIŞ FİŞİ
+═══════════════════════════════════════
+
+MİGROS TİCARET A.Ş.
+Vergi No: 0261006814
+Vergi Dairesi: Kadıköy
+Adres: Bağdat Cad. No:432 Kadıköy/İSTANBUL
+Tel: (0216) 555 12 34
+
+═══════════════════════════════════════
+
+FİŞ NO: 0012457891
+KASIYER: AYŞE K.
+TARİH: 15.03.2024
+SAAT: 14:25:33
+KASA NO: 003
+
+═══════════════════════════════════════
+
+ÜRÜNLER:
+
+Ekmek Beyaz 500gr          1x    4,50 TL
+Süt Yarım Yağlı 1lt        2x    8,75 TL  
+Peynir Beyaz 500gr         1x   48,90 TL
+Domates Kg                1.2x  12,60 TL
+Elma Kg                   0.8x  11,20 TL
+Çay Poşet 100'lü          1x   24,80 TL
+Yoğurt 500gr              3x   15,60 TL
+Su 1.5lt                  2x    6,40 TL
+
+═══════════════════════════════════════
+
+ARA TOPLAM:                     132,75 TL
+İNDİRİM (%5):                    -6,64 TL
+NET TOPLAM:                     126,11 TL
+KDV (%8):                         8,41 TL
+KDV (%18):                        9,62 TL
+GENEL TOPLAM:                   144,14 TL
+
+═══════════════════════════════════════
+
+ÖDEME BİLGİLERİ:
+ÖDEME ŞEKLİ: KREDİ KARTI
+KART NO: ****-****-****-1234
+BANKA: Garanti BBVA
+ONAY KODU: 123456
+REF NO: 789012345
+
+═══════════════════════════════════════
+
+MİGROS MONEY PUAN:
+KART NO: 1234567890123456
+KAZANILAN PUAN: 14
+TOPLAM PUAN: 1,247
+
+═══════════════════════════════════════
+
+YASAL BİLGİLER:
+Fiş seri no: AA0012457891
+Zaman damgası: 15.03.2024 14:25:33
+EFT Maliye No: 98765432
+
+Bu fiş KDV iadesinde geçerlidir.
+14 gün içinde iade hakkınız vardır.
+İade için fiş ve ürün birlikte getirilmelidir.
+
+Teşekkürler, iyi günler dileriz!
+
+═══════════════════════════════════════
+
+MÜŞTERİ HİZMETLERİ: 444 6 647
+www.migros.com.tr
+
+QR Kod: [Digital Receipt Available]
+E-Fiş için: migros.com.tr/e-fis 

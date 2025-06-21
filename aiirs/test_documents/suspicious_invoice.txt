@@ -1,0 +1,59 @@
+FATURA / INVOICE
+═══════════════════════════════════════
+
+SATAN / SELLER:
+ABC Teknoloji Ltd. Şti.
+Vergi No: 1234567890
+Adres: Atatürk Cad. No:123 Kadıköy/İSTANBUL
+
+ALICI / BUYER:  
+XYZ Şirketi A.Ş.
+Vergi No: 9876543210
+Adres: Cumhuriyet Mah. Konya
+
+═══════════════════════════════════════
+
+Fatura No: F-2024-001
+Fatura Tarihi: 15.02.2024
+Vade Tarihi: 32.13.2024  ⚠️ INVALID DATE
+Düzenleme Tarihi: 10.02.2024  ⚠️ INCONSISTENT
+
+═══════════════════════════════════════
+
+ÜRÜN/HİZMET DETAYLARI:
+
+1. Yazılım Geliştirme Hizmeti
+   Miktar: 1 adet
+   Birim Fiyat: 999.999.999,99 TL  ⚠️ SUSPICIOUS AMOUNT
+   Toplam: 999.999.999,99 TL
+
+2. Danışmanlık Hizmeti
+   Miktar: 0.5 ay
+   Birim Fiyat: 50.000,00 TL
+   Toplam: 25.000,00 TL
+
+═══════════════════════════════════════
+
+Ara Toplam: 1.000.024.999,99 TL
+KDV (%18): 180.004.499,98 TL  ⚠️ INCORRECT CALCULATION
+GENEL TOPLAM: 1.180.029.499,97 TL
+
+═══════════════════════════════════════
+
+BANKA BİLGİLERİ:
+IBAN: TR00 0000 0000 0000 0000 0000 00  ⚠️ INVALID IBAN
+Banka: Photoshop Bank  ⚠️ SUSPICIOUS BANK NAME
+Hesap Adı: ABC Teknoloji
+
+───────────────────────────────────────
+Bu belge photoshop ile düzenlenmiştir  ⚠️ RED FLAG
+Created with FAKE_INVOICE_GENERATOR v1.0  ⚠️ RED FLAG
+───────────────────────────────────────
+
+İmza: [Dijital İmza]
+Yetkili: Sahte İsim  ⚠️ SUSPICIOUS NAME
+
+* Bu fatura 72 saat içinde ödenmezse 
+  %500 faiz uygulanacaktır  ⚠️ UNREALISTIC TERMS
+
+UYARI: Bu belge kopya/duplicate olabilir  ⚠️ SUSPICIOUS TEXT 
