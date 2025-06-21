@@ -450,10 +450,13 @@ class UIComponents {
             `;
 
       // Apply metadata formatting immediately after adding the message
-      const messageTextElement = messageDiv.querySelector(".message-text");
-      if (messageTextElement) {
-        this.applyMetadataFormatting(messageTextElement);
-      }
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const messageTextElement = messageDiv.querySelector(".message-text");
+        if (messageTextElement) {
+          this.applyMetadataFormatting(messageTextElement);
+        }
+      });
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -586,13 +589,16 @@ class UIComponents {
         // Update UI to show active session
         this.updateChatSessionsUI();
 
-        // Fix existing messages metadata formatting with multiple attempts
-        const applyFormatting = () => this.fixExistingMetadataFormatting();
+        // Apply metadata formatting more reliably
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          this.fixExistingMetadataFormatting();
 
-        // Apply at different intervals to ensure proper formatting
-        setTimeout(applyFormatting, 50);
-        setTimeout(applyFormatting, 200);
-        setTimeout(applyFormatting, 500);
+          // Apply additional formatting passes to catch any delayed renders
+          setTimeout(() => this.fixExistingMetadataFormatting(), 100);
+          setTimeout(() => this.fixExistingMetadataFormatting(), 300);
+          setTimeout(() => this.fixExistingMetadataFormatting(), 600);
+        });
 
         console.log("Loaded chat session:", sessionId);
         this.showNotification("Chat session loaded", "success");
@@ -918,6 +924,10 @@ class UIComponents {
       const messageText = messageDiv.querySelector(".message-text");
       if (!messageText) return;
 
+      // Check if metadata is already properly formatted
+      const hasFormattedMetadata = messageText.querySelector("pre code");
+      const hasMetadataLabel = messageText.querySelector(".metadata-label");
+
       const currentContent = messageText.textContent || messageText.innerText;
 
       // More flexible check for metadata presence
@@ -927,6 +937,8 @@ class UIComponents {
         "📊",
         "Kaynak:",
         "İşlem Durumu:",
+        "Kategori:",
+        "Belirtilmiş",
       ];
 
       const hasMetadata = metadataIndicators.some((indicator) =>
@@ -934,6 +946,11 @@ class UIComponents {
       );
 
       if (hasMetadata) {
+        // If already has formatted metadata with label, skip
+        if (hasFormattedMetadata && hasMetadataLabel) {
+          return;
+        }
+
         // Remove any existing metadata labels first
         const existingLabels = messageText.querySelectorAll(".metadata-label");
         existingLabels.forEach((label) => label.remove());
@@ -972,6 +989,27 @@ class UIComponents {
 
     // Apply our metadata styling to a specific container
     container.querySelectorAll("pre").forEach((preBlock) => {
+      // Check if this pre block contains metadata content
+      const preContent = preBlock.textContent || preBlock.innerText;
+      const metadataKeywords = [
+        "Kaynak:",
+        "İşlem Durumu:",
+        "Kategori:",
+        "dosya",
+        "sayfa",
+        "kimlik",
+        "yazışma",
+        "bilgilendirme",
+      ];
+      const hasMetadataContent = metadataKeywords.some((keyword) =>
+        preContent.includes(keyword)
+      );
+
+      // Only apply metadata styling if it contains actual metadata
+      if (!hasMetadataContent) {
+        return;
+      }
+
       if (isDarkMode) {
         // Dark mode colors
         preBlock.style.cssText = `
@@ -999,12 +1037,9 @@ class UIComponents {
       }
 
       // Always add metadata label to code blocks that contain metadata content
-      const preContent = preBlock.textContent || preBlock.innerText;
-      const hasMetadataContent = preContent.includes("Kaynak:");
-
       const existingLabel = preBlock.querySelector(".metadata-label");
 
-      if (hasMetadataContent && !existingLabel) {
+      if (!existingLabel) {
         const label = document.createElement("div");
         label.className = "metadata-label";
 
@@ -1022,6 +1057,7 @@ class UIComponents {
             padding: 6px 12px !important;
             border-radius: 4px !important;
             border-left: 3px solid #60a5fa !important;
+            display: inline-block !important;
           `;
         } else {
           // Light mode label styling
@@ -1037,6 +1073,7 @@ class UIComponents {
             padding: 6px 12px !important;
             border-radius: 4px !important;
             border-left: 3px solid #3b82f6 !important;
+            display: inline-block !important;
           `;
         }
 
