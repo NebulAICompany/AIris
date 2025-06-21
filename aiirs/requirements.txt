@@ -30,6 +30,8 @@ requests
 colorama
 feedparser
 python-dateutil
+cohere
+python-dotenv
 opencv-python
 pytesseract
 # Fix for urllib3/botocore compatibility issue

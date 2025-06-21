@@ -229,7 +229,6 @@ async def handle_query(request: QueryRequest):
 
         answer = await run_orchestration(query, web_search_enabled, wolfram_enabled)
         logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
-
         api_requests_total.labels(status="success").inc()
 
         logger.info("Query processed successfully")

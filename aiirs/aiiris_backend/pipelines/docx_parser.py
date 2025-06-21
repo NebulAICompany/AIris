@@ -1,13 +1,13 @@
 from pathlib import Path
 import openai
+import os
 from docx2pdf import convert
+
 
 class DocxParser:
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = openai.OpenAI(
-            api_key="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"
-        )
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def run(self):
         from aiiris_backend.pipelines.uploadpipe import UploadPipeline

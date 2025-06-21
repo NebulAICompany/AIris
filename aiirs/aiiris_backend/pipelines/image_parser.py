@@ -1,14 +1,13 @@
 import base64
 from pathlib import Path
 import openai
+import os
 
 
 class ImageParser:
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = openai.OpenAI(
-            api_key="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"
-        )
+        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def run(self):
         if not Path(self.file_path).exists():

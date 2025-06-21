@@ -1,98 +1,29 @@
-2025-06-20 22:31:27 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 22:39:28 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 22:39:47 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:39:47 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:40:27 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:40:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:40:53 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:40:53 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:40:55 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:40:55 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:40:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:40:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:40:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:40:58 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:40:59 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:40:59 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:41:00 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:41:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:42:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:42:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:42:20 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:42:20 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:43:21 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:43:22 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:44:08 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 22:44:43 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 22:44:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:44:53 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:45:53 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:45:54 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:48:15 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:48:15 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:49:15 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:49:16 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:57:29 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 22:57:38 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:57:38 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:57:41 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:57:41 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:58:41 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:58:41 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 22:59:41 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 22:59:41 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:00:42 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:00:42 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:01:42 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:01:42 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:02:43 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:02:43 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:03:43 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:03:44 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:04:44 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:04:45 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:06:40 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 23:06:45 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:06:45 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:07:46 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:07:46 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:08:46 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:08:46 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:09:47 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:09:48 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:10:48 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:10:48 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:11:49 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:11:49 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:12:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:12:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:13:51 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Yahoo Finance RSS
-2025-06-20 23:13:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:17:27 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 23:17:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:17:36 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:17:36 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:19:09 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 23:19:14 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:19:15 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:19:15 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:26:03 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-20 23:26:07 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:26:07 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:26:07 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:26:24 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:26:24 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:26:24 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:26:34 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:26:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:26:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:27:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:27:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:27:35 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-20 23:28:36 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-20 23:28:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-20 23:28:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
-2025-06-21 00:47:30 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
-2025-06-21 00:53:25 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
-2025-06-21 00:53:25 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
-2025-06-21 00:53:25 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-21 01:44:05 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-21 15:35:06 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-21 15:35:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: 231401013_YAĞIZ CAN_AKAY.pdf (application/pdf)
+2025-06-21 15:35:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-21 15:35:32 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-21 15:35:59 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: 231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-21 15:36:22 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Reranking 15 documents using Cohere model: rerank-v3.5
+2025-06-21 15:36:23 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Successfully reranked documents. Returned 5 results
+2025-06-21 15:36:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Dosyada neyden bahsediliyor...
+2025-06-21 15:36:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-21 15:38:45 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Reranking 15 documents using Cohere model: rerank-v3.5
+2025-06-21 15:38:45 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Successfully reranked documents. Returned 5 results
+2025-06-21 15:38:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Dosyada özel isim geçiyor mu ...
+2025-06-21 15:38:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-21 15:41:04 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: tcmb.pdf (application/pdf)
+2025-06-21 15:41:04 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\tcmb.pdf
+2025-06-21 15:41:04 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-21 15:43:18 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: tcmb.pdf
+2025-06-21 15:43:50 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Reranking 15 documents using Cohere model: rerank-v3.5
+2025-06-21 15:43:51 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Successfully reranked documents. Returned 5 results
+2025-06-21 15:44:07 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Uluslararası yatırım pozisyonu istatistikleri hakkında bilgi verir misin ? ...
+2025-06-21 15:44:07 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-21 15:44:57 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Reranking 15 documents using Cohere model: rerank-v3.5
+2025-06-21 15:44:57 - aiiris_backend.retrieval.reranker - INFO - [aiiris_backend.app.main] Successfully reranked documents. Returned 5 results
+2025-06-21 15:45:10 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Elinde Yağız Can Akay ile ilgili bilgi var mı ?...
+2025-06-21 15:45:10 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-21 15:47:02 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-21 15:48:19 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-21 15:48:26 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...

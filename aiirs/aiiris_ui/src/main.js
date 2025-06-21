@@ -281,6 +281,7 @@ class AIrisApp {
 
     // Handle query requests
 
+
     ipcMain.handle(
       "send-query",
       async (
@@ -324,6 +325,7 @@ class AIrisApp {
 
         }
       }
+
     ); // Handle file upload requests
 
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
