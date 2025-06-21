@@ -354,9 +354,19 @@ def retrieve_with_rse(query: str, k: int = 15, preset: str = "balanced") -> Tupl
     from .retriever import retrieve_top_k
     
     # Get initial retrieval results
-    initial_results = retrieve_top_k(query, k=k)
+    initial_results = retrieve_top_k(query, k=k*3)
+    unique_chunks = []
+    duplicate_cleared_initial_results = []
+    for r in initial_results:
+        cid = r['metadata']['chunk_id'].split('_')[1]
+        if cid not in unique_chunks:
+            unique_chunks.append(cid)
+            duplicate_cleared_initial_results.append(r)
+    initial_results = duplicate_cleared_initial_results[:k]
+
+    print(f"Initial Results: {[r['metadata']['chunk_id'] for r in duplicate_cleared_initial_results]}")
     
-    if not initial_results:
+    if not duplicate_cleared_initial_results:
         return [], []
     
     # Apply RSE to single query results
