@@ -57,57 +57,35 @@
             </div>
           </div>
           <div class="header-right">
-            <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
-              <i class="fas fa-moon"></i>
-            </button>
-            <div class="connection-status" id="connection-status">
-              <div class="status-indicator offline"></div>
-              <span>Connecting...</span>
+            <div class="header-controls">
+              <div class="header-toggle-websearch">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="web-search-toggle" />
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label">Web Search</span>
+              </div>
+              <div class="header-toggle-wolfram">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="wolfram-toggle" />
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label">Wolfram Alpha</span>
+              </div>
             </div>
-          </div>
-          <div
-            class="header-toggle-websearch"
-            style="
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              margin-left: 14px;
-            "
-          >
-            <label class="toggle-switch">
-              <input type="checkbox" id="web-search-toggle" />
-              <span class="slider"></span>
-            </label>
-            <span
-              style="
-                font-size: 13px;
-                color: var(--text-secondary);
-                white-space: nowrap;
-              "
-              >Web Search</span
-            >
-          </div>
-          <div
-            class="header-toggle-wolfram"
-            style="
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              margin-left: 14px;
-            "
-          >
-            <label class="toggle-switch">
-              <input type="checkbox" id="wolfram-toggle" />
-              <span class="slider"></span>
-            </label>
-            <span
-              style="
-                font-size: 13px;
-                color: var(--text-secondary);
-                white-space: nowrap;
-              "
-              >Wolfram Alpha</span
-            >
+            <div class="header-actions">
+              <button
+                id="theme-toggle"
+                class="theme-toggle"
+                title="Toggle theme"
+              >
+                <i class="fas fa-moon"></i>
+              </button>
+              <div class="connection-status" id="connection-status">
+                <div class="status-indicator offline"></div>
+                <span>Connecting...</span>
+              </div>
+            </div>
           </div>
 
           <!-- Currency Ticker -->
@@ -155,11 +133,49 @@
           <div id="chat-tab" class="tab-content active">
             <div class="chat-container">
               <div class="chat-header">
-                <h2>AI Financial Assistant</h2>
-                <p>
-                  Ask questions about your financial documents and get
-                  AI-powered insights
-                </p>
+                <div class="chat-header-main">
+                  <h2>AI Financial Assistant</h2>
+                  <p>
+                    Ask questions about your financial documents and get
+                    AI-powered insights
+                  </p>
+                </div>
+                <div class="chat-session-controls">
+                  <button
+                    id="toggle-chat-history"
+                    class="btn btn-secondary"
+                    title="View chat history"
+                  >
+                    <i class="fas fa-history"></i> History
+                  </button>
+                  <button
+                    id="new-chat-btn"
+                    class="btn btn-secondary"
+                    title="Start new chat"
+                  >
+                    <i class="fas fa-plus"></i> New Chat
+                  </button>
+                </div>
+              </div>
+
+              <!-- Chat History Dropdown -->
+              <div class="chat-history-dropdown" id="chat-history-dropdown">
+                <div class="chat-history-header">
+                  <h3>Chat History</h3>
+                  <button
+                    id="close-chat-history"
+                    class="btn-icon"
+                    title="Close"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div class="chat-sessions-list" id="chat-sessions-list">
+                  <div class="loading-sessions">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading chat history...</span>
+                  </div>
+                </div>
               </div>
 
               <div class="chat-messages" id="chat-messages">

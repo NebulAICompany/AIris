@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from aiiris_backend.retrieval.reranker import rerank
 from aiiris_backend.orchestrator.query_utils import (
     clean_query,
@@ -17,6 +17,7 @@ from aiiris_backend.guardrails.filters import (
     sanitize_output,
 )
 from .reflection import reflect_and_retry
+from .chat_history import chat_history_manager, MessageRole
 import os
 
 VECTORSTORE_PATH = "aiiris_backend/vectorstore"
@@ -36,12 +37,36 @@ def preprocess_query(query: str):
 
 
 async def run_orchestration(
-    query: str, web_search_enabled: bool, wolfram_enabled: bool = False
+    query: str,
+    web_search_enabled: bool,
+    wolfram_enabled: bool = False,
+    session_id: Optional[str] = None,
 ) -> str:
     print(f"🔍 Query Orchestrator started:")
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
     print(f"   - Wolfram Enabled: {wolfram_enabled}")
+    print(f"   - Session ID: {session_id}")
+
+    # Handle chat history and session management
+    if session_id:
+        # Add user message to chat history
+        chat_history_manager.add_message(session_id, MessageRole.USER, query)
+
+        # Get conversation context
+        conversation_context = chat_history_manager.get_conversation_context(
+            session_id, max_messages=10
+        )
+        print(f"   - Conversation context: {len(conversation_context)} messages")
+
+        # Reduce history if too long
+        session = chat_history_manager.get_session(session_id)
+        if session and len(session.messages) > 30:
+            print(f"   - Reducing chat history from {len(session.messages)} messages")
+            chat_history_manager.reduce_history(session, target_messages=20)
+    else:
+        conversation_context = []
+        print(f"   - No session ID provided, processing as standalone query")
 
     # Vectorstore'ı yükle
     if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
@@ -107,13 +132,14 @@ async def run_orchestration(
 
     print("using web search ?= ", web_search_enabled)
 
-    # Create the agent with web context if available
+    # Create the agent with web context and conversation history if available
     agent = create_rag_agent(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
         mcp_servers=[],
         wolfram_enabled=wolfram_enabled,
+        conversation_history=conversation_context,
     )
 
     # Generate initial answer
@@ -133,5 +159,12 @@ async def run_orchestration(
 
     # 7. Maske çöz
     final_answer = pii_unmask(final_answer, pii_map)
+
+    # 8. Add assistant response to chat history
+    if session_id:
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, final_answer
+        )
+        print(f"   - Added assistant response to session {session_id}")
 
     return final_answer

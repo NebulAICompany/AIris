@@ -1,6 +1,7 @@
 import sys
 import asyncio
 import os
+from datetime import datetime
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -88,6 +89,19 @@ async def start_metrics_server():
         content=generate_latest(),
         media_type=CONTENT_TYPE_LATEST,
     )
+
+
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint that returns JSON status
+    """
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "service": "AIris Backend API",
+        "version": "0.1.0",
+    }
 
 
 # API rotalarını bağla

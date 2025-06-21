@@ -20,6 +20,10 @@ class UIComponents {
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
 
+    // Chat session management
+    this.currentSessionId = null;
+    this.chatSessions = [];
+
     this.init();
   }
 
@@ -27,6 +31,7 @@ class UIComponents {
     this.setupEventListeners();
     this.loadTheme();
     this.initializeComponents();
+
     // Set toggle state on load
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
@@ -100,10 +105,34 @@ class UIComponents {
       themeToggle.addEventListener("click", () => this.toggleTheme());
     }
 
-    // Clear chat
-    const clearChatButton = document.getElementById("clear-chat");
-    if (clearChatButton) {
-      clearChatButton.addEventListener("click", () => this.clearChat());
+    // Clear chat functionality removed
+
+    // New chat button
+    const newChatButton = document.getElementById("new-chat-btn");
+    if (newChatButton) {
+      newChatButton.addEventListener(
+        "click",
+        async () => await this.startNewChat()
+      );
+    }
+
+    // Chat history dropdown buttons
+    const toggleChatHistoryButton = document.getElementById(
+      "toggle-chat-history"
+    );
+    if (toggleChatHistoryButton) {
+      toggleChatHistoryButton.addEventListener(
+        "click",
+        async () => await this.toggleChatHistoryDropdown()
+      );
+    }
+
+    const closeChatHistoryButton =
+      document.getElementById("close-chat-history");
+    if (closeChatHistoryButton) {
+      closeChatHistoryButton.addEventListener("click", () =>
+        this.closeChatHistoryDropdown()
+      );
     }
 
     // Settings save
@@ -293,30 +322,77 @@ class UIComponents {
     chatInput.value = "";
     this.toggleSendButton();
 
+    // Create new session if none exists
+    if (!this.currentSessionId) {
+      const sessionId = await this.createNewChatSession();
+      if (!sessionId) {
+        console.warn("Failed to create session, proceeding without session ID");
+      }
+    }
+
     // Add user message to chat
     this.addMessageToChat("user", message);
 
     try {
       // Show typing indicator
       this.showTypingIndicator(); // Send to backend
-      const response = await window.airisAPI.sendQuery(
+      const response = await window.apiService.sendQuery(
         message,
         this.webSearchEnabled,
-        this.wolframEnabled
-      ); // Remove typing indicator
+        this.wolframEnabled,
+        this.currentSessionId
+      );
+
+      // Remove typing indicator
       this.hideTypingIndicator();
+
+      // Check if response is valid
+      if (!response || !response.success) {
+        const errorMsg = response?.error || "Failed to get response from AI";
+        this.addMessageToChat(
+          "error",
+          `Sorry, I couldn't process your request: ${errorMsg}`
+        );
+        return;
+      }
+
+      // Ensure we have actual response content
+      const assistantResponse =
+        response.response ||
+        response.data?.response ||
+        "I apologize, but I couldn't generate a proper response.";
+
+      // Update session ID if it was created server-side
+      if (response.sessionId && response.sessionId !== this.currentSessionId) {
+        this.currentSessionId = response.sessionId;
+        // Refresh sessions list to show the new session
+        await this.loadChatSessions();
+      }
 
       // Add AI response to chat
-      this.addMessageToChat("assistant", response.response);
+      this.addMessageToChat("assistant", assistantResponse);
 
       // Update chat history
-      this.chatHistory.push({ user: message, assistant: response.response });
+      this.chatHistory.push({ user: message, assistant: assistantResponse });
     } catch (error) {
       this.hideTypingIndicator();
-      this.addMessageToChat(
-        "error",
-        "Sorry, I encountered an error processing your request. Please try again."
-      );
+
+      let errorMessage =
+        "Sorry, I encountered an error processing your request. Please try again.";
+      if (error.message) {
+        if (error.message.includes("timeout")) {
+          errorMessage =
+            "The request took too long. The AI service might be busy. Please try again.";
+        } else if (
+          error.message.includes("fetch") ||
+          error.message.includes("network")
+        ) {
+          errorMessage =
+            "Connection error. Please check your internet connection and try again.";
+        }
+      }
+
+      this.addMessageToChat("error", errorMessage);
       console.error("Chat error:", error);
     } finally {
       this.isProcessing = false;
@@ -336,24 +412,51 @@ class UIComponents {
 
     if (type === "user") {
       messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
                 <div class="message-content">
                     <div class="message-text">${Utils.escapeHtml(content)}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
-                <div class="message-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
             `;
     } else if (type === "assistant") {
+      // Detect and format metadata content automatically
+      let processedContent = content || "No response received";
+
+      // Auto-detect and format metadata sections
+      processedContent = this.formatMetadataContent(processedContent);
+
+      // Safely parse markdown content, fallback to escaped HTML if marked fails
+      let parsedContent;
+      try {
+        parsedContent =
+          processedContent && typeof processedContent === "string"
+            ? marked.parse(processedContent)
+            : Utils.escapeHtml(processedContent);
+      } catch (error) {
+        console.warn("Markdown parsing failed:", error);
+        parsedContent = Utils.escapeHtml(processedContent);
+      }
+
       messageDiv.innerHTML = `
                 <div class="message-avatar">
                     <i class="fas fa-robot"></i>
                 </div>
                 <div class="message-content">
-                    <div class="message-text">${marked.parse(content)}</div>
+                    <div class="message-text">${parsedContent}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
+
+      // Apply metadata formatting immediately after adding the message
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        const messageTextElement = messageDiv.querySelector(".message-text");
+        if (messageTextElement) {
+          this.applyMetadataFormatting(messageTextElement);
+        }
+      });
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -371,10 +474,13 @@ class UIComponents {
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // Apply syntax highlighting
+    // Apply syntax highlighting and force metadata styling
     messageDiv.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightBlock(block);
     });
+
+    // Apply metadata formatting to new message
+    this.applyMetadataFormatting(messageDiv);
   }
 
   showTypingIndicator() {
@@ -415,12 +521,591 @@ class UIComponents {
       chatMessages.innerHTML = "";
       this.chatHistory = [];
 
+      // Start a new session
+      this.currentSessionId = null;
+
       // Add welcome message
       this.addMessageToChat(
         "assistant",
         "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them."
       );
     }
+  }
+
+  // Chat Session Management Methods
+  async createNewChatSession() {
+    try {
+      const response = await window.apiService.createChatSession();
+      if (response.success) {
+        this.currentSessionId = response.sessionId;
+        console.log("Created new chat session:", this.currentSessionId);
+
+        // Reload chat sessions to show the new session in the list
+        await this.loadChatSessions();
+
+        return this.currentSessionId;
+      } else {
+        console.error("Failed to create chat session:", response.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error creating chat session:", error);
+      return null;
+    }
+  }
+
+  async loadChatSession(sessionId) {
+    try {
+      const response = await window.apiService.getChatSession(sessionId);
+      if (response.success) {
+        this.currentSessionId = sessionId;
+        this.chatHistory = [];
+
+        // Clear current chat
+        const chatMessages = document.getElementById("chat-messages");
+        if (chatMessages) {
+          chatMessages.innerHTML = "";
+        }
+
+        // Load messages from session
+        const session = response.session;
+        session.messages.forEach((msg) => {
+          this.addMessageToChat(msg.role, msg.content);
+
+          // Update local chat history
+          if (msg.role === "user") {
+            this.chatHistory.push({ user: msg.content });
+          } else if (msg.role === "assistant") {
+            if (
+              this.chatHistory.length > 0 &&
+              !this.chatHistory[this.chatHistory.length - 1].assistant
+            ) {
+              this.chatHistory[this.chatHistory.length - 1].assistant =
+                msg.content;
+            }
+          }
+        });
+
+        // Update UI to show active session
+        this.updateChatSessionsUI();
+
+        // Apply metadata formatting more reliably
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          this.fixExistingMetadataFormatting();
+
+          // Apply additional formatting passes to catch any delayed renders
+          setTimeout(() => this.fixExistingMetadataFormatting(), 100);
+          setTimeout(() => this.fixExistingMetadataFormatting(), 300);
+          setTimeout(() => this.fixExistingMetadataFormatting(), 600);
+        });
+
+        console.log("Loaded chat session:", sessionId);
+        this.showNotification("Chat session loaded", "success");
+        return true;
+      } else {
+        console.error("Failed to load chat session:", response.error);
+        this.showNotification("Failed to load chat session", "error");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error loading chat session:", error);
+      this.showNotification("Error loading chat session", "error");
+      return false;
+    }
+  }
+
+  async loadChatSessions() {
+    try {
+      const response = await window.apiService.listChatSessions();
+      if (response.success) {
+        this.chatSessions = response.sessions;
+        this.updateChatSessionsUI();
+
+        // Auto-load the most recent session if no current session and we have sessions
+        if (!this.currentSessionId && this.chatSessions.length > 0) {
+          const mostRecentSession = this.chatSessions[0]; // Sessions are sorted by updated_at desc
+          await this.loadChatSession(mostRecentSession.session_id);
+        }
+
+        return this.chatSessions;
+      } else {
+        console.error("Failed to load chat sessions:", response.error);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error loading chat sessions:", error);
+      return [];
+    }
+  }
+
+  async deleteChatSession(sessionId) {
+    try {
+      const response = await window.apiService.deleteChatSession(sessionId);
+      if (response.success) {
+        // If this was the current session, clear it
+        if (this.currentSessionId === sessionId) {
+          this.clearChat();
+        }
+
+        // Reload sessions list
+        await this.loadChatSessions();
+
+        this.showNotification("Chat session deleted successfully", "success");
+        return true;
+      } else {
+        this.showNotification("Failed to delete chat session", "error");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error deleting chat session:", error);
+      this.showNotification("Error deleting chat session", "error");
+      return false;
+    }
+  }
+
+  async startNewChat() {
+    // Clear current chat
+    this.clearChat();
+
+    // Create a new session - this will also reload the sessions list
+    const sessionId = await this.createNewChatSession();
+
+    if (sessionId) {
+      console.log("New chat session created:", sessionId);
+      this.showNotification("Started new chat session", "success");
+    } else {
+      console.error("Failed to create new chat session");
+      this.showNotification("Failed to create new chat session", "error");
+    }
+  }
+
+  async toggleChatHistoryDropdown() {
+    const dropdown = document.getElementById("chat-history-dropdown");
+    if (dropdown) {
+      const isVisible = dropdown.classList.contains("show");
+      if (isVisible) {
+        this.closeChatHistoryDropdown();
+      } else {
+        await this.showChatHistoryDropdown();
+      }
+    }
+  }
+
+  async showChatHistoryDropdown() {
+    const dropdown = document.getElementById("chat-history-dropdown");
+    if (dropdown) {
+      // Refresh sessions list before showing dropdown
+      await this.loadChatSessions();
+
+      dropdown.classList.add("show");
+      // Add click outside listener
+      setTimeout(() => {
+        document.addEventListener("click", this.handleClickOutside.bind(this));
+      }, 100);
+    }
+  }
+
+  closeChatHistoryDropdown() {
+    const dropdown = document.getElementById("chat-history-dropdown");
+    if (dropdown) {
+      dropdown.classList.remove("show");
+      // Remove click outside listener
+      document.removeEventListener("click", this.handleClickOutside.bind(this));
+    }
+  }
+
+  handleClickOutside(event) {
+    const dropdown = document.getElementById("chat-history-dropdown");
+    const toggleButton = document.getElementById("toggle-chat-history");
+
+    if (
+      dropdown &&
+      !dropdown.contains(event.target) &&
+      !toggleButton.contains(event.target)
+    ) {
+      this.closeChatHistoryDropdown();
+    }
+  }
+
+  updateChatSessionsUI() {
+    const sessionsList = document.getElementById("chat-sessions-list");
+    if (!sessionsList) {
+      console.warn("Chat sessions list element not found");
+      return;
+    }
+
+    console.log(
+      "Updating chat sessions UI with",
+      this.chatSessions.length,
+      "sessions"
+    );
+
+    // Clear loading state
+    sessionsList.innerHTML = "";
+
+    if (this.chatSessions.length === 0) {
+      sessionsList.innerHTML = `
+        <div class="no-sessions">
+          <i class="fas fa-comments"></i>
+          <p>No chat history yet</p>
+          <p>Start a conversation to see it here</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Render each session
+    this.chatSessions.forEach((session) => {
+      const sessionItem = this.createChatSessionItem(session);
+      sessionsList.appendChild(sessionItem);
+    });
+
+    console.log("Chat sessions UI updated successfully");
+  }
+
+  createChatSessionItem(session) {
+    const sessionItem = document.createElement("div");
+    sessionItem.className = "chat-session-item";
+    sessionItem.dataset.sessionId = session.session_id;
+
+    // Mark as active if it's the current session
+    if (session.session_id === this.currentSessionId) {
+      sessionItem.classList.add("active");
+    }
+
+    // Format the date
+    const date = new Date(session.updated_at);
+    const formattedDate = this.formatChatDate(date);
+
+    sessionItem.innerHTML = `
+      <div class="chat-session-title">${Utils.escapeHtml(
+        session.title || "Untitled Chat"
+      )}</div>
+      <div class="chat-session-meta">
+        <span class="chat-session-date">${formattedDate}</span>
+        <span class="chat-session-count">${session.message_count}</span>
+        <div class="chat-session-actions">
+          <button class="chat-session-delete" data-session-id="${
+            session.session_id
+          }" title="Delete session">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Add click handler to load session
+    sessionItem.addEventListener("click", (e) => {
+      // Don't load session if clicking delete button
+      if (!e.target.closest(".chat-session-delete")) {
+        this.loadChatSession(session.session_id);
+        this.closeChatHistoryDropdown();
+      }
+    });
+
+    // Add delete handler
+    const deleteBtn = sessionItem.querySelector(".chat-session-delete");
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.deleteChatSession(session.session_id);
+    });
+
+    return sessionItem;
+  }
+
+  formatChatDate(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } else if (diffDays === 1) {
+      return "Yesterday";
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  }
+
+  formatMetadataContent(content) {
+    if (!content || typeof content !== "string") {
+      return content;
+    }
+
+    // More flexible patterns to catch metadata sections with various formatting
+    const metadataPatterns = [
+      /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:/gi,
+      /🗂️\s*Kullanılan Bilgi Metadataları:/gi,
+      /📊\s*Kullanılan Bilgi Metadataları:/gi,
+      /\*\*Kullanılan Bilgi Metadataları:\*\*/gi,
+      /Kullanılan Bilgi Metadataları:/gi,
+    ];
+
+    // Check if content contains any metadata pattern
+    let metadataMatch = null;
+    let matchedPattern = null;
+
+    for (const pattern of metadataPatterns) {
+      const match = content.match(pattern);
+      if (match) {
+        metadataMatch = match;
+        matchedPattern = pattern;
+        break;
+      }
+    }
+
+    if (!metadataMatch) {
+      return content;
+    }
+
+    // Find the actual start of metadata section (including any preceding separators)
+    const fullMatch = metadataMatch[0];
+    const metadataStart = content.indexOf(fullMatch);
+
+    if (metadataStart === -1) {
+      return content;
+    }
+
+    // Check if there's a separator (---) before the metadata
+    let actualStart = metadataStart;
+    const beforeMetadataCheck = content.substring(
+      Math.max(0, metadataStart - 10),
+      metadataStart
+    );
+    const separatorMatch = beforeMetadataCheck.match(/---\s*$/);
+    if (separatorMatch) {
+      actualStart = metadataStart - separatorMatch[0].length;
+    }
+
+    // Extract parts
+    const beforeMetadata = content.substring(0, actualStart).trim();
+    let metadataSection = content.substring(actualStart);
+
+    // Clean up metadata section - remove various formats of the title
+    let cleanedMetadata = metadataSection
+      .replace(/---\s*\n\s*/g, "")
+      .replace(/🗂️\s*Kullanılan Bilgi Metadataları:\s*/gi, "")
+      .replace(/📊\s*Kullanılan Bilgi Metadataları:\s*/gi, "")
+      .replace(/\*\*Kullanılan Bilgi Metadataları:\*\*\s*/gi, "")
+      .replace(/Kullanılan Bilgi Metadataları:\s*/gi, "")
+      .trim();
+
+    // Also remove any trailing separators
+    cleanedMetadata = cleanedMetadata.replace(/\s*---\s*$/, "").trim();
+
+    // Format as code block
+    const formattedMetadata = `\`\`\`\n${cleanedMetadata}\n\`\`\``;
+
+    // Combine everything
+    let result = "";
+    if (beforeMetadata) {
+      result += beforeMetadata + "\n\n";
+    }
+    result += formattedMetadata;
+
+    return result;
+  }
+
+  fixExistingMetadataFormatting() {
+    const chatMessages = document.getElementById("chat-messages");
+    if (!chatMessages) return;
+
+    const messages = chatMessages.querySelectorAll(
+      ".message.assistant-message"
+    );
+
+    messages.forEach((messageDiv) => {
+      const messageText = messageDiv.querySelector(".message-text");
+      if (!messageText) return;
+
+      // Check if metadata is already properly formatted
+      const hasFormattedMetadata = messageText.querySelector("pre code");
+      const hasMetadataLabel = messageText.querySelector(".metadata-label");
+
+      const currentContent = messageText.textContent || messageText.innerText;
+
+      // More flexible check for metadata presence
+      const metadataIndicators = [
+        "Kullanılan Bilgi Metadataları:",
+        "🗂️",
+        "📊",
+        "Kaynak:",
+        "İşlem Durumu:",
+        "Kategori:",
+        "Belirtilmiş",
+      ];
+
+      const hasMetadata = metadataIndicators.some((indicator) =>
+        currentContent.includes(indicator)
+      );
+
+      if (hasMetadata) {
+        // If already has formatted metadata with label, skip
+        if (hasFormattedMetadata && hasMetadataLabel) {
+          return;
+        }
+
+        // Remove any existing metadata labels first
+        const existingLabels = messageText.querySelectorAll(".metadata-label");
+        existingLabels.forEach((label) => label.remove());
+
+        // Get the raw HTML content to preserve any existing formatting
+        const rawHtml = messageText.innerHTML;
+
+        // Check if already formatted as code block
+        const alreadyFormatted =
+          rawHtml.includes("<pre>") &&
+          (rawHtml.includes("Kaynak:") || rawHtml.includes("İşlem Durumu:"));
+
+        if (!alreadyFormatted) {
+          // Reprocess this message content
+          const formattedContent = this.formatMetadataContent(currentContent);
+
+          try {
+            const parsedContent = marked.parse(formattedContent);
+            messageText.innerHTML = parsedContent;
+          } catch (error) {
+            console.warn("Failed to reformat existing message:", error);
+          }
+        }
+
+        // Apply our styling to the formatted content
+        this.applyMetadataFormatting(messageText);
+      }
+    });
+  }
+
+  applyMetadataFormatting(container) {
+    // Detect dark mode
+    const isDarkMode =
+      document.body.classList.contains("dark-theme") ||
+      document.documentElement.getAttribute("data-theme") === "dark";
+
+    // Apply our metadata styling to a specific container
+    container.querySelectorAll("pre").forEach((preBlock) => {
+      // Check if this pre block contains metadata content
+      const preContent = preBlock.textContent || preBlock.innerText;
+      const metadataKeywords = [
+        "Kaynak:",
+        "İşlem Durumu:",
+        "Kategori:",
+        "dosya",
+        "sayfa",
+        "kimlik",
+        "yazışma",
+        "bilgilendirme",
+      ];
+      const hasMetadataContent = metadataKeywords.some((keyword) =>
+        preContent.includes(keyword)
+      );
+
+      // Only apply metadata styling if it contains actual metadata
+      if (!hasMetadataContent) {
+        return;
+      }
+
+      if (isDarkMode) {
+        // Dark mode colors
+        preBlock.style.cssText = `
+          background-color: #1e293b !important;
+          border: 1px solid #334155 !important;
+          border-left: 4px solid #3b82f6 !important;
+          border-radius: 8px !important;
+          padding: 16px !important;
+          margin: 12px 0 !important;
+          overflow-x: auto !important;
+          position: relative !important;
+        `;
+      } else {
+        // Light mode colors
+        preBlock.style.cssText = `
+          background-color: #f0f2f5 !important;
+          border: 1px solid #d1d5db !important;
+          border-left: 4px solid #3b82f6 !important;
+          border-radius: 8px !important;
+          padding: 16px !important;
+          margin: 12px 0 !important;
+          overflow-x: auto !important;
+          position: relative !important;
+        `;
+      }
+
+      // Always add metadata label to code blocks that contain metadata content
+      const existingLabel = preBlock.querySelector(".metadata-label");
+
+      if (!existingLabel) {
+        const label = document.createElement("div");
+        label.className = "metadata-label";
+
+        if (isDarkMode) {
+          // Dark mode label styling
+          label.style.cssText = `
+            font-size: 11px !important;
+            color: #60a5fa !important;
+            font-weight: 600 !important;
+            margin-bottom: 12px !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            padding: 6px 12px !important;
+            border-radius: 4px !important;
+            border-left: 3px solid #60a5fa !important;
+            display: inline-block !important;
+          `;
+        } else {
+          // Light mode label styling
+          label.style.cssText = `
+            font-size: 11px !important;
+            color: #3b82f6 !important;
+            font-weight: 600 !important;
+            margin-bottom: 12px !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            padding: 6px 12px !important;
+            border-radius: 4px !important;
+            border-left: 3px solid #3b82f6 !important;
+            display: inline-block !important;
+          `;
+        }
+
+        label.textContent = "📊 Kullanılan Bilgi Metadataları";
+        preBlock.insertBefore(label, preBlock.firstChild);
+      }
+
+      // Force code styling
+      preBlock.querySelectorAll("code, code *").forEach((codeEl) => {
+        if (isDarkMode) {
+          // Dark mode code styling
+          codeEl.style.cssText = `
+            background: none !important;
+            background-color: transparent !important;
+            color: #cbd5e1 !important;
+            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
+            font-size: 13px !important;
+            line-height: 1.6 !important;
+          `;
+        } else {
+          // Light mode code styling
+          codeEl.style.cssText = `
+            background: none !important;
+            background-color: transparent !important;
+            color: #4b5563 !important;
+            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
+            font-size: 13px !important;
+            line-height: 1.6 !important;
+          `;
+        }
+      });
+    });
   }
 
   // File handling
@@ -554,8 +1239,8 @@ class UIComponents {
       progressFill.style.width = "25%";
       progressText.textContent = "25%";
 
-      // Call IPC with fileData and fileName separately
-      const response = await window.airisAPI.uploadFile(fileBuffer, file.name);
+      // Call API service for file upload
+      const response = await window.apiService.uploadFile(file);
 
       // Update progress to complete
       progressFill.style.width = "100%";
@@ -660,12 +1345,12 @@ class UIComponents {
 
   async openFile(fileName) {
     try {
-      // Request the main process to open the file
-      const result = await window.airisAPI.openFile(fileName);
-
-      if (!result.success) {
-        this.showNotification(`Failed to open file: ${result.error}`, "error");
-      }
+      // In web context, we can't open files directly
+      // Instead, show a notification with file info
+      this.showNotification(
+        `File: ${fileName} - Cannot open files in web context`,
+        "info"
+      );
     } catch (error) {
       console.error("Error opening file:", error);
       this.showNotification("Failed to open file. Please try again.", "error");
@@ -694,12 +1379,24 @@ class UIComponents {
 
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
 
-      // Request the main process to delete the file
-      const result = await window.airisAPI.deleteFile(fileName);
+      // Request the API service to delete the file
+      const result = await fetch(
+        `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`,
+        {
+          method: "DELETE",
+        }
+      );
 
-      console.log("📋 Frontend: API response received:", result);
+      if (!result.ok) {
+        throw new Error(`Failed to delete file: ${result.statusText}`);
+      }
 
-      if (result.success) {
+      const data = await result.json();
+      const response = { success: true, message: data.message };
+
+      console.log("📋 Frontend: API response received:", response);
+
+      if (response.success) {
         console.log(
           "✅ Frontend: Deletion successful, showing success message"
         );
@@ -711,9 +1408,9 @@ class UIComponents {
         console.log("🔄 Frontend: Refreshing file list");
         this.loadFileLibrary();
       } else {
-        console.error("❌ Frontend: Deletion failed:", result.error);
+        console.error("❌ Frontend: Deletion failed:", response.error);
         this.showNotification(
-          `Failed to delete file: ${result.error}`,
+          `Failed to delete file: ${response.error}`,
           "error"
         );
       }
@@ -788,8 +1485,8 @@ class UIComponents {
 
   async loadAnalytics() {
     try {
-      const metrics = await window.airisAPI.getMetrics();
-      this.updateAnalyticsDashboard(metrics);
+      const metrics = await window.apiService.getSystemStats();
+      this.updateAnalyticsDashboard(metrics.stats);
 
       // Set up auto-refresh every 30 seconds when on analytics tab
       if (this.currentTab === "analytics") {
@@ -799,8 +1496,8 @@ class UIComponents {
         this.analyticsRefreshTimer = setInterval(async () => {
           if (this.currentTab === "analytics") {
             try {
-              const updatedMetrics = await window.airisAPI.getMetrics();
-              this.updateAnalyticsDashboard(updatedMetrics);
+              const updatedMetrics = await window.apiService.getSystemStats();
+              this.updateAnalyticsDashboard(updatedMetrics.stats);
             } catch (error) {
               console.error("Analytics refresh error:", error);
             }
@@ -813,9 +1510,9 @@ class UIComponents {
       console.error("Analytics error:", error);
       // Show fallback data
       this.updateAnalyticsDashboard({
-        totalQueries: 0,
-        totalDocuments: 0,
-        avgResponseTime: "N/A",
+        apiRequests: 0,
+        documentsProcessed: 0,
+        averageResponseTime: "N/A",
         systemHealth: "Error",
         recentActivity: [],
       });
@@ -830,21 +1527,21 @@ class UIComponents {
     const systemHealth = document.getElementById("system-health");
 
     if (apiRequests) {
-      apiRequests.textContent = metrics.totalQueries || "0";
+      apiRequests.textContent = metrics.apiRequests || "0";
     }
     if (responseTime) {
-      responseTime.textContent = metrics.avgResponseTime || "N/A";
+      responseTime.textContent = metrics.averageResponseTime || "N/A";
     }
     if (documentCount) {
-      documentCount.textContent = metrics.totalDocuments || "0";
+      documentCount.textContent = metrics.documentsProcessed || "0";
     }
     if (systemHealth) {
       systemHealth.textContent = metrics.systemHealth || "Unknown";
       // Color code the health status
       systemHealth.style.color =
-        metrics.systemHealth === "Healthy"
+        metrics.systemHealth === "healthy"
           ? "var(--success)"
-          : metrics.systemHealth === "Disconnected"
+          : metrics.systemHealth === "offline"
           ? "var(--error)"
           : "var(--text-secondary)";
     }
@@ -896,6 +1593,9 @@ class UIComponents {
     this.isDarkMode = !this.isDarkMode;
     this.applyTheme();
     localStorage.setItem("airis-theme", this.isDarkMode ? "dark" : "light");
+
+    // Reformat existing metadata with new theme
+    this.refreshMetadataFormatting();
   }
 
   applyTheme() {
@@ -907,6 +1607,25 @@ class UIComponents {
         ? '<i class="fas fa-sun"></i>'
         : '<i class="fas fa-moon"></i>';
     }
+  }
+
+  refreshMetadataFormatting() {
+    // Refresh all existing metadata formatting when theme changes
+    const chatMessages = document.getElementById("chat-messages");
+    if (!chatMessages) return;
+
+    const metadataBlocks = chatMessages.querySelectorAll("pre");
+    metadataBlocks.forEach((preBlock) => {
+      // Remove existing labels to prevent duplicates
+      const existingLabels = preBlock.querySelectorAll(".metadata-label");
+      existingLabels.forEach((label) => label.remove());
+
+      // Get the parent message container and reapply formatting
+      const messageContainer = preBlock.closest(".message-text");
+      if (messageContainer) {
+        this.applyMetadataFormatting(messageContainer);
+      }
+    });
   }
 
   // Settings management

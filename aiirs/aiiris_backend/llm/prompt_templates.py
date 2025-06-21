@@ -3,17 +3,19 @@ from typing import List
 from agents.tool import WebSearchTool
 from aiiris_backend.agent_mcps.office_agent import office_agent
 
+
 @function_tool
 async def route_to_office_agent(task: str) -> str:
     """
     Routes office-related tasks to the specialized Office Agent.
     Use this for Word, Excel operations.
-    
+
     Args:
         task: Detailed description of the office task to perform
     """
     result = await Runner.run(office_agent, task)
-    return result.content if hasattr(result, 'content') else str(result)
+    return result.content if hasattr(result, "content") else str(result)
+
 
 # Import our custom wolfram function tool
 from aiiris_backend.agents.wolfram_alpha_tool import wolfram_alpha_query
@@ -26,6 +28,7 @@ def create_rag_agent(
     instruction: str = None,
     mcp_servers: List = None,
     wolfram_enabled: bool = False,
+    conversation_history: List = None,
 ) -> Agent:
 
     instruction_part = f"\n\nÖzel Talimat: {instruction}" if instruction else ""
@@ -36,6 +39,15 @@ def create_rag_agent(
         if web_search_enabled
         else ""
     )
+
+    # Conversation history'i formatla
+    conversation_context_part = ""
+    if conversation_history and len(conversation_history) > 0:
+        conversation_context_part = "\n💬 **Sohbet Geçmişi:**\n"
+        for i, msg in enumerate(conversation_history[-5:]):  # Son 5 mesajı göster
+            role = "🙋 Kullanıcı" if msg["role"] == "user" else "🤖 Asistan"
+            conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
+        conversation_context_part += "\n"
 
     tools = [route_to_office_agent]
     if web_search_enabled:
@@ -69,7 +81,7 @@ Elindeki wolfram_alpha_query fonksiyonunu kullanarak matematiksel hesaplamalar, 
 {local_context}
 
 🔍 **Web Arama Durumu:** {web_context_part}
-
+{conversation_context_part}
 ❓ **Mevcut Sorgu:**
 {query}{instruction_part}
 
@@ -98,16 +110,16 @@ Aşağıdaki durumlardan herhangi birinde route_to_office_agent'ı kullan:
 - ✅ Yapılandırılmış ve organize yanıtlar ver
 
 📊 **Yanıt Formatı:**
-Her yanıtının sonunda aşağıdaki metadata formatını kullan:
+Her yanıtının sonunda kullandığın kaynakların metadatalarını aşağıdaki şekilde göster:
 
 ```
 🗂️ Kullanılan Bilgi Metadataları:
-- 📂 Kaynak: [Source]
-- 📅 Tarih: [Date]
-- 🏷️ Kategori: [Category]
-- 🔧 Kullanılan Araçlar: [Tools Used]
-- İşlem Durumu: [Success/Partial/Failed]
+- 📂 Kaynak: (Gerçek kaynak dosya adı)
+- 📅 Tarih: (Dokümanın tarihi varsa)
+- 🏷️ Kategori: (İçerik kategorisi)
 ```
+
+NOT: Eğer herhangi bir bilgi mevcut değilse o satırı atlayabilirsin. Placeholder veya boş değerler ([...], None, vb.) kullanma.
 
 **Kritik Kurallar:**
 - Bilmediğin konularda spekülasyon yapma
@@ -122,7 +134,6 @@ Her yanıtının sonunda aşağıdaki metadata formatını kullan:
         name="RAG_Assistant",
         instructions=agent_instructions,
         model="gpt-4.1",
-
         tools=tools,
     )
 

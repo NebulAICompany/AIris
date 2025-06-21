@@ -80,6 +80,23 @@ class AIrisApp {
       this.mainWindow.show();
     });
 
+    // Filter out annoying DevTools console messages
+    this.mainWindow.webContents.on(
+      "console-message",
+      (event, level, message, line, sourceId) => {
+        // Suppress specific autofill-related DevTools errors
+        if (
+          message.includes("Request Autofill.enable failed") ||
+          message.includes("Request Autofill.setAddresses failed") ||
+          message.includes("'Autofill.enable' wasn't found") ||
+          message.includes("'Autofill.setAddresses' wasn't found")
+        ) {
+          event.preventDefault();
+          return;
+        }
+      }
+    );
+
     // Open DevTools in development
     if (process.argv.includes("--dev")) {
       logger.debug("Opening DevTools for development");
@@ -281,7 +298,6 @@ class AIrisApp {
 
     // Handle query requests
 
-
     ipcMain.handle(
       "send-query",
       async (
@@ -322,10 +338,8 @@ class AIrisApp {
         } catch (error) {
           logger.error(`Query error: ${error.message}`, "IPC");
           throw new Error(`Failed to send query: ${error.message}`);
-
         }
       }
-
     ); // Handle file upload requests
 
     ipcMain.handle("upload-file", async (event, fileData, fileName) => {
