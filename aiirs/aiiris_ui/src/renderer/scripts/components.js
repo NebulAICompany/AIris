@@ -1345,15 +1345,52 @@ class UIComponents {
 
   async openFile(fileName) {
     try {
-      // In web context, we can't open files directly
-      // Instead, show a notification with file info
-      this.showNotification(
-        `File: ${fileName} - Cannot open files in web context`,
-        "info"
-      );
+      // Try to open the file using Electron's API
+      if (window.airisAPI && window.airisAPI.openFile) {
+        try {
+          await window.airisAPI.openFile(fileName);
+          this.showNotification(`Opened ${fileName}`, "success");
+          return;
+        } catch (electronError) {
+          console.warn(
+            "Electron API failed, trying web fallback:",
+            electronError
+          );
+        }
+      }
+
+      // Fallback: Try to download the file through the web API
+      try {
+        const downloadUrl = `http://localhost:8000/api/files/${encodeURIComponent(
+          fileName
+        )}/download`;
+        window.open(downloadUrl, "_blank");
+        this.showNotification(`Downloading ${fileName}...`, "info");
+      } catch (downloadError) {
+        console.error("Download failed:", downloadError);
+
+        // Last resort: Try to get file info
+        const response = await fetch(
+          `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`
+        );
+        if (response.ok) {
+          const fileInfo = await response.json();
+          this.showNotification(
+            `${fileName} (${Utils.formatFileSize(
+              fileInfo.size || 0
+            )}) - Unable to open directly`,
+            "warning"
+          );
+        } else {
+          throw new Error("Unable to access file");
+        }
+      }
     } catch (error) {
       console.error("Error opening file:", error);
-      this.showNotification("Failed to open file. Please try again.", "error");
+      this.showNotification(
+        `Failed to open ${fileName}. Please try again.`,
+        "error"
+      );
     }
   }
 
