@@ -14,7 +14,7 @@ class AIrisApp {
 
   async init() {
     try {
-      logger.info("Initializing AIris App...", 'APP');
+      logger.info("Initializing AIris App...", "APP");
 
       // Wait for DOM to be ready
       if (document.readyState === "loading") {
@@ -23,7 +23,7 @@ class AIrisApp {
         await this.start();
       }
     } catch (error) {
-      logger.error(`Failed to initialize app: ${error.message}`, 'APP');
+      logger.error(`Failed to initialize app: ${error.message}`, "APP");
       this.showErrorScreen(error);
     }
   }
@@ -40,8 +40,24 @@ class AIrisApp {
       this.uiComponents = new UIComponents();
       window.uiComponents = this.uiComponents; // Global access for HTML event handlers
 
+      // Load chat sessions
+      await this.uiComponents.loadChatSessions();
+
+      // Fix any existing metadata formatting after loading with multiple attempts
+      // This ensures formatting is applied even if rendering is delayed
+      const applyFormatting = () => {
+        if (this.uiComponents) {
+          this.uiComponents.fixExistingMetadataFormatting();
+        }
+      };
+
+      // Apply formatting at different intervals to catch delayed renders
+      setTimeout(applyFormatting, 100);
+      setTimeout(applyFormatting, 500);
+      setTimeout(applyFormatting, 1000);
+
       // Initialize currency service
-      logger.info('Initializing currency service...', 'APP');
+      logger.info("Initializing currency service...", "APP");
       this.currencyService = new CurrencyService();
       window.currencyService = this.currencyService; // Global access
       await this.currencyService.start();
@@ -59,27 +75,27 @@ class AIrisApp {
       this.hideLoadingScreen();
 
       this.isInitialized = true;
-      logger.info('AIris App initialized successfully', 'APP');
+      logger.info("AIris App initialized successfully", "APP");
 
       // Show connection status
       this.updateConnectionStatus(this.backendConnected);
     } catch (error) {
-      logger.error(`Failed to start app: ${error.message}`, 'APP');
+      logger.error(`Failed to start app: ${error.message}`, "APP");
       this.showErrorScreen(error);
     }
   }
 
   async checkBackendConnection() {
     try {
-      logger.info("Checking backend connection...", 'APP');
+      logger.info("Checking backend connection...", "APP");
 
       // Try to connect to the backend
-      const health = await window.airisAPI.checkHealth();
+      const health = await window.apiService.checkHealth();
       this.backendConnected = true;
 
-      logger.info("Backend connection successful", 'APP');
+      logger.info("Backend connection successful", "APP");
     } catch (error) {
-      logger.warn(`Backend connection failed: ${error.message}`, 'APP');
+      logger.warn(`Backend connection failed: ${error.message}`, "APP");
       this.backendConnected = false;
 
       // Show warning but don't block the app
@@ -137,7 +153,7 @@ class AIrisApp {
                     <button onclick="location.reload()" class="btn btn-primary">
                         <i class="fas fa-redo"></i> Reload Application
                     </button>
-                    <button onclick="window.airisAPI.openDevTools()" class="btn btn-secondary">
+                    <button onclick="window.apiService.openDevTools()" class="btn btn-secondary">
                         <i class="fas fa-bug"></i> Open Developer Tools
                     </button>
                 </div>
@@ -188,13 +204,13 @@ class AIrisApp {
   setupErrorHandling() {
     // Global error handler
     window.addEventListener("error", (event) => {
-      logger.error(`Global error: ${event.error?.message}`, 'APP');
+      logger.error(`Global error: ${event.error?.message}`, "APP");
       this.handleError(event.error);
     });
 
     // Promise rejection handler
     window.addEventListener("unhandledrejection", (event) => {
-      logger.error(`Unhandled promise rejection: ${event.reason}`, 'APP');
+      logger.error(`Unhandled promise rejection: ${event.reason}`, "APP");
       this.handleError(event.reason);
     });
   }
@@ -263,7 +279,7 @@ class AIrisApp {
       // F12: Toggle developer tools
       if (e.key === "F12") {
         e.preventDefault();
-        window.airisAPI.openDevTools();
+        window.apiService.openDevTools();
       }
     });
   }
@@ -287,7 +303,7 @@ class AIrisApp {
 
       return this.backendConnected;
     } catch (error) {
-      logger.error(`Reconnection failed: ${error.message}`, 'APP');
+      logger.error(`Reconnection failed: ${error.message}`, "APP");
       return false;
     }
   }
@@ -302,11 +318,11 @@ class AIrisApp {
         localStorage.setItem("airis-chat-history", JSON.stringify(chatHistory));
       }
     }
-    
+
     // Stop currency service
     if (this.currencyService) {
       this.currencyService.stop();
-      logger.info('Currency service stopped', 'APP');
+      logger.info("Currency service stopped", "APP");
     }
   }
 
@@ -320,78 +336,92 @@ class AIrisApp {
   }
 
   initializeCurrencyService() {
-    logger.info("Initializing currency service", 'APP');
-    
+    logger.info("Initializing currency service", "APP");
+
     // Start the currency service with update callback
     window.currencyService.start((data) => {
       this.updateCurrencyDisplay(data);
     });
-    
+
     // Handle app cleanup
-    window.addEventListener('beforeunload', () => {
+    window.addEventListener("beforeunload", () => {
       window.currencyService.stop();
     });
   }
-  
+
   updateCurrencyDisplay(data) {
     try {
       const { currencies, gold, lastUpdate, isStale } = data;
-      
+
       if (currencies) {
         // Update USD/TRY
-        const usdTryElement = document.getElementById('usd-try');
+        const usdTryElement = document.getElementById("usd-try");
         if (usdTryElement) {
-          usdTryElement.textContent = window.currencyService.formatNumber(currencies.usdTry, 2);
+          usdTryElement.textContent = window.currencyService.formatNumber(
+            currencies.usdTry,
+            2
+          );
         }
-        
+
         // Update EUR/TRY
-        const eurTryElement = document.getElementById('eur-try');
+        const eurTryElement = document.getElementById("eur-try");
         if (eurTryElement) {
-          eurTryElement.textContent = window.currencyService.formatNumber(currencies.eurTry, 2);
+          eurTryElement.textContent = window.currencyService.formatNumber(
+            currencies.eurTry,
+            2
+          );
         }
-        
+
         // Update USD/EUR
-        const usdEurElement = document.getElementById('usd-eur');
+        const usdEurElement = document.getElementById("usd-eur");
         if (usdEurElement) {
-          usdEurElement.textContent = window.currencyService.formatNumber(currencies.usdEur, 4);
+          usdEurElement.textContent = window.currencyService.formatNumber(
+            currencies.usdEur,
+            4
+          );
         }
       }
-      
+
       if (gold) {
         // Update Gold price
-        const goldElement = document.getElementById('gold-price');
+        const goldElement = document.getElementById("gold-price");
         if (goldElement) {
-          goldElement.textContent = `$${window.currencyService.formatNumber(gold.price, 0)}`;
+          goldElement.textContent = `$${window.currencyService.formatNumber(
+            gold.price,
+            0
+          )}`;
         }
       }
-      
+
       // Update status indicator
-      const statusElement = document.getElementById('currency-status');
+      const statusElement = document.getElementById("currency-status");
       if (statusElement) {
-        const statusIcon = statusElement.querySelector('i');
-        const statusText = statusElement.querySelector('.status-text');
-        
+        const statusIcon = statusElement.querySelector("i");
+        const statusText = statusElement.querySelector(".status-text");
+
         if (isStale) {
-          statusElement.className = 'currency-status stale';
-          statusText.textContent = 'Cached';
+          statusElement.className = "currency-status stale";
+          statusText.textContent = "Cached";
         } else {
-          statusElement.className = 'currency-status live';
-          statusText.textContent = 'Live';
+          statusElement.className = "currency-status live";
+          statusText.textContent = "Live";
         }
       }
-      
-      logger.debug('Currency display updated', 'APP');
-      
+
+      logger.debug("Currency display updated", "APP");
     } catch (error) {
-      logger.error(`Failed to update currency display: ${error.message}`, 'APP');
-      
+      logger.error(
+        `Failed to update currency display: ${error.message}`,
+        "APP"
+      );
+
       // Show error state
-      const statusElement = document.getElementById('currency-status');
+      const statusElement = document.getElementById("currency-status");
       if (statusElement) {
-        statusElement.className = 'currency-status error';
-        const statusText = statusElement.querySelector('.status-text');
+        statusElement.className = "currency-status error";
+        const statusText = statusElement.querySelector(".status-text");
         if (statusText) {
-          statusText.textContent = 'Error';
+          statusText.textContent = "Error";
         }
       }
     }
@@ -432,4 +462,4 @@ window.getDebugInfo = () =>
   window.airisApp?.getDebugInfo() || "App not initialized";
 window.reconnectBackend = () => window.airisApp?.reconnectBackend();
 
-logger.info("AIris App script loaded successfully", 'APP');
+logger.info("AIris App script loaded successfully", "APP");

@@ -18,36 +18,39 @@ class APIService {
     // Set up fetch-based API client
     this.api = {
       get: async (url, config = {}) => {
-        return this.makeRequest(url, 'GET', null, config);
+        return this.makeRequest(url, "GET", null, config);
       },
       post: async (url, data, config = {}) => {
-        return this.makeRequest(url, 'POST', data, config);
+        return this.makeRequest(url, "POST", data, config);
+      },
+      delete: async (url, config = {}) => {
+        return this.makeRequest(url, "DELETE", null, config);
       },
       defaults: {
         baseURL: this.baseURL,
-        timeout: this.timeout
-      }
+        timeout: this.timeout,
+      },
     };
   }
 
-  async makeRequest(url, method = 'GET', data = null, config = {}) {
-    const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-    
+  async makeRequest(url, method = "GET", data = null, config = {}) {
+    const fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+
     console.log(`[API] ${method.toUpperCase()} ${fullUrl}`);
 
     const requestOptions = {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        ...config.headers
+        "Content-Type": "application/json",
+        ...config.headers,
       },
-      signal: AbortSignal.timeout(config.timeout || this.timeout)
+      signal: AbortSignal.timeout(config.timeout || this.timeout),
     };
 
     if (data) {
       if (data instanceof FormData) {
         // Remove Content-Type header for FormData (browser will set it with boundary)
-        delete requestOptions.headers['Content-Type'];
+        delete requestOptions.headers["Content-Type"];
         requestOptions.body = data;
       } else {
         requestOptions.body = JSON.stringify(data);
@@ -56,16 +59,17 @@ class APIService {
 
     try {
       const response = await fetch(fullUrl, requestOptions);
-      
+
       console.log(`[API] Response: ${response.status} ${fullUrl}`);
 
       if (!response.ok) {
         const errorData = await response.text();
         let errorMessage;
-        
+
         try {
           const parsed = JSON.parse(errorData);
-          errorMessage = parsed.message || parsed.detail || `HTTP ${response.status}`;
+          errorMessage =
+            parsed.message || parsed.detail || `HTTP ${response.status}`;
         } catch {
           errorMessage = errorData || `HTTP ${response.status}`;
         }
@@ -78,18 +82,24 @@ class APIService {
       }
 
       const responseData = await response.json();
-      return { data: responseData, status: response.status, config: { url: fullUrl } };
+      return {
+        data: responseData,
+        status: response.status,
+        config: { url: fullUrl },
+      };
     } catch (error) {
       console.error("[API] Request error:", error);
-      
-      if (error.name === 'AbortError') {
+
+      if (error.name === "AbortError") {
         throw new Error("Request timeout - please try again");
       }
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error("Unable to connect to server. Please check if the backend is running.");
+
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Unable to connect to server. Please check if the backend is running."
+        );
       }
-      
+
       throw error;
     }
   }
@@ -110,7 +120,7 @@ class APIService {
   // Test connection to backend
   async testConnection() {
     try {
-      const response = await this.api.get("/");
+      const response = await this.api.get("/health");
       return {
         success: true,
         status: "online",
@@ -125,18 +135,111 @@ class APIService {
     }
   }
   // Send query to AI system
-  async sendQuery(query, webSearchEnabled = false, wolframEnabled = false) {
+  async sendQuery(
+    query,
+    webSearchEnabled = false,
+    wolframEnabled = false,
+    sessionId = null
+  ) {
     try {
-      const response = await this.api.post("/api/query", {
-        query: query.trim(),
-        webSearchEnabled: webSearchEnabled,
-        wolframEnabled: wolframEnabled,
-      });
+      const response = await this.api.post(
+        "/api/query",
+        {
+          query: query.trim(),
+          webSearchEnabled: webSearchEnabled,
+          wolframEnabled: wolframEnabled,
+          sessionId: sessionId,
+        },
+        {
+          timeout: 60000, // Increase timeout to 60 seconds for AI queries
+        }
+      );
 
       return {
         success: true,
         data: response.data,
         response: response.data.response || response.data,
+        sessionId: response.data.sessionId,
+      };
+    } catch (error) {
+      console.error("Query API error:", error);
+
+      let errorMessage = "An unexpected error occurred";
+
+      if (error.name === "AbortError" || error.message.includes("timeout")) {
+        errorMessage =
+          "The request took too long to complete. The AI might be processing a complex query. Please try again.";
+      } else if (error.message.includes("fetch")) {
+        errorMessage =
+          "Unable to connect to the AI service. Please check your connection and try again.";
+      } else if (error.message.includes("500")) {
+        errorMessage =
+          "The AI service is temporarily unavailable. Please try again in a moment.";
+      } else {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  // Chat Session Management
+  async createChatSession() {
+    try {
+      const response = await this.api.post("/api/chat/sessions");
+      return {
+        success: true,
+        sessionId: response.data.session_id,
+        createdAt: response.data.created_at,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async getChatSession(sessionId) {
+    try {
+      const response = await this.api.get(`/api/chat/sessions/${sessionId}`);
+      return {
+        success: true,
+        session: response.data.session,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async listChatSessions() {
+    try {
+      const response = await this.api.get("/api/chat/sessions");
+      return {
+        success: true,
+        sessions: response.data.sessions,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        sessions: [],
+      };
+    }
+  }
+
+  async deleteChatSession(sessionId) {
+    try {
+      const response = await this.api.delete(`/api/chat/sessions/${sessionId}`);
+      return {
+        success: true,
+        message: response.data.message,
       };
     } catch (error) {
       return {
@@ -184,10 +287,18 @@ class APIService {
   // Get system metrics (Prometheus endpoint)
   async getMetrics() {
     try {
-      const response = await this.api.get("/");
+      // Make a special request for metrics that expects plain text, not JSON
+      const fullUrl = `${this.baseURL}/`;
+      const response = await fetch(fullUrl);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const metricsText = await response.text(); // Get as plain text, not JSON
 
       // Parse Prometheus metrics format
-      const metrics = this.parsePrometheusMetrics(response.data);
+      const metrics = this.parsePrometheusMetrics(metricsText);
 
       return {
         success: true,
@@ -231,41 +342,26 @@ class APIService {
     return metrics;
   }
 
-  // Get aggregated system stats
+  // Get aggregated system stats from the proper analytics endpoint
   async getSystemStats() {
     try {
-      const { metrics } = await this.getMetrics();
+      const response = await this.api.get("/api/metrics");
 
+      const data = response.data;
+
+      // Map the backend response to frontend expected format
       const stats = {
-        apiRequests: 0,
-        averageResponseTime: 0,
-        documentsProcessed: 0,
-        systemHealth: "unknown",
+        apiRequests: data.totalQueries || 0,
+        averageResponseTime: data.avgResponseTime || "0ms",
+        documentsProcessed: data.totalDocuments || 0,
+        systemHealth:
+          data.systemHealth === "Healthy"
+            ? "healthy"
+            : data.systemHealth === "No Data"
+            ? "idle"
+            : "offline",
+        recentActivity: data.recentActivity || [],
       };
-
-      // Extract API requests total
-      if (metrics.api_requests_total) {
-        stats.apiRequests = metrics.api_requests_total.reduce(
-          (sum, metric) => sum + metric.value,
-          0
-        );
-      }
-
-      // Extract LLM response times
-      if (metrics.llm_duration_seconds) {
-        const responseTimes = metrics.llm_duration_seconds.map(
-          (m) => m.value * 1000
-        );
-        stats.averageResponseTime =
-          responseTimes.length > 0
-            ? Math.round(
-                responseTimes.reduce((a, b) => a + b) / responseTimes.length
-              )
-            : 0;
-      }
-
-      // Determine system health based on recent metrics
-      stats.systemHealth = this.determineSystemHealth(metrics);
 
       return {
         success: true,
@@ -277,9 +373,10 @@ class APIService {
         error: error.message,
         stats: {
           apiRequests: 0,
-          averageResponseTime: 0,
+          averageResponseTime: "0ms",
           documentsProcessed: 0,
           systemHealth: "offline",
+          recentActivity: [],
         },
       };
     }
@@ -388,7 +485,7 @@ class APIService {
   // Health check endpoint
   async checkHealth() {
     try {
-      const response = await this.makeRequest("/", "GET");
+      const response = await this.makeRequest("/health", "GET");
       return {
         status: "healthy",
         timestamp: new Date().toISOString(),

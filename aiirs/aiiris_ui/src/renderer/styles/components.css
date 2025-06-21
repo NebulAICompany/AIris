@@ -64,6 +64,192 @@
   flex-direction: column;
 }
 
+/* Chat History Dropdown */
+.chat-history-dropdown {
+  position: absolute;
+  top: 72px;
+  right: 24px;
+  width: 320px;
+  max-height: 400px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.chat-history-dropdown.show {
+  display: flex;
+  animation: fadeIn 0.2s ease;
+}
+
+.chat-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+}
+
+.chat-history-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.btn-icon:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.chat-sessions-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  max-height: 320px;
+}
+
+.loading-sessions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.chat-session-item {
+  padding: 12px;
+  margin-bottom: 4px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+}
+
+.chat-session-item:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.chat-session-item.active {
+  background-color: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.chat-session-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: -webkit-box;
+  display: box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.chat-session-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.chat-session-item.active .chat-session-meta {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-session-date {
+  flex: 1;
+}
+
+.chat-session-count {
+  font-size: 10px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+}
+
+.chat-session-item.active .chat-session-count {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.chat-session-actions {
+  opacity: 0;
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+  transition: var(--transition);
+}
+
+.chat-session-item:hover .chat-session-actions {
+  opacity: 1;
+}
+
+.chat-session-delete {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 10px;
+  transition: var(--transition);
+}
+
+.chat-session-delete:hover {
+  background-color: var(--error);
+  color: white;
+}
+
+.no-sessions {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.no-sessions i {
+  font-size: 24px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .chat-header {
   margin-bottom: 24px;
 }
@@ -144,10 +330,20 @@
   margin-bottom: 16px;
   display: flex;
   gap: 12px;
+  max-width: 100%;
 }
 
-.message.user {
+.message.user-message {
   flex-direction: row-reverse;
+  justify-content: flex-start;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.message.assistant-message {
+  justify-content: flex-start;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .message-avatar {
@@ -163,37 +359,60 @@
   flex-shrink: 0;
 }
 
-.message.user .message-avatar {
+.message.user-message .message-avatar {
   background-color: var(--accent-secondary);
 }
 
 .message-content {
   flex: 1;
   max-width: 70%;
+  min-width: 0;
 }
 
-.message-bubble {
+.message.user-message .message-content {
+  text-align: right;
+}
+
+.message.assistant-message .message-content {
+  text-align: left;
+}
+
+.message-text {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   padding: 12px 16px;
   word-wrap: break-word;
+  display: inline-block;
+  max-width: 100%;
 }
 
-.message.user .message-bubble {
+.message.user-message .message-text {
   background-color: var(--accent-primary);
   color: white;
   border-color: var(--accent-primary);
+  border-radius: 16px 16px 4px 16px;
+}
+
+.message.assistant-message .message-text {
+  background-color: var(--bg-primary);
+  border-radius: 16px 16px 16px 4px;
 }
 
 .message-time {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 4px;
+  display: block;
 }
 
-.message.user .message-time {
+.message.user-message .message-time {
   text-align: right;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message.assistant-message .message-time {
+  text-align: left;
 }
 
 .chat-input-container {
@@ -870,17 +1089,125 @@
   font-size: 13px;
 }
 
-.markdown-content pre {
-  background-color: var(--bg-tertiary);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  overflow-x: auto;
-  margin-bottom: 12px;
+/* Force override all metadata/code block styles - very specific selectors */
+.message-text pre,
+.message-content pre,
+.markdown-content pre,
+div pre,
+pre.hljs,
+pre[class*="hljs"],
+pre[class*="language-"] {
+  background-color: #f0f2f5 !important;
+  background: #f0f2f5 !important;
+  border: 1px solid #d1d5db !important;
+  border-left: 4px solid #3b82f6 !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin: 12px 0 !important;
+  overflow-x: auto !important;
+  position: relative !important;
 }
 
-.markdown-content pre code {
-  background: none;
-  padding: 0;
+/* CSS title removed - JavaScript will handle it to avoid duplication */
+
+/* Force text colors in code blocks */
+.message-text pre code,
+.message-content pre code,
+.markdown-content pre code,
+div pre code,
+pre.hljs code,
+pre[class*="hljs"] code,
+pre code,
+code {
+  background: none !important;
+  background-color: transparent !important;
+  color: #4b5563 !important;
+  font-family: "SFMono-Regular", "Monaco", "Consolas", "Liberation Mono",
+    "Courier New", monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  padding: 0 !important;
+}
+
+/* Override ALL highlight.js classes */
+.hljs,
+.hljs-addition,
+.hljs-attr,
+.hljs-attribute,
+.hljs-built_in,
+.hljs-bullet,
+.hljs-char,
+.hljs-code,
+.hljs-comment,
+.hljs-deletion,
+.hljs-doctag,
+.hljs-emphasis,
+.hljs-formula,
+.hljs-keyword,
+.hljs-link,
+.hljs-literal,
+.hljs-meta,
+.hljs-name,
+.hljs-number,
+.hljs-operator,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-quote,
+.hljs-regexp,
+.hljs-section,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-selector-pseudo,
+.hljs-selector-tag,
+.hljs-string,
+.hljs-strong,
+.hljs-subst,
+.hljs-symbol,
+.hljs-tag,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-title,
+.hljs-type,
+.hljs-variable {
+  background: none !important;
+  background-color: transparent !important;
+  color: #4b5563 !important;
+}
+
+/* Dark theme with higher specificity */
+[data-theme="dark"] .message-text pre,
+[data-theme="dark"] .message-content pre,
+[data-theme="dark"] .markdown-content pre,
+[data-theme="dark"] div pre,
+[data-theme="dark"] pre.hljs,
+[data-theme="dark"] pre[class*="hljs"] {
+  background-color: #374151 !important;
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+  border-left-color: #3b82f6 !important;
+}
+
+[data-theme="dark"] .message-text pre code,
+[data-theme="dark"] .message-content pre code,
+[data-theme="dark"] .markdown-content pre code,
+[data-theme="dark"] div pre code {
+  color: #d1d5db !important;
+}
+
+/* Body level override for maximum specificity */
+body .message-text pre,
+body .message-content pre {
+  background-color: #f0f2f5 !important;
+  border: 1px solid #d1d5db !important;
+  border-left: 4px solid #3b82f6 !important;
+}
+
+body [data-theme="dark"] .message-text pre,
+body [data-theme="dark"] .message-content pre {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
 }
 
 .markdown-content ul,

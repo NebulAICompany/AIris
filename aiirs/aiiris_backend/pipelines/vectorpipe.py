@@ -108,7 +108,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             ]
 
             # Limit to 5 hypothetical prompts per chunk
-            hypothetical_prompts = hypothetical_prompts[:5]
+            hypothetical_prompts = hypothetical_prompts[:3]
 
             # Update metrics
             hype_hypothetical_content_generated.inc(len(hypothetical_prompts))
