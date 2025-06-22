@@ -277,8 +277,8 @@ class DocumentVerificationPipeline:
             llm_response = self._get_llm_response(classification_prompt)
             
             try:
-                # Parse LLM response
-                result = json.loads(llm_response)
+                # Parse LLM response using robust extraction
+                result = self._extract_json_from_response(llm_response)
                 
                 return {
                     "detected_type": result.get("document_type", "unknown"),
@@ -290,7 +290,7 @@ class DocumentVerificationPipeline:
                 
             except json.JSONDecodeError:
                 # Fallback parsing if JSON is malformed
-                logger.warning("LLM response was not valid JSON, attempting fallback parsing")
+                logger.warning("LLM classification response was not valid JSON, attempting fallback parsing")
                 return self._fallback_classification(text)
             
         except Exception as e:
@@ -466,7 +466,7 @@ class DocumentVerificationPipeline:
         
         try:
             llm_response = self._get_llm_response(extraction_prompt)
-            result = json.loads(llm_response)
+            result = self._extract_json_from_response(llm_response)
             
             # Clean and validate extracted fields
             cleaned_result = {}
@@ -528,7 +528,7 @@ class DocumentVerificationPipeline:
             llm_response = self._get_llm_response(validation_prompt)
             
             try:
-                result = json.loads(llm_response)
+                result = self._extract_json_from_response(llm_response)
                 
                 # Calculate score based on LLM analysis
                 base_score = result.get("confidence_score", 0.5)
@@ -561,7 +561,7 @@ class DocumentVerificationPipeline:
                 }
                 
             except json.JSONDecodeError:
-                logger.warning("Template validation LLM response was not valid JSON")
+                logger.warning("Template validation LLM response was not valid JSON, falling back to simple validation")
                 return self._simple_template_validation(text, doc_type)
             
         except Exception as e:
@@ -643,7 +643,7 @@ class DocumentVerificationPipeline:
             llm_response = self._get_llm_response(consistency_prompt)
             
             try:
-                result = json.loads(llm_response)
+                result = self._extract_json_from_response(llm_response)
                 
                 # Calculate consistency score based on issues found
                 base_score = result.get("consistency_score", 0.5)
@@ -694,7 +694,7 @@ class DocumentVerificationPipeline:
                 }
                 
             except json.JSONDecodeError:
-                logger.warning("Data consistency LLM response was not valid JSON")
+                logger.warning("Data consistency LLM response was not valid JSON, falling back to simple check")
                 return self._simple_consistency_check(extracted_fields)
             
         except Exception as e:
@@ -775,7 +775,7 @@ class DocumentVerificationPipeline:
             llm_response = self._get_llm_response(fraud_prompt)
             
             try:
-                result = json.loads(llm_response)
+                result = self._extract_json_from_response(llm_response)
                 
                 # Extract fraud analysis results
                 risk_level = result.get("risk_level", "medium")
@@ -848,7 +848,7 @@ class DocumentVerificationPipeline:
                 }
                 
             except json.JSONDecodeError:
-                logger.warning("Fraud analysis LLM response was not valid JSON")
+                logger.warning("Fraud analysis LLM response was not valid JSON, falling back to simple analysis")
                 return self._simple_fraud_analysis(text, ocr_result)
             
         except Exception as e:
@@ -951,7 +951,7 @@ class DocumentVerificationPipeline:
             response = self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are an expert document verification analyst specializing in Turkish financial documents. Provide accurate, detailed analysis in the requested JSON format."},
+                    {"role": "system", "content": "You are an expert document verification analyst specializing in Turkish financial documents. Always respond with only valid JSON in the exact format requested, without any additional text or explanations."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,  # Low temperature for consistent results
@@ -963,6 +963,67 @@ class DocumentVerificationPipeline:
         except Exception as e:
             logger.error(f"LLM API call failed: {str(e)}")
             raise e
+
+    def _extract_json_from_response(self, response: str) -> dict:
+        """Extract valid JSON from LLM response that may contain extra text"""
+        try:
+            # First, try direct parsing
+            return json.loads(response)
+        except json.JSONDecodeError:
+            pass
+        
+        # If direct parsing fails, try to extract JSON from the response
+        try:
+            # Look for JSON-like content between braces
+            import re
+            
+            # Find JSON objects in the response
+            json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+            matches = re.findall(json_pattern, response, re.DOTALL)
+            
+            for match in matches:
+                try:
+                    return json.loads(match)
+                except json.JSONDecodeError:
+                    continue
+            
+            # If no valid JSON found, try extracting from code blocks
+            code_block_pattern = r'```(?:json)?\s*(\{.*?\})\s*```'
+            code_matches = re.findall(code_block_pattern, response, re.DOTALL | re.IGNORECASE)
+            
+            for match in code_matches:
+                try:
+                    return json.loads(match)
+                except json.JSONDecodeError:
+                    continue
+            
+            # If still no valid JSON, try line-by-line extraction
+            lines = response.split('\n')
+            json_lines = []
+            in_json = False
+            
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith('{'):
+                    in_json = True
+                    json_lines = [stripped]
+                elif in_json:
+                    json_lines.append(stripped)
+                    if stripped.endswith('}'):
+                        try:
+                            potential_json = '\n'.join(json_lines)
+                            return json.loads(potential_json)
+                        except json.JSONDecodeError:
+                            in_json = False
+                            json_lines = []
+            
+            # If all extraction attempts fail, log the response and raise an error
+            logger.warning(f"Could not extract valid JSON from LLM response: {response[:200]}...")
+            raise json.JSONDecodeError("No valid JSON found in response", response, 0)
+            
+        except Exception as e:
+            logger.error(f"JSON extraction failed: {str(e)}")
+            raise json.JSONDecodeError("JSON extraction failed", response, 0)
     
     def _calculate_confidence_score(self, stages: Dict[str, Any]) -> float:
         """Calculate overall confidence score from all verification stages"""

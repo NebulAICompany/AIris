@@ -147,7 +147,8 @@ class APIService {
     query,
     webSearchEnabled = false,
     wolframEnabled = false,
-    sessionId = null
+    sessionId = null,
+    selectedFiles = null
   ) {
     try {
       // Determine timeout based on enabled features
@@ -168,6 +169,7 @@ class APIService {
           webSearchEnabled: webSearchEnabled,
           wolframEnabled: wolframEnabled,
           sessionId: sessionId,
+          selectedFiles: selectedFiles,
         },
         {
           timeout: timeout, // Dynamic timeout based on features
@@ -321,6 +323,24 @@ class APIService {
       return {
         success: false,
         error: error.message,
+      };
+    }
+  }
+
+  // Get uploaded files list
+  async getFiles() {
+    try {
+      const response = await this.api.get("/api/files");
+      return {
+        success: true,
+        files: response.data.files || [],
+      };
+    } catch (error) {
+      console.error("Error fetching files:", error);
+      return {
+        success: false,
+        error: error.message,
+        files: [],
       };
     }
   }
