@@ -268,12 +268,12 @@ class UIComponents {
 
     // Define the queries for each suggestion chip
     const chipQueries = {
-      "What's in my latest report?":
-        "Please provide an overview of my most recently uploaded files and their key contents. What financial documents do I have and what information do they contain?",
-      "Analyze financial trends":
-        "Analyze the financial trends and patterns in my uploaded documents. Show me any significant changes, growth patterns, or important financial insights from the data.",
-      "Summary of expenses":
-        "Provide a comprehensive summary of all expenses found in my documents. Break down the expenses by category, time period, and highlight any significant spending patterns.",
+      "Tüm Dosyalarımı özetle":
+        "Yüklediğim tüm dosyaları analiz et ve içeriklerinin genel bir özetini çıkar. Hangi türde belgelerim var ve ne tür bilgiler içeriyorlar?",
+      "Seçili Dosyalarımı özetle":
+        "Seçili belgelerdeki finansal trendleri ve desenleri analiz et. Önemli değişiklikleri, büyüme kalıplarını ve dikkat çekici finansal görüşleri göster.",
+      "Seçili dosyadan gider analizi":
+        "Seçili dosyalarımda bulunan tüm giderlerin kapsamlı bir özetini hazırla. Giderleri kategoriye, zaman dilimine göre ayır ve önemli harcama kalıplarını vurgula.",
     };
 
     const query = chipQueries[chipText];
