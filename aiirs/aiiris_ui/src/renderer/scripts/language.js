@@ -227,7 +227,40 @@ class LanguageService {
         
         // Error states
         errorLoadingFiles: 'Error loading files',
-        failedToLoadFiles: 'Failed to load files. Please try again later.'
+        failedToLoadFiles: 'Failed to load files. Please try again later.',
+
+        // Document Verification Section
+        documentVerification: 'Document Verification',
+        documentVerificationTitle: 'Document Verification',
+        verifyDocumentsDesc: 'Upload documents to verify their authenticity and detect potential fraud',
+        verificationDragDrop: 'Drop Document to Verify',
+        verificationSupportedFormats: 'Supported: PDF, JPG, PNG, TIFF, BMP',
+        documentType: 'Document Type',
+        autoDetect: 'Auto Detect',
+        invoice: 'Invoice (Fatura)',
+        receipt: 'Receipt (Fiş/Makbuz)',
+        bankStatement: 'Bank Statement',
+        payslip: 'Payslip (Maaş Bordrosu)',
+        contract: 'Contract (Sözleşme)',
+        taxDeclaration: 'Tax Declaration',
+        other: 'Other',
+        verifyDocument: 'Verify Document',
+        verificationResults: 'Verification Results',
+        confidence: 'Confidence',
+        verificationStatus: 'Status',
+        fraudRisk: 'Fraud Risk',
+        verificationStages: 'Verification Stages',
+        issuesFound: 'Issues Found',
+        downloadReport: 'Download Report',
+        verifyAnother: 'Verify Another Document',
+        verificationCompleted: 'Verification completed successfully',
+        verificationFailed: 'Document verification failed',
+        pleaseSelectFile: 'Please select a file to verify',
+        unsupportedFileType: 'Unsupported file type',
+        noVerificationDataToDownload: 'No verification data available to download',
+        reportDownloaded: 'Verification report downloaded successfully',
+        wolframMathVerification: 'Wolfram Alpha Mathematical Verification',
+        wolframMathVerificationDesc: 'Enable advanced mathematical verification for calculations, fraud detection, and currency validation'
       },
 
       tr: {
@@ -446,7 +479,40 @@ class LanguageService {
         
         // Error states
         errorLoadingFiles: 'Dosyalar yüklenirken hata',
-        failedToLoadFiles: 'Dosyalar yüklenemedi. Lütfen daha sonra tekrar deneyin.'
+        failedToLoadFiles: 'Dosyalar yüklenemedi. Lütfen daha sonra tekrar deneyin.',
+
+        // Document Verification Section
+        documentVerification: 'Belge Doğrulama',
+        documentVerificationTitle: 'Belge Doğrulama',
+        verifyDocumentsDesc: 'Belgelerin orijinalliğini doğrulamak ve potansiyel sahtekarlığı tespit etmek için yükleyin',
+        verificationDragDrop: 'Doğrulanacak Belgeyi Bırakın',
+        verificationSupportedFormats: 'Desteklenen: PDF, JPG, PNG, TIFF, BMP',
+        documentType: 'Belge Türü',
+        autoDetect: 'Otomatik Tespit',
+        invoice: 'Fatura',
+        receipt: 'Fiş/Makbuz',
+        bankStatement: 'Banka Ekstresi',
+        payslip: 'Maaş Bordrosu',
+        contract: 'Sözleşme',
+        taxDeclaration: 'Vergi Beyannamesi',
+        other: 'Diğer',
+        verifyDocument: 'Belgeyi Doğrula',
+        verificationResults: 'Doğrulama Sonuçları',
+        confidence: 'Güven',
+        verificationStatus: 'Durum',
+        fraudRisk: 'Sahtekarlık Riski',
+        verificationStages: 'Doğrulama Aşamaları',
+        issuesFound: 'Bulunan Sorunlar',
+        downloadReport: 'Raporu İndir',
+        verifyAnother: 'Başka Belge Doğrula',
+        verificationCompleted: 'Doğrulama başarıyla tamamlandı',
+        verificationFailed: 'Belge doğrulama başarısız oldu',
+        pleaseSelectFile: 'Lütfen doğrulanacak bir dosya seçin',
+        unsupportedFileType: 'Desteklenmeyen dosya türü',
+        noVerificationDataToDownload: 'İndirilecek doğrulama verisi mevcut değil',
+        reportDownloaded: 'Doğrulama raporu başarıyla indirildi',
+        wolframMathVerification: 'Wolfram Alpha Matematiksel Doğrulama',
+        wolframMathVerificationDesc: 'Hesaplamalar, sahtekarlık tespiti ve para birimi doğrulaması için gelişmiş matematiksel doğrulamayı etkinleştir'
       }
     };
   }

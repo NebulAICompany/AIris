@@ -276,6 +276,9 @@ class UIComponents {
       case "news":
         await this.loadFinanceNews();
         break;
+      case "verification":
+        await this.loadVerificationTab();
+        break;
     }
   }
 
@@ -2392,6 +2395,522 @@ class UIComponents {
       noActivity.textContent = t('loadingActivity');
     } else if (noActivity && noActivity.textContent.includes('No recent')) {
       noActivity.textContent = t('noActivity');
+    }
+  }
+
+  // Document Verification functionality
+  setupVerificationEventListeners() {
+    const verificationUploadArea = document.getElementById("verification-upload-area");
+    const verificationFileInput = document.getElementById("verification-file-input");
+    const verificationBrowseBtn = document.getElementById("verification-browse-files");
+    const verifyDocumentBtn = document.getElementById("verify-document-btn");
+    const verifyAnotherBtn = document.getElementById("verify-another-document");
+    const downloadReportBtn = document.getElementById("download-verification-report");
+
+    if (verificationUploadArea) {
+      // Drag and drop functionality
+      verificationUploadArea.addEventListener("dragover", this.handleVerificationDragOver.bind(this));
+      verificationUploadArea.addEventListener("dragleave", this.handleVerificationDragLeave.bind(this));
+      verificationUploadArea.addEventListener("drop", this.handleVerificationDrop.bind(this));
+      verificationUploadArea.addEventListener("click", () => verificationFileInput?.click());
+    }
+
+    if (verificationBrowseBtn) {
+      verificationBrowseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        verificationFileInput?.click();
+      });
+    }
+
+    if (verificationFileInput) {
+      verificationFileInput.addEventListener("change", this.handleVerificationFileSelect.bind(this));
+    }
+
+    if (verifyDocumentBtn) {
+      verifyDocumentBtn.addEventListener("click", this.startDocumentVerification.bind(this));
+    }
+
+    if (verifyAnotherBtn) {
+      verifyAnotherBtn.addEventListener("click", this.resetVerificationInterface.bind(this));
+    }
+
+    if (downloadReportBtn) {
+      downloadReportBtn.addEventListener("click", this.downloadVerificationReport.bind(this));
+    }
+
+    // Initialize Wolfram Alpha toggle for verification
+    const verificationWolframToggle = document.getElementById("verification-wolfram-toggle");
+    if (verificationWolframToggle) {
+      verificationWolframToggle.checked = Utils.isWolframEnabled();
+      verificationWolframToggle.addEventListener("change", (e) => {
+        Utils.setWolframEnabled(e.target.checked);
+        console.log("Verification Wolfram Alpha enabled:", e.target.checked);
+      });
+    }
+  }
+
+  async loadVerificationTypes() {
+    try {
+      const result = await window.apiService.getVerificationTypes();
+      
+      if (result.success) {
+        this.verificationTypes = result.verificationTypes;
+        this.updateVerificationTypeSelect(result.verificationTypes);
+      } else {
+        console.warn("Failed to load verification types:", result.error);
+      }
+    } catch (error) {
+      console.error("Error loading verification types:", error);
+    }
+  }
+
+  updateVerificationTypeSelect(types) {
+    const select = document.getElementById("verification-type");
+    if (!select || !types) return;
+
+    // Clear existing options except the first one (Auto Detect)
+    const autoOption = select.querySelector('option[value="auto"]');
+    select.innerHTML = "";
+    if (autoOption) {
+      select.appendChild(autoOption);
+    }
+
+    // Add options for each verification type
+    Object.entries(types).forEach(([key, value]) => {
+      if (key !== "auto") {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = `${value} (${key})`;
+        select.appendChild(option);
+      }
+    });
+  }
+
+  handleVerificationDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const uploadArea = document.getElementById("verification-upload-area");
+    if (uploadArea) {
+      uploadArea.classList.add("drag-over");
+    }
+  }
+
+  handleVerificationDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const uploadArea = document.getElementById("verification-upload-area");
+    if (uploadArea && !uploadArea.contains(e.relatedTarget)) {
+      uploadArea.classList.remove("drag-over");
+    }
+  }
+
+  handleVerificationDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const uploadArea = document.getElementById("verification-upload-area");
+    if (uploadArea) {
+      uploadArea.classList.remove("drag-over");
+    }
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      this.handleVerificationFiles(files);
+    }
+  }
+
+  handleVerificationFileSelect(e) {
+    const files = Array.from(e.target.files);
+    this.handleVerificationFiles(files);
+  }
+
+  handleVerificationFiles(files) {
+    if (files.length === 0) return;
+
+    // Take only the first file for verification
+    const file = files[0];
+    
+    // Check file type
+    const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(
+        `${t('unsupportedFileType')}: ${fileExtension}. ${t('verificationSupportedFormats')}`, 
+        "error"
+      );
+      return;
+    }
+
+    // Store the selected file and enable verification button
+    this.selectedVerificationFile = file;
+    this.updateVerificationUI(file);
+  }
+
+  updateVerificationUI(file) {
+    const uploadArea = document.getElementById("verification-upload-area");
+    const verifyBtn = document.getElementById("verify-document-btn");
+    
+    if (uploadArea && file) {
+      uploadArea.classList.add("file-hover");
+      const uploadIcon = uploadArea.querySelector(".upload-icon i");
+      if (uploadIcon) {
+        uploadIcon.className = "fas fa-file-check";
+      }
+      
+      const uploadText = uploadArea.querySelector("h3");
+      if (uploadText) {
+        uploadText.textContent = `Selected: ${file.name}`;
+      }
+    }
+
+    if (verifyBtn) {
+      verifyBtn.disabled = !file;
+    }
+  }
+
+  async startDocumentVerification() {
+    if (!this.selectedVerificationFile) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(t('pleaseSelectFile'), "warning");
+      return;
+    }
+
+    const verificationType = document.getElementById("verification-type")?.value || "auto";
+    const wolframEnabled = document.getElementById("verification-wolfram-toggle")?.checked || false;
+    const verifyBtn = document.getElementById("verify-document-btn");
+    const resultsContainer = document.getElementById("verification-results");
+
+    try {
+      // Disable button and show loading state
+      if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Verifying...</span>';
+      }
+
+      // Show progress indicator
+      this.showVerificationProgress("Starting verification...");
+
+      // Call verification API with Wolfram Alpha if enabled
+      const result = await window.apiService.verifyDocument(
+        this.selectedVerificationFile,
+        verificationType,
+        wolframEnabled,
+        (progress, status) => {
+          this.updateVerificationProgress(progress, status);
+        }
+      );
+
+      // Hide progress indicator
+      this.hideVerificationProgress();
+
+      if (result.success) {
+        // Show verification results
+        this.displayVerificationResults(result.verificationResult);
+        
+        if (resultsContainer) {
+          resultsContainer.style.display = "block";
+          resultsContainer.scrollIntoView({ behavior: "smooth" });
+        }
+
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        this.showNotification(t('verificationCompleted'), "success");
+      } else {
+        throw new Error(result.error);
+      }
+
+    } catch (error) {
+      console.error("Verification failed:", error);
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(`${t('verificationFailed')}: ${error.message}`, "error");
+      
+      this.hideVerificationProgress();
+    } finally {
+      // Re-enable button
+      if (verifyBtn) {
+        verifyBtn.disabled = false;
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        verifyBtn.innerHTML = `<i class="fas fa-shield-alt"></i> <span>${t('verifyDocument')}</span>`;
+      }
+    }
+  }
+
+  showVerificationProgress(message) {
+    const uploadSection = document.querySelector(".verification-upload-section");
+    if (!uploadSection) return;
+
+    // Remove existing progress indicator
+    const existingProgress = uploadSection.querySelector(".verification-progress");
+    if (existingProgress) {
+      existingProgress.remove();
+    }
+
+    // Create progress indicator
+    const progressDiv = document.createElement("div");
+    progressDiv.className = "verification-progress";
+    progressDiv.innerHTML = `
+      <i class="fas fa-spinner fa-spin"></i>
+      <span class="verification-progress-text">${message}</span>
+    `;
+
+    uploadSection.appendChild(progressDiv);
+  }
+
+  updateVerificationProgress(progress, status) {
+    const progressText = document.querySelector(".verification-progress-text");
+    if (progressText && status) {
+      progressText.textContent = status;
+    }
+  }
+
+  hideVerificationProgress() {
+    const progressDiv = document.querySelector(".verification-progress");
+    if (progressDiv) {
+      progressDiv.remove();
+    }
+  }
+
+  displayVerificationResults(result) {
+    this.currentVerificationResult = result;
+
+    // Update status badge
+    const statusBadge = document.getElementById("verification-status-badge");
+    if (statusBadge) {
+      statusBadge.textContent = result.status || "Unknown";
+      statusBadge.className = `status-badge ${result.status || "processing"}`;
+    }
+
+    // Update confidence score
+    this.updateConfidenceScore(result.confidence_score || 0);
+
+    // Update verification details
+    this.updateVerificationDetails(result);
+
+    // Update verification stages
+    this.updateVerificationStages(result.stages || {});
+
+    // Show issues if any
+    this.updateVerificationIssues(result.warnings || [], result.errors || []);
+  }
+
+  updateConfidenceScore(score) {
+    const scoreValue = document.getElementById("verification-score-value");
+    const scoreCircle = document.getElementById("verification-score-circle");
+    
+    if (scoreValue) {
+      scoreValue.textContent = `${Math.round(score * 100)}%`;
+    }
+
+    if (scoreCircle) {
+      // Update the conic gradient based on score
+      const percentage = score * 360; // Convert to degrees
+      const color = score >= 0.8 ? '#22c55e' : score >= 0.6 ? '#f59e0b' : '#ef4444';
+      
+      scoreCircle.style.background = `conic-gradient(
+        ${color} 0deg,
+        ${color} ${percentage}deg,
+        var(--border-color) ${percentage}deg,
+        var(--border-color) 360deg
+      )`;
+    }
+  }
+
+  updateVerificationDetails(result) {
+    const detectedType = document.getElementById("detected-document-type");
+    const finalStatus = document.getElementById("verification-final-status");
+    const fraudRisk = document.getElementById("fraud-risk-level");
+
+    if (detectedType) {
+      detectedType.textContent = result.verification_type || "Unknown";
+    }
+
+    if (finalStatus) {
+      finalStatus.textContent = result.status || "Unknown";
+      finalStatus.className = `detail-value ${result.status}`;
+    }
+
+    if (fraudRisk) {
+      const fraudLevel = result.stages?.fraud_analysis?.risk_level || "unknown";
+      fraudRisk.textContent = fraudLevel;
+      fraudRisk.className = `detail-value risk-${fraudLevel}`;
+    }
+  }
+
+  updateVerificationStages(stages) {
+    const stagesGrid = document.getElementById("verification-stages-grid");
+    if (!stagesGrid) return;
+
+    stagesGrid.innerHTML = "";
+
+    const stageNames = {
+      quality_control: "Quality Control",
+      classification: "Document Classification", 
+      text_extraction: "Text Extraction",
+      template_validation: "Template Validation",
+      data_consistency: "Data Consistency",
+      fraud_analysis: "Fraud Analysis"
+    };
+
+    Object.entries(stages).forEach(([stageName, stageData]) => {
+      const stageCard = this.createStageCard(stageNames[stageName] || stageName, stageData);
+      stagesGrid.appendChild(stageCard);
+    });
+  }
+
+  createStageCard(stageName, stageData) {
+    const card = document.createElement("div");
+    card.className = "stage-card";
+
+    // Determine stage status
+    let stageStatus = "warning";
+    let statusIcon = "fas fa-exclamation-triangle";
+    
+    if (stageData.passed || stageData.valid || stageData.consistent || stageData.risk_level === "low") {
+      stageStatus = "passed";
+      statusIcon = "fas fa-check";
+    } else if (stageData.failed || stageData.risk_level === "high") {
+      stageStatus = "failed";
+      statusIcon = "fas fa-times";
+    }
+
+    // Get stage score
+    const score = stageData.score || stageData.confidence || stageData.quality_score || 0;
+    const percentage = Math.round(score * 100);
+
+    // Get stage details
+    const issues = stageData.issues || stageData.indicators || [];
+    const details = Array.isArray(issues) ? issues.join(", ") : 
+                   stageData.assessment || stageData.reasoning || "No details available";
+
+    card.innerHTML = `
+      <div class="stage-header">
+        <div class="stage-name">${stageName}</div>
+        <div class="stage-status ${stageStatus}">
+          <i class="${statusIcon}"></i>
+        </div>
+      </div>
+      <div class="stage-details">${Utils.escapeHtml(details)}</div>
+      <div class="stage-score">
+        <span class="stage-score-label">Score</span>
+        <span class="stage-score-value">${percentage}%</span>
+      </div>
+    `;
+
+    return card;
+  }
+
+  updateVerificationIssues(warnings, errors) {
+    const issuesContainer = document.getElementById("verification-issues");
+    const issuesList = document.getElementById("verification-issues-list");
+
+    const allIssues = [...warnings, ...errors];
+
+    if (allIssues.length === 0) {
+      if (issuesContainer) {
+        issuesContainer.style.display = "none";
+      }
+      return;
+    }
+
+    if (issuesContainer) {
+      issuesContainer.style.display = "block";
+    }
+
+    if (issuesList) {
+      issuesList.innerHTML = allIssues.map(issue => `
+        <div class="issue-item">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span class="issue-text">${Utils.escapeHtml(issue)}</span>
+        </div>
+      `).join("");
+    }
+  }
+
+  resetVerificationInterface() {
+    // Reset file selection
+    this.selectedVerificationFile = null;
+    
+    // Reset upload area
+    const uploadArea = document.getElementById("verification-upload-area");
+    const verifyBtn = document.getElementById("verify-document-btn");
+    const resultsContainer = document.getElementById("verification-results");
+    const fileInput = document.getElementById("verification-file-input");
+
+    if (uploadArea) {
+      uploadArea.classList.remove("file-hover");
+      const uploadIcon = uploadArea.querySelector(".upload-icon i");
+      if (uploadIcon) {
+        uploadIcon.className = "fas fa-shield-alt";
+      }
+      
+      const uploadText = uploadArea.querySelector("h3");
+      if (uploadText) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        uploadText.textContent = t('verificationDragDrop');
+      }
+    }
+
+    if (verifyBtn) {
+      verifyBtn.disabled = true;
+    }
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+
+    if (fileInput) {
+      fileInput.value = "";
+    }
+
+    // Hide any progress indicators
+    this.hideVerificationProgress();
+
+    // Scroll back to top
+    const verificationContainer = document.querySelector(".verification-container");
+    if (verificationContainer) {
+      verificationContainer.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  downloadVerificationReport() {
+    if (!this.currentVerificationResult) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(t('noVerificationDataToDownload'), "warning");
+      return;
+    }
+
+    // Create a comprehensive report
+    const report = {
+      document_name: this.selectedVerificationFile?.name || "Unknown Document",
+      verification_timestamp: new Date().toISOString(),
+      verification_result: this.currentVerificationResult
+    };
+
+    // Convert to JSON and create download
+    const reportJson = JSON.stringify(report, null, 2);
+    const blob = new Blob([reportJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Create download link
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `verification_report_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    this.showNotification(t('reportDownloaded'), "success");
+  }
+
+  // Initialize verification when tab loads
+  async loadVerificationTab() {
+    if (!this.verificationInitialized) {
+      this.setupVerificationEventListeners();
+      await this.loadVerificationTypes();
+      this.verificationInitialized = true;
     }
   }
 }

@@ -1,0 +1,42 @@
+FATURA
+INVOICE
+
+ABC Yazılım Geliştirme Ltd. Şti.
+Vergi No: 1234567890
+İstanbul, Türkiye
+
+FATURA NO: F-2024-999999
+TARİH: 32/13/2024
+VADE TARİHİ: 45/18/2024
+
+SAYIN:
+XYZ Holdings A.Ş.
+Vergi No: 0987654321
+
+ÜRÜN/HİZMET AÇIKLAMASI:
+- Photoshop ile düzenlenmiş belge template hizmeti
+- Fake document creation service  
+- 50 adet duplicate fatura template'i
+- Modified invoice editing yazılımı
+
+TOPLAM TUTAR: 999.999.999,99 TL
+KDV (%18): 179.999.999,98 TL
+GENEL TOPLAM: 1.179.999.999,97 TL
+
+ÖDEME KOŞULLARI:
+Bu fatura kesinlikle ödenmelidir yoksa hukuki işlem başlatılacaktır!
+HEMEN ödeme yapılmazsa mahkemeye vereceğiz!
+
+Bu belge Adobe Photoshop CC 2024 ile oluşturulmuştur.
+Template ID: FAKE_INVOICE_001
+Copy protection: DISABLED
+
+BANKA BİLGİLERİ:
+IBAN: TR99 9999 9999 9999 9999 9999 99
+Banka: Sahte Bank
+
+Bu fatura toplamda 50 defa kopyalanmıştır.
+Modified date: 99/99/9999
+Creation software: FakeDoc Pro v2.1
+
+Yasal Uyarı: Bu edited document'tır. 
