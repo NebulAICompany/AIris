@@ -1,5 +1,6 @@
 from pathlib import Path
 import openai
+import pythoncom
 import os
 from docx2pdf import convert
 
@@ -12,6 +13,9 @@ class DocxParser:
     def run(self):
         from aiiris_backend.pipelines.uploadpipe import UploadPipeline
         from pathlib import Path
+
+        # Initialize COM at the beginning
+        pythoncom.CoInitialize()
 
         output_dir = Path(__file__).resolve().parent / "uploads"
         output_dir.mkdir(parents=True, exist_ok=True)

@@ -16,6 +16,7 @@ class PdfParser:
         self.pdf_path = pdf_path
         self.azure_endpoint_doc_intel = os.getenv(
             "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"
+
         )
         self.azure_key_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
