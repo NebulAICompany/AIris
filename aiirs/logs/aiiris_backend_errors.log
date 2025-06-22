@@ -1,2 +1,4 @@
 2025-06-20 23:19:23 - aiiris_backend.aiiris_backend.app.router - ERROR - [aiiris_backend.app.main] Error processing query: run_orchestration() missing 1 required positional argument: 'web_search_enabled'
 2025-06-21 17:05:28 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] Error processing query: Vectorstore not loaded. Please load the vectorstore first.
+2025-06-22 14:50:06 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for İkt.docx: (-2147221008, 'CoInitialize has not been called.', None, None)
+2025-06-22 15:33:11 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for VeriSeti.xlsx: Error code: 400 - {'error': {'message': 'Requested 969974 tokens, max 300000 tokens per request', 'type': 'max_tokens_per_request', 'param': None, 'code': 'max_tokens_per_request'}}

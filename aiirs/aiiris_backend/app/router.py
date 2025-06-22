@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from aiiris_backend.orchestrator.query_orchestrator import run_orchestration
 from aiiris_backend.orchestrator.chat_history import chat_history_manager
@@ -627,6 +628,62 @@ def delete_file(filename: str):
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
 
+@router.get("/files/{filename}/download")
+def download_file(filename: str):
+    """
+    Download a file from uploads directory.
+    """
+    try:
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        file_path = uploads_dir / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+        
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type='application/octet-stream'
+        )
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error downloading file {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error downloading file: {error_message}"
+        )
+
+
+@router.get("/files/{filename}/preview")
+def get_file_preview(filename: str):
+    """
+    Generate a preview for the specified file.
+    Returns different preview types based on file extension.
+    """
+    try:
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        file_path = uploads_dir / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+        
+        from aiiris_backend.pipelines.preview_generator import PreviewGenerator
+        preview_generator = PreviewGenerator(str(file_path))
+        preview_data = preview_generator.generate_preview()
+        
+        return {
+            "filename": filename,
+            "preview_type": preview_data["type"],
+            "preview_data": preview_data["data"],
+            "success": True
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error generating preview for {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating preview: {error_message}"
+        )
+
+
 @router.get("/finance-news")
 async def get_finance_news():
     """
@@ -707,6 +764,109 @@ async def get_finance_news():
         logger.error(f"Error fetching finance news: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error fetching finance news: {str(e)}"
+        )
+
+
+# Document Verification Endpoints
+@router.post("/verify")
+async def verify_document(
+    file: UploadFile = File(...),
+    verification_type: str = "auto",
+    wolfram_enabled: bool = False
+):
+    """
+    Verify a document using the LLM-based verification pipeline with optional Wolfram Alpha mathematical verification
+    """
+    global request_counter
+    try:
+        # Increment request counter
+        request_counter += 1
+        
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})")
+        
+        # Check file type
+        allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.bmp']
+        file_ext = Path(file.filename).suffix.lower()
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported file type: {file_ext}. Allowed types: {', '.join(allowed_extensions)}"
+            )
+        
+        # Create verification_uploads directory if it doesn't exist
+        verification_dir = Path(__file__).parent.parent / "verification_uploads"
+        verification_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save uploaded file temporarily
+        temp_file_path = verification_dir / file.filename
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        logger.info(f"File saved for verification: {temp_file_path}")
+        
+        # Import and run verification pipeline
+        from aiiris_backend.pipelines.document_verification import verification_pipeline
+        
+        # Run verification with Wolfram Alpha if enabled
+        verification_result = verification_pipeline.verify_document(
+            str(temp_file_path), 
+            verification_type,
+            wolfram_enabled
+        )
+        
+        # Clean up temporary file
+        try:
+            temp_file_path.unlink()
+            logger.info(f"Temporary file cleaned up: {temp_file_path}")
+        except Exception as cleanup_error:
+            logger.warning(f"Could not clean up temporary file: {cleanup_error}")
+        
+        logger.info(f"Document verification completed: {verification_result.get('status', 'unknown')}")
+        
+        return verification_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Document verification error for {file.filename}: {error_message}")
+        
+        # Clean up temporary file on error
+        try:
+            if 'temp_file_path' in locals():
+                temp_file_path.unlink()
+        except:
+            pass
+        
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Document verification failed: {error_message}"
+        )
+
+
+@router.get("/verification-types")
+def get_verification_types():
+    """
+    Get available document verification types
+    """
+    try:
+        from aiiris_backend.pipelines.document_verification import verification_pipeline
+        
+        verification_types = verification_pipeline.verification_types
+        
+        return {
+            "verification_types": verification_types,
+            "supported_formats": verification_pipeline.supported_formats,
+            "default_type": "auto"
+        }
+        
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting verification types: {error_message}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error getting verification types: {error_message}"
         )
 
 

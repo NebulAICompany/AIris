@@ -25,6 +25,13 @@ class UIComponents {
     this.chatSessions = [];
 
     this.init();
+    
+    // Subscribe to language changes
+    if (window.languageService) {
+      window.languageService.subscribe(() => {
+        this.updateDynamicTexts();
+      });
+    }
   }
 
   init() {
@@ -41,6 +48,16 @@ class UIComponents {
     const wolframToggle = document.getElementById("wolfram-toggle");
     if (wolframToggle) {
       wolframToggle.checked = this.wolframEnabled;
+    }
+
+    // Set language setting on load
+    if (window.languageService) {
+      const languageSetting = document.getElementById("language-setting");
+      if (languageSetting) {
+        languageSetting.value = window.languageService.getCurrentLanguage();
+      }
+      // Update texts with current language
+      window.languageService.updatePageTexts();
     }
   }
 
@@ -139,6 +156,16 @@ class UIComponents {
     const saveSettingsButton = document.getElementById("save-settings");
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
+    }
+
+    // Language setting change
+    const languageSetting = document.getElementById("language-setting");
+    if (languageSetting) {
+      languageSetting.addEventListener("change", (e) => {
+        if (window.languageService) {
+          window.languageService.setLanguage(e.target.value);
+        }
+      });
     } // Web Search toggle event
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
@@ -249,6 +276,9 @@ class UIComponents {
       case "news":
         await this.loadFinanceNews();
         break;
+      case "verification":
+        await this.loadVerificationTab();
+        break;
     }
   }
 
@@ -350,19 +380,22 @@ class UIComponents {
 
       // Check if response is valid
       if (!response || !response.success) {
-        const errorMsg = response?.error || "AI'dan yanıt alınamadı";
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        const errorMsg = response?.error || "Failed to get response from AI";
         this.addMessageToChat(
           "error",
-          `Üzgünüm, isteğinizi işleyemedim: ${errorMsg}`
+          `${t('sorryError')} ${errorMsg}`
         );
         return;
       }
 
       // Ensure we have actual response content
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       const assistantResponse =
         response.response ||
         response.data?.response ||
-        "Özür dilerim, uygun bir yanıt oluşturamadım.";
+
+        t('apologizeResponse');
 
       // Update session ID if it was created server-side
       if (response.sessionId && response.sessionId !== this.currentSessionId) {
@@ -379,33 +412,19 @@ class UIComponents {
     } catch (error) {
       this.hideTypingIndicator();
 
-      let errorMessage =
-        "Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.";
 
-      // Enhanced error handling based on error type
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      let errorMessage = t('sorryEncounteredError');
       if (error.message) {
-        if (
-          error.message.includes("timeout") ||
-          error.message.includes("zaman aşımı")
-        ) {
-          errorMessage =
-            "İstek zaman aşımına uğradı. AI servisi meşgul olabilir. Lütfen daha kısa bir soru deneyin veya birkaç saniye bekleyin.";
+        if (error.message.includes("timeout")) {
+          errorMessage = t('requestTookTooLong');
+
         } else if (
           error.message.includes("fetch") ||
           error.message.includes("network") ||
           error.message.includes("bağlan")
         ) {
-          errorMessage =
-            "Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.";
-        } else if (
-          error.message.includes("502") ||
-          error.message.includes("503")
-        ) {
-          errorMessage =
-            "Backend servisi geçici olarak kullanılamıyor. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
-        } else if (error.message.includes("500")) {
-          errorMessage =
-            "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+          errorMessage = t('connectionErrorCheck');
         }
       }
 
@@ -641,10 +660,11 @@ class UIComponents {
       this.currentSessionId = null;
 
       // Add welcome message
-      this.addMessageToChat(
-        "assistant",
-        "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them."
-      );
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    this.addMessageToChat(
+      "assistant",
+      t('welcomeAssistantMessage')
+    );
     }
   }
 
@@ -1318,10 +1338,24 @@ class UIComponents {
                 </button>
             </div>
             <div class="upload-progress" style="display: none;">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%"></div>
+                <div class="progress-header">
+                    <div class="progress-status">
+                        <i class="fas fa-clock progress-icon"></i>
+                        <span class="progress-stage">Preparing...</span>
+                    </div>
+                    <div class="progress-percentage">0%</div>
                 </div>
-                <div class="progress-text">0%</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%">
+                            <div class="progress-shine"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <span class="upload-speed"></span>
+                    <span class="time-remaining"></span>
+                </div>
             </div>
         `;
 
@@ -1373,46 +1407,218 @@ class UIComponents {
   async uploadFile(file, fileItem) {
     const progressElement = fileItem.querySelector(".upload-progress");
     const progressFill = fileItem.querySelector(".progress-fill");
-    const progressText = fileItem.querySelector(".progress-text");
+    const progressPercentage = fileItem.querySelector(".progress-percentage");
+    const progressStage = fileItem.querySelector(".progress-stage");
+    const progressIcon = fileItem.querySelector(".progress-icon");
+    const uploadSpeed = fileItem.querySelector(".upload-speed");
+    const timeRemaining = fileItem.querySelector(".time-remaining");
 
+    // Show progress container
     progressElement.style.display = "block";
+    
+    // Track timing for speed calculation
+    const startTime = Date.now();
+    let lastTime = startTime;
+    let lastLoaded = 0;
 
     try {
-      // Convert File to ArrayBuffer for IPC communication
-      const fileBuffer = await file.arrayBuffer();
+      // Stage 1: Preparing file
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-cog fa-spin", t('preparingFile'));
+      await this.animateProgress(progressFill, progressPercentage, 0, 10, 500);
 
-      // Simulate progress during file reading
-      progressFill.style.width = "25%";
-      progressText.textContent = "25%";
+      // Stage 2: Reading file
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-file-alt", t('readingFile'));
+      
+      // Read file with progress simulation
+      let fileBuffer;
+      await this.simulateAsyncOperation(
+        async () => {
+          fileBuffer = await file.arrayBuffer();
+        },
+        (progress) => {
+          const currentProgress = 10 + (progress * 0.15); // 10% to 25%
+          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+        },
+        Math.max(500, Math.min(2000, file.size / 1000)) // Dynamic duration based on file size
+      );
 
-      // Call API service for file upload
-      const response = await window.apiService.uploadFile(file);
+      // Stage 3: Uploading
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-cloud-upload-alt", t('uploading'));
+      
+      let uploadResponse;
+      await this.simulateAsyncOperation(
+        async () => {
+          uploadResponse = await window.apiService.uploadFile(file);
+        },
+        (progress) => {
+          const currentProgress = 25 + (progress * 0.45); // 25% to 70%
+          const currentTime = Date.now();
+          const deltaTime = currentTime - lastTime;
+          const deltaLoaded = (progress - lastLoaded) * file.size;
+          
+          if (deltaTime > 100) { // Update speed every 100ms
+            const speed = deltaLoaded / deltaTime * 1000; // bytes per second
+            const remaining = file.size * (1 - progress);
+            const eta = remaining / speed;
+            
+            uploadSpeed.textContent = this.formatSpeed(speed);
+            timeRemaining.textContent = this.formatTime(eta);
+            
+            lastTime = currentTime;
+            lastLoaded = progress;
+          }
+          
+          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+        },
+        Math.max(1000, Math.min(5000, file.size / 500)) // Dynamic duration based on file size
+      );
 
-      // Update progress to complete
-      progressFill.style.width = "100%";
-      progressText.textContent = "100%";
+      // Stage 4: Processing
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-brain fa-pulse", t('processingWithAI'));
+      uploadSpeed.textContent = "";
+      timeRemaining.textContent = "";
+      
+      // Processing stage (AI processing happens in background)
+      await this.simulateAsyncOperation(
+        async () => {
+          // Wait a bit more to show processing stage
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        },
+        (progress) => {
+          const currentProgress = 70 + (progress * 0.25); // 70% to 95%
+          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+        },
+        2000
+      );
 
-      // Success
+      // Stage 5: Complete
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-check", t('uploadComplete'));
+      await this.animateProgress(progressFill, progressPercentage, null, 100, 500);
+
+      // Success styling
       fileItem.classList.add("upload-success");
-      progressText.textContent = "Complete";
+      progressFill.style.background = "linear-gradient(90deg, #10b981, #34d399)";
+      
+      // Calculate total time
+      const totalTime = Date.now() - startTime;
+      const avgSpeed = file.size / (totalTime / 1000);
+      uploadSpeed.textContent = `${t('avgSpeed')}: ${this.formatSpeed(avgSpeed)}`;
+      timeRemaining.textContent = `${t('completedIn')} ${this.formatTime(totalTime / 1000)}`;
 
       // Remove after delay
       setTimeout(() => {
-        fileItem.remove();
-        this.updateUploadButton();
-      }, 2000);
+        fileItem.style.opacity = "0";
+        fileItem.style.transform = "translateX(100%)";
+        setTimeout(() => {
+          fileItem.remove();
+          this.updateUploadButton();
+        }, 300);
+      }, 3000);
 
       this.uploadedFiles.push({
         name: file.name,
         size: file.size,
         uploadDate: new Date(),
-        id: response.file_id || Utils.generateId(),
+        id: uploadResponse.file_id || Utils.generateId(),
       });
+
     } catch (error) {
+      // Error state
       fileItem.classList.add("upload-error");
-      progressText.textContent = "Error";
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-exclamation-triangle", t('uploadFailed'));
+      progressFill.style.background = "linear-gradient(90deg, #ef4444, #f87171)";
+      uploadSpeed.textContent = "";
+      timeRemaining.textContent = t('errorOccurred');
       console.error("Upload error:", error);
+      
+      // Show retry option
+      setTimeout(() => {
+        const retryButton = document.createElement("button");
+        retryButton.className = "retry-upload-btn";
+        retryButton.innerHTML = `<i class="fas fa-redo"></i> ${t('retry')}`;
+        retryButton.onclick = () => {
+          fileItem.classList.remove("upload-error");
+          this.uploadFile(file, fileItem);
+        };
+        fileItem.querySelector(".progress-details").appendChild(retryButton);
+      }, 1000);
     }
+  }
+
+  updateProgressStage(iconElement, stageElement, iconClass, stageText) {
+    iconElement.className = `${iconClass} progress-icon`;
+    stageElement.textContent = stageText;
+  }
+
+  async animateProgress(fillElement, percentageElement, fromWidth, toWidth, duration) {
+    return new Promise(resolve => {
+      const startWidth = fromWidth !== null ? fromWidth : parseFloat(fillElement.style.width) || 0;
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentWidth = startWidth + (toWidth - startWidth) * easeProgress;
+        
+        fillElement.style.width = `${currentWidth}%`;
+        if (percentageElement) {
+          percentageElement.textContent = `${Math.round(currentWidth)}%`;
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          resolve();
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    });
+  }
+
+  async simulateAsyncOperation(operation, progressCallback, duration) {
+    const startTime = Date.now();
+    
+    // Start the actual operation
+    const operationPromise = operation();
+    
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      progressCallback(progress);
+      
+      if (progress >= 1) {
+        clearInterval(progressInterval);
+      }
+    }, 50);
+    
+    // Wait for either the operation to complete or the duration to pass
+    await Promise.all([
+      operationPromise,
+      new Promise(resolve => setTimeout(resolve, duration))
+    ]);
+    
+    clearInterval(progressInterval);
+    progressCallback(1); // Ensure we end at 100%
+  }
+
+  formatSpeed(bytesPerSecond) {
+    if (bytesPerSecond < 1024) return `${bytesPerSecond.toFixed(0)} B/s`;
+    if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+  }
+
+  formatTime(seconds) {
+    if (seconds < 1) return "< 1s";
+    if (seconds < 60) return `${seconds.toFixed(0)}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}m ${remainingSeconds}s`;
   }
 
   async loadFileLibrary() {
@@ -1428,11 +1634,12 @@ class UIComponents {
       fileLibrary.innerHTML = "";
 
       if (files.length === 0) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
           <i class="fas fa-folder-open"></i>
-          <h3>No documents yet</h3>
-          <p>Upload some documents to get started</p>
-          <button class="cta-button" data-tab="upload">Upload Files</button>
+          <h3>${t('noDocuments')}</h3>
+          <p>${t('uploadToGetStarted')}</p>
+          <button class="cta-button" data-tab="upload">${t('uploadFilesBtn')}</button>
         </div>`;
         return;
       }
@@ -1464,38 +1671,149 @@ class UIComponents {
               </button>
             </div>
           </div>
+          <div class="file-card-preview" id="preview-${Utils.escapeHtml(file.name).replace(/[^a-zA-Z0-9]/g, '_')}">
+            <div class="preview-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span data-i18n="previewLoading">Loading preview...</span>
+            </div>
+          </div>
         `;
 
         // Add click handler to open file (but not on action buttons)
         fileItem.addEventListener("click", (e) => {
-          // Don't open file if clicking on action buttons
-          if (!e.target.closest(".file-card-actions")) {
+          // Don't open file if clicking on action buttons or preview area
+          if (!e.target.closest(".file-card-actions") && !e.target.closest(".file-card-preview")) {
             this.openFile(file.name);
           }
         });
 
         fileLibrary.appendChild(fileItem);
+        
+        // Load preview for this file
+        this.loadFilePreview(file.name);
       });
     } catch (error) {
       const fileLibrary = document.getElementById("files-grid");
       if (fileLibrary) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>Error loading files</h3>
-          <p>Failed to load files. Please try again later.</p>
+          <h3>${t('error')}</h3>
+          <p>${t('networkError')}</p>
         </div>`;
       }
       console.error("Error loading file library:", error);
     }
   }
 
+  async loadFilePreview(fileName) {
+    const previewId = `preview-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const previewElement = document.getElementById(previewId);
+    
+    if (!previewElement) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/files/${encodeURIComponent(fileName)}/preview`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load preview: ${response.statusText}`);
+      }
+      
+      const previewData = await response.json();
+      this.renderFilePreview(previewElement, previewData);
+    } catch (error) {
+      console.error(`Error loading preview for ${fileName}:`, error);
+      previewElement.innerHTML = `
+        <div class="preview-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Preview unavailable: ${Utils.escapeHtml(error.message || 'Network error')}</span>
+        </div>
+      `;
+    }
+  }
+
+  renderFilePreview(previewElement, previewData) {
+    if (!previewData.success) {
+      previewElement.innerHTML = `
+        <div class="preview-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Preview error: ${Utils.escapeHtml(previewData.error || 'Unknown error')}</span>
+        </div>
+      `;
+      return;
+    }
+
+    const { preview_type, preview_data } = previewData;
+
+    switch (preview_type) {
+      case 'image':
+        previewElement.innerHTML = `
+          <div class="preview-image">
+            <img src="${preview_data}" alt="Document preview" />
+          </div>
+        `;
+        break;
+        
+      case 'text':
+        previewElement.innerHTML = `
+          <div class="preview-text">
+            <pre>${Utils.escapeHtml(preview_data)}</pre>
+          </div>
+        `;
+        break;
+        
+      case 'excel':
+        previewElement.innerHTML = `
+          <div class="preview-excel">
+            <div class="excel-summary">
+              <strong>${preview_data.columns.length} columns, ${preview_data.rows_shown} rows</strong>
+            </div>
+            <div class="excel-data">${preview_data.html}</div>
+          </div>
+        `;
+        break;
+        
+      case 'info':
+        previewElement.innerHTML = `
+          <div class="preview-info">
+            <i class="fas fa-info-circle"></i>
+            <span>${Utils.escapeHtml(preview_data)}</span>
+          </div>
+        `;
+        break;
+        
+      case 'error':
+        previewElement.innerHTML = `
+          <div class="preview-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>${Utils.escapeHtml(preview_data)}</span>
+          </div>
+        `;
+        break;
+        
+      default:
+        previewElement.innerHTML = `
+          <div class="preview-info">
+            <i class="fas fa-file"></i>
+            <span>Preview not available</span>
+          </div>
+        `;
+    }
+  }
+
   async openFile(fileName) {
     try {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      
       // Try to open the file using Electron's API
       if (window.airisAPI && window.airisAPI.openFile) {
         try {
           await window.airisAPI.openFile(fileName);
-          this.showNotification(`Opened ${fileName}`, "success");
+          this.showNotification(`${t('openedFile')} ${fileName}`, "success");
           return;
         } catch (electronError) {
           console.warn(
@@ -1511,7 +1829,7 @@ class UIComponents {
           fileName
         )}/download`;
         window.open(downloadUrl, "_blank");
-        this.showNotification(`Downloading ${fileName}...`, "info");
+        this.showNotification(`${t('downloadingFile')} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
 
@@ -1524,7 +1842,7 @@ class UIComponents {
           this.showNotification(
             `${fileName} (${Utils.formatFileSize(
               fileInfo.size || 0
-            )}) - Unable to open directly`,
+            )}) - ${t('unableToOpenDirectly')}`,
             "warning"
           );
         } else {
@@ -1534,7 +1852,7 @@ class UIComponents {
     } catch (error) {
       console.error("Error opening file:", error);
       this.showNotification(
-        `Failed to open ${fileName}. Please try again.`,
+        `${t('failedToOpenFile')} ${fileName}. ${t('sorryEncounteredError')}`,
         "error"
       );
     }
@@ -1558,7 +1876,8 @@ class UIComponents {
       console.log("✅ Frontend: User confirmed deletion for:", fileName);
 
       // Show loading state
-      this.showNotification("Deleting file...", "info");
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(t('deletingFile'), "info");
 
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
 
@@ -1614,6 +1933,7 @@ class UIComponents {
     const fileIcon = Utils.getFileIcon(file.name);
     const fileSize = Utils.formatFileSize(file.size);
     const uploadDate = new Date(file.uploadDate).toLocaleDateString();
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
 
     fileElement.innerHTML = `
             <div class="file-icon">
@@ -1623,18 +1943,18 @@ class UIComponents {
                 <div class="file-name">${Utils.escapeHtml(file.name)}</div>
                 <div class="file-meta">
                     <span class="file-size">${fileSize}</span>
-                    <span class="file-date">Uploaded ${uploadDate}</span>
+                    <span class="file-date">${t('uploadedOn')} ${uploadDate}</span>
                 </div>
             </div>
             <div class="file-actions">
                 <button class="action-btn" onclick="window.uiComponents.downloadFile('${
                   file.id
-                }')">
+                }')" title="${t('downloadFile')}">
                     <i class="fas fa-download"></i>
                 </button>
                 <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${
                   file.id
-                }')">
+                }')" title="${t('deleteFile')}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -1653,7 +1973,8 @@ class UIComponents {
   }
 
   async deleteFile(fileId) {
-    if (!confirm("Are you sure you want to delete this file?")) return;
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    if (!confirm(t('areYouSureDelete'))) return;
 
     try {
       // Remove from local storage
@@ -1709,17 +2030,19 @@ class UIComponents {
     const documentCount = document.getElementById("document-count");
     const systemHealth = document.getElementById("system-health");
 
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    
     if (apiRequests) {
       apiRequests.textContent = metrics.apiRequests || "0";
     }
     if (responseTime) {
-      responseTime.textContent = metrics.averageResponseTime || "N/A";
+      responseTime.textContent = metrics.averageResponseTime || t('notAvailable');
     }
     if (documentCount) {
       documentCount.textContent = metrics.documentsProcessed || "0";
     }
     if (systemHealth) {
-      systemHealth.textContent = metrics.systemHealth || "Unknown";
+      systemHealth.textContent = metrics.systemHealth || t('unknown');
       // Color code the health status
       systemHealth.style.color =
         metrics.systemHealth === "healthy"
@@ -1740,8 +2063,9 @@ class UIComponents {
     activityList.innerHTML = "";
 
     if (activities.length === 0) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       activityList.innerHTML =
-        '<div class="no-activity">No recent activity</div>';
+        `<div class="no-activity">${t('noActivity')}</div>`;
       return;
     }
 
@@ -1842,7 +2166,8 @@ class UIComponents {
     localStorage.setItem("airis-settings", JSON.stringify(settings));
 
     // Show success message
-    this.showNotification("Settings saved successfully!", "success");
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    this.showNotification(t('settingsSavedSuccessfully'), "success");
   }
 
   loadSettings() {
@@ -1903,9 +2228,10 @@ class UIComponents {
     this.loadSettings();
 
     // Initialize with welcome message
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
     this.addMessageToChat(
       "assistant",
-      "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them."
+      t('welcomeAssistantMessage')
     );
 
     // Update upload button state
@@ -1935,17 +2261,18 @@ class UIComponents {
 
     // Show loading state if forcing refresh or no news loaded
     if (forceRefresh || !this.lastNewsUpdate) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       newsGrid.innerHTML = `
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading latest finance news...</p>
+          <p>${t('loadingLatestNews')}</p>
         </div>
       `;
 
       if (refreshButton) {
         refreshButton.disabled = true;
         refreshButton.innerHTML =
-          '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
+          `<i class="fas fa-sync-alt fa-spin"></i> ${t('loading')}`;
       }
     }
 
@@ -1957,7 +2284,8 @@ class UIComponents {
         this.lastNewsUpdate = new Date().toISOString();
 
         if (newsLastUpdated) {
-          newsLastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+          const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+          newsLastUpdated.textContent = `${t('lastUpdatedAt')} ${new Date().toLocaleTimeString()}`;
         }
 
         // Set up auto-refresh interval (1 minute)
@@ -1967,26 +2295,28 @@ class UIComponents {
       }
     } catch (error) {
       console.error("Failed to load finance news:", error);
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       newsGrid.innerHTML = `
         <div class="error-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>Failed to load news</h3>
+          <h3>${t('failedToLoadNews')}</h3>
           <p>${
-            error.message || "Unable to fetch finance news. Please try again."
+            error.message || t('unableToFetchNews')
           }</p>
           <button class="btn btn-primary" onclick="window.uiComponents.loadFinanceNews(true)">
-            <i class="fas fa-retry"></i> Retry
+            <i class="fas fa-retry"></i> ${t('retryAction')}
           </button>
         </div>
       `;
 
       if (newsLastUpdated) {
-        newsLastUpdated.textContent = "Failed to update";
+        newsLastUpdated.textContent = t('failedToUpdate');
       }
     } finally {
       if (refreshButton) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         refreshButton.disabled = false;
-        refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t('refresh')}`;
       }
     }
   }
@@ -2064,12 +2394,14 @@ class UIComponents {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+
     if (minutes < 60) {
-      return `${minutes}m ago`;
+      return `${minutes}${t('minutesAgo')}`;
     } else if (hours < 24) {
-      return `${hours}h ago`;
+      return `${hours}${t('hoursAgo')}`;
     } else {
-      return `${days}d ago`;
+      return `${days}${t('daysAgo')}`;
     }
   }
 
@@ -2091,6 +2423,646 @@ class UIComponents {
     if (this.newsRefreshInterval) {
       clearInterval(this.newsRefreshInterval);
       this.newsRefreshInterval = null;
+    }
+  }
+
+  updateDynamicTexts() {
+    if (!window.languageService) return;
+
+    const t = window.languageService.t.bind(window.languageService);
+
+    // Update suggestion chips
+    const chips = document.querySelectorAll('.suggestion-chip');
+    chips.forEach((chip, index) => {
+      const chipKeys = ['suggestedQuestions.latestReport', 'suggestedQuestions.analyzeTrends', 'suggestedQuestions.expenseSummary'];
+      if (chipKeys[index]) {
+        chip.textContent = t(chipKeys[index]);
+      }
+    });
+
+    // Update upload progress stages
+    this.updateProgressStage = (iconElement, stageElement, iconClass, stageText) => {
+      iconElement.className = `${iconClass} progress-icon`;
+      
+      // Use translation for stage text
+      let translatedText = stageText;
+      if (stageText.includes('Preparing')) translatedText = t('preparing');
+      else if (stageText.includes('Reading')) translatedText = t('readingFile');
+      else if (stageText.includes('Uploading')) translatedText = t('uploading');
+      else if (stageText.includes('Processing with AI')) translatedText = t('processingWithAI');
+      else if (stageText.includes('complete')) translatedText = t('uploadComplete');
+      else if (stageText.includes('failed')) translatedText = t('uploadFailed');
+      
+      stageElement.textContent = translatedText;
+    };
+
+    // Update file deletion confirmation dialog
+    this.deleteFile = async (fileName) => {
+      try {
+        const confirmed = confirm(t('deleteConfirmation', { filename: fileName }));
+        if (!confirmed) return;
+
+        this.showNotification(t('loading'), "info");
+
+        const result = await fetch(
+          `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`,
+          { method: "DELETE" }
+        );
+
+        if (!result.ok) {
+          throw new Error(`Failed to delete file: ${result.statusText}`);
+        }
+
+        const data = await result.json();
+
+        this.showNotification(t('fileDeletedSuccessfully', { filename: fileName }), "success");
+        this.loadFileLibrary();
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        this.showNotification(t('failedToDeleteFile'), "error");
+      }
+    };
+
+    // Update status texts
+    const statusTexts = document.querySelectorAll('.status-text');
+    statusTexts.forEach(status => {
+      if (status.textContent.includes('Loading')) {
+        status.textContent = t('loading');
+      } else if (status.textContent.includes('Connected')) {
+        status.textContent = t('connected');
+      } else if (status.textContent.includes('Connecting')) {
+        status.textContent = t('connecting');
+      }
+    });
+
+    // Update empty states
+    this.updateEmptyStates();
+
+    // Update news refresh button text
+    const refreshButton = document.getElementById('refresh-news');
+    if (refreshButton && !refreshButton.disabled) {
+      refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t('refresh')}`;
+    }
+
+    // Update analytics metrics with translations
+    const responseTime = document.getElementById("response-time");
+    const systemHealth = document.getElementById("system-health");
+    if (responseTime && responseTime.textContent === 'N/A') {
+      responseTime.textContent = t('notAvailable');
+    }
+    if (systemHealth && systemHealth.textContent === 'Unknown') {
+      systemHealth.textContent = t('unknown');
+    }
+
+    // Refresh current tab content with new language
+    if (this.currentTab === 'files') {
+      this.loadFileLibrary();
+    } else if (this.currentTab === 'news') {
+      this.loadFinanceNews();
+    } else if (this.currentTab === 'analytics') {
+      this.loadAnalytics();
+    }
+  }
+
+  updateEmptyStates() {
+    if (!window.languageService) return;
+
+    const t = window.languageService.t.bind(window.languageService);
+
+    // Update file empty state
+    const fileEmptyState = document.querySelector('#files-grid .empty-state');
+    if (fileEmptyState) {
+      const heading = fileEmptyState.querySelector('h3');
+      const paragraph = fileEmptyState.querySelector('p');
+      const button = fileEmptyState.querySelector('button');
+      
+      if (heading) heading.textContent = t('noDocuments');
+      if (paragraph) paragraph.textContent = t('uploadToGetStarted');
+      if (button) button.textContent = t('uploadFilesBtn');
+    }
+
+    // Update no activity state
+    const noActivity = document.querySelector('.no-activity');
+    if (noActivity && noActivity.textContent.includes('Loading')) {
+      noActivity.textContent = t('loadingActivity');
+    } else if (noActivity && noActivity.textContent.includes('No recent')) {
+      noActivity.textContent = t('noActivity');
+    }
+  }
+
+  // Document Verification functionality
+  setupVerificationEventListeners() {
+    const verificationUploadArea = document.getElementById("verification-upload-area");
+    const verificationFileInput = document.getElementById("verification-file-input");
+    const verificationBrowseBtn = document.getElementById("verification-browse-files");
+    const verifyDocumentBtn = document.getElementById("verify-document-btn");
+    const verifyAnotherBtn = document.getElementById("verify-another-document");
+    const downloadReportBtn = document.getElementById("download-verification-report");
+
+    if (verificationUploadArea) {
+      // Drag and drop functionality
+      verificationUploadArea.addEventListener("dragover", this.handleVerificationDragOver.bind(this));
+      verificationUploadArea.addEventListener("dragleave", this.handleVerificationDragLeave.bind(this));
+      verificationUploadArea.addEventListener("drop", this.handleVerificationDrop.bind(this));
+      verificationUploadArea.addEventListener("click", () => verificationFileInput?.click());
+    }
+
+    if (verificationBrowseBtn) {
+      verificationBrowseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        verificationFileInput?.click();
+      });
+    }
+
+    if (verificationFileInput) {
+      verificationFileInput.addEventListener("change", this.handleVerificationFileSelect.bind(this));
+    }
+
+    if (verifyDocumentBtn) {
+      verifyDocumentBtn.addEventListener("click", this.startDocumentVerification.bind(this));
+    }
+
+    if (verifyAnotherBtn) {
+      verifyAnotherBtn.addEventListener("click", this.resetVerificationInterface.bind(this));
+    }
+
+    if (downloadReportBtn) {
+      downloadReportBtn.addEventListener("click", this.downloadVerificationReport.bind(this));
+    }
+
+    // Initialize Wolfram Alpha toggle for verification
+    const verificationWolframToggle = document.getElementById("verification-wolfram-toggle");
+    if (verificationWolframToggle) {
+      verificationWolframToggle.checked = Utils.isWolframEnabled();
+      verificationWolframToggle.addEventListener("change", (e) => {
+        Utils.setWolframEnabled(e.target.checked);
+        console.log("Verification Wolfram Alpha enabled:", e.target.checked);
+      });
+    }
+  }
+
+  async loadVerificationTypes() {
+    try {
+      const result = await window.apiService.getVerificationTypes();
+      
+      if (result.success) {
+        this.verificationTypes = result.verificationTypes;
+        this.updateVerificationTypeSelect(result.verificationTypes);
+      } else {
+        console.warn("Failed to load verification types:", result.error);
+      }
+    } catch (error) {
+      console.error("Error loading verification types:", error);
+    }
+  }
+
+  updateVerificationTypeSelect(types) {
+    const select = document.getElementById("verification-type");
+    if (!select || !types) return;
+
+    // Clear existing options except the first one (Auto Detect)
+    const autoOption = select.querySelector('option[value="auto"]');
+    select.innerHTML = "";
+    if (autoOption) {
+      select.appendChild(autoOption);
+    }
+
+    // Add options for each verification type
+    Object.entries(types).forEach(([key, value]) => {
+      if (key !== "auto") {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = `${value} (${key})`;
+        select.appendChild(option);
+      }
+    });
+  }
+
+  handleVerificationDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const uploadArea = document.getElementById("verification-upload-area");
+    if (uploadArea) {
+      uploadArea.classList.add("drag-over");
+    }
+  }
+
+  handleVerificationDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const uploadArea = document.getElementById("verification-upload-area");
+    if (uploadArea && !uploadArea.contains(e.relatedTarget)) {
+      uploadArea.classList.remove("drag-over");
+    }
+  }
+
+  handleVerificationDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const uploadArea = document.getElementById("verification-upload-area");
+    if (uploadArea) {
+      uploadArea.classList.remove("drag-over");
+    }
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      this.handleVerificationFiles(files);
+    }
+  }
+
+  handleVerificationFileSelect(e) {
+    const files = Array.from(e.target.files);
+    this.handleVerificationFiles(files);
+  }
+
+  handleVerificationFiles(files) {
+    if (files.length === 0) return;
+
+    // Take only the first file for verification
+    const file = files[0];
+    
+    // Check file type
+    const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(
+        `${t('unsupportedFileType')}: ${fileExtension}. ${t('verificationSupportedFormats')}`, 
+        "error"
+      );
+      return;
+    }
+
+    // Store the selected file and enable verification button
+    this.selectedVerificationFile = file;
+    this.updateVerificationUI(file);
+  }
+
+  updateVerificationUI(file) {
+    const uploadArea = document.getElementById("verification-upload-area");
+    const verifyBtn = document.getElementById("verify-document-btn");
+    
+    if (uploadArea && file) {
+      uploadArea.classList.add("file-hover");
+      const uploadIcon = uploadArea.querySelector(".upload-icon i");
+      if (uploadIcon) {
+        uploadIcon.className = "fas fa-file-check";
+      }
+      
+      const uploadText = uploadArea.querySelector("h3");
+      if (uploadText) {
+        uploadText.textContent = `Selected: ${file.name}`;
+      }
+    }
+
+    if (verifyBtn) {
+      verifyBtn.disabled = !file;
+    }
+  }
+
+  async startDocumentVerification() {
+    if (!this.selectedVerificationFile) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(t('pleaseSelectFile'), "warning");
+      return;
+    }
+
+    const verificationType = document.getElementById("verification-type")?.value || "auto";
+    const wolframEnabled = document.getElementById("verification-wolfram-toggle")?.checked || false;
+    const verifyBtn = document.getElementById("verify-document-btn");
+    const resultsContainer = document.getElementById("verification-results");
+
+    try {
+      // Disable button and show loading state
+      if (verifyBtn) {
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Verifying...</span>';
+      }
+
+      // Show progress indicator
+      this.showVerificationProgress("Starting verification...");
+
+      // Call verification API with Wolfram Alpha if enabled
+      const result = await window.apiService.verifyDocument(
+        this.selectedVerificationFile,
+        verificationType,
+        wolframEnabled,
+        (progress, status) => {
+          this.updateVerificationProgress(progress, status);
+        }
+      );
+
+      // Hide progress indicator
+      this.hideVerificationProgress();
+
+      if (result.success) {
+        // Show verification results
+        this.displayVerificationResults(result.verificationResult);
+        
+        if (resultsContainer) {
+          resultsContainer.style.display = "block";
+          resultsContainer.scrollIntoView({ behavior: "smooth" });
+        }
+
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        this.showNotification(t('verificationCompleted'), "success");
+      } else {
+        throw new Error(result.error);
+      }
+
+    } catch (error) {
+      console.error("Verification failed:", error);
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(`${t('verificationFailed')}: ${error.message}`, "error");
+      
+      this.hideVerificationProgress();
+    } finally {
+      // Re-enable button
+      if (verifyBtn) {
+        verifyBtn.disabled = false;
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        verifyBtn.innerHTML = `<i class="fas fa-shield-alt"></i> <span>${t('verifyDocument')}</span>`;
+      }
+    }
+  }
+
+  showVerificationProgress(message) {
+    const uploadSection = document.querySelector(".verification-upload-section");
+    if (!uploadSection) return;
+
+    // Remove existing progress indicator
+    const existingProgress = uploadSection.querySelector(".verification-progress");
+    if (existingProgress) {
+      existingProgress.remove();
+    }
+
+    // Create progress indicator
+    const progressDiv = document.createElement("div");
+    progressDiv.className = "verification-progress";
+    progressDiv.innerHTML = `
+      <i class="fas fa-spinner fa-spin"></i>
+      <span class="verification-progress-text">${message}</span>
+    `;
+
+    uploadSection.appendChild(progressDiv);
+  }
+
+  updateVerificationProgress(progress, status) {
+    const progressText = document.querySelector(".verification-progress-text");
+    if (progressText && status) {
+      progressText.textContent = status;
+    }
+  }
+
+  hideVerificationProgress() {
+    const progressDiv = document.querySelector(".verification-progress");
+    if (progressDiv) {
+      progressDiv.remove();
+    }
+  }
+
+  displayVerificationResults(result) {
+    this.currentVerificationResult = result;
+
+    // Update status badge
+    const statusBadge = document.getElementById("verification-status-badge");
+    if (statusBadge) {
+      statusBadge.textContent = result.status || "Unknown";
+      statusBadge.className = `status-badge ${result.status || "processing"}`;
+    }
+
+    // Update confidence score
+    this.updateConfidenceScore(result.confidence_score || 0);
+
+    // Update verification details
+    this.updateVerificationDetails(result);
+
+    // Update verification stages
+    this.updateVerificationStages(result.stages || {});
+
+    // Show issues if any
+    this.updateVerificationIssues(result.warnings || [], result.errors || []);
+  }
+
+  updateConfidenceScore(score) {
+    const scoreValue = document.getElementById("verification-score-value");
+    const scoreCircle = document.getElementById("verification-score-circle");
+    
+    if (scoreValue) {
+      scoreValue.textContent = `${Math.round(score * 100)}%`;
+    }
+
+    if (scoreCircle) {
+      // Update the conic gradient based on score
+      const percentage = score * 360; // Convert to degrees
+      const color = score >= 0.8 ? '#22c55e' : score >= 0.6 ? '#f59e0b' : '#ef4444';
+      
+      scoreCircle.style.background = `conic-gradient(
+        ${color} 0deg,
+        ${color} ${percentage}deg,
+        var(--border-color) ${percentage}deg,
+        var(--border-color) 360deg
+      )`;
+    }
+  }
+
+  updateVerificationDetails(result) {
+    const detectedType = document.getElementById("detected-document-type");
+    const finalStatus = document.getElementById("verification-final-status");
+    const fraudRisk = document.getElementById("fraud-risk-level");
+
+    if (detectedType) {
+      detectedType.textContent = result.verification_type || "Unknown";
+    }
+
+    if (finalStatus) {
+      finalStatus.textContent = result.status || "Unknown";
+      finalStatus.className = `detail-value ${result.status}`;
+    }
+
+    if (fraudRisk) {
+      const fraudLevel = result.stages?.fraud_analysis?.risk_level || "unknown";
+      fraudRisk.textContent = fraudLevel;
+      fraudRisk.className = `detail-value risk-${fraudLevel}`;
+    }
+  }
+
+  updateVerificationStages(stages) {
+    const stagesGrid = document.getElementById("verification-stages-grid");
+    if (!stagesGrid) return;
+
+    stagesGrid.innerHTML = "";
+
+    const stageNames = {
+      quality_control: "Quality Control",
+      classification: "Document Classification", 
+      text_extraction: "Text Extraction",
+      template_validation: "Template Validation",
+      data_consistency: "Data Consistency",
+      fraud_analysis: "Fraud Analysis"
+    };
+
+    Object.entries(stages).forEach(([stageName, stageData]) => {
+      const stageCard = this.createStageCard(stageNames[stageName] || stageName, stageData);
+      stagesGrid.appendChild(stageCard);
+    });
+  }
+
+  createStageCard(stageName, stageData) {
+    const card = document.createElement("div");
+    card.className = "stage-card";
+
+    // Determine stage status
+    let stageStatus = "warning";
+    let statusIcon = "fas fa-exclamation-triangle";
+    
+    if (stageData.passed || stageData.valid || stageData.consistent || stageData.risk_level === "low") {
+      stageStatus = "passed";
+      statusIcon = "fas fa-check";
+    } else if (stageData.failed || stageData.risk_level === "high") {
+      stageStatus = "failed";
+      statusIcon = "fas fa-times";
+    }
+
+    // Get stage score
+    const score = stageData.score || stageData.confidence || stageData.quality_score || 0;
+    const percentage = Math.round(score * 100);
+
+    // Get stage details
+    const issues = stageData.issues || stageData.indicators || [];
+    const details = Array.isArray(issues) ? issues.join(", ") : 
+                   stageData.assessment || stageData.reasoning || "No details available";
+
+    card.innerHTML = `
+      <div class="stage-header">
+        <div class="stage-name">${stageName}</div>
+        <div class="stage-status ${stageStatus}">
+          <i class="${statusIcon}"></i>
+        </div>
+      </div>
+      <div class="stage-details">${Utils.escapeHtml(details)}</div>
+      <div class="stage-score">
+        <span class="stage-score-label">Score</span>
+        <span class="stage-score-value">${percentage}%</span>
+      </div>
+    `;
+
+    return card;
+  }
+
+  updateVerificationIssues(warnings, errors) {
+    const issuesContainer = document.getElementById("verification-issues");
+    const issuesList = document.getElementById("verification-issues-list");
+
+    const allIssues = [...warnings, ...errors];
+
+    if (allIssues.length === 0) {
+      if (issuesContainer) {
+        issuesContainer.style.display = "none";
+      }
+      return;
+    }
+
+    if (issuesContainer) {
+      issuesContainer.style.display = "block";
+    }
+
+    if (issuesList) {
+      issuesList.innerHTML = allIssues.map(issue => `
+        <div class="issue-item">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span class="issue-text">${Utils.escapeHtml(issue)}</span>
+        </div>
+      `).join("");
+    }
+  }
+
+  resetVerificationInterface() {
+    // Reset file selection
+    this.selectedVerificationFile = null;
+    
+    // Reset upload area
+    const uploadArea = document.getElementById("verification-upload-area");
+    const verifyBtn = document.getElementById("verify-document-btn");
+    const resultsContainer = document.getElementById("verification-results");
+    const fileInput = document.getElementById("verification-file-input");
+
+    if (uploadArea) {
+      uploadArea.classList.remove("file-hover");
+      const uploadIcon = uploadArea.querySelector(".upload-icon i");
+      if (uploadIcon) {
+        uploadIcon.className = "fas fa-shield-alt";
+      }
+      
+      const uploadText = uploadArea.querySelector("h3");
+      if (uploadText) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        uploadText.textContent = t('verificationDragDrop');
+      }
+    }
+
+    if (verifyBtn) {
+      verifyBtn.disabled = true;
+    }
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+
+    if (fileInput) {
+      fileInput.value = "";
+    }
+
+    // Hide any progress indicators
+    this.hideVerificationProgress();
+
+    // Scroll back to top
+    const verificationContainer = document.querySelector(".verification-container");
+    if (verificationContainer) {
+      verificationContainer.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  downloadVerificationReport() {
+    if (!this.currentVerificationResult) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(t('noVerificationDataToDownload'), "warning");
+      return;
+    }
+
+    // Create a comprehensive report
+    const report = {
+      document_name: this.selectedVerificationFile?.name || "Unknown Document",
+      verification_timestamp: new Date().toISOString(),
+      verification_result: this.currentVerificationResult
+    };
+
+    // Convert to JSON and create download
+    const reportJson = JSON.stringify(report, null, 2);
+    const blob = new Blob([reportJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    // Create download link
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `verification_report_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    this.showNotification(t('reportDownloaded'), "success");
+  }
+
+  // Initialize verification when tab loads
+  async loadVerificationTab() {
+    if (!this.verificationInitialized) {
+      this.setupVerificationEventListeners();
+      await this.loadVerificationTypes();
+      this.verificationInitialized = true;
     }
   }
 }

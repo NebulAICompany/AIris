@@ -32,6 +32,9 @@ feedparser
 python-dateutil
 cohere
 python-dotenv
-# Alpha Vantage MCP Server dependencies
 httpx
 mcp
+opencv-python
+pytesseract
+reportlab
+urllib3<2.0.0
