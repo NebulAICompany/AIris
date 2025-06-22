@@ -206,6 +206,9 @@
 
               <div class="chat-input-container">
                 <div class="chat-input-wrapper">
+                  <button id="file-selection-btn" class="file-selection-button" title="Select files to include">
+                    <i class="fas fa-file"></i>
+                  </button>
                   <textarea
                     id="chat-input"
                     class="chat-input"
@@ -216,6 +219,55 @@
                   <button id="send-button" class="send-button" disabled>
                     <i class="fas fa-paper-plane"></i>
                   </button>
+                </div>
+              </div>
+
+              <!-- File Selection Modal -->
+              <div id="file-selection-modal" class="file-selection-modal">
+                <div class="file-selection-content">
+                  <div class="file-selection-header">
+                    <h3 data-i18n="selectFiles">Select Files</h3>
+                    <button id="close-file-selection" class="btn-icon">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="file-selection-body">
+                    <div class="file-selection-controls">
+                      <button id="select-all-files" class="file-control-btn">
+                        <i class="fas fa-check-double"></i>
+                        <span data-i18n="selectAll">Select All</span>
+                      </button>
+                      <button id="deselect-all-files" class="file-control-btn">
+                        <i class="fas fa-times"></i>
+                        <span data-i18n="deselectAll">Deselect All</span>
+                      </button>
+                    </div>
+                    
+                    <div class="files-list" id="files-selection-list">
+                      <div class="loading-files">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span data-i18n="loadingFiles">Loading files...</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="file-selection-footer">
+                    <div class="prompt-buttons">
+                      <button id="prompt-report" class="prompt-btn btn-primary">
+                        <i class="fas fa-file-alt"></i>
+                        <span data-i18n="writeReport">Write Report</span>
+                      </button>
+                      <button id="prompt-analyze" class="prompt-btn btn-primary">
+                        <i class="fas fa-chart-line"></i>
+                        <span data-i18n="analyzeData">Analyze Data</span>
+                      </button>
+                      <button id="prompt-summarize" class="prompt-btn btn-primary">
+                        <i class="fas fa-list"></i>
+                        <span data-i18n="summarize">Summarize</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -198,6 +198,7 @@ class QueryRequest(BaseModel):
     webSearchEnabled: bool = False
     wolframEnabled: bool = False
     sessionId: Optional[str] = None
+    selectedFiles: Optional[List[str]] = None
 
 
 class UploadRequest(BaseModel):
@@ -218,15 +219,17 @@ async def handle_query(request: QueryRequest):
         web_search_enabled = request.webSearchEnabled
         wolfram_enabled = request.wolframEnabled
         session_id = request.sessionId
+        selected_files = request.selectedFiles
 
         print(f"📝 API Router received:")
         print(f"   - Query: {query}")
         print(f"   - Web Search Enabled: {web_search_enabled}")
         print(f"   - Wolfram Enabled: {wolfram_enabled}")
         print(f"   - Session ID: {session_id}")
+        print(f"   - Selected Files: {selected_files}")
 
         answer = await run_orchestration(
-            query, web_search_enabled, wolfram_enabled, session_id
+            query, web_search_enabled, wolfram_enabled, session_id, selected_files
         )
         logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()

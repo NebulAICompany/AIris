@@ -156,6 +156,27 @@ def enhance_existing_metadata(response: str, docs: List) -> str:
     return response
 
 
+def filter_docs_by_selected_files(docs: List, selected_files: Optional[List[str]]) -> List:
+    """
+    Filter retrieved documents to only include those from selected files.
+    If selected_files is None or empty, return all documents.
+    """
+    if not selected_files or len(selected_files) == 0:
+        return docs
+    
+    filtered_docs = []
+    for doc in docs:
+        metadata = doc.get("metadata", {})
+        file_name = metadata.get("file_name", "")
+        
+        # Check if this document's file is in the selected files list
+        if file_name in selected_files:
+            filtered_docs.append(doc)
+    
+    print(f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files")
+    return filtered_docs
+
+
 def extract_and_format_metadata(response: str) -> tuple:
     """
     Extract metadata from response and return (main_content, formatted_metadata).
@@ -227,12 +248,14 @@ async def run_orchestration(
     web_search_enabled: bool,
     wolfram_enabled: bool = False,
     session_id: Optional[str] = None,
+    selected_files: Optional[List[str]] = None,
 ) -> str:
     print(f"🔍 Query Orchestrator started:")
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
     print(f"   - Wolfram Enabled: {wolfram_enabled}")
     print(f"   - Session ID: {session_id}")
+    print(f"   - Selected Files: {selected_files}")
 
     # Handle chat history and session management
     if session_id:
@@ -284,8 +307,17 @@ async def run_orchestration(
             return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
         # print(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
 
-        # Use RSE-enhanced chunks directly (they're already optimized)
-        reranked_docs = rse_chunks[:5]  # Take top 5 RSE segments
+        # Filter RSE chunks by selected files
+        filtered_rse_chunks = filter_docs_by_selected_files(rse_chunks, selected_files)
+        
+        if not filtered_rse_chunks:
+            if selected_files:
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+            else:
+                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+
+        # Use filtered RSE-enhanced chunks directly (they're already optimized)
+        reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
         # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
         retrieved_docs = retrieve_top_k(
@@ -294,12 +326,21 @@ async def run_orchestration(
         print(type(retrieved_docs))
 
         if not retrieved_docs:
-            return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+            return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
 
-        # Extract only the content from the retrieved docs before reranking
+        # Filter retrieved docs by selected files
+        filtered_retrieved_docs = filter_docs_by_selected_files(retrieved_docs, selected_files)
+        
+        if not filtered_retrieved_docs:
+            if selected_files:
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+            else:
+                return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
+
+        # Extract only the content from the filtered retrieved docs before reranking
         doc_contents = [
             {"content": doc["content"], "metadata": doc["metadata"]}
-            for doc in retrieved_docs
+            for doc in filtered_retrieved_docs
         ]
         reranked_docs = rerank(
             preprocessed_query, doc_contents, with_score=False, top_n=5

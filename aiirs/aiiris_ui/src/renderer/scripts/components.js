@@ -24,6 +24,11 @@ class UIComponents {
     this.currentSessionId = null;
     this.chatSessions = [];
 
+    // File selection management
+    this.selectedFiles = [];
+    this.allFiles = [];
+    this.fileSelectionModal = null;
+
     this.init();
     
     // Subscribe to language changes
@@ -200,6 +205,45 @@ class UIComponents {
       );
     }
 
+    // File selection button
+    const fileSelectionBtn = document.getElementById("file-selection-btn");
+    if (fileSelectionBtn) {
+      fileSelectionBtn.addEventListener("click", () => this.showFileSelectionModal());
+    }
+
+    // File selection modal close
+    const closeFileSelection = document.getElementById("close-file-selection");
+    if (closeFileSelection) {
+      closeFileSelection.addEventListener("click", () => this.hideFileSelectionModal());
+    }
+
+    // File selection controls
+    const selectAllFiles = document.getElementById("select-all-files");
+    if (selectAllFiles) {
+      selectAllFiles.addEventListener("click", () => this.selectAllFiles());
+    }
+
+    const deselectAllFiles = document.getElementById("deselect-all-files");
+    if (deselectAllFiles) {
+      deselectAllFiles.addEventListener("click", () => this.deselectAllFiles());
+    }
+
+    // Prompt buttons
+    const promptReport = document.getElementById("prompt-report");
+    if (promptReport) {
+      promptReport.addEventListener("click", () => this.insertPrompt("report"));
+    }
+
+    const promptAnalyze = document.getElementById("prompt-analyze");
+    if (promptAnalyze) {
+      promptAnalyze.addEventListener("click", () => this.insertPrompt("analyze"));
+    }
+
+    const promptSummarize = document.getElementById("prompt-summarize");
+    if (promptSummarize) {
+      promptSummarize.addEventListener("click", () => this.insertPrompt("summarize"));
+    }
+
     // Event delegation for dynamic buttons
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
@@ -224,6 +268,21 @@ class UIComponents {
         if (link) {
           window.open(link, "_blank");
         }
+      }
+
+      // Handle file selection item clicks
+      if (e.target.closest(".file-selection-item")) {
+        e.preventDefault();
+        const fileItem = e.target.closest(".file-selection-item");
+        const fileName = fileItem.dataset.filename;
+        if (fileName) {
+          this.toggleFileSelection(fileName);
+        }
+      }
+
+      // Handle modal backdrop clicks
+      if (e.target.classList.contains("file-selection-modal")) {
+        this.hideFileSelectionModal();
       }
     });
   }
@@ -372,7 +431,9 @@ class UIComponents {
         message,
         this.webSearchEnabled,
         this.wolframEnabled,
-        this.currentSessionId
+        this.currentSessionId,
+        2, // maxRetries
+        this.selectedFiles.length > 0 ? this.selectedFiles : null // selectedFiles
       );
 
       // Remove typing indicator
@@ -443,7 +504,8 @@ class UIComponents {
     webSearchEnabled,
     wolframEnabled,
     sessionId,
-    maxRetries = 2
+    maxRetries = 2,
+    selectedFiles = null
   ) {
     let lastError;
 
@@ -455,7 +517,8 @@ class UIComponents {
           message,
           webSearchEnabled,
           wolframEnabled,
-          sessionId
+          sessionId,
+          selectedFiles
         );
 
         return response;
@@ -3064,6 +3127,240 @@ class UIComponents {
       await this.loadVerificationTypes();
       this.verificationInitialized = true;
     }
+  }
+
+  // File Selection Modal Methods
+  async showFileSelectionModal() {
+    const modal = document.getElementById("file-selection-modal");
+    if (!modal) return;
+
+    // Store reference to modal
+    this.fileSelectionModal = modal;
+
+    // Load files if not already loaded
+    await this.loadFilesForSelection();
+
+    // Show modal with animation
+    modal.classList.add("show");
+
+    // Update file selection display
+    this.updateFileSelectionDisplay();
+  }
+
+  hideFileSelectionModal() {
+    const modal = document.getElementById("file-selection-modal");
+    if (modal) {
+      modal.classList.remove("show");
+    }
+    this.fileSelectionModal = null;
+  }
+
+  async loadFilesForSelection() {
+    const filesList = document.getElementById("files-selection-list");
+    if (!filesList) return;
+
+    // Show loading state
+    filesList.innerHTML = `
+      <div class="loading-files">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Loading files...</span>
+      </div>
+    `;
+
+    try {
+      // Fetch files from API
+      const result = await window.apiService.getFiles();
+      
+      if (result.success && result.files) {
+        this.allFiles = result.files;
+        
+        // Initialize selected files to all files if not already set
+        if (this.selectedFiles.length === 0) {
+          this.selectedFiles = this.allFiles.map(file => file.name);
+        }
+
+        this.renderFileSelectionList();
+        this.updateFileSelectionButton();
+      } else {
+        throw new Error(result.error || "Failed to load files");
+      }
+    } catch (error) {
+      console.error("Error loading files for selection:", error);
+      filesList.innerHTML = `
+        <div class="loading-files">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Error loading files: ${error.message}</span>
+        </div>
+      `;
+    }
+  }
+
+  renderFileSelectionList() {
+    const filesList = document.getElementById("files-selection-list");
+    if (!filesList || !this.allFiles) return;
+
+    if (this.allFiles.length === 0) {
+      filesList.innerHTML = `
+        <div class="loading-files">
+          <i class="fas fa-folder-open"></i>
+          <span>No files available. Upload some files first.</span>
+        </div>
+      `;
+      return;
+    }
+
+    filesList.innerHTML = this.allFiles.map(file => {
+      const isSelected = this.selectedFiles.includes(file.name);
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      const fileIcon = this.getFileIcon(fileExtension);
+      const fileSize = this.formatFileSize(file.size);
+
+      return `
+        <div class="file-selection-item ${isSelected ? 'selected' : ''}" data-filename="${file.name}">
+          <div class="file-checkbox ${isSelected ? 'checked' : ''}">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="file-item-icon ${fileExtension}">
+            <i class="${fileIcon}"></i>
+          </div>
+          <div class="file-item-info">
+            <div class="file-item-name" title="${file.name}">${file.name}</div>
+            <div class="file-item-size">${fileSize}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  getFileIcon(extension) {
+    const iconMap = {
+      'pdf': 'fas fa-file-pdf',
+      'docx': 'fas fa-file-word',
+      'doc': 'fas fa-file-word',
+      'xlsx': 'fas fa-file-excel',
+      'xls': 'fas fa-file-excel',
+      'txt': 'fas fa-file-alt',
+      'jpg': 'fas fa-file-image',
+      'jpeg': 'fas fa-file-image',
+      'png': 'fas fa-file-image',
+      'gif': 'fas fa-file-image',
+      'bmp': 'fas fa-file-image',
+      'tiff': 'fas fa-file-image'
+    };
+    return iconMap[extension] || 'fas fa-file';
+  }
+
+  formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  toggleFileSelection(fileName) {
+    const index = this.selectedFiles.indexOf(fileName);
+    
+    if (index > -1) {
+      // File is selected, remove it
+      this.selectedFiles.splice(index, 1);
+    } else {
+      // File is not selected, add it
+      this.selectedFiles.push(fileName);
+    }
+
+    // Update display
+    this.updateFileSelectionDisplay();
+    this.updateFileSelectionButton();
+  }
+
+  selectAllFiles() {
+    this.selectedFiles = [...this.allFiles.map(file => file.name)];
+    this.updateFileSelectionDisplay();
+    this.updateFileSelectionButton();
+  }
+
+  deselectAllFiles() {
+    this.selectedFiles = [];
+    this.updateFileSelectionDisplay();
+    this.updateFileSelectionButton();
+  }
+
+  updateFileSelectionDisplay() {
+    // Update checkboxes and selection state
+    const fileItems = document.querySelectorAll('.file-selection-item');
+    
+    fileItems.forEach(item => {
+      const fileName = item.dataset.filename;
+      const isSelected = this.selectedFiles.includes(fileName);
+      const checkbox = item.querySelector('.file-checkbox');
+      
+      if (isSelected) {
+        item.classList.add('selected');
+        checkbox.classList.add('checked');
+      } else {
+        item.classList.remove('selected');
+        checkbox.classList.remove('checked');
+      }
+    });
+  }
+
+  updateFileSelectionButton() {
+    const button = document.getElementById("file-selection-btn");
+    if (!button) return;
+
+    const selectedCount = this.selectedFiles.length;
+    const totalCount = this.allFiles.length;
+
+    if (selectedCount === 0) {
+      button.classList.remove('has-selection');
+      button.removeAttribute('data-count');
+      button.title = "Select files to include";
+    } else if (selectedCount === totalCount) {
+      button.classList.add('has-selection');
+      button.setAttribute('data-count', 'All');
+      button.title = `All ${totalCount} files selected`;
+    } else {
+      button.classList.add('has-selection');
+      button.setAttribute('data-count', selectedCount);
+      button.title = `${selectedCount} of ${totalCount} files selected`;
+    }
+  }
+
+  insertPrompt(type) {
+    const chatInput = document.getElementById("chat-input");
+    if (!chatInput) return;
+
+    let prompt = "";
+    const selectedFilesList = this.selectedFiles.length > 0 
+      ? `Selected files: ${this.selectedFiles.join(', ')}\n\n` 
+      : "";
+
+    switch (type) {
+      case "report":
+        prompt = `${selectedFilesList}Please write a comprehensive report about the content of the selected files. Include key insights, findings, and recommendations based on the data.`;
+        break;
+      case "analyze":
+        prompt = `${selectedFilesList}Please analyze the content and numbers/statistics in the selected files. Identify trends, patterns, and provide detailed analysis of any financial data, metrics, or numerical information found.`;
+        break;
+      case "summarize":
+        prompt = `${selectedFilesList}Please provide a concise summary of the selected files. Highlight the main points, key information, and essential details from each document.`;
+        break;
+      default:
+        return;
+    }
+
+    // Insert prompt into chat input
+    chatInput.value = prompt;
+    
+    // Hide modal
+    this.hideFileSelectionModal();
+    
+    // Focus chat input
+    chatInput.focus();
+    
+    // Enable send button
+    this.toggleSendButton();
   }
 }
 

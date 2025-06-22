@@ -260,7 +260,19 @@ class LanguageService {
         noVerificationDataToDownload: 'No verification data available to download',
         reportDownloaded: 'Verification report downloaded successfully',
         wolframMathVerification: 'Wolfram Alpha Mathematical Verification',
-        wolframMathVerificationDesc: 'Enable advanced mathematical verification for calculations, fraud detection, and currency validation'
+        wolframMathVerificationDesc: 'Enable advanced mathematical verification for calculations, fraud detection, and currency validation',
+
+        // File Selection
+        selectFiles: 'Select Files',
+        selectAll: 'Select All',
+        deselectAll: 'Deselect All',
+        writeReport: 'Write Report',
+        analyzeData: 'Analyze Data',
+        summarize: 'Summarize',
+        loadingFiles: 'Loading files...',
+        noFilesAvailable: 'No files available. Upload some files first.',
+        filesSelected: 'files selected',
+        allFilesSelected: 'All files selected'
       },
 
       tr: {
@@ -512,7 +524,19 @@ class LanguageService {
         noVerificationDataToDownload: 'İndirilecek doğrulama verisi mevcut değil',
         reportDownloaded: 'Doğrulama raporu başarıyla indirildi',
         wolframMathVerification: 'Wolfram Alpha Matematiksel Doğrulama',
-        wolframMathVerificationDesc: 'Hesaplamalar, sahtekarlık tespiti ve para birimi doğrulaması için gelişmiş matematiksel doğrulamayı etkinleştir'
+        wolframMathVerificationDesc: 'Hesaplamalar, sahtekarlık tespiti ve para birimi doğrulaması için gelişmiş matematiksel doğrulamayı etkinleştir',
+
+        // File Selection
+        selectFiles: 'Dosya Seç',
+        selectAll: 'Tümünü Seç',
+        deselectAll: 'Seçimi Kaldır',
+        writeReport: 'Rapor Yaz',
+        analyzeData: 'Veri Analizi',
+        summarize: 'Özetle',
+        loadingFiles: 'Dosyalar yükleniyor...',
+        noFilesAvailable: 'Dosya mevcut değil. Önce bazı dosyalar yükleyin.',
+        filesSelected: 'dosya seçildi',
+        allFilesSelected: 'Tüm dosyalar seçildi'
       }
     };
   }
