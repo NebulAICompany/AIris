@@ -1318,17 +1318,26 @@ class UIComponents {
               </button>
             </div>
           </div>
+          <div class="file-card-preview" id="preview-${Utils.escapeHtml(file.name).replace(/[^a-zA-Z0-9]/g, '_')}">
+            <div class="preview-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading preview...</span>
+            </div>
+          </div>
         `;
 
         // Add click handler to open file (but not on action buttons)
         fileItem.addEventListener("click", (e) => {
-          // Don't open file if clicking on action buttons
-          if (!e.target.closest(".file-card-actions")) {
+          // Don't open file if clicking on action buttons or preview area
+          if (!e.target.closest(".file-card-actions") && !e.target.closest(".file-card-preview")) {
             this.openFile(file.name);
           }
         });
 
         fileLibrary.appendChild(fileItem);
+        
+        // Load preview for this file
+        this.loadFilePreview(file.name);
       });
     } catch (error) {
       const fileLibrary = document.getElementById("files-grid");
@@ -1340,6 +1349,105 @@ class UIComponents {
         </div>`;
       }
       console.error("Error loading file library:", error);
+    }
+  }
+
+  async loadFilePreview(fileName) {
+    const previewId = `preview-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const previewElement = document.getElementById(previewId);
+    
+    if (!previewElement) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/files/${encodeURIComponent(fileName)}/preview`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load preview: ${response.statusText}`);
+      }
+      
+      const previewData = await response.json();
+      this.renderFilePreview(previewElement, previewData);
+    } catch (error) {
+      console.error(`Error loading preview for ${fileName}:`, error);
+      previewElement.innerHTML = `
+        <div class="preview-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Preview unavailable: ${Utils.escapeHtml(error.message || 'Network error')}</span>
+        </div>
+      `;
+    }
+  }
+
+  renderFilePreview(previewElement, previewData) {
+    if (!previewData.success) {
+      previewElement.innerHTML = `
+        <div class="preview-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Preview error: ${Utils.escapeHtml(previewData.error || 'Unknown error')}</span>
+        </div>
+      `;
+      return;
+    }
+
+    const { preview_type, preview_data } = previewData;
+
+    switch (preview_type) {
+      case 'image':
+        previewElement.innerHTML = `
+          <div class="preview-image">
+            <img src="${preview_data}" alt="Document preview" />
+          </div>
+        `;
+        break;
+        
+      case 'text':
+        previewElement.innerHTML = `
+          <div class="preview-text">
+            <pre>${Utils.escapeHtml(preview_data)}</pre>
+          </div>
+        `;
+        break;
+        
+      case 'excel':
+        previewElement.innerHTML = `
+          <div class="preview-excel">
+            <div class="excel-summary">
+              <strong>${preview_data.columns.length} columns, ${preview_data.rows_shown} rows</strong>
+            </div>
+            <div class="excel-data">${preview_data.html}</div>
+          </div>
+        `;
+        break;
+        
+      case 'info':
+        previewElement.innerHTML = `
+          <div class="preview-info">
+            <i class="fas fa-info-circle"></i>
+            <span>${Utils.escapeHtml(preview_data)}</span>
+          </div>
+        `;
+        break;
+        
+      case 'error':
+        previewElement.innerHTML = `
+          <div class="preview-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>${Utils.escapeHtml(preview_data)}</span>
+          </div>
+        `;
+        break;
+        
+      default:
+        previewElement.innerHTML = `
+          <div class="preview-info">
+            <i class="fas fa-file"></i>
+            <span>Preview not available</span>
+          </div>
+        `;
     }
   }
 
