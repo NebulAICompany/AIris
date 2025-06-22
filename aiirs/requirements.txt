@@ -32,6 +32,8 @@ feedparser
 python-dateutil
 cohere
 python-dotenv
+httpx
+mcp
 opencv-python
 pytesseract
 reportlab

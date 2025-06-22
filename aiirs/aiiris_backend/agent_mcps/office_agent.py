@@ -35,5 +35,8 @@ TECHNICAL CONSIDERATIONS:
 
 
 Use your tools strategically to create efficient document processing workflows that save users time and ensure data accuracy.""",
-    tools=[create_excel_from_table, create_word_document],  # ✅ added Office MCP tool here
+    tools=[
+        create_excel_from_table,
+        create_word_document,
+    ],
 )

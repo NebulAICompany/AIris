@@ -4,7 +4,7 @@ class APIService {
   constructor() {
     this.isElectron = typeof window.airisAPI !== "undefined";
     this.baseURL = "http://localhost:8000";
-    this.timeout = 30000;
+    this.timeout = 45000; // Increased from 30s to 45s
 
     // Always set up axios for API calls, regardless of environment
     this.setupAxios();
@@ -38,13 +38,19 @@ class APIService {
 
     console.log(`[API] ${method.toUpperCase()} ${fullUrl}`);
 
+    // Create abort controller for manual timeout management
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, config.timeout || this.timeout);
+
     const requestOptions = {
       method,
       headers: {
         "Content-Type": "application/json",
         ...config.headers,
       },
-      signal: AbortSignal.timeout(config.timeout || this.timeout),
+      signal: controller.signal,
     };
 
     if (data) {
@@ -59,6 +65,7 @@ class APIService {
 
     try {
       const response = await fetch(fullUrl, requestOptions);
+      clearTimeout(timeoutId); // Clear timeout on successful response
 
       console.log(`[API] Response: ${response.status} ${fullUrl}`);
 
@@ -88,15 +95,16 @@ class APIService {
         config: { url: fullUrl },
       };
     } catch (error) {
+      clearTimeout(timeoutId); // Clear timeout on error
       console.error("[API] Request error:", error);
 
       if (error.name === "AbortError") {
-        throw new Error("Request timeout - please try again");
+        throw new Error("İstek zaman aşımına uğradı - lütfen tekrar deneyin");
       }
 
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
-          "Unable to connect to server. Please check if the backend is running."
+          "Sunucuya bağlanılamıyor. Lütfen backend'in çalıştığından emin olun."
         );
       }
 
@@ -142,6 +150,17 @@ class APIService {
     sessionId = null
   ) {
     try {
+      // Determine timeout based on enabled features
+      let timeout = 90000; // Base timeout: 90 seconds
+      if (webSearchEnabled) timeout += 30000; // Add 30s for web search
+      if (wolframEnabled) timeout += 30000; // Add 30s for Wolfram
+
+      console.log(
+        `[API] AI Query timeout set to: ${
+          timeout / 1000
+        }s (Web: ${webSearchEnabled}, Wolfram: ${wolframEnabled})`
+      );
+
       const response = await this.api.post(
         "/api/query",
         {
@@ -151,7 +170,7 @@ class APIService {
           sessionId: sessionId,
         },
         {
-          timeout: 60000, // Increase timeout to 60 seconds for AI queries
+          timeout: timeout, // Dynamic timeout based on features
         }
       );
 
@@ -164,17 +183,39 @@ class APIService {
     } catch (error) {
       console.error("Query API error:", error);
 
-      let errorMessage = "An unexpected error occurred";
+      let errorMessage = "Beklenmeyen bir hata oluştu";
 
-      if (error.name === "AbortError" || error.message.includes("timeout")) {
+      if (
+        error.name === "AbortError" ||
+        error.message.includes("timeout") ||
+        error.message.includes("zaman aşımı")
+      ) {
+        let timeoutReason = "AI sorgusu";
+        if (webSearchEnabled && wolframEnabled) {
+          timeoutReason =
+            "web araması ve Wolfram Alpha ile karmaşık AI sorgusu";
+        } else if (webSearchEnabled) {
+          timeoutReason = "web araması ile AI sorgusu";
+        } else if (wolframEnabled) {
+          timeoutReason = "Wolfram Alpha ile AI sorgusu";
+        }
+
+        errorMessage = `${timeoutReason} tamamlanması çok uzun sürdü. Lütfen daha kısa bir soru deneyin veya birkaç saniye bekleyip tekrar deneyin.`;
+      } else if (
+        error.message.includes("fetch") ||
+        error.message.includes("bağlan")
+      ) {
         errorMessage =
-          "The request took too long to complete. The AI might be processing a complex query. Please try again.";
-      } else if (error.message.includes("fetch")) {
-        errorMessage =
-          "Unable to connect to the AI service. Please check your connection and try again.";
+          "AI servisine bağlanılamıyor. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
       } else if (error.message.includes("500")) {
         errorMessage =
-          "The AI service is temporarily unavailable. Please try again in a moment.";
+          "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+      } else if (
+        error.message.includes("502") ||
+        error.message.includes("503")
+      ) {
+        errorMessage =
+          "Backend servisi şu anda meşgul. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
       } else {
         errorMessage = error.message;
       }
@@ -256,7 +297,7 @@ class APIService {
       formData.append("file", file);
 
       const config = {
-        timeout: 120000, // 2 minutes for file uploads
+        timeout: 180000, // 3 minutes for file uploads (increased for larger files)
       };
 
       // Note: Fetch API doesn't support upload progress natively
