@@ -38,3 +38,6 @@ opencv-python
 pytesseract
 reportlab
 urllib3<2.0.0
+openpyxl
+nltk
+langchain_experimental

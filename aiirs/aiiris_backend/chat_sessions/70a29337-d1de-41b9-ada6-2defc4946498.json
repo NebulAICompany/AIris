@@ -1,0 +1,23 @@
+{
+  "session_id": "70a29337-d1de-41b9-ada6-2defc4946498",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Deniz Vapurlarını bir excel dosyasına çevir",
+      "timestamp": "2025-06-22T18:09:06.057221",
+      "metadata": {},
+      "message_id": "51924aa6-3e95-4ff4-ac43-54b9ee0534ac"
+    },
+    {
+      "role": "assistant",
+      "content": "İstanbul Şehir İçi Vapurlarına ait bilet fiyatları ve aktarma tarifeleri, Excel dosyası olarak iki ayrı tablo halinde hazırlanmıştır:\n\n1. Hat Bazlı Bilet Fiyatları (Her bir deniz hattı için Mevcut/Yeni Tam, Öğrenci ve İndirimli bilet fiyatları ile limit bilgileri)\n2. Aktarma Tarifeleri (1.Aktarma, 2.Aktarma, vb. için Mevcut/Yeni Tam, Öğrenci, İndirimli bilet fiyatları)\n\nAşağıdaki bağlantılardan Excel dosyalarını indirebilirsiniz:\n\n- [Hat Bazlı Bilet Fiyatları Excel](sandbox:/C:/Users/ASUS/Desktop/Coding/Python/vectorrag/aiirs/aiiris_backend/uploads/Istanbul_Sehir_Ici_Vapurlari_Hat_Bazli_Fiyat_Tablo.xlsx)\n- [Aktarma Tarifeleri Excel](sandbox:/C:/Users/ASUS/Desktop/Coding/Python/vectorrag/aiirs/aiiris_backend/uploads/Istanbul_Sehir_Ici_Vapurlari_Aktarma_Tarifeleri.xlsx)\n\nHer iki dosyada hem mevcut hem de yeni fiyatlar, bilet tipleri ve varsa ek kısıtlamalar (limitler) belirtilmiştir.\n\n🗂️ Kullanılan Bilgi Metadataları:\n- 📂 Kaynak: ŞEHİR İÇİ VAPURLARI_txt.txt\n- 🏷️ Kategori: İstanbul toplu taşıma, Deniz vapurları bilet fiyatları\n\nBaşka bir veriye, tabloya veya farklı bir formatta bilgiye ihtiyacınız olursa lütfen belirtin!",
+      "timestamp": "2025-06-22T18:10:22.195768",
+      "metadata": {},
+      "message_id": "0ce31e1e-9551-4731-bb8d-517bebc45dd1"
+    }
+  ],
+  "created_at": "2025-06-22T18:09:06.047540",
+  "updated_at": "2025-06-22T18:10:22.195768",
+  "title": "Deniz Vapurlarını bir excel dosyasına çevir",
+  "metadata": null
+}

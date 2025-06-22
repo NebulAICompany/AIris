@@ -15,13 +15,14 @@ import aiiris_backend.pipelines.vectorpipe as vectorpipe
 # Vector store path
 VECTOR_STORE_PATH = "aiiris_backend/vectorstore"
 
+
 def process_file(file_path: str) -> dict:
     """
     Process an uploaded file synchronously.
-    
+
     Args:
         file_path: Path to the uploaded file
-        
+
     Returns:
         Dictionary with processing results
     """
@@ -36,14 +37,23 @@ def process_file(file_path: str) -> dict:
 
         pipeline.run()
         save_dir = Path(__file__).resolve().parent.parent / "pipelines/uploads"
-        # Step 2: Create or update vector store
-        vectorpipe.VectorStorePipeline(
-        ).run(uploads_path=save_dir, save_path=VECTOR_STORE_PATH)
+
+        # Step 2: Determine the expected output filename
+        # All parsers follow the pattern: original_stem + "_txt.txt"
+        original_stem = Path(file_path).stem
+        expected_output_filename = f"{original_stem}_txt.txt"
+
+        # Step 3: Create or update vector store with the specific file
+        vectorpipe.VectorStorePipeline().run(
+            uploads_path=save_dir,
+            save_path=VECTOR_STORE_PATH,
+            specific_file=expected_output_filename,
+        )
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTOR_STORE_PATH
+            "vector_store_path": VECTOR_STORE_PATH,
         }
     except Exception as e:
         print(f"Error processing file: {str(e)}")

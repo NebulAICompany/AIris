@@ -169,14 +169,26 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
 
         return enhanced_docs
 
-    def run(self, uploads_path: str, save_path: str):
+    def run(self, uploads_path: str, save_path: str, specific_file: str = None):
         start_time = time.time()
 
         try:
-            files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
-            if not files:
-                print("No text files found in uploads directory")
-                return
+            if specific_file:
+                # Process only the specific file if provided
+                if os.path.exists(
+                    os.path.join(uploads_path, specific_file)
+                ) and specific_file.endswith((".txt")):
+                    files = [specific_file]
+                    print(f"Processing specific file: {specific_file}")
+                else:
+                    print(f"Specific file {specific_file} not found or not a .txt file")
+                    return
+            else:
+                # Original behavior: process all .txt files
+                files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
+                if not files:
+                    print("No text files found in uploads directory")
+                    return
 
             total_text_length = 0
             chunk_idx = 0
@@ -265,7 +277,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 else:
                     vectorstore.add_documents(enhanced_docs)
 
-                # Clean up only .txt files from uploads directory
+                # Clean up processed .txt file
                 if file.endswith(".txt"):
                     os.remove(file_path)
                     print(f"🗑️ Deleted processed .txt file: {file}")

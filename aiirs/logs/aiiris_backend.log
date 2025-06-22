@@ -1,0 +1,132 @@
+2025-06-22 17:25:28 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:25:44 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] Error getting verification types: No module named 'cv2'
+2025-06-22 17:25:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:25:51 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:25:51 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 17:26:14 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] Error processing query: Vectorstore not loaded. Please load the vectorstore first.
+2025-06-22 17:26:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: ŞEHİR İÇİ VAPURLARI.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 17:26:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\ŞEHİR İÇİ VAPURLARI.docx
+2025-06-22 17:26:58 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:27:02 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for ŞEHİR İÇİ VAPURLARI.docx: (-2147023170, 'Uzaktan işlem çağrısı başarısız.', None, None)
+2025-06-22 17:27:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: çıktı.pdf (application/pdf)
+2025-06-22 17:27:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\çıktı.pdf
+2025-06-22 17:27:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:28:42 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:30:12 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:30:20 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] Error getting verification types: No module named 'cv2'
+2025-06-22 17:30:21 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:30:21 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:30:21 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 17:30:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: ŞEHİR İÇİ VAPURLARI.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 17:30:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\ŞEHİR İÇİ VAPURLARI.docx
+2025-06-22 17:30:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:30:32 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for ŞEHİR İÇİ VAPURLARI.docx: (-2147023170, 'Uzaktan işlem çağrısı başarısız.', None, None)
+2025-06-22 17:30:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: 231401013_YAĞIZ CAN_AKAY.pdf (application/pdf)
+2025-06-22 17:30:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:30:52 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:31:27 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: 231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:34:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:34:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:34:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 17:34:05 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:34:05 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:34:05 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 17:34:51 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting document verification: sosyal-guvenlik-4a-ise-giris-cikis-bildirgesi.pdf (type: auto, wolfram_enabled: False)
+2025-06-22 17:34:51 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\sosyal-guvenlik-4a-ise-giris-cikis-bildirgesi.pdf
+2025-06-22 17:34:51 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] Document verification error for sosyal-guvenlik-4a-ise-giris-cikis-bildirgesi.pdf: No module named 'cv2'
+2025-06-22 17:40:17 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:40:45 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: Karar Taslağı Yeni Form.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 17:40:45 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\Karar Taslağı Yeni Form.docx
+2025-06-22 17:40:58 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:41:04 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for Karar Taslağı Yeni Form.docx: (-2147023170, 'Uzaktan işlem çağrısı başarısız.', None, None)
+2025-06-22 17:41:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:41:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:41:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 17:42:04 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting document verification: imza-sirkuleri.pdf (type: auto, wolfram_enabled: False)
+2025-06-22 17:42:04 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\imza-sirkuleri.pdf
+2025-06-22 17:42:04 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\imza-sirkuleri.pdf
+2025-06-22 17:42:05 - aiiris_backend.DOCUMENT_VERIFICATION - ERROR - [DOCUMENT_VERIFICATION] PDF OCR failed: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-06-22 17:42:05 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Verification completed with status: rejected
+2025-06-22 17:42:05 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Temporary file cleaned up: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\imza-sirkuleri.pdf
+2025-06-22 17:42:05 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Document verification completed: rejected
+2025-06-22 17:42:21 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting document verification: redacted (5).pdf (type: auto, wolfram_enabled: False)
+2025-06-22 17:42:21 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\redacted (5).pdf
+2025-06-22 17:42:21 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\redacted (5).pdf
+2025-06-22 17:42:21 - aiiris_backend.DOCUMENT_VERIFICATION - ERROR - [DOCUMENT_VERIFICATION] PDF OCR failed: tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-06-22 17:42:21 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Verification completed with status: rejected
+2025-06-22 17:42:21 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Temporary file cleaned up: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\redacted (5).pdf
+2025-06-22 17:42:21 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Document verification completed: rejected
+2025-06-22 17:42:37 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting document verification: END214 ÖDEV 2.pdf (type: auto, wolfram_enabled: False)
+2025-06-22 17:42:37 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\END214 ÖDEV 2.pdf
+2025-06-22 17:42:37 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\END214 ÖDEV 2.pdf
+2025-06-22 17:42:47 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] LLM field extraction failed: Expecting value: line 1 column 1 (char 0)
+2025-06-22 17:42:53 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:42:53 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting document verification: END214 ÖDEV 2.pdf (type: auto, wolfram_enabled: False)
+2025-06-22 17:42:53 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\END214 ÖDEV 2.pdf
+2025-06-22 17:42:53 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\END214 ÖDEV 2.pdf
+2025-06-22 17:43:03 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] LLM field extraction failed: Expecting value: line 1 column 1 (char 0)
+2025-06-22 17:43:15 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] Data consistency LLM response was not valid JSON
+2025-06-22 17:43:22 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] Fraud analysis LLM response was not valid JSON
+2025-06-22 17:43:22 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Verification completed with status: verified
+2025-06-22 17:43:22 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Temporary file cleaned up: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\END214 ÖDEV 2.pdf
+2025-06-22 17:43:22 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Document verification completed: verified
+2025-06-22 17:43:48 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:44:06 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting file upload: Karar Taslağı Yeni Form.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 17:44:06 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\Karar Taslağı Yeni Form.docx
+2025-06-22 17:44:08 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Processing uploaded file...
+2025-06-22 17:47:07 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:47:37 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:47:51 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:47:57 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:52:21 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:52:38 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting document verification: 231401013_YAĞIZ CAN_AKAY.pdf (type: auto, wolfram_enabled: False)
+2025-06-22 17:52:38 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:52:38 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:52:49 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] LLM field extraction failed: Expecting value: line 1 column 1 (char 0)
+2025-06-22 17:53:04 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] Data consistency LLM response was not valid JSON
+2025-06-22 17:53:13 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] Fraud analysis LLM response was not valid JSON
+2025-06-22 17:53:13 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Verification completed with status: verified
+2025-06-22 17:53:13 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Temporary file cleaned up: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:53:13 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Document verification completed: verified
+2025-06-22 17:54:06 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting file upload: 231401013_YAĞIZ CAN_AKAY.pdf (application/pdf)
+2025-06-22 17:54:06 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:54:07 - aiiris_backend.ROUTER - ERROR - [DOCUMENT_VERIFICATION] File upload error for 231401013_YAĞIZ CAN_AKAY.pdf: No module named 'openpyxl'
+2025-06-22 17:54:38 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:54:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: 231401013_YAĞIZ CAN_AKAY.pdf (application/pdf)
+2025-06-22 17:54:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:54:50 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for 231401013_YAĞIZ CAN_AKAY.pdf: No module named 'nltk'
+2025-06-22 17:55:16 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:55:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: 231401013_YAĞIZ CAN_AKAY.pdf (application/pdf)
+2025-06-22 17:55:29 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:55:43 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for 231401013_YAĞIZ CAN_AKAY.pdf: No module named 'langchain_experimental'
+2025-06-22 17:56:04 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:56:26 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: 231401013_YAĞIZ CAN_AKAY.pdf (application/pdf)
+2025-06-22 17:56:26 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\231401013_YAĞIZ CAN_AKAY.pdf
+2025-06-22 17:56:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:57:00 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for 231401013_YAĞIZ CAN_AKAY.pdf: Error code: 400 - {'error': {'message': 'Requested 969974 tokens, max 300000 tokens per request', 'type': 'max_tokens_per_request', 'param': None, 'code': 'max_tokens_per_request'}}
+2025-06-22 17:58:18 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: ŞEHİR İÇİ VAPURLARI.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 17:58:18 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\ŞEHİR İÇİ VAPURLARI.docx
+2025-06-22 17:58:18 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 17:59:21 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for ŞEHİR İÇİ VAPURLARI.docx: Error code: 400 - {'error': {'message': 'Requested 969974 tokens, max 300000 tokens per request', 'type': 'max_tokens_per_request', 'param': None, 'code': 'max_tokens_per_request'}}
+2025-06-22 18:06:15 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 18:06:48 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting file upload: ŞEHİR İÇİ VAPURLARI.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 18:06:48 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved to: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\uploads\ŞEHİR İÇİ VAPURLARI.docx
+2025-06-22 18:06:49 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Processing uploaded file...
+2025-06-22 18:08:30 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File processed successfully: ŞEHİR İÇİ VAPURLARI.docx
+2025-06-22 18:10:22 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Processing query: Deniz Vapurlarını bir excel dosyasına çevir...
+2025-06-22 18:10:22 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Query processed successfully
+2025-06-22 18:12:41 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Starting document verification: finalF20.pdf (type: auto, wolfram_enabled: False)
+2025-06-22 18:12:41 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] File saved for verification: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\finalF20.pdf
+2025-06-22 18:12:41 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\finalF20.pdf
+2025-06-22 18:12:52 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] LLM field extraction failed: Expecting value: line 1 column 1 (char 0)
+2025-06-22 18:13:14 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] Data consistency LLM response was not valid JSON
+2025-06-22 18:13:20 - aiiris_backend.DOCUMENT_VERIFICATION - WARNING - [DOCUMENT_VERIFICATION] Fraud analysis LLM response was not valid JSON
+2025-06-22 18:13:20 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Verification completed with status: verified
+2025-06-22 18:13:20 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Temporary file cleaned up: C:\Users\ASUS\Desktop\Coding\Python\vectorrag\aiirs\aiiris_backend\verification_uploads\finalF20.pdf
+2025-06-22 18:13:20 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Document verification completed: verified
+2025-06-22 18:14:21 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 18:14:22 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] RSS feed encoding: UTF-8
+2025-06-22 18:14:22 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Successfully fetched 20 finance news articles
+2025-06-22 18:14:50 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 18:14:51 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] RSS feed encoding: UTF-8
+2025-06-22 18:14:51 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Successfully fetched 20 finance news articles
