@@ -25,6 +25,13 @@ class UIComponents {
     this.chatSessions = [];
 
     this.init();
+    
+    // Subscribe to language changes
+    if (window.languageService) {
+      window.languageService.subscribe(() => {
+        this.updateDynamicTexts();
+      });
+    }
   }
 
   init() {
@@ -41,6 +48,16 @@ class UIComponents {
     const wolframToggle = document.getElementById("wolfram-toggle");
     if (wolframToggle) {
       wolframToggle.checked = this.wolframEnabled;
+    }
+
+    // Set language setting on load
+    if (window.languageService) {
+      const languageSetting = document.getElementById("language-setting");
+      if (languageSetting) {
+        languageSetting.value = window.languageService.getCurrentLanguage();
+      }
+      // Update texts with current language
+      window.languageService.updatePageTexts();
     }
   }
 
@@ -139,6 +156,16 @@ class UIComponents {
     const saveSettingsButton = document.getElementById("save-settings");
     if (saveSettingsButton) {
       saveSettingsButton.addEventListener("click", () => this.saveSettings());
+    }
+
+    // Language setting change
+    const languageSetting = document.getElementById("language-setting");
+    if (languageSetting) {
+      languageSetting.addEventListener("change", (e) => {
+        if (window.languageService) {
+          window.languageService.setLanguage(e.target.value);
+        }
+      });
     } // Web Search toggle event
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
@@ -348,19 +375,21 @@ class UIComponents {
 
       // Check if response is valid
       if (!response || !response.success) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         const errorMsg = response?.error || "Failed to get response from AI";
         this.addMessageToChat(
           "error",
-          `Sorry, I couldn't process your request: ${errorMsg}`
+          `${t('sorryError')} ${errorMsg}`
         );
         return;
       }
 
       // Ensure we have actual response content
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       const assistantResponse =
         response.response ||
         response.data?.response ||
-        "I apologize, but I couldn't generate a proper response.";
+        t('apologizeResponse');
 
       // Update session ID if it was created server-side
       if (response.sessionId && response.sessionId !== this.currentSessionId) {
@@ -377,18 +406,16 @@ class UIComponents {
     } catch (error) {
       this.hideTypingIndicator();
 
-      let errorMessage =
-        "Sorry, I encountered an error processing your request. Please try again.";
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      let errorMessage = t('sorryEncounteredError');
       if (error.message) {
         if (error.message.includes("timeout")) {
-          errorMessage =
-            "The request took too long. The AI service might be busy. Please try again.";
+          errorMessage = t('requestTookTooLong');
         } else if (
           error.message.includes("fetch") ||
           error.message.includes("network")
         ) {
-          errorMessage =
-            "Connection error. Please check your internet connection and try again.";
+          errorMessage = t('connectionErrorCheck');
         }
       }
 
@@ -525,10 +552,11 @@ class UIComponents {
       this.currentSessionId = null;
 
       // Add welcome message
-      this.addMessageToChat(
-        "assistant",
-        "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them."
-      );
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    this.addMessageToChat(
+      "assistant",
+      t('welcomeAssistantMessage')
+    );
     }
   }
 
@@ -1257,11 +1285,12 @@ class UIComponents {
 
     try {
       // Stage 1: Preparing file
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-cog fa-spin", "Preparing file...");
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-cog fa-spin", t('preparingFile'));
       await this.animateProgress(progressFill, progressPercentage, 0, 10, 500);
 
       // Stage 2: Reading file
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-file-alt", "Reading file...");
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-file-alt", t('readingFile'));
       
       // Read file with progress simulation
       let fileBuffer;
@@ -1277,7 +1306,7 @@ class UIComponents {
       );
 
       // Stage 3: Uploading
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-cloud-upload-alt", "Uploading...");
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-cloud-upload-alt", t('uploading'));
       
       let uploadResponse;
       await this.simulateAsyncOperation(
@@ -1308,7 +1337,7 @@ class UIComponents {
       );
 
       // Stage 4: Processing
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-brain fa-pulse", "Processing with AI...");
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-brain fa-pulse", t('processingWithAI'));
       uploadSpeed.textContent = "";
       timeRemaining.textContent = "";
       
@@ -1326,7 +1355,7 @@ class UIComponents {
       );
 
       // Stage 5: Complete
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-check", "Upload complete!");
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-check", t('uploadComplete'));
       await this.animateProgress(progressFill, progressPercentage, null, 100, 500);
 
       // Success styling
@@ -1336,8 +1365,8 @@ class UIComponents {
       // Calculate total time
       const totalTime = Date.now() - startTime;
       const avgSpeed = file.size / (totalTime / 1000);
-      uploadSpeed.textContent = `Avg: ${this.formatSpeed(avgSpeed)}`;
-      timeRemaining.textContent = `Completed in ${this.formatTime(totalTime / 1000)}`;
+      uploadSpeed.textContent = `${t('avgSpeed')}: ${this.formatSpeed(avgSpeed)}`;
+      timeRemaining.textContent = `${t('completedIn')} ${this.formatTime(totalTime / 1000)}`;
 
       // Remove after delay
       setTimeout(() => {
@@ -1359,17 +1388,17 @@ class UIComponents {
     } catch (error) {
       // Error state
       fileItem.classList.add("upload-error");
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-exclamation-triangle", "Upload failed");
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-exclamation-triangle", t('uploadFailed'));
       progressFill.style.background = "linear-gradient(90deg, #ef4444, #f87171)";
       uploadSpeed.textContent = "";
-      timeRemaining.textContent = "Error occurred";
+      timeRemaining.textContent = t('errorOccurred');
       console.error("Upload error:", error);
       
       // Show retry option
       setTimeout(() => {
         const retryButton = document.createElement("button");
         retryButton.className = "retry-upload-btn";
-        retryButton.innerHTML = '<i class="fas fa-redo"></i> Retry';
+        retryButton.innerHTML = `<i class="fas fa-redo"></i> ${t('retry')}`;
         retryButton.onclick = () => {
           fileItem.classList.remove("upload-error");
           this.uploadFile(file, fileItem);
@@ -1467,11 +1496,12 @@ class UIComponents {
       fileLibrary.innerHTML = "";
 
       if (files.length === 0) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
           <i class="fas fa-folder-open"></i>
-          <h3>No documents yet</h3>
-          <p>Upload some documents to get started</p>
-          <button class="cta-button" data-tab="upload">Upload Files</button>
+          <h3>${t('noDocuments')}</h3>
+          <p>${t('uploadToGetStarted')}</p>
+          <button class="cta-button" data-tab="upload">${t('uploadFilesBtn')}</button>
         </div>`;
         return;
       }
@@ -1506,7 +1536,7 @@ class UIComponents {
           <div class="file-card-preview" id="preview-${Utils.escapeHtml(file.name).replace(/[^a-zA-Z0-9]/g, '_')}">
             <div class="preview-loading">
               <i class="fas fa-spinner fa-spin"></i>
-              <span>Loading preview...</span>
+              <span data-i18n="previewLoading">Loading preview...</span>
             </div>
           </div>
         `;
@@ -1527,10 +1557,11 @@ class UIComponents {
     } catch (error) {
       const fileLibrary = document.getElementById("files-grid");
       if (fileLibrary) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>Error loading files</h3>
-          <p>Failed to load files. Please try again later.</p>
+          <h3>${t('error')}</h3>
+          <p>${t('networkError')}</p>
         </div>`;
       }
       console.error("Error loading file library:", error);
@@ -1638,11 +1669,13 @@ class UIComponents {
 
   async openFile(fileName) {
     try {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      
       // Try to open the file using Electron's API
       if (window.airisAPI && window.airisAPI.openFile) {
         try {
           await window.airisAPI.openFile(fileName);
-          this.showNotification(`Opened ${fileName}`, "success");
+          this.showNotification(`${t('openedFile')} ${fileName}`, "success");
           return;
         } catch (electronError) {
           console.warn(
@@ -1658,7 +1691,7 @@ class UIComponents {
           fileName
         )}/download`;
         window.open(downloadUrl, "_blank");
-        this.showNotification(`Downloading ${fileName}...`, "info");
+        this.showNotification(`${t('downloadingFile')} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
 
@@ -1671,7 +1704,7 @@ class UIComponents {
           this.showNotification(
             `${fileName} (${Utils.formatFileSize(
               fileInfo.size || 0
-            )}) - Unable to open directly`,
+            )}) - ${t('unableToOpenDirectly')}`,
             "warning"
           );
         } else {
@@ -1681,7 +1714,7 @@ class UIComponents {
     } catch (error) {
       console.error("Error opening file:", error);
       this.showNotification(
-        `Failed to open ${fileName}. Please try again.`,
+        `${t('failedToOpenFile')} ${fileName}. ${t('sorryEncounteredError')}`,
         "error"
       );
     }
@@ -1705,7 +1738,8 @@ class UIComponents {
       console.log("✅ Frontend: User confirmed deletion for:", fileName);
 
       // Show loading state
-      this.showNotification("Deleting file...", "info");
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      this.showNotification(t('deletingFile'), "info");
 
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
 
@@ -1761,6 +1795,7 @@ class UIComponents {
     const fileIcon = Utils.getFileIcon(file.name);
     const fileSize = Utils.formatFileSize(file.size);
     const uploadDate = new Date(file.uploadDate).toLocaleDateString();
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
 
     fileElement.innerHTML = `
             <div class="file-icon">
@@ -1770,18 +1805,18 @@ class UIComponents {
                 <div class="file-name">${Utils.escapeHtml(file.name)}</div>
                 <div class="file-meta">
                     <span class="file-size">${fileSize}</span>
-                    <span class="file-date">Uploaded ${uploadDate}</span>
+                    <span class="file-date">${t('uploadedOn')} ${uploadDate}</span>
                 </div>
             </div>
             <div class="file-actions">
                 <button class="action-btn" onclick="window.uiComponents.downloadFile('${
                   file.id
-                }')">
+                }')" title="${t('downloadFile')}">
                     <i class="fas fa-download"></i>
                 </button>
                 <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${
                   file.id
-                }')">
+                }')" title="${t('deleteFile')}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -1800,7 +1835,8 @@ class UIComponents {
   }
 
   async deleteFile(fileId) {
-    if (!confirm("Are you sure you want to delete this file?")) return;
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    if (!confirm(t('areYouSureDelete'))) return;
 
     try {
       // Remove from local storage
@@ -1856,17 +1892,19 @@ class UIComponents {
     const documentCount = document.getElementById("document-count");
     const systemHealth = document.getElementById("system-health");
 
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    
     if (apiRequests) {
       apiRequests.textContent = metrics.apiRequests || "0";
     }
     if (responseTime) {
-      responseTime.textContent = metrics.averageResponseTime || "N/A";
+      responseTime.textContent = metrics.averageResponseTime || t('notAvailable');
     }
     if (documentCount) {
       documentCount.textContent = metrics.documentsProcessed || "0";
     }
     if (systemHealth) {
-      systemHealth.textContent = metrics.systemHealth || "Unknown";
+      systemHealth.textContent = metrics.systemHealth || t('unknown');
       // Color code the health status
       systemHealth.style.color =
         metrics.systemHealth === "healthy"
@@ -1887,8 +1925,9 @@ class UIComponents {
     activityList.innerHTML = "";
 
     if (activities.length === 0) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       activityList.innerHTML =
-        '<div class="no-activity">No recent activity</div>';
+        `<div class="no-activity">${t('noActivity')}</div>`;
       return;
     }
 
@@ -1972,7 +2011,8 @@ class UIComponents {
     localStorage.setItem("airis-settings", JSON.stringify(settings));
 
     // Show success message
-    this.showNotification("Settings saved successfully!", "success");
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    this.showNotification(t('settingsSavedSuccessfully'), "success");
   }
 
   loadSettings() {
@@ -2033,9 +2073,10 @@ class UIComponents {
     this.loadSettings();
 
     // Initialize with welcome message
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
     this.addMessageToChat(
       "assistant",
-      "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them."
+      t('welcomeAssistantMessage')
     );
 
     // Update upload button state
@@ -2065,17 +2106,18 @@ class UIComponents {
 
     // Show loading state if forcing refresh or no news loaded
     if (forceRefresh || !this.lastNewsUpdate) {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       newsGrid.innerHTML = `
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>Loading latest finance news...</p>
+          <p>${t('loadingLatestNews')}</p>
         </div>
       `;
 
       if (refreshButton) {
         refreshButton.disabled = true;
         refreshButton.innerHTML =
-          '<i class="fas fa-sync-alt fa-spin"></i> Loading...';
+          `<i class="fas fa-sync-alt fa-spin"></i> ${t('loading')}`;
       }
     }
 
@@ -2087,7 +2129,8 @@ class UIComponents {
         this.lastNewsUpdate = new Date().toISOString();
 
         if (newsLastUpdated) {
-          newsLastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+          const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+          newsLastUpdated.textContent = `${t('lastUpdatedAt')} ${new Date().toLocaleTimeString()}`;
         }
 
         // Set up auto-refresh interval (1 minute)
@@ -2097,26 +2140,28 @@ class UIComponents {
       }
     } catch (error) {
       console.error("Failed to load finance news:", error);
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
       newsGrid.innerHTML = `
         <div class="error-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>Failed to load news</h3>
+          <h3>${t('failedToLoadNews')}</h3>
           <p>${
-            error.message || "Unable to fetch finance news. Please try again."
+            error.message || t('unableToFetchNews')
           }</p>
           <button class="btn btn-primary" onclick="window.uiComponents.loadFinanceNews(true)">
-            <i class="fas fa-retry"></i> Retry
+            <i class="fas fa-retry"></i> ${t('retryAction')}
           </button>
         </div>
       `;
 
       if (newsLastUpdated) {
-        newsLastUpdated.textContent = "Failed to update";
+        newsLastUpdated.textContent = t('failedToUpdate');
       }
     } finally {
       if (refreshButton) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
         refreshButton.disabled = false;
-        refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+        refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t('refresh')}`;
       }
     }
   }
@@ -2194,12 +2239,14 @@ class UIComponents {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
+    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+
     if (minutes < 60) {
-      return `${minutes}m ago`;
+      return `${minutes}${t('minutesAgo')}`;
     } else if (hours < 24) {
-      return `${hours}h ago`;
+      return `${hours}${t('hoursAgo')}`;
     } else {
-      return `${days}d ago`;
+      return `${days}${t('daysAgo')}`;
     }
   }
 
@@ -2221,6 +2268,130 @@ class UIComponents {
     if (this.newsRefreshInterval) {
       clearInterval(this.newsRefreshInterval);
       this.newsRefreshInterval = null;
+    }
+  }
+
+  updateDynamicTexts() {
+    if (!window.languageService) return;
+
+    const t = window.languageService.t.bind(window.languageService);
+
+    // Update suggestion chips
+    const chips = document.querySelectorAll('.suggestion-chip');
+    chips.forEach((chip, index) => {
+      const chipKeys = ['suggestedQuestions.latestReport', 'suggestedQuestions.analyzeTrends', 'suggestedQuestions.expenseSummary'];
+      if (chipKeys[index]) {
+        chip.textContent = t(chipKeys[index]);
+      }
+    });
+
+    // Update upload progress stages
+    this.updateProgressStage = (iconElement, stageElement, iconClass, stageText) => {
+      iconElement.className = `${iconClass} progress-icon`;
+      
+      // Use translation for stage text
+      let translatedText = stageText;
+      if (stageText.includes('Preparing')) translatedText = t('preparing');
+      else if (stageText.includes('Reading')) translatedText = t('readingFile');
+      else if (stageText.includes('Uploading')) translatedText = t('uploading');
+      else if (stageText.includes('Processing with AI')) translatedText = t('processingWithAI');
+      else if (stageText.includes('complete')) translatedText = t('uploadComplete');
+      else if (stageText.includes('failed')) translatedText = t('uploadFailed');
+      
+      stageElement.textContent = translatedText;
+    };
+
+    // Update file deletion confirmation dialog
+    this.deleteFile = async (fileName) => {
+      try {
+        const confirmed = confirm(t('deleteConfirmation', { filename: fileName }));
+        if (!confirmed) return;
+
+        this.showNotification(t('loading'), "info");
+
+        const result = await fetch(
+          `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`,
+          { method: "DELETE" }
+        );
+
+        if (!result.ok) {
+          throw new Error(`Failed to delete file: ${result.statusText}`);
+        }
+
+        const data = await result.json();
+
+        this.showNotification(t('fileDeletedSuccessfully', { filename: fileName }), "success");
+        this.loadFileLibrary();
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        this.showNotification(t('failedToDeleteFile'), "error");
+      }
+    };
+
+    // Update status texts
+    const statusTexts = document.querySelectorAll('.status-text');
+    statusTexts.forEach(status => {
+      if (status.textContent.includes('Loading')) {
+        status.textContent = t('loading');
+      } else if (status.textContent.includes('Connected')) {
+        status.textContent = t('connected');
+      } else if (status.textContent.includes('Connecting')) {
+        status.textContent = t('connecting');
+      }
+    });
+
+    // Update empty states
+    this.updateEmptyStates();
+
+    // Update news refresh button text
+    const refreshButton = document.getElementById('refresh-news');
+    if (refreshButton && !refreshButton.disabled) {
+      refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t('refresh')}`;
+    }
+
+    // Update analytics metrics with translations
+    const responseTime = document.getElementById("response-time");
+    const systemHealth = document.getElementById("system-health");
+    if (responseTime && responseTime.textContent === 'N/A') {
+      responseTime.textContent = t('notAvailable');
+    }
+    if (systemHealth && systemHealth.textContent === 'Unknown') {
+      systemHealth.textContent = t('unknown');
+    }
+
+    // Refresh current tab content with new language
+    if (this.currentTab === 'files') {
+      this.loadFileLibrary();
+    } else if (this.currentTab === 'news') {
+      this.loadFinanceNews();
+    } else if (this.currentTab === 'analytics') {
+      this.loadAnalytics();
+    }
+  }
+
+  updateEmptyStates() {
+    if (!window.languageService) return;
+
+    const t = window.languageService.t.bind(window.languageService);
+
+    // Update file empty state
+    const fileEmptyState = document.querySelector('#files-grid .empty-state');
+    if (fileEmptyState) {
+      const heading = fileEmptyState.querySelector('h3');
+      const paragraph = fileEmptyState.querySelector('p');
+      const button = fileEmptyState.querySelector('button');
+      
+      if (heading) heading.textContent = t('noDocuments');
+      if (paragraph) paragraph.textContent = t('uploadToGetStarted');
+      if (button) button.textContent = t('uploadFilesBtn');
+    }
+
+    // Update no activity state
+    const noActivity = document.querySelector('.no-activity');
+    if (noActivity && noActivity.textContent.includes('Loading')) {
+      noActivity.textContent = t('loadingActivity');
+    } else if (noActivity && noActivity.textContent.includes('No recent')) {
+      noActivity.textContent = t('noActivity');
     }
   }
 }

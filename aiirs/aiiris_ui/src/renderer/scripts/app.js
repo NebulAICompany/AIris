@@ -33,6 +33,13 @@ class AIrisApp {
       // Show loading screen
       this.showLoadingScreen();
 
+      // Initialize language service first
+      if (window.languageService) {
+        // Set initial language and update page texts
+        window.languageService.updatePageTexts();
+        logger.info("Language service initialized", "APP");
+      }
+
       // Check backend connection
       await this.checkBackendConnection();
 

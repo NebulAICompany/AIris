@@ -253,3 +253,11 @@
 2025-06-22 15:31:23 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: D:\GitHub\vectorrag\aiirs\aiiris_backend\uploads\VeriSeti.xlsx
 2025-06-22 15:31:23 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
 2025-06-22 15:33:11 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for VeriSeti.xlsx: Error code: 400 - {'error': {'message': 'Requested 969974 tokens, max 300000 tokens per request', 'type': 'max_tokens_per_request', 'param': None, 'code': 'max_tokens_per_request'}}
+2025-06-22 15:52:21 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 15:52:32 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 15:52:32 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 15:52:32 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 15:52:54 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 15:52:54 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 15:52:54 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:01:50 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
