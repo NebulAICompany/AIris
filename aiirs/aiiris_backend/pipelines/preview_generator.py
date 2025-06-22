@@ -232,9 +232,12 @@ class PreviewGenerator:
         # Try to convert to PDF first, then to image
         if DOCX2PDF_AVAILABLE and FITZ_AVAILABLE and PIL_AVAILABLE:
             try:
-                return self._generate_docx_image_preview()
+                print(f"Attempting PDF conversion for: {self.file_path.name}")
+                result = self._generate_docx_image_preview()
+                print(f"PDF conversion successful for: {self.file_path.name}")
+                return result
             except Exception as e:
-                print(f"DOCX to image conversion failed: {e}, falling back to text preview")
+                print(f"DOCX to image conversion failed for {self.file_path.name}: {e}, falling back to visual preview")
         
         # Fall back to creating a visual text representation
         if PIL_AVAILABLE:
@@ -247,18 +250,85 @@ class PreviewGenerator:
         return self._generate_docx_text_preview()
     
     def _generate_docx_image_preview(self) -> Dict[str, Any]:
-        """Try to convert DOCX to PDF, then to image."""
-        temp_pdf = None
+        """Try to convert DOCX to PDF, then to image with retry logic."""
+        return self._convert_docx_with_retry(max_retries=2)
+    
+    def _convert_docx_with_retry(self, max_retries: int = 2) -> Dict[str, Any]:
+        """Convert DOCX with retry logic for COM errors."""
+        for attempt in range(max_retries + 1):
+            temp_pdf = None
+            try:
+                # Initialize COM for Windows (fresh initialization each attempt)
+                import sys
+                if sys.platform.startswith('win'):
+                    try:
+                        import pythoncom
+                        # Try to uninitialize first in case there's a stale COM state
+                        try:
+                            pythoncom.CoUninitialize()
+                        except:
+                            pass
+                        # Fresh initialization
+                        pythoncom.CoInitialize()
+                        print(f"COM initialized successfully for attempt {attempt + 1}")
+                    except Exception as com_error:
+                        print(f"COM initialization failed on attempt {attempt + 1}: {com_error}")
+                        if attempt == max_retries:
+                            raise Exception(f"COM initialization failed after {max_retries + 1} attempts")
+                
+                # Create a temporary PDF file
+                with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
+                    temp_pdf = temp_file.name
+                
+                print(f"Converting {self.file_path.name} to PDF (attempt {attempt + 1})")
+                
+                # Convert DOCX to PDF
+                convert(str(self.file_path), temp_pdf)
+                
+                # Verify the PDF was created and is not empty
+                if not os.path.exists(temp_pdf) or os.path.getsize(temp_pdf) == 0:
+                    raise Exception("Generated PDF is empty or doesn't exist")
+                
+                print(f"PDF conversion successful for {self.file_path.name} on attempt {attempt + 1}")
+                
+                # Use our PDF preview logic
+                return self._convert_pdf_to_image(temp_pdf)
+                
+            except Exception as e:
+                print(f"Conversion attempt {attempt + 1} failed for {self.file_path.name}: {e}")
+                
+                # Clean up COM for this attempt
+                import sys
+                if sys.platform.startswith('win'):
+                    try:
+                        import pythoncom
+                        pythoncom.CoUninitialize()
+                    except:
+                        pass
+                
+                # Clean up temporary PDF file
+                if temp_pdf and os.path.exists(temp_pdf):
+                    try:
+                        os.unlink(temp_pdf)
+                    except:
+                        pass
+                
+                # If this was the last attempt, raise the exception
+                if attempt == max_retries:
+                    raise e
+                
+                # Wait a bit before retrying
+                import time
+                time.sleep(0.5)
+        
+        # This should never be reached, but just in case
+        raise Exception("Unexpected error in conversion retry logic")
+    
+    def _convert_pdf_to_image(self, pdf_path: str) -> Dict[str, Any]:
+        """Convert PDF to image preview."""
+        pdf_document = None
         try:
-            # Create a temporary PDF file
-            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
-                temp_pdf = temp_file.name
-            
-            # Convert DOCX to PDF
-            convert(str(self.file_path), temp_pdf)
-            
-            # Use our PDF preview logic
-            pdf_document = fitz.open(temp_pdf)
+            pdf_document = fitz.open(pdf_path)
             
             if len(pdf_document) == 0:
                 raise Exception("Generated PDF is empty")
@@ -282,8 +352,6 @@ class PreviewGenerator:
             img.save(buffer, format='PNG')
             img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             
-            pdf_document.close()
-            
             return {
                 "type": "image",
                 "data": f"data:image/png;base64,{img_base64}",
@@ -294,12 +362,19 @@ class PreviewGenerator:
             }
             
         finally:
-            # Clean up temporary PDF file
-            if temp_pdf and os.path.exists(temp_pdf):
+            # Close PDF document
+            if pdf_document is not None:
                 try:
-                    os.unlink(temp_pdf)
+                    pdf_document.close()
                 except:
                     pass
+            
+            # Clean up the temporary PDF file
+            try:
+                if os.path.exists(pdf_path):
+                    os.unlink(pdf_path)
+            except:
+                pass
     
     def _generate_docx_visual_preview(self) -> Dict[str, Any]:
         """Create a visual representation of DOCX content using PIL."""
