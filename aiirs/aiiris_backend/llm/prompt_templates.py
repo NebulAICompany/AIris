@@ -2,20 +2,7 @@ from agents import Agent, Runner, function_tool
 from typing import List
 from agents.tool import WebSearchTool
 from aiiris_backend.agent_mcps.office_agent import office_agent
-
-
-@function_tool
-async def route_to_office_agent(task: str) -> str:
-    """
-    Routes office-related tasks to the specialized Office Agent.
-    Use this for Word, Excel operations.
-
-    Args:
-        task: Detailed description of the office task to perform
-    """
-    result = await Runner.run(office_agent, task)
-    return result.content if hasattr(result, "content") else str(result)
-
+from aiiris_backend.agent_mcps.alpha_vantage_agent import alpha_vantage_agent
 
 # Import our custom wolfram function tool
 from aiiris_backend.agents.wolfram_alpha_tool import wolfram_alpha_query
@@ -49,7 +36,27 @@ def create_rag_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = [route_to_office_agent]
+    office_agent_tool = office_agent.as_tool(
+        tool_name="office_operations",
+        tool_description="""Use this tool for Microsoft Office operations including:
+        - Creating Excel workbooks from structured data
+        - Generating Word documents with custom content
+        - Document processing and format conversion
+        - Any task requiring Word or Excel functionality""",
+    )
+
+    alpha_vantage_tool = alpha_vantage_agent.as_tool(
+        tool_name="financial_data_analysis",
+        tool_description="""Use this tool for financial data analysis including:
+        - Stock quotes and company information
+        - Cryptocurrency rates and analysis
+        - Historical price data and time series
+        - Option chain data and technical analysis
+        - Market trends and volatility analysis
+        - Any financial data query or analysis""",
+    )
+
+    tools = [office_agent_tool, alpha_vantage_tool]
     if web_search_enabled:
         tools.append(WebSearchTool())
 
@@ -74,6 +81,7 @@ Elindeki wolfram_alpha_query fonksiyonunu kullanarak matematiksel hesaplamalar, 
     )
 
     agent_instructions = f"""🤖 Sen gelişmiş bir RAG (Retrieval-Augmented Generation) Asistanısın. 
+
 **Wolfram Yönergeleri:**
 {wolfram_instructions}
 
@@ -89,18 +97,29 @@ Elindeki wolfram_alpha_query fonksiyonunu kullanarak matematiksel hesaplamalar, 
 
 🎯 **Ana Görevler:**
 1. **Bilgi Analizi:** Sorguyu analiz et ve hangi kaynakları kullanman gerektiğini belirle
-2. **Akıllı Yönlendirme:** Office işlemleri için route_to_office_agent fonksiyonunu kullan
+2. **Akıllı Yönlendirme:** Specialized agentları doğru kullan
 3. **Kapsamlı Yanıtlama:** Mevcut bilgilerle detaylı ve doğru yanıtlar ver
 4. **Kaynak Belgeleme:** Kullandığın bilgilerin metadatalarını sağla
 
 🔧 **İşlem Protokolleri:**
 
 **🏢 Office İşlemleri İçin:**
-Aşağıdaki durumlardan herhangi birinde route_to_office_agent'ı kullan:
-- "Word belgesi oluştur"
-- "Excel dosyası oluştur"
-- Herhangi bir office uygulaması gerektiren işlem olursa route_to_office_agent fonksiyonunu çağır
+Aşağıdaki durumlardan herhangi birinde office_operations aracını kullan:
+- Word belgesi oluşturma ve düzenleme
+- Excel dosyası oluşturma ve veri işleme
+- Tablo verilerinden Excel dosyası çıkarma
+- Belge formatı dönüştürme
+- Herhangi bir Microsoft Office uygulaması gerektiren işlem
 
+**💰 Finansal Veri Analizi İçin:**
+Aşağıdaki durumlardan herhangi birinde financial_data_analysis aracını kullan:
+- Hisse senedi fiyatları ve kotasyonları
+- Şirket finansal bilgileri (sektör, piyasa değeri)
+- Kripto para kurları ve analizi
+- Tarihsel fiyat verileri ve zaman serileri
+- Opsiyon zinciri verileri
+- Teknik analiz ve piyasa trendleri
+- Herhangi bir finansal veri sorgusu veya analizi
 
 📐 **Kalite Standartları:**
 - ✅ Doğru ve güncel bilgi sağla
@@ -123,10 +142,9 @@ NOT: Eğer herhangi bir bilgi mevcut değilse o satırı atlayabilirsin. Placeho
 
 **Kritik Kurallar:**
 - Bilmediğin konularda spekülasyon yapma
-- Office işlemlerini kendın yapmaya çalışma, Office Agent'a yönlendir
+- Specialized agentları doğru işlev için kullan
 - Her zaman güvenilir kaynakları tercih et
 - Kullanıcının gizliliğini ve veri güvenliğini koru
-
 
 Şimdi sorguyu analiz et ve en uygun yanıtı hazırla! """
 

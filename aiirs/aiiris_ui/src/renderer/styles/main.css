@@ -738,6 +738,33 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
+.warning-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.retry-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.retry-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 .close-btn {
   background: none;
   border: none;
@@ -745,9 +772,9 @@ input:checked + .slider:before {
   font-size: 1.1rem;
   cursor: pointer;
   padding: 0.25rem;
-  margin-left: auto;
   opacity: 0.8;
   transition: opacity 0.2s;
+  flex-shrink: 0;
 }
 
 .close-btn:hover {
@@ -856,6 +883,42 @@ input:checked + .slider:before {
   }
   30% {
     transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* Enhanced Typing Indicator */
+.typing-indicator .message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.typing-status {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.8;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.typing-indicator .typing-dots {
+  padding: 0.5rem 1rem;
+  margin-bottom: 0;
+}
+
+/* Enhanced typing indicator animations */
+.typing-status {
+  animation: pulseText 2s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
     opacity: 1;
   }
 }

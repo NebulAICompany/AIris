@@ -333,10 +333,12 @@ class UIComponents {
     // Add user message to chat
     this.addMessageToChat("user", message);
 
+    // Show enhanced typing indicator with progress info
+    this.showEnhancedTypingIndicator(message);
+
     try {
-      // Show typing indicator
-      this.showTypingIndicator(); // Send to backend
-      const response = await window.apiService.sendQuery(
+      // Send to backend with enhanced error handling
+      const response = await this.sendQueryWithRetry(
         message,
         this.webSearchEnabled,
         this.wolframEnabled,
@@ -348,10 +350,10 @@ class UIComponents {
 
       // Check if response is valid
       if (!response || !response.success) {
-        const errorMsg = response?.error || "Failed to get response from AI";
+        const errorMsg = response?.error || "AI'dan yanıt alınamadı";
         this.addMessageToChat(
           "error",
-          `Sorry, I couldn't process your request: ${errorMsg}`
+          `Üzgünüm, isteğinizi işleyemedim: ${errorMsg}`
         );
         return;
       }
@@ -360,7 +362,7 @@ class UIComponents {
       const assistantResponse =
         response.response ||
         response.data?.response ||
-        "I apologize, but I couldn't generate a proper response.";
+        "Özür dilerim, uygun bir yanıt oluşturamadım.";
 
       // Update session ID if it was created server-side
       if (response.sessionId && response.sessionId !== this.currentSessionId) {
@@ -378,17 +380,32 @@ class UIComponents {
       this.hideTypingIndicator();
 
       let errorMessage =
-        "Sorry, I encountered an error processing your request. Please try again.";
+        "Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.";
+
+      // Enhanced error handling based on error type
       if (error.message) {
-        if (error.message.includes("timeout")) {
-          errorMessage =
-            "The request took too long. The AI service might be busy. Please try again.";
-        } else if (
-          error.message.includes("fetch") ||
-          error.message.includes("network")
+        if (
+          error.message.includes("timeout") ||
+          error.message.includes("zaman aşımı")
         ) {
           errorMessage =
-            "Connection error. Please check your internet connection and try again.";
+            "İstek zaman aşımına uğradı. AI servisi meşgul olabilir. Lütfen daha kısa bir soru deneyin veya birkaç saniye bekleyin.";
+        } else if (
+          error.message.includes("fetch") ||
+          error.message.includes("network") ||
+          error.message.includes("bağlan")
+        ) {
+          errorMessage =
+            "Bağlantı hatası. İnternet bağlantınızı kontrol edin ve tekrar deneyin.";
+        } else if (
+          error.message.includes("502") ||
+          error.message.includes("503")
+        ) {
+          errorMessage =
+            "Backend servisi geçici olarak kullanılamıyor. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
+        } else if (error.message.includes("500")) {
+          errorMessage =
+            "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
         }
       }
 
@@ -398,6 +415,105 @@ class UIComponents {
       this.isProcessing = false;
       this.toggleSendButton();
       chatInput.focus();
+    }
+  }
+
+  // Enhanced query sending with retry logic
+  async sendQueryWithRetry(
+    message,
+    webSearchEnabled,
+    wolframEnabled,
+    sessionId,
+    maxRetries = 2
+  ) {
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[Chat] Sending query attempt ${attempt}/${maxRetries}`);
+
+        const response = await window.apiService.sendQuery(
+          message,
+          webSearchEnabled,
+          wolframEnabled,
+          sessionId
+        );
+
+        return response;
+      } catch (error) {
+        lastError = error;
+        console.warn(`[Chat] Attempt ${attempt} failed:`, error.message);
+
+        // Don't retry on certain error types
+        if (
+          error.message.includes("400") ||
+          error.message.includes("401") ||
+          error.message.includes("403")
+        ) {
+          throw error;
+        }
+
+        // If not the last attempt, wait before retrying
+        if (attempt < maxRetries) {
+          this.updateTypingIndicatorMessage(
+            `Bağlantı sorunu, tekrar deneniyor... (${attempt}/${maxRetries})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  // Enhanced typing indicator with progress info
+  showEnhancedTypingIndicator(message) {
+    const chatMessages = document.getElementById("chat-messages");
+    if (!chatMessages) return;
+
+    // Remove any existing typing indicator
+    this.hideTypingIndicator();
+
+    const typingDiv = document.createElement("div");
+    typingDiv.className = "message assistant-message typing-indicator";
+    typingDiv.id = "typing-indicator";
+
+    // Determine what features are enabled for status message
+    let statusMessage = "AI düşünüyor...";
+    if (this.webSearchEnabled && this.wolframEnabled) {
+      statusMessage = "Web araması ve Wolfram Alpha ile analiz ediliyor...";
+    } else if (this.webSearchEnabled) {
+      statusMessage = "Web araması yapılıyor...";
+    } else if (this.wolframEnabled) {
+      statusMessage = "Wolfram Alpha ile analiz ediliyor...";
+    }
+
+    typingDiv.innerHTML = `
+      <div class="message-avatar">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="message-content">
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="typing-status">${statusMessage}</div>
+      </div>
+    `;
+
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // Update typing indicator message
+  updateTypingIndicatorMessage(message) {
+    const typingIndicator = document.getElementById("typing-indicator");
+    if (typingIndicator) {
+      const statusElement = typingIndicator.querySelector(".typing-status");
+      if (statusElement) {
+        statusElement.textContent = message;
+      }
     }
   }
 
@@ -920,34 +1036,59 @@ class UIComponents {
       ".message.assistant-message"
     );
 
-    messages.forEach((messageDiv) => {
+    console.log(`Fixing metadata formatting for ${messages.length} messages`);
+
+    messages.forEach((messageDiv, index) => {
       const messageText = messageDiv.querySelector(".message-text");
       if (!messageText) return;
 
-      // Check if metadata is already properly formatted
-      const hasFormattedMetadata = messageText.querySelector("pre code");
-      const hasMetadataLabel = messageText.querySelector(".metadata-label");
+      // Get the original content - try to get from data attribute first, then fallback to text
+      let originalContent =
+        messageDiv.dataset.originalContent ||
+        messageText.textContent ||
+        messageText.innerText;
 
-      const currentContent = messageText.textContent || messageText.innerText;
+      // Store original content if not already stored
+      if (!messageDiv.dataset.originalContent) {
+        messageDiv.dataset.originalContent = originalContent;
+      }
 
-      // More flexible check for metadata presence
+      // Enhanced metadata detection
       const metadataIndicators = [
         "Kullanılan Bilgi Metadataları:",
         "🗂️",
         "📊",
         "Kaynak:",
+        "- Kaynak:",
+        "📂 Kaynak:",
         "İşlem Durumu:",
         "Kategori:",
-        "Belirtilmiş",
+        "- Kategori:",
+        "🏷️ Kategori:",
+        "Tarih:",
+        "- Tarih:",
+        "📅 Tarih:",
+        "Belge Türü:",
+        "📄 Belge Türü:",
+        "- Belge Türü:",
+        "Alpha Vantage", // Financial data indicator
+        "Finansal veriler",
       ];
 
       const hasMetadata = metadataIndicators.some((indicator) =>
-        currentContent.includes(indicator)
+        originalContent.includes(indicator)
       );
 
       if (hasMetadata) {
-        // If already has formatted metadata with label, skip
+        console.log(`Processing message ${index + 1} with metadata`);
+
+        // Check if metadata is already properly formatted
+        const hasFormattedMetadata = messageText.querySelector("pre code");
+        const hasMetadataLabel = messageText.querySelector(".metadata-label");
+
+        // If already properly formatted, just apply styling
         if (hasFormattedMetadata && hasMetadataLabel) {
+          this.applyMetadataFormatting(messageText);
           return;
         }
 
@@ -955,30 +1096,35 @@ class UIComponents {
         const existingLabels = messageText.querySelectorAll(".metadata-label");
         existingLabels.forEach((label) => label.remove());
 
-        // Get the raw HTML content to preserve any existing formatting
-        const rawHtml = messageText.innerHTML;
+        try {
+          // Process the content with our improved formatters
+          const formattedContent = this.formatMetadataContent(originalContent);
 
-        // Check if already formatted as code block
-        const alreadyFormatted =
-          rawHtml.includes("<pre>") &&
-          (rawHtml.includes("Kaynak:") || rawHtml.includes("İşlem Durumu:"));
+          // Parse markdown and update content
+          const parsedContent = marked.parse(formattedContent);
+          messageText.innerHTML = parsedContent;
 
-        if (!alreadyFormatted) {
-          // Reprocess this message content
-          const formattedContent = this.formatMetadataContent(currentContent);
+          // Apply our enhanced styling
+          this.applyMetadataFormatting(messageText);
 
+          console.log(`Successfully reformatted message ${index + 1}`);
+        } catch (error) {
+          console.warn(`Failed to reformat message ${index + 1}:`, error);
+
+          // Fallback: try to apply basic formatting
           try {
-            const parsedContent = marked.parse(formattedContent);
-            messageText.innerHTML = parsedContent;
-          } catch (error) {
-            console.warn("Failed to reformat existing message:", error);
+            this.applyMetadataFormatting(messageText);
+          } catch (fallbackError) {
+            console.warn(
+              `Fallback formatting also failed for message ${index + 1}:`,
+              fallbackError
+            );
           }
         }
-
-        // Apply our styling to the formatted content
-        this.applyMetadataFormatting(messageText);
       }
     });
+
+    console.log("Metadata formatting fix completed");
   }
 
   applyMetadataFormatting(container) {
@@ -1648,21 +1794,38 @@ class UIComponents {
 
   refreshMetadataFormatting() {
     // Refresh all existing metadata formatting when theme changes
+    console.log("Refreshing metadata formatting after theme change");
+
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
-    const metadataBlocks = chatMessages.querySelectorAll("pre");
-    metadataBlocks.forEach((preBlock) => {
-      // Remove existing labels to prevent duplicates
-      const existingLabels = preBlock.querySelectorAll(".metadata-label");
-      existingLabels.forEach((label) => label.remove());
+    const messages = chatMessages.querySelectorAll(
+      ".message.assistant-message"
+    );
+    console.log(
+      `Refreshing formatting for ${messages.length} assistant messages`
+    );
 
-      // Get the parent message container and reapply formatting
-      const messageContainer = preBlock.closest(".message-text");
-      if (messageContainer) {
-        this.applyMetadataFormatting(messageContainer);
+    messages.forEach((messageDiv, index) => {
+      const messageText = messageDiv.querySelector(".message-text");
+      if (messageText) {
+        // Remove any existing metadata labels to prevent duplicates
+        const existingLabels = messageText.querySelectorAll(".metadata-label");
+        existingLabels.forEach((label) => label.remove());
+
+        // Reapply formatting with current theme
+        this.applyMetadataFormatting(messageText);
+        console.log(`Refreshed formatting for message ${index + 1}`);
       }
     });
+
+    // Also fix existing metadata formatting to ensure consistency
+    // Small delay to ensure theme classes are applied
+    setTimeout(() => {
+      this.fixExistingMetadataFormatting();
+    }, 100);
+
+    console.log("Metadata formatting refresh completed");
   }
 
   // Settings management

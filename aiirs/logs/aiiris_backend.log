@@ -205,3 +205,48 @@
 2025-06-21 19:39:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
 2025-06-21 19:39:02 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
 2025-06-21 19:39:02 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:00:54 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 16:01:56 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:01:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:01:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:01:59 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:02:00 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:02:00 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:02:02 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:02:03 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:02:03 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:02:32 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:02:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:02:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:10:32 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:10:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:10:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:11:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:11:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:11:33 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:12:00 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 16:12:00 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 16:12:00 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 16:12:44 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Merhaba bana forexin hisse değerini söyle...
+2025-06-22 16:12:44 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 16:14:29 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: alpha vantage agentı kullan ve borsadan bir şeyler çekmeyi dene...
+2025-06-22 16:14:29 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 16:16:29 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Tesla hakkında bilgi ver alpha vantage agent kullanarak...
+2025-06-22 16:16:29 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 16:17:49 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Tesla hakkında bilgi ver alpha vantage agent kullanarak...
+2025-06-22 16:17:49 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 16:24:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: selam...
+2025-06-22 16:24:28 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 16:25:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Bana elindeki belgeler hakkında bilgi ver...
+2025-06-22 16:25:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 17:05:50 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 17:08:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:08:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:08:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 17:08:31 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Merhaba, elindeki belgelerde nelerden bahsediliyor...
+2025-06-22 17:08:31 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 17:08:48 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing query: Selam...
+2025-06-22 17:08:48 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Query processed successfully
+2025-06-22 17:08:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 17:08:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 17:08:57 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles

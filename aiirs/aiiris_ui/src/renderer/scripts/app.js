@@ -93,22 +93,41 @@ class AIrisApp {
     }
   }
 
-  async checkBackendConnection() {
-    try {
-      logger.info("Checking backend connection...", "APP");
+  async checkBackendConnection(retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        logger.info(
+          `Checking backend connection... (attempt ${attempt}/${retries})`,
+          "APP"
+        );
 
-      // Try to connect to the backend
-      const health = await window.apiService.checkHealth();
-      this.backendConnected = true;
+        // Try to connect to the backend with a shorter timeout for connection check
+        const health = await window.apiService.healthCheck();
+        this.backendConnected = true;
 
-      logger.info("Backend connection successful", "APP");
-    } catch (error) {
-      logger.warn(`Backend connection failed: ${error.message}`, "APP");
-      this.backendConnected = false;
+        logger.info("Backend connection successful", "APP");
+        return;
+      } catch (error) {
+        logger.warn(
+          `Backend connection attempt ${attempt} failed: ${error.message}`,
+          "APP"
+        );
 
-      // Show warning but don't block the app
-      this.showConnectionWarning();
+        if (attempt < retries) {
+          // Wait before retrying (exponential backoff)
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          logger.info(`Retrying connection in ${waitTime}ms...`, "APP");
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        }
+      }
     }
+
+    // All attempts failed
+    this.backendConnected = false;
+    logger.error("Backend connection failed after all retries", "APP");
+
+    // Show warning but don't block the app
+    this.showConnectionWarning();
   }
 
   showLoadingScreen() {
@@ -175,26 +194,37 @@ class AIrisApp {
   }
 
   showConnectionWarning() {
+    // Remove any existing warning
+    const existingWarning = document.querySelector(".connection-warning");
+    if (existingWarning) {
+      existingWarning.remove();
+    }
+
     const warning = document.createElement("div");
     warning.className = "connection-warning";
     warning.innerHTML = `
             <div class="warning-content">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Backend connection failed. Some features may not work properly.</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
+                <span>Backend bağlantısı başarısız. AI özelliklerini kullanmak için backend'in çalıştığından emin olun.</span>
+                <div class="warning-actions">
+                    <button onclick="window.airisApp.reconnectBackend()" class="retry-btn">
+                        <i class="fas fa-redo"></i> Tekrar Dene
+                    </button>
+                    <button onclick="this.closest('.connection-warning').remove()" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
         `;
 
     document.body.appendChild(warning);
 
-    // Auto-hide after 10 seconds
+    // Auto-hide after 15 seconds
     setTimeout(() => {
       if (warning.parentElement) {
         warning.remove();
       }
-    }, 10000);
+    }, 15000);
   }
 
   updateConnectionStatus(connected) {
