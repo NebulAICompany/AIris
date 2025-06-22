@@ -32,3 +32,7 @@ feedparser
 python-dateutil
 cohere
 python-dotenv
+opencv-python
+pytesseract
+reportlab
+urllib3<2.0.0

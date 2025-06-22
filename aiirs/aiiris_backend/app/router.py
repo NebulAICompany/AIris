@@ -767,6 +767,109 @@ async def get_finance_news():
         )
 
 
+# Document Verification Endpoints
+@router.post("/verify")
+async def verify_document(
+    file: UploadFile = File(...),
+    verification_type: str = "auto",
+    wolfram_enabled: bool = False
+):
+    """
+    Verify a document using the LLM-based verification pipeline with optional Wolfram Alpha mathematical verification
+    """
+    global request_counter
+    try:
+        # Increment request counter
+        request_counter += 1
+        
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})")
+        
+        # Check file type
+        allowed_extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.bmp']
+        file_ext = Path(file.filename).suffix.lower()
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported file type: {file_ext}. Allowed types: {', '.join(allowed_extensions)}"
+            )
+        
+        # Create verification_uploads directory if it doesn't exist
+        verification_dir = Path(__file__).parent.parent / "verification_uploads"
+        verification_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save uploaded file temporarily
+        temp_file_path = verification_dir / file.filename
+        with open(temp_file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        logger.info(f"File saved for verification: {temp_file_path}")
+        
+        # Import and run verification pipeline
+        from aiiris_backend.pipelines.document_verification import verification_pipeline
+        
+        # Run verification with Wolfram Alpha if enabled
+        verification_result = verification_pipeline.verify_document(
+            str(temp_file_path), 
+            verification_type,
+            wolfram_enabled
+        )
+        
+        # Clean up temporary file
+        try:
+            temp_file_path.unlink()
+            logger.info(f"Temporary file cleaned up: {temp_file_path}")
+        except Exception as cleanup_error:
+            logger.warning(f"Could not clean up temporary file: {cleanup_error}")
+        
+        logger.info(f"Document verification completed: {verification_result.get('status', 'unknown')}")
+        
+        return verification_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Document verification error for {file.filename}: {error_message}")
+        
+        # Clean up temporary file on error
+        try:
+            if 'temp_file_path' in locals():
+                temp_file_path.unlink()
+        except:
+            pass
+        
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Document verification failed: {error_message}"
+        )
+
+
+@router.get("/verification-types")
+def get_verification_types():
+    """
+    Get available document verification types
+    """
+    try:
+        from aiiris_backend.pipelines.document_verification import verification_pipeline
+        
+        verification_types = verification_pipeline.verification_types
+        
+        return {
+            "verification_types": verification_types,
+            "supported_formats": verification_pipeline.supported_formats,
+            "default_type": "auto"
+        }
+        
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting verification types: {error_message}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error getting verification types: {error_message}"
+        )
+
+
 if __name__ == "__main__":
     file_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/Esra/pdf_file.pdf"  # Change this to your file path
     with open(file_path, "rb") as file:
