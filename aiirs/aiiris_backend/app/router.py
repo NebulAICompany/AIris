@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from aiiris_backend.orchestrator.query_orchestrator import run_orchestration
+from aiiris_backend.orchestrator.chat_history import chat_history_manager
 from aiiris_backend.monitoring.metrics import api_requests_total
 from aiiris_backend.libs.logger import get_logger
 import shutil
@@ -11,7 +12,7 @@ import feedparser
 import asyncio
 import re
 import html
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 logger = get_logger("ROUTER")
 
@@ -20,51 +21,52 @@ router = APIRouter()
 # Simple request counter
 request_counter = 0
 
+
 def clean_turkish_text(text):
     """
     Clean Turkish text from HTML entities, CDATA, and encoding issues.
     """
     if not text:
         return ""
-    
+
     # Debug: log original text if it contains HTML entities
-    if '&#' in text:
+    if "&#" in text:
         logger.debug(f"Processing text with HTML entities: {text[:100]}...")
-    
+
     # Remove CDATA wrapper if present
-    cdata_pattern = r'<!\[CDATA\[(.*?)\]\]>'
+    cdata_pattern = r"<!\[CDATA\[(.*?)\]\]>"
     cdata_match = re.search(cdata_pattern, text, re.DOTALL)
     if cdata_match:
         text = cdata_match.group(1).strip()
-    
+
     # First pass: decode HTML entities (handles &#39;, &amp;, &quot;, etc.)
     text = html.unescape(text)
-    
+
     # Second pass: handle any remaining numeric HTML entities manually
     # This catches cases where html.unescape might miss some
     numeric_entities = {
-        '&#39;': "'",   # Apostrophe
-        '&#x27;': "'",  # Apostrophe (hex)
-        '&#34;': '"',   # Double quote
-        '&#x22;': '"',  # Double quote (hex)
-        '&#38;': '&',   # Ampersand
-        '&#x26;': '&',  # Ampersand (hex)
-        '&#60;': '<',   # Less than
-        '&#x3C;': '<',  # Less than (hex)
-        '&#62;': '>',   # Greater than
-        '&#x3E;': '>',  # Greater than (hex)
-        '&#160;': ' ',  # Non-breaking space
-        '&#xA0;': ' ',  # Non-breaking space (hex)
-        '&#8217;': "'", # Right single quotation mark
-        '&#8220;': '"', # Left double quotation mark
-        '&#8221;': '"', # Right double quotation mark
-        '&#8211;': '–', # En dash
-        '&#8212;': '—', # Em dash
+        "&#39;": "'",  # Apostrophe
+        "&#x27;": "'",  # Apostrophe (hex)
+        "&#34;": '"',  # Double quote
+        "&#x22;": '"',  # Double quote (hex)
+        "&#38;": "&",  # Ampersand
+        "&#x26;": "&",  # Ampersand (hex)
+        "&#60;": "<",  # Less than
+        "&#x3C;": "<",  # Less than (hex)
+        "&#62;": ">",  # Greater than
+        "&#x3E;": ">",  # Greater than (hex)
+        "&#160;": " ",  # Non-breaking space
+        "&#xA0;": " ",  # Non-breaking space (hex)
+        "&#8217;": "'",  # Right single quotation mark
+        "&#8220;": '"',  # Left double quotation mark
+        "&#8221;": '"',  # Right double quotation mark
+        "&#8211;": "–",  # En dash
+        "&#8212;": "—",  # Em dash
     }
-    
+
     for entity, replacement in numeric_entities.items():
         text = text.replace(entity, replacement)
-    
+
     # Third pass: use regex to catch any remaining numeric entities
     def replace_numeric_entity(match):
         try:
@@ -72,10 +74,10 @@ def clean_turkish_text(text):
             return chr(num)
         except (ValueError, OverflowError):
             return match.group(0)  # Return original if conversion fails
-    
+
     # Handle decimal numeric entities like &#123;
-    text = re.sub(r'&#(\d+);', replace_numeric_entity, text)
-    
+    text = re.sub(r"&#(\d+);", replace_numeric_entity, text)
+
     # Handle hexadecimal numeric entities like &#x7B;
     def replace_hex_entity(match):
         try:
@@ -83,42 +85,43 @@ def clean_turkish_text(text):
             return chr(num)
         except (ValueError, OverflowError):
             return match.group(0)  # Return original if conversion fails
-    
-    text = re.sub(r'&#x([0-9a-fA-F]+);', replace_hex_entity, text)
-    
+
+    text = re.sub(r"&#x([0-9a-fA-F]+);", replace_hex_entity, text)
+
     # Remove HTML tags
-    text = re.sub(r'<[^>]+>', '', text)
-    
+    text = re.sub(r"<[^>]+>", "", text)
+
     # Normalize whitespace
-    text = ' '.join(text.split())
-    
+    text = " ".join(text.split())
+
     # Handle common encoding issues specific to Turkish
     replacements = {
-        'â€™': "'",  # Common encoding issue
-        'â€œ': '"',  # Opening quote
-        'â€': '"',   # Closing quote
-        'â€"': '—',  # Em dash
-        'â€"': '–',  # En dash
-        'Ä±': 'ı',   # Turkish lowercase i
-        'Ä°': 'İ',   # Turkish uppercase I
-        'Åž': 'Ş',   # Turkish S
-        'ÅŸ': 'ş',   # Turkish s
-        'Ä°': 'İ',   # Turkish I
-        'Ã§': 'ç',   # Turkish c
-        'Ã¼': 'ü',   # Turkish u
-        'Ã¶': 'ö',   # Turkish o
-        'Ä±': 'ı',   # Turkish i
-        'ÄŸ': 'ğ',   # Turkish g
+        "â€™": "'",  # Common encoding issue
+        "â€œ": '"',  # Opening quote
+        "â€": '"',  # Closing quote
+        'â€"': "—",  # Em dash
+        'â€"': "–",  # En dash
+        "Ä±": "ı",  # Turkish lowercase i
+        "Ä°": "İ",  # Turkish uppercase I
+        "Åž": "Ş",  # Turkish S
+        "ÅŸ": "ş",  # Turkish s
+        "Ä°": "İ",  # Turkish I
+        "Ã§": "ç",  # Turkish c
+        "Ã¼": "ü",  # Turkish u
+        "Ã¶": "ö",  # Turkish o
+        "Ä±": "ı",  # Turkish i
+        "ÄŸ": "ğ",  # Turkish g
     }
-    
+
     for old, new in replacements.items():
         text = text.replace(old, new)
-    
+
     # Debug: log final text if we started with HTML entities
-    if '&#' in text:
+    if "&#" in text:
         logger.debug(f"Still contains HTML entities after cleaning: {text[:100]}...")
-    
+
     return text.strip()
+
 
 def extract_image_info(entry):
     """
@@ -128,14 +131,14 @@ def extract_image_info(entry):
     image_url = ""
     image_width = 0
     image_height = 0
-    
+
     # Method 1: Check for enclosure tag (main image)
-    if hasattr(entry, 'enclosures') and entry.enclosures:
+    if hasattr(entry, "enclosures") and entry.enclosures:
         for enclosure in entry.enclosures:
-            if enclosure.get('type', '').startswith('image/'):
-                image_url = enclosure.get('href', '') or enclosure.get('url', '')
+            if enclosure.get("type", "").startswith("image/"):
+                image_url = enclosure.get("href", "") or enclosure.get("url", "")
                 break
-    
+
     # Method 2: Extract from img tag in description if no enclosure found
     if not image_url:
         description = entry.get("description", "") or entry.get("summary", "")
@@ -145,27 +148,32 @@ def extract_image_info(entry):
             img_match = re.search(img_pattern, description, re.IGNORECASE)
             if img_match:
                 image_url = img_match.group(1)
-                
+
                 # Try to extract width and height from img tag
                 width_pattern = r'width=["\']?(\d+)["\']?'
                 height_pattern = r'height=["\']?(\d+)["\']?'
-                
-                width_match = re.search(width_pattern, img_match.group(0), re.IGNORECASE)
-                height_match = re.search(height_pattern, img_match.group(0), re.IGNORECASE)
-                
+
+                width_match = re.search(
+                    width_pattern, img_match.group(0), re.IGNORECASE
+                )
+                height_match = re.search(
+                    height_pattern, img_match.group(0), re.IGNORECASE
+                )
+
                 if width_match:
                     try:
                         image_width = int(width_match.group(1))
                     except ValueError:
                         pass
-                        
+
                 if height_match:
                     try:
                         image_height = int(height_match.group(1))
                     except ValueError:
                         pass
-    
+
     return image_url, image_width, image_height
+
 
 class NewsArticle(BaseModel):
     title: str
@@ -177,15 +185,18 @@ class NewsArticle(BaseModel):
     image_width: int = 0
     image_height: int = 0
 
+
 class NewsResponse(BaseModel):
     articles: List[NewsArticle]
     total_count: int
     last_updated: str
 
+
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
     wolframEnabled: bool = False
+    sessionId: Optional[str] = None
 
 
 class UploadRequest(BaseModel):
@@ -205,18 +216,22 @@ async def handle_query(request: QueryRequest):
         query = request.query
         web_search_enabled = request.webSearchEnabled
         wolfram_enabled = request.wolframEnabled
+        session_id = request.sessionId
 
         print(f"📝 API Router received:")
         print(f"   - Query: {query}")
         print(f"   - Web Search Enabled: {web_search_enabled}")
         print(f"   - Wolfram Enabled: {wolfram_enabled}")
+        print(f"   - Session ID: {session_id}")
 
-        answer = await run_orchestration(query, web_search_enabled, wolfram_enabled)
+        answer = await run_orchestration(
+            query, web_search_enabled, wolfram_enabled, session_id
+        )
         logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()
 
         logger.info("Query processed successfully")
-        return {"response": answer}
+        return {"response": answer, "sessionId": session_id}
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
         api_requests_total.labels(status="error").inc()
@@ -264,6 +279,95 @@ def handle_upload(file: UploadFile = File(...)):
         logger.error(f"File upload error for {file.filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
+        )
+
+
+@router.get("/chat/sessions")
+def list_chat_sessions():
+    """
+    Returns a list of all chat sessions with metadata.
+    """
+    try:
+        sessions = chat_history_manager.list_sessions()
+        return {"sessions": sessions}
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error listing chat sessions: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error listing chat sessions: {error_message}"
+        )
+
+
+@router.get("/chat/sessions/{session_id}")
+def get_chat_session(session_id: str):
+    """
+    Returns a specific chat session with all messages.
+    """
+    try:
+        session = chat_history_manager.get_session(session_id)
+        if not session:
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
+
+        return {
+            "session": {
+                "session_id": session.session_id,
+                "title": session.title,
+                "created_at": session.created_at.isoformat(),
+                "updated_at": session.updated_at.isoformat(),
+                "messages": [msg.to_dict() for msg in session.messages],
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting chat session {session_id}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting chat session: {error_message}"
+        )
+
+
+@router.post("/chat/sessions")
+def create_chat_session():
+    """
+    Creates a new chat session and returns its ID.
+    """
+    try:
+        session = chat_history_manager.create_session()
+        return {
+            "session_id": session.session_id,
+            "created_at": session.created_at.isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error creating chat session: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error creating chat session: {error_message}"
+        )
+
+
+@router.delete("/chat/sessions/{session_id}")
+def delete_chat_session(session_id: str):
+    """
+    Deletes a chat session and all its messages.
+    """
+    try:
+        success = chat_history_manager.delete_session(session_id)
+        if not success:
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
+
+        return {"message": f"Session {session_id} deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error deleting chat session {session_id}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error deleting chat session: {error_message}"
         )
 
 
@@ -526,38 +630,40 @@ def delete_file(filename: str):
 @router.get("/finance-news")
 async def get_finance_news():
     """
-    Fetch latest finance news from nance RSS feed. """
+    Fetch latest finance news from nance RSS feed."""
     try:
         logger.info("Fetching finance news from Dünya Gazetesi RSS")
-        
+
         # Dünya Gazetesi RSS feed URL
         rss_url = "https://www.dunya.com/rss/ekonomi.xml"
-        
+
         # Parse the RSS feed with proper encoding handling
         feed = feedparser.parse(rss_url)
-        
+
         # Ensure proper UTF-8 encoding for Turkish content
-        if hasattr(feed, 'encoding') and feed.encoding:
+        if hasattr(feed, "encoding") and feed.encoding:
             logger.info(f"RSS feed encoding: {feed.encoding}")
         else:
             logger.info("RSS feed encoding not specified, assuming UTF-8")
-        
+
         # Check if feed was parsed successfully
         if feed.bozo:
             logger.warning(f"RSS feed parse error: {feed.bozo_exception}")
-        
+
         # Extract news articles and sort by publication date
         news_articles = []
         for entry in feed.entries:
             # Clean the title using comprehensive Turkish text cleaning
             title = clean_turkish_text(entry.get("title", "No title"))
-            
+
             # Clean the summary/description using comprehensive Turkish text cleaning
-            summary = clean_turkish_text(entry.get("summary", "") or entry.get("description", ""))
-            
+            summary = clean_turkish_text(
+                entry.get("summary", "") or entry.get("description", "")
+            )
+
             # Extract image information
             image_url, image_width, image_height = extract_image_info(entry)
-            
+
             article = {
                 "title": title,
                 "link": entry.get("link", ""),
@@ -566,38 +672,43 @@ async def get_finance_news():
                 "source": "Dünya Gazetesi",
                 "image_url": image_url,
                 "image_width": image_width,
-                "image_height": image_height
+                "image_height": image_height,
             }
             news_articles.append(article)
-        
+
         # Sort articles by publication date (newest first)
         from dateutil import parser as date_parser
+
         try:
             news_articles.sort(
-                key=lambda x: date_parser.parse(x["published"]) if x["published"] else datetime.min,
-                reverse=True
+                key=lambda x: (
+                    date_parser.parse(x["published"])
+                    if x["published"]
+                    else datetime.min
+                ),
+                reverse=True,
             )
         except Exception as sort_error:
             logger.warning(f"Could not sort articles by date: {sort_error}")
-        
+
         # Limit to 20 most recent articles
         news_articles = news_articles[:20]
-        
+
         logger.info(f"Successfully fetched {len(news_articles)} finance news articles")
-        
+
         return {
             "status": "success",
             "count": len(news_articles),
             "articles": news_articles,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Error fetching finance news: {str(e)}")
         raise HTTPException(
-            status_code=500, 
-            detail=f"Error fetching finance news: {str(e)}"
+            status_code=500, detail=f"Error fetching finance news: {str(e)}"
         )
+
 
 if __name__ == "__main__":
     file_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/Esra/pdf_file.pdf"  # Change this to your file path

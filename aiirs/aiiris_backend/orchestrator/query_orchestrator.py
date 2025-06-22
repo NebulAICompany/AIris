@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from aiiris_backend.retrieval.reranker import rerank
 from aiiris_backend.orchestrator.query_utils import (
     clean_query,
@@ -9,13 +9,15 @@ from aiiris_backend.orchestrator.query_utils import (
 from aiiris_backend.llm.llm_engine import generate_answer
 from aiiris_backend.llm.prompt_templates import create_rag_agent
 from aiiris_backend.retrieval.retriever import retrieve_top_k, load_vectorstore
-from aiiris_backend.guardrails.pii_masker import mask_pii, unmask_pii
+from aiiris_backend.guardrails.pii_masker import mask_pii
+from aiiris_backend.guardrails.pii_deneme import pii_unmask
 from aiiris_backend.guardrails.filters import (
     check_input_violations,
     check_output_violations,
     sanitize_output,
 )
 from .reflection import reflect_and_retry
+from .chat_history import chat_history_manager, MessageRole
 import os
 
 VECTORSTORE_PATH = "aiiris_backend/vectorstore"
@@ -35,12 +37,36 @@ def preprocess_query(query: str):
 
 
 async def run_orchestration(
-    query: str, web_search_enabled: bool, wolfram_enabled: bool = False
+    query: str,
+    web_search_enabled: bool,
+    wolfram_enabled: bool = False,
+    session_id: Optional[str] = None,
 ) -> str:
     print(f"🔍 Query Orchestrator started:")
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
     print(f"   - Wolfram Enabled: {wolfram_enabled}")
+    print(f"   - Session ID: {session_id}")
+
+    # Handle chat history and session management
+    if session_id:
+        # Add user message to chat history
+        chat_history_manager.add_message(session_id, MessageRole.USER, query)
+
+        # Get conversation context
+        conversation_context = chat_history_manager.get_conversation_context(
+            session_id, max_messages=10
+        )
+        print(f"   - Conversation context: {len(conversation_context)} messages")
+
+        # Reduce history if too long
+        session = chat_history_manager.get_session(session_id)
+        if session and len(session.messages) > 30:
+            print(f"   - Reducing chat history from {len(session.messages)} messages")
+            chat_history_manager.reduce_history(session, target_messages=20)
+    else:
+        conversation_context = []
+        print(f"   - No session ID provided, processing as standalone query")
 
     # Vectorstore'ı yükle
     if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
@@ -59,22 +85,35 @@ async def run_orchestration(
     masked_query, pii_map = mask_pii(preprocessed_query)
     print(f"Masked Query: {masked_query}")
 
-    # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
-    retrieved_docs = retrieve_top_k(
-        preprocessed_query, k=15
-    )  # Get more docs for better reranking
-    print(type(retrieved_docs))
+    rse_enabled = True
+    if rse_enabled:
+        # 4. Enhanced Retrieval with RSE (Relevant Segment Extraction)
+        from aiiris_backend.retrieval.rse import retrieve_with_rse
+    
+        rse_chunks, rse_scores = retrieve_with_rse(preprocessed_query, k=15, preset="balanced")
+        
+        if not rse_chunks:
+            return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+        #print(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
+        
+        # Use RSE-enhanced chunks directly (they're already optimized)
+        reranked_docs = rse_chunks[:5]  # Take top 5 RSE segments
+    else:
+        # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
+        retrieved_docs = retrieve_top_k(
+            preprocessed_query, k=15
+        )  # Get more docs for better reranking
+        print(type(retrieved_docs))
 
-    if not retrieved_docs:
-        return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+        if not retrieved_docs:
+          return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
-    # Extract only the content from the retrieved docs before reranking
-    doc_contents = [
-        {"content": doc["content"], "metadata": doc["metadata"]}
-        for doc in retrieved_docs
-    ]
-
-    reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=5)
+        # Extract only the content from the retrieved docs before reranking
+        doc_contents = [
+            {"content": doc["content"], "metadata": doc["metadata"]}
+            for doc in retrieved_docs
+        ]
+        reranked_docs = rerank(preprocessed_query, doc_contents, with_score=False, top_n=5)
 
     context_entries = []
 
@@ -83,9 +122,7 @@ async def run_orchestration(
         metadata = doc["metadata"]
 
         metadata_str = ""
-        metadata_str += f"Source: {metadata.get('source')}\n"
-        metadata_str += f"Date: {metadata.get('date')}\n"
-        metadata_str += f"Category: {metadata.get('category')}\n"
+        metadata_str += f"Source: {metadata.get('file_name')}\n"
 
         context_entries.append(
             f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
@@ -95,13 +132,14 @@ async def run_orchestration(
 
     print("using web search ?= ", web_search_enabled)
 
-    # Create the agent with web context if available
+    # Create the agent with web context and conversation history if available
     agent = create_rag_agent(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
         mcp_servers=[],
         wolfram_enabled=wolfram_enabled,
+        conversation_history=conversation_context,
     )
 
     # Generate initial answer
@@ -120,6 +158,13 @@ async def run_orchestration(
         )  # tüm zararlıları sansürle
 
     # 7. Maske çöz
-    final_answer = unmask_pii(final_answer, pii_map)
+    final_answer = pii_unmask(final_answer, pii_map)
+
+    # 8. Add assistant response to chat history
+    if session_id:
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, final_answer
+        )
+        print(f"   - Added assistant response to session {session_id}")
 
     return final_answer
