@@ -205,3 +205,29 @@
 2025-06-21 19:39:01 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
 2025-06-21 19:39:02 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
 2025-06-21 19:39:02 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 14:30:25 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 14:47:33 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-22 14:47:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-22 14:47:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] RSS feed encoding: UTF-8
+2025-06-22 14:47:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Successfully fetched 20 finance news articles
+2025-06-22 14:48:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: Bilanco.xlsx (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
+2025-06-22 14:48:30 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: D:\GitHub\vectorrag\aiirs\aiiris_backend\uploads\Bilanco.xlsx
+2025-06-22 14:48:36 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 14:48:49 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: Bilanco.xlsx
+2025-06-22 14:49:13 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: jpeg_file.jpg (image/jpeg)
+2025-06-22 14:49:13 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: D:\GitHub\vectorrag\aiirs\aiiris_backend\uploads\jpeg_file.jpg
+2025-06-22 14:49:13 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 14:49:25 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: jpeg_file.jpg
+2025-06-22 14:49:39 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: png_file.png (image/png)
+2025-06-22 14:49:39 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: D:\GitHub\vectorrag\aiirs\aiiris_backend\uploads\png_file.png
+2025-06-22 14:49:39 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 14:49:50 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: png_file.png
+2025-06-22 14:50:06 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: İkt.docx (application/vnd.openxmlformats-officedocument.wordprocessingml.document)
+2025-06-22 14:50:06 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: D:\GitHub\vectorrag\aiirs\aiiris_backend\uploads\İkt.docx
+2025-06-22 14:50:06 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 14:50:06 - aiiris_backend.ROUTER - ERROR - [aiiris_backend.app.main] File upload error for İkt.docx: (-2147221008, 'CoInitialize has not been called.', None, None)
+2025-06-22 14:50:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Starting file upload: text_file.txt (text/plain)
+2025-06-22 14:50:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File saved to: D:\GitHub\vectorrag\aiirs\aiiris_backend\uploads\text_file.txt
+2025-06-22 14:50:37 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Processing uploaded file...
+2025-06-22 14:50:39 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] File processed successfully: text_file.txt
+2025-06-22 14:55:59 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...

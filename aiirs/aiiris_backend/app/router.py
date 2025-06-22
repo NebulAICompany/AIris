@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from aiiris_backend.orchestrator.query_orchestrator import run_orchestration
 from aiiris_backend.orchestrator.chat_history import chat_history_manager
@@ -625,6 +626,62 @@ def delete_file(filename: str):
 
         print(f"❌ Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
+
+
+@router.get("/files/{filename}/download")
+def download_file(filename: str):
+    """
+    Download a file from uploads directory.
+    """
+    try:
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        file_path = uploads_dir / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+        
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type='application/octet-stream'
+        )
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error downloading file {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error downloading file: {error_message}"
+        )
+
+
+@router.get("/files/{filename}/preview")
+def get_file_preview(filename: str):
+    """
+    Generate a preview for the specified file.
+    Returns different preview types based on file extension.
+    """
+    try:
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        file_path = uploads_dir / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+        
+        from aiiris_backend.pipelines.preview_generator import PreviewGenerator
+        preview_generator = PreviewGenerator(str(file_path))
+        preview_data = preview_generator.generate_preview()
+        
+        return {
+            "filename": filename,
+            "preview_type": preview_data["type"],
+            "preview_data": preview_data["data"],
+            "success": True
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error generating preview for {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating preview: {error_message}"
+        )
 
 
 @router.get("/finance-news")

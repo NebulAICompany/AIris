@@ -774,6 +774,151 @@
   color: var(--text-secondary);
 }
 
+/* File Preview Styles */
+.file-card-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  min-height: 120px;
+  max-height: 250px;
+  overflow: hidden;
+}
+
+.preview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 120px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.preview-loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.preview-error,
+.preview-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 120px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.preview-error {
+  color: var(--error);
+}
+
+.preview-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 8px;
+}
+
+.preview-image img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-text {
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--font-mono, 'Courier New', monospace);
+}
+
+.preview-text pre {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.preview-excel {
+  max-height: 220px;
+  overflow: auto;
+}
+
+.excel-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.excel-data table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.excel-data th,
+.excel-data td {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.excel-data th {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.excel-data td {
+  color: var(--text-secondary);
+}
+
+/* Dark theme adjustments */
+body.dark-theme .file-card-preview {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+body.dark-theme .preview-image img {
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme .excel-data th {
+  background-color: var(--bg-tertiary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .file-card-preview {
+    min-height: 100px;
+    max-height: 200px;
+  }
+  
+  .preview-image img {
+    max-height: 180px;
+  }
+  
+  .preview-text,
+  .preview-excel {
+    max-height: 180px;
+  }
+}
+
 /* Analytics Components */
 .analytics-container {
   height: 100%;
