@@ -1172,10 +1172,24 @@ class UIComponents {
                 </button>
             </div>
             <div class="upload-progress" style="display: none;">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%"></div>
+                <div class="progress-header">
+                    <div class="progress-status">
+                        <i class="fas fa-clock progress-icon"></i>
+                        <span class="progress-stage">Preparing...</span>
+                    </div>
+                    <div class="progress-percentage">0%</div>
                 </div>
-                <div class="progress-text">0%</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%">
+                            <div class="progress-shine"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <span class="upload-speed"></span>
+                    <span class="time-remaining"></span>
+                </div>
             </div>
         `;
 
@@ -1227,46 +1241,217 @@ class UIComponents {
   async uploadFile(file, fileItem) {
     const progressElement = fileItem.querySelector(".upload-progress");
     const progressFill = fileItem.querySelector(".progress-fill");
-    const progressText = fileItem.querySelector(".progress-text");
+    const progressPercentage = fileItem.querySelector(".progress-percentage");
+    const progressStage = fileItem.querySelector(".progress-stage");
+    const progressIcon = fileItem.querySelector(".progress-icon");
+    const uploadSpeed = fileItem.querySelector(".upload-speed");
+    const timeRemaining = fileItem.querySelector(".time-remaining");
 
+    // Show progress container
     progressElement.style.display = "block";
+    
+    // Track timing for speed calculation
+    const startTime = Date.now();
+    let lastTime = startTime;
+    let lastLoaded = 0;
 
     try {
-      // Convert File to ArrayBuffer for IPC communication
-      const fileBuffer = await file.arrayBuffer();
+      // Stage 1: Preparing file
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-cog fa-spin", "Preparing file...");
+      await this.animateProgress(progressFill, progressPercentage, 0, 10, 500);
 
-      // Simulate progress during file reading
-      progressFill.style.width = "25%";
-      progressText.textContent = "25%";
+      // Stage 2: Reading file
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-file-alt", "Reading file...");
+      
+      // Read file with progress simulation
+      let fileBuffer;
+      await this.simulateAsyncOperation(
+        async () => {
+          fileBuffer = await file.arrayBuffer();
+        },
+        (progress) => {
+          const currentProgress = 10 + (progress * 0.15); // 10% to 25%
+          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+        },
+        Math.max(500, Math.min(2000, file.size / 1000)) // Dynamic duration based on file size
+      );
 
-      // Call API service for file upload
-      const response = await window.apiService.uploadFile(file);
+      // Stage 3: Uploading
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-cloud-upload-alt", "Uploading...");
+      
+      let uploadResponse;
+      await this.simulateAsyncOperation(
+        async () => {
+          uploadResponse = await window.apiService.uploadFile(file);
+        },
+        (progress) => {
+          const currentProgress = 25 + (progress * 0.45); // 25% to 70%
+          const currentTime = Date.now();
+          const deltaTime = currentTime - lastTime;
+          const deltaLoaded = (progress - lastLoaded) * file.size;
+          
+          if (deltaTime > 100) { // Update speed every 100ms
+            const speed = deltaLoaded / deltaTime * 1000; // bytes per second
+            const remaining = file.size * (1 - progress);
+            const eta = remaining / speed;
+            
+            uploadSpeed.textContent = this.formatSpeed(speed);
+            timeRemaining.textContent = this.formatTime(eta);
+            
+            lastTime = currentTime;
+            lastLoaded = progress;
+          }
+          
+          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+        },
+        Math.max(1000, Math.min(5000, file.size / 500)) // Dynamic duration based on file size
+      );
 
-      // Update progress to complete
-      progressFill.style.width = "100%";
-      progressText.textContent = "100%";
+      // Stage 4: Processing
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-brain fa-pulse", "Processing with AI...");
+      uploadSpeed.textContent = "";
+      timeRemaining.textContent = "";
+      
+      // Processing stage (AI processing happens in background)
+      await this.simulateAsyncOperation(
+        async () => {
+          // Wait a bit more to show processing stage
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        },
+        (progress) => {
+          const currentProgress = 70 + (progress * 0.25); // 70% to 95%
+          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+        },
+        2000
+      );
 
-      // Success
+      // Stage 5: Complete
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-check", "Upload complete!");
+      await this.animateProgress(progressFill, progressPercentage, null, 100, 500);
+
+      // Success styling
       fileItem.classList.add("upload-success");
-      progressText.textContent = "Complete";
+      progressFill.style.background = "linear-gradient(90deg, #10b981, #34d399)";
+      
+      // Calculate total time
+      const totalTime = Date.now() - startTime;
+      const avgSpeed = file.size / (totalTime / 1000);
+      uploadSpeed.textContent = `Avg: ${this.formatSpeed(avgSpeed)}`;
+      timeRemaining.textContent = `Completed in ${this.formatTime(totalTime / 1000)}`;
 
       // Remove after delay
       setTimeout(() => {
-        fileItem.remove();
-        this.updateUploadButton();
-      }, 2000);
+        fileItem.style.opacity = "0";
+        fileItem.style.transform = "translateX(100%)";
+        setTimeout(() => {
+          fileItem.remove();
+          this.updateUploadButton();
+        }, 300);
+      }, 3000);
 
       this.uploadedFiles.push({
         name: file.name,
         size: file.size,
         uploadDate: new Date(),
-        id: response.file_id || Utils.generateId(),
+        id: uploadResponse.file_id || Utils.generateId(),
       });
+
     } catch (error) {
+      // Error state
       fileItem.classList.add("upload-error");
-      progressText.textContent = "Error";
+      this.updateProgressStage(progressIcon, progressStage, "fas fa-exclamation-triangle", "Upload failed");
+      progressFill.style.background = "linear-gradient(90deg, #ef4444, #f87171)";
+      uploadSpeed.textContent = "";
+      timeRemaining.textContent = "Error occurred";
       console.error("Upload error:", error);
+      
+      // Show retry option
+      setTimeout(() => {
+        const retryButton = document.createElement("button");
+        retryButton.className = "retry-upload-btn";
+        retryButton.innerHTML = '<i class="fas fa-redo"></i> Retry';
+        retryButton.onclick = () => {
+          fileItem.classList.remove("upload-error");
+          this.uploadFile(file, fileItem);
+        };
+        fileItem.querySelector(".progress-details").appendChild(retryButton);
+      }, 1000);
     }
+  }
+
+  updateProgressStage(iconElement, stageElement, iconClass, stageText) {
+    iconElement.className = `${iconClass} progress-icon`;
+    stageElement.textContent = stageText;
+  }
+
+  async animateProgress(fillElement, percentageElement, fromWidth, toWidth, duration) {
+    return new Promise(resolve => {
+      const startWidth = fromWidth !== null ? fromWidth : parseFloat(fillElement.style.width) || 0;
+      const startTime = Date.now();
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentWidth = startWidth + (toWidth - startWidth) * easeProgress;
+        
+        fillElement.style.width = `${currentWidth}%`;
+        if (percentageElement) {
+          percentageElement.textContent = `${Math.round(currentWidth)}%`;
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          resolve();
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    });
+  }
+
+  async simulateAsyncOperation(operation, progressCallback, duration) {
+    const startTime = Date.now();
+    
+    // Start the actual operation
+    const operationPromise = operation();
+    
+    // Simulate progress updates
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      progressCallback(progress);
+      
+      if (progress >= 1) {
+        clearInterval(progressInterval);
+      }
+    }, 50);
+    
+    // Wait for either the operation to complete or the duration to pass
+    await Promise.all([
+      operationPromise,
+      new Promise(resolve => setTimeout(resolve, duration))
+    ]);
+    
+    clearInterval(progressInterval);
+    progressCallback(1); // Ensure we end at 100%
+  }
+
+  formatSpeed(bytesPerSecond) {
+    if (bytesPerSecond < 1024) return `${bytesPerSecond.toFixed(0)} B/s`;
+    if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+  }
+
+  formatTime(seconds) {
+    if (seconds < 1) return "< 1s";
+    if (seconds < 60) return `${seconds.toFixed(0)}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}m ${remainingSeconds}s`;
   }
 
   async loadFileLibrary() {
