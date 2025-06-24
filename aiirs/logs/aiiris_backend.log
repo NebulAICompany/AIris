@@ -130,3 +130,23 @@
 2025-06-22 18:14:50 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Fetching finance news from Dünya Gazetesi RSS
 2025-06-22 18:14:51 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] RSS feed encoding: UTF-8
 2025-06-22 18:14:51 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Successfully fetched 20 finance news articles
+2025-06-24 10:33:49 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-24 10:34:25 - aiiris_backend.ROUTER - INFO - [aiiris_backend.app.main] Fetching finance news from Dünya Gazetesi RSS
+2025-06-24 10:34:26 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] RSS feed encoding: UTF-8
+2025-06-24 10:34:26 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Successfully fetched 20 finance news articles
+2025-06-24 10:35:20 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Processing query: alpha vantage kullanarak beni tesla şirketi hakkında bilgilendir...
+2025-06-24 10:35:20 - aiiris_backend.ROUTER - INFO - [DOCUMENT_VERIFICATION] Query processed successfully
+2025-06-24 10:38:36 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-24 10:38:49 - aiiris_backend.aiiris_backend.app.main - INFO - [aiiris_backend.app.main] Starting AIris Backend API...
+2025-06-24 10:39:13 - aiiris_backend.ROUTER - INFO - [ROUTER] Fetching finance news from Dünya Gazetesi RSS
+2025-06-24 10:39:13 - aiiris_backend.ROUTER - INFO - [ROUTER] RSS feed encoding: UTF-8
+2025-06-24 10:39:13 - aiiris_backend.ROUTER - INFO - [ROUTER] Successfully fetched 20 finance news articles
+2025-06-24 10:41:23 - aiiris_backend.ROUTER - INFO - [ROUTER] Starting document verification: suspicious_invoice.pdf (type: auto, wolfram_enabled: False)
+2025-06-24 10:41:23 - aiiris_backend.ROUTER - INFO - [ROUTER] File saved for verification: C:\Users\ASUS\Desktop\Coding\CanProjects\teknofest\aiirs\aiiris_backend\verification_uploads\suspicious_invoice.pdf
+2025-06-24 10:41:23 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Starting verification for: C:\Users\ASUS\Desktop\Coding\CanProjects\teknofest\aiirs\aiiris_backend\verification_uploads\suspicious_invoice.pdf
+2025-06-24 10:42:25 - aiiris_backend.DOCUMENT_VERIFICATION - INFO - [DOCUMENT_VERIFICATION] Verification completed with status: rejected
+2025-06-24 10:42:25 - aiiris_backend.ROUTER - INFO - [ROUTER] Temporary file cleaned up: C:\Users\ASUS\Desktop\Coding\CanProjects\teknofest\aiirs\aiiris_backend\verification_uploads\suspicious_invoice.pdf
+2025-06-24 10:42:25 - aiiris_backend.ROUTER - INFO - [ROUTER] Document verification completed: rejected
+2025-06-24 10:43:25 - aiiris_backend.ROUTER - INFO - [ROUTER] Fetching finance news from Dünya Gazetesi RSS
+2025-06-24 10:43:25 - aiiris_backend.ROUTER - INFO - [ROUTER] RSS feed encoding: UTF-8
+2025-06-24 10:43:25 - aiiris_backend.ROUTER - INFO - [ROUTER] Successfully fetched 20 finance news articles

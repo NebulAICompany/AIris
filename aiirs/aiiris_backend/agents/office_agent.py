@@ -1,4 +1,4 @@
-from agents import Agent, Runner
+from agents import Agent
 import os
 from pathlib import Path
 import asyncio

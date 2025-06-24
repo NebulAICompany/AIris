@@ -1,7 +1,7 @@
 from agents import Agent, Runner, function_tool
 from typing import List
 from agents.tool import WebSearchTool
-from aiiris_backend.agent_mcps.office_agent import office_agent
+from aiiris_backend.agents.office_agent import office_agent
 from aiiris_backend.agent_mcps.alpha_vantage_agent import alpha_vantage_agent
 
 # Import our custom wolfram function tool

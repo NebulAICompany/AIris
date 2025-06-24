@@ -14,10 +14,24 @@
       "timestamp": "2025-06-22T18:10:22.195768",
       "metadata": {},
       "message_id": "0ce31e1e-9551-4731-bb8d-517bebc45dd1"
+    },
+    {
+      "role": "user",
+      "content": "alpha vantage kullanarak beni tesla şirketi hakkında bilgilendir",
+      "timestamp": "2025-06-24T10:34:47.581171",
+      "metadata": {},
+      "message_id": "9533bcac-7afe-4448-8a8c-2c4035f80154"
+    },
+    {
+      "role": "assistant",
+      "content": "İşte Alpha Vantage verilerine göre Tesla, Inc. (TSLA) hakkında temel bilgiler:\n\n---\n\n### Genel Şirket Bilgisi\n- **Sektör:** Üretim\n- **Endüstri:** Motorlu Araçlar ve Binek Araç Gövdeleri\n- **Merkez:** Palo Alto, California, ABD\n- **Faaliyet Alanları:** Elektrikli otomobil, batarya, enerji depolama, güneş panelleri\n\n---\n\n### Finansal Veriler ve Hisse Bilgileri\n- **Hisse Senedi Fiyatı:** 348,68 USD\n- **Günlük Değişim:** +26,52 USD (%8,23 yukarı)\n- **Açılış Fiyatı:** 327,54 USD\n- **Gün İçi En Yüksek/En Düşük Fiyat:** 357,54 / 327,48 USD\n- **Önceki Kapanış:** 322,16 USD\n- **52 Haftalık En Yüksek / En Düşük:** 488,54 / 182 USD\n\n---\n\n### Temel Finansal Göstergeler\n- **Piyasa Değeri:** 1,12 Trilyon USD\n- **Fiyat/Kazanç (P/E) Oranı:** 200,39\n- **Hisse Başına Kazanç (EPS):** 1,74 USD\n- **Beta:** 2,461 (yüksek volatilite göstergesi)\n\n---\n\n### Kısa Analiz ve Yorum\n- Tesla, yüksek teknoloji ve yenilikçi elektrikli otomobil ürünleriyle sektör liderlerinden biridir.\n- Hisse değeri volatil; P/E oranının yüksek olması, gelecekteki büyüme ve beklentilerin fiyatlara yansıdığını gösterir. \n- Beta değeri yüksek (2,46) olduğundan piyasa dalgalanmalarına hassastır.\n- Hızlı büyüyen, ancak riskli yatırım seçenekleri arasında değerlendirilir.\n\n---\n\n🗂️ Kullanılan Bilgi Metadataları:\n- 📂 Kaynak: Alpha Vantage API (finansal veriler)\n- 🏷️ Kategori: Finansal Analiz / Şirket Bilgisi\n\nBaşka detay ya da teknik analiz isterseniz iletebilirsiniz!",
+      "timestamp": "2025-06-24T10:35:20.931316",
+      "metadata": {},
+      "message_id": "a1d500fc-aae4-410c-b8dc-37f1d4304a3d"
     }
   ],
   "created_at": "2025-06-22T18:09:06.047540",
-  "updated_at": "2025-06-22T18:10:22.195768",
+  "updated_at": "2025-06-24T10:35:20.931316",
   "title": "Deniz Vapurlarını bir excel dosyasına çevir",
   "metadata": null
 }
