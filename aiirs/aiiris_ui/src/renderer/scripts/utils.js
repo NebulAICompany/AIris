@@ -319,6 +319,8 @@ class Utils {
   static isWolframEnabled() {
     return this.storage.get("wolframEnabled", false);
   }
+
+
 }
 
 // Export for use in other modules

@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from pathlib import Path
 import os
 import logging
+from aiiris_backend.libs.logger import get_logger
 
 FILES_PATH = Path(__file__).parent.parent / "uploads"
 FILES_PATH.mkdir(parents=True, exist_ok=True)
@@ -33,8 +34,7 @@ try:
 except ImportError:
     PANDAS_AVAILABLE = False
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger("OFFICE_TOOLS")
 
 @function_tool
 def create_excel_from_table(data: List[List[str]], file_name: str, sheet_name: str = "Sheet1") -> Dict[str, Any]:

@@ -147,6 +147,7 @@ class APIService {
     query,
     webSearchEnabled = false,
     wolframEnabled = false,
+    ragFusionEnabled = false,
     sessionId = null,
     selectedFiles = null
   ) {
@@ -155,11 +156,12 @@ class APIService {
       let timeout = 90000; // Base timeout: 90 seconds
       if (webSearchEnabled) timeout += 30000; // Add 30s for web search
       if (wolframEnabled) timeout += 30000; // Add 30s for Wolfram
+      // RAG Fusion disabled - no timeout adjustment needed
 
       console.log(
         `[API] AI Query timeout set to: ${
           timeout / 1000
-        }s (Web: ${webSearchEnabled}, Wolfram: ${wolframEnabled})`
+        }s (Web: ${webSearchEnabled}, Wolfram: ${wolframEnabled}, RAG Fusion: disabled)`
       );
 
       const response = await this.api.post(
@@ -168,6 +170,7 @@ class APIService {
           query: query.trim(),
           webSearchEnabled: webSearchEnabled,
           wolframEnabled: wolframEnabled,
+          ragFusionEnabled: false, // Hardcoded to false
           sessionId: sessionId,
           selectedFiles: selectedFiles,
         },

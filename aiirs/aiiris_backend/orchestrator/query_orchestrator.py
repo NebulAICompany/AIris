@@ -247,6 +247,7 @@ async def run_orchestration(
     query: str,
     web_search_enabled: bool,
     wolfram_enabled: bool = False,
+    rag_fusion_enabled: bool = False,
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
@@ -254,6 +255,7 @@ async def run_orchestration(
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
     print(f"   - Wolfram Enabled: {wolfram_enabled}")
+    print(f"   - RAG Fusion Enabled: {rag_fusion_enabled}")
     print(f"   - Session ID: {session_id}")
     print(f"   - Selected Files: {selected_files}")
 
@@ -294,8 +296,32 @@ async def run_orchestration(
     masked_query, pii_map = mask_pii(preprocessed_query)
     print(f"Masked Query: {masked_query}")
 
-    rse_enabled = True
-    if rse_enabled:
+    rse_enabled = False
+    if rag_fusion_enabled:
+        # 4. Enhanced Retrieval with RAG Fusion (Multiple Query Generation + RRF)
+        from aiiris_backend.retrieval.rag_fusion import retrieve_with_fusion
+
+        fusion_docs, fusion_metadata = await retrieve_with_fusion(
+            preprocessed_query, k=15, num_queries=4, top_n=5
+        )
+
+        if not fusion_docs:
+            return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+        
+        print(f"🔀 RAG Fusion Results: {fusion_metadata}")
+
+        # Filter fusion docs by selected files
+        filtered_fusion_docs = filter_docs_by_selected_files(fusion_docs, selected_files)
+        
+        if not filtered_fusion_docs:
+            if selected_files:
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+            else:
+                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+
+        # Use filtered fusion docs directly (they're already optimized and reranked)
+        reranked_docs = filtered_fusion_docs
+    elif rse_enabled:
         # 4. Enhanced Retrieval with RSE (Relevant Segment Extraction)
         from aiiris_backend.retrieval.rse import retrieve_with_rse
 
@@ -335,7 +361,7 @@ async def run_orchestration(
             if selected_files:
                 return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
             else:
-                return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
+                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
         # Extract only the content from the filtered retrieved docs before reranking
         doc_contents = [

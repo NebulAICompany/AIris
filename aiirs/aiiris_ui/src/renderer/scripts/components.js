@@ -16,6 +16,8 @@ class UIComponents {
     // Add wolframEnabled flag, initialize from storage or default to false
     this.wolframEnabled = Utils.isWolframEnabled();
 
+
+
     // Finance news properties
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
@@ -54,6 +56,8 @@ class UIComponents {
     if (wolframToggle) {
       wolframToggle.checked = this.wolframEnabled;
     }
+
+
 
     // Set language setting on load
     if (window.languageService) {
@@ -196,6 +200,8 @@ class UIComponents {
       });
       console.log("wolframEnabled: ", this.wolframEnabled);
     }
+
+
 
     // Finance News refresh button
     const refreshNewsButton = document.getElementById("refresh-news");
@@ -431,6 +437,7 @@ class UIComponents {
         message,
         this.webSearchEnabled,
         this.wolframEnabled,
+        false, // ragFusionEnabled - hardcoded to false
         this.currentSessionId,
         2, // maxRetries
         this.selectedFiles.length > 0 ? this.selectedFiles : null // selectedFiles
@@ -503,6 +510,7 @@ class UIComponents {
     message,
     webSearchEnabled,
     wolframEnabled,
+    ragFusionEnabled,
     sessionId,
     maxRetries = 2,
     selectedFiles = null
@@ -517,6 +525,7 @@ class UIComponents {
           message,
           webSearchEnabled,
           wolframEnabled,
+          ragFusionEnabled,
           sessionId,
           selectedFiles
         );

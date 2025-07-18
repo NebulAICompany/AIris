@@ -197,6 +197,7 @@ class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
     wolframEnabled: bool = False
+    ragFusionEnabled: bool = False
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
@@ -218,6 +219,7 @@ async def handle_query(request: QueryRequest):
         query = request.query
         web_search_enabled = request.webSearchEnabled
         wolfram_enabled = request.wolframEnabled
+        rag_fusion_enabled = request.ragFusionEnabled
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
@@ -225,11 +227,12 @@ async def handle_query(request: QueryRequest):
         print(f"   - Query: {query}")
         print(f"   - Web Search Enabled: {web_search_enabled}")
         print(f"   - Wolfram Enabled: {wolfram_enabled}")
+        print(f"   - RAG Fusion Enabled: {rag_fusion_enabled}")
         print(f"   - Session ID: {session_id}")
         print(f"   - Selected Files: {selected_files}")
 
         answer = await run_orchestration(
-            query, web_search_enabled, wolfram_enabled, session_id, selected_files
+            query, web_search_enabled, wolfram_enabled, rag_fusion_enabled, session_id, selected_files
         )
         logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()

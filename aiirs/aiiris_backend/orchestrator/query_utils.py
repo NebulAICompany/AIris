@@ -1,6 +1,7 @@
 import re
 import logging
 from typing import Optional, Tuple, Literal
+from aiiris_backend.libs.logger import get_logger
 
 # Dil tespiti için
 try:
@@ -39,7 +40,7 @@ except ImportError as e:
     logging.error(f"Zemberek library not found: {e}")
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger("QUERY_UTILS")
 
 # Niyet tipleri
 IntentType = Literal[

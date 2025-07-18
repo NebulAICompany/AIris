@@ -302,7 +302,7 @@ class AIrisApp {
       "send-query",
       async (
         event,
-        { query, webSearchEnabled = false, wolframEnabled = false }
+        { query, webSearchEnabled = false, wolframEnabled = false, ragFusionEnabled = false }
       ) => {
         try {
           logger.info(
@@ -311,7 +311,9 @@ class AIrisApp {
             "Web search enabled:",
             webSearchEnabled,
             "Wolfram enabled:",
-            wolframEnabled
+            wolframEnabled,
+            "RAG Fusion enabled:",
+            false
           );
           const response = await fetch("http://localhost:8000/api/query", {
             method: "POST",
@@ -319,7 +321,7 @@ class AIrisApp {
               "Content-Type": "application/json",
               Accept: "application/json",
             },
-            body: JSON.stringify({ query, webSearchEnabled, wolframEnabled }),
+            body: JSON.stringify({ query, webSearchEnabled, wolframEnabled, ragFusionEnabled: false }),
           });
 
           logger.debug(`Query response status: ${response.status}`, "IPC");

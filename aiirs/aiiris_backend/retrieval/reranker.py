@@ -1,11 +1,9 @@
 from typing import List, Dict, Any
-import logging
 import cohere
 import os
+from aiiris_backend.libs.logger import get_logger
 
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger("RERANKER")
 
 api_key = os.getenv("COHERE_API_KEY")
 

@@ -21,6 +21,10 @@ class ColoredFormatter(logging.Formatter):
     }
 
     def format(self, record):
+        # Ensure context attribute exists
+        if not hasattr(record, "context"):
+            record.context = ""
+            
         # Add color for console output
         if hasattr(record, "is_console") and record.is_console:
             color = self.COLORS.get(record.levelname, "")
@@ -37,10 +41,8 @@ class ContextFilter(logging.Filter):
         self.context_tag = context_tag
 
     def filter(self, record):
-        if self.context_tag:
-            record.context = f"[{self.context_tag}]"
-        else:
-            record.context = ""
+        # Always set context, even if empty
+        record.context = f"[{self.context_tag}]" if self.context_tag else ""
         return True
 
 
@@ -88,8 +90,15 @@ def setup_base_logger():
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
+    # Create a safe formatter class that handles missing context
+    class SafeFormatter(logging.Formatter):
+        def format(self, record):
+            if not hasattr(record, "context"):
+                record.context = ""
+            return super().format(record)
+
     # Formatters
-    file_formatter = logging.Formatter(
+    file_formatter = SafeFormatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(context)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
@@ -102,6 +111,9 @@ def setup_base_logger():
     file_handler.setFormatter(file_formatter)
     error_handler.setFormatter(file_formatter)
     console_handler.setFormatter(console_formatter)
+
+    # Add context filter to base logger
+    base_logger.addFilter(ContextFilter())
 
     # Mark console records for coloring
     def add_console_flag(record):
