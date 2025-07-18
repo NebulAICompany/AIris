@@ -248,6 +248,7 @@ async def run_orchestration(
     web_search_enabled: bool,
     wolfram_enabled: bool = False,
     rag_fusion_enabled: bool = False,
+    pre_embedding_process: str = "cch",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
@@ -256,6 +257,7 @@ async def run_orchestration(
     print(f"   - Web Search Enabled: {web_search_enabled}")
     print(f"   - Wolfram Enabled: {wolfram_enabled}")
     print(f"   - RAG Fusion Enabled: {rag_fusion_enabled}")
+    print(f"   - Pre-embedding Process: {pre_embedding_process}")
     print(f"   - Session ID: {session_id}")
     print(f"   - Selected Files: {selected_files}")
 
@@ -282,6 +284,12 @@ async def run_orchestration(
     # Vectorstore'ı yükle
     if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
         print(f"Loading vectorstore from {VECTORSTORE_PATH}")
+        if pre_embedding_process == "cch":
+            print("   - Contextual Chunk Headers (CCH) enhanced chunks will be used for retrieval")
+        elif pre_embedding_process == "hype":
+            print("   - HyPE (Hypothetical Prompt Embeddings) enhanced chunks will be used for retrieval")
+        else:
+            print("   - Standard chunks will be used for retrieval")
         load_vectorstore(VECTORSTORE_PATH)
 
     # 1. Temizlik + analiz
@@ -386,7 +394,7 @@ async def run_orchestration(
         )
 
     local_context = "\n\n---\n\n".join(context_entries)
-
+    print(f"   - Local Context: {local_context}")
     print("using web search ?= ", web_search_enabled)
 
     # Create the agent with web context and conversation history if available

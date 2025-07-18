@@ -198,12 +198,14 @@ class QueryRequest(BaseModel):
     webSearchEnabled: bool = False
     wolframEnabled: bool = False
     ragFusionEnabled: bool = False
+    preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
 
 class UploadRequest(BaseModel):
     file: str
+    preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
 
 
 @router.post("/query")
@@ -220,6 +222,7 @@ async def handle_query(request: QueryRequest):
         web_search_enabled = request.webSearchEnabled
         wolfram_enabled = request.wolframEnabled
         rag_fusion_enabled = request.ragFusionEnabled
+        pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
@@ -228,11 +231,12 @@ async def handle_query(request: QueryRequest):
         print(f"   - Web Search Enabled: {web_search_enabled}")
         print(f"   - Wolfram Enabled: {wolfram_enabled}")
         print(f"   - RAG Fusion Enabled: {rag_fusion_enabled}")
+        print(f"   - Pre-embedding Process: {pre_embedding_process}")
         print(f"   - Session ID: {session_id}")
         print(f"   - Selected Files: {selected_files}")
 
         answer = await run_orchestration(
-            query, web_search_enabled, wolfram_enabled, rag_fusion_enabled, session_id, selected_files
+            query, web_search_enabled, wolfram_enabled, rag_fusion_enabled, pre_embedding_process, session_id, selected_files
         )
         logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()
@@ -246,13 +250,17 @@ async def handle_query(request: QueryRequest):
 
 
 @router.post("/upload")
-def handle_upload(file: UploadFile = File(...)):
+def handle_upload(
+    file: UploadFile = File(...),
+    preEmbeddingProcess: str = "cch"
+):
     global request_counter
     try:
         # Increment simple counter
         request_counter += 1
 
         logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
+        logger.info(f"Pre-embedding process: {preEmbeddingProcess}")
 
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(__file__).parent.parent / "uploads"
@@ -265,12 +273,12 @@ def handle_upload(file: UploadFile = File(...)):
 
         logger.info(f"File saved to: {file_path}")
 
-        # Process the uploaded file
+        # Process the uploaded file with pre-embedding process parameter
         from aiiris_backend.orchestrator.upload_orchestrator import process_file
 
         logger.info("Processing uploaded file...")
 
-        result = process_file(str(file_path))
+        result = process_file(str(file_path), pre_embedding_process=preEmbeddingProcess)
 
         logger.info(f"File processed successfully: {file.filename}")
 
@@ -280,6 +288,7 @@ def handle_upload(file: UploadFile = File(...)):
             "status": "success",
             "message": "Dosya başarıyla yüklendi ve işlendi",
             "result": result,
+            "preEmbeddingProcess": preEmbeddingProcess,
         }
     except Exception as e:
         error_message = str(e)

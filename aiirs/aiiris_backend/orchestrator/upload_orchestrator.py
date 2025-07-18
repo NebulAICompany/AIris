@@ -16,7 +16,7 @@ import aiiris_backend.pipelines.vectorpipe as vectorpipe
 VECTOR_STORE_PATH = "aiiris_backend/vectorstore"
 
 
-def process_file(file_path: str) -> dict:
+def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
     Process an uploaded file synchronously.
 
@@ -44,7 +44,17 @@ def process_file(file_path: str) -> dict:
         expected_output_filename = f"{original_stem}_txt.txt"
 
         # Step 3: Create or update vector store with the specific file
-        vectorpipe.VectorStorePipeline().run(
+        from aiiris_backend.pipelines.vectorpipe import PreEmbeddingProcess
+        
+        # Convert string to enum
+        if pre_embedding_process.lower() == "hype":
+            process_enum = PreEmbeddingProcess.HYPE
+        elif pre_embedding_process.lower() == "cch":
+            process_enum = PreEmbeddingProcess.CCH
+        else:
+            process_enum = PreEmbeddingProcess.NONE
+            
+        vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             uploads_path=save_dir,
             save_path=VECTOR_STORE_PATH,
             specific_file=expected_output_filename,
