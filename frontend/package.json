@@ -1,0 +1,50 @@
+{
+  "name": "airis-desktop",
+  "version": "1.0.0",
+  "description": "AIris - AI-Powered Financial Document Processing Desktop Application",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electron",
+    "desktop",
+    "ai",
+    "financial",
+    "document-processing",
+    "rag"
+  ],
+  "author": "AIris Team",
+  "license": "MIT",
+  "homepage": "./",
+  "build": {
+    "appId": "com.airis.desktop",
+    "productName": "AIris Desktop",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }
+  },
+  "devDependencies": {
+    "electron": "^36.3.1"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "form-data": "^4.0.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12",
+    "node-fetch": "^2.6.7",
+    "undici": "^7.10.0"
+  }
+}
