@@ -1,6 +1,4 @@
-import os
 import time
-from openai import OpenAI
 from backend.monitoring.metrics import llm_duration_seconds
 from agents import Agent, Runner
 from pathlib import Path

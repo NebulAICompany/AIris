@@ -7,13 +7,11 @@ from backend.monitoring.metrics import api_requests_total
 from backend.libs.logger import get_logger
 import shutil
 from pathlib import Path
-import os
 from datetime import datetime
 import feedparser
-import asyncio
 import re
 import html
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 
 logger = get_logger("ROUTER")
 

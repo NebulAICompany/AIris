@@ -6,7 +6,7 @@ Handles conversation storage, context management, and history reduction.
 import json
 import uuid
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 import asyncio
 from dataclasses import dataclass, asdict

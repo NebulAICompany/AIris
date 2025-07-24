@@ -1,12 +1,8 @@
-import asyncio
 import os
-from typing import Optional, Dict, Any
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.mcp import MCPServerStdio
 from pathlib import Path
 import requests
-import json
-from datetime import datetime
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 import dotenv

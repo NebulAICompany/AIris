@@ -1,4 +1,3 @@
-from pathlib import Path
 import openai
 import pythoncom
 import os

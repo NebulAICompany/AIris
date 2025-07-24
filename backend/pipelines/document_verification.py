@@ -4,20 +4,17 @@ Implements comprehensive document verification using LLM-based analysis and Wolf
 """
 
 import cv2
-import numpy as np
 import pytesseract
 from PIL import Image
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 import fitz  # PyMuPDF
 from backend.libs.logger import get_logger
 from openai import OpenAI
 import os
-import hashlib
-import tempfile
 import io
 
 # Import Wolfram Alpha tool for mathematical verification

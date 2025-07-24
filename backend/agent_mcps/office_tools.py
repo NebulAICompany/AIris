@@ -1,8 +1,7 @@
 from agents import function_tool
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from pathlib import Path
 import os
-import logging
 from backend.libs.logger import get_logger
 
 FILES_PATH = Path(__file__).parent.parent / "uploads"

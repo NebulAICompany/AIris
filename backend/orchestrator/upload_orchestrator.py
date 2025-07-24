@@ -1,14 +1,10 @@
 import os
 import sys
 from pathlib import Path
-import json
-from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
 
 # Add the project root to system path to allow imports
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
-# Import from upload.py and buraya.py
 from backend.pipelines.uploadpipe import UploadPipeline
 import backend.pipelines.vectorpipe as vectorpipe
 

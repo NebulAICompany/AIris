@@ -9,7 +9,6 @@ if sys.platform == "win32":
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
-from backend.monitoring.metrics import expose_metrics
 from backend.libs.logger import setup_logger, get_logger
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles

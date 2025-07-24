@@ -42,17 +42,8 @@ class UploadPipeline:
 
 
 def main():
-    # file_path = "backend/files/pdf_file.pdf"
-    # file_path = "backend/files/market_demand.pdf"
-    # file_path = "backend/files/bankacılık_denetleme_kurumu.pdf"
-    # file_path = "backend/files/tcmb.pdf"
-    # file_path = "backend/files/Bilanco.xlsx"
+
     file_path = "backend/files/TUFE.xlsx"
-    # file_path = "backend/files/VeriSeti.xlsx"
-    # file_path = "backend/files/İkt.docx"
-    # file_path = "backend/files/text_file.txt"
-    # file_path = "backend/files/png_file.png"
-    # file_path = "backend/files/jpeg_file.jpg"
 
     if not os.path.exists(file_path):
         print(f"X Hata: {file_path} dosyası bulunamadı!")
