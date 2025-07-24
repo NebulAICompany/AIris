@@ -7,12 +7,11 @@ from .pii_deneme import pii_mask
 import json
 from openai import OpenAI
 from pathlib import Path
-from typing import List, Dict, Optional, Literal
+from typing import List, Dict
 import time
 import asyncio
 from enum import Enum
 from backend.monitoring.metrics import (
-    hype_indexing_duration_seconds,
     hype_hypothetical_content_generated,
     hype_enhanced_documents_indexed,
     vectorstore_total_chunks,

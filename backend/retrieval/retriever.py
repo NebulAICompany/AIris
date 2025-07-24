@@ -1,9 +1,6 @@
 from typing import List, Dict, Any
 import os
-import numpy as np
 from langchain_community.vectorstores import FAISS
-from langchain_core.embeddings import embeddings
-from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 
 _vectorstore = None

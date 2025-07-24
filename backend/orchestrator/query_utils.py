@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import Optional, Tuple, Literal
+from typing import Tuple, Literal
 from backend.libs.logger import get_logger
 
 # Dil tespiti için
