@@ -1,2 +1,0 @@
-2025-06-17 23:38:19 - __main__ - ERROR - Failed to load vectorstore: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
-2025-06-17 23:38:19 - __main__ - ERROR - Cannot continue without vectorstore
