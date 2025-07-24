@@ -2,40 +2,13 @@ from agents import function_tool
 from typing import Any, Dict, List
 from pathlib import Path
 import os
+from docx import Document
+from openpyxl import Workbook
 from backend.libs.logger import get_logger
 
 FILES_PATH = Path(__file__).parent.parent / "uploads"
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
-# Office-related imports
-try:
-    import win32com.client
-
-    WIN32_AVAILABLE = True
-except ImportError:
-    WIN32_AVAILABLE = False
-    print("Warning: win32com.client not available. Office operations will be limited.")
-
-try:
-    from openpyxl import Workbook
-
-    OPENPYXL_AVAILABLE = True
-except ImportError:
-    OPENPYXL_AVAILABLE = False
-
-try:
-    from docx import Document
-
-    PYTHON_DOCX_AVAILABLE = True
-except ImportError:
-    PYTHON_DOCX_AVAILABLE = False
-
-try:
-    import pandas as pd
-
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
 
 logger = get_logger("OFFICE_TOOLS")
 
@@ -53,11 +26,6 @@ def create_excel_from_table(
         sheet_name: Name of the Excel sheet (default: "Sheet1")
     """
     try:
-        if not OPENPYXL_AVAILABLE:
-            return {
-                "success": False,
-                "error": "openpyxl library not available. Please install it with: pip install openpyxl",
-            }
 
         # Ensure file_path is absolute and in the uploads directory
         file_path = FILES_PATH / file_name
@@ -102,11 +70,6 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
         file_path: Name of the file to be created (without extension)
     """
     try:
-        if not PYTHON_DOCX_AVAILABLE:
-            return {
-                "success": False,
-                "error": "python-docx library not available. Please install it with: pip install python-docx",
-            }
 
         # Ensure file_path is absolute and in the uploads directory
         file_path = FILES_PATH / file_name
@@ -123,7 +86,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
             if paragraph_text.strip():
                 # Check if it's a title (simple heuristic)
                 if len(paragraph_text.split("\n")) == 1 and len(paragraph_text) < 100:
-                    p = doc.add_heading(paragraph_text.strip(), level=1)
+                    doc.add_heading(paragraph_text.strip(), level=1)
                 else:
                     # Handle multi-line paragraphs
                     lines = paragraph_text.split("\n")
