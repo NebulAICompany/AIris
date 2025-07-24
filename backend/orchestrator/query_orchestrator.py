@@ -414,7 +414,6 @@ async def run_orchestration(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
-        mcp_servers=[],
         wolfram_enabled=wolfram_enabled,
         conversation_history=conversation_context,
     )

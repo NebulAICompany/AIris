@@ -4,13 +4,19 @@ import xml.etree.ElementTree as ET
 from agents import function_tool
 
 
-def wolfram_alpha_query_custom(query: str, app_id: str) -> str:
+@function_tool
+def wolfram_alpha_query(query: str, app_id: str = os.getenv("WOLFRAM_APP_ID")) -> str:
     """
-    Custom Wolfram Alpha query function that bypasses the Content-Type issue
+    Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
+
+    Args:
+        query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
+
+    Returns:
+        The result from Wolfram Alpha as a string
     """
     url = "http://api.wolframalpha.com/v2/query"
     params = {"input": query, "appid": app_id, "output": "XML"}
-
     try:
         response = requests.get(url, params=params)
 
@@ -51,25 +57,3 @@ def wolfram_alpha_query_custom(query: str, app_id: str) -> str:
 
     except Exception as e:
         return f"Error: {str(e)}"
-
-
-@function_tool
-def wolfram_alpha_query(query: str) -> str:
-    """
-    Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
-
-    Args:
-        query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
-
-    Returns:
-        The result from Wolfram Alpha as a string
-    """
-    try:
-        app_id = os.getenv("WOLFRAM_APP_ID")
-        if not app_id:
-            return "Error: WOLFRAM_APP_ID environment variable not set"
-
-        return wolfram_alpha_query_custom(query, app_id)
-
-    except Exception as e:
-        return f"Error querying Wolfram Alpha: {str(e)}"
