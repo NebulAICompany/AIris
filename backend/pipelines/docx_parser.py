@@ -6,6 +6,7 @@ class DocxParser:
     def __init__(self, file_path: str, txt_output_path: str):
         self.file_path = file_path
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.txt_output_path = txt_output_path
 
     def run(self):
         from backend.pipelines.uploadpipe import UploadPipeline
