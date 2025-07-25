@@ -1,11 +1,10 @@
 from agents import Agent
 from typing import List
 from agents.tool import WebSearchTool
-from backend.agents.office_agent import office_agent
-from backend.agent_mcps.alpha_vantage_agent import alpha_vantage_agent
+from backend.core.agents import office_agent, alpha_vantage_agent
 
 # Import our custom wolfram function tool
-from backend.agents.wolfram_alpha_tool import wolfram_alpha_query
+from backend.core.tools.api import wolfram_alpha_query
 
 
 def create_rag_agent(
@@ -13,7 +12,6 @@ def create_rag_agent(
     web_search_enabled: bool,
     query: str,
     instruction: str = None,
-    mcp_servers: List = None,
     wolfram_enabled: bool = False,
     conversation_history: List = None,
 ) -> Agent:
