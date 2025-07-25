@@ -21,7 +21,6 @@ yarn-error.log*
 # Test ve büyük dosyalar
 tests/test_documents/
 *.pdf
-*.jar
 *.lock
 
 # IDE/editor
