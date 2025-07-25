@@ -244,6 +244,11 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                     doc.metadata["content_type"] = "original"
                     chunk_idx += 1
 
+                    if '(Image)' in doc.page_content:  # Check if the chunk contains an image
+                        doc.metadata["contains_image"] = True
+                    else:
+                        doc.metadata["contains_image"] = False
+
                 # Generate hypothetical prompts and create enhanced document set
                 print(f"❓ Generating hypothetical prompts for {file}...")
                 enhanced_docs = self.create_enhanced_documents(docs, file)

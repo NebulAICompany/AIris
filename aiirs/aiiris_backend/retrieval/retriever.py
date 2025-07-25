@@ -19,7 +19,7 @@ def _get_embeddings() -> Embeddings:
         )
     except (ImportError, Exception) as e:
         try:
-            from langchain_huggingface import HuggingFaceEmbeddings
+            from langchain_community.embeddings import HuggingFaceEmbeddings
 
             return HuggingFaceEmbeddings(
                 model_name="sentence-transformers/all-MiniLM-L6-v2",
@@ -71,9 +71,13 @@ def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
         )
 
         results = []
+        chunks_with_images = 0
         for doc, score in docs_with_scores:
             content_type = doc.metadata.get("content_type", "original")
-
+            contains_image = doc.metadata.get("contains_image", False)
+            
+            if contains_image:
+                chunks_with_images += 1
             # If this is a hypothetical prompt match, we want to return the original content
             # but note that it was found via a prompt match
             if content_type == "hypothetical_prompt":
@@ -91,6 +95,7 @@ def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
                             **doc.metadata,
                             "match_type": "prompt_match",
                             "matching_prompt": hypothetical_prompt,
+                            "contains_image": contains_image,
                         },
                     }
                 )
@@ -99,10 +104,10 @@ def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
                     {
                         "content": doc.page_content,
                         "score": score,
-                        "metadata": {**doc.metadata, "match_type": "content_match"},
+                        "metadata": {**doc.metadata, "match_type": "content_match", "contains_image": contains_image},
                     }
                 )
-
+        print("CHUNKS WITH IMAGES IS: ", chunks_with_images)
         # Show breakdown of results
         original_count = sum(
             1 for r in results if r["metadata"].get("content_type") == "original"

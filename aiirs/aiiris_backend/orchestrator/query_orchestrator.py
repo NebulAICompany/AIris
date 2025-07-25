@@ -324,7 +324,6 @@ async def run_orchestration(
             preprocessed_query, k=15
         )  # Get more docs for better reranking
         print(type(retrieved_docs))
-
         if not retrieved_docs:
             return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
 

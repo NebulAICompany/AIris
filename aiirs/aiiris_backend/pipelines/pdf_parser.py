@@ -3,6 +3,13 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.formrecognizer import DocumentAnalysisClient
 import os, fitz, nltk, base64, openai
 from pathlib import Path
+from aiiris_backend.pipelines.tools import describe_image, describe_table
+from PIL import Image
+from dotenv import load_dotenv
+load_dotenv()
+import nltk
+from nltk.tokenize import sent_tokenize
+
 
 # Download required NLTK data
 try:
@@ -12,14 +19,14 @@ except LookupError:
 
 
 class PdfParser:
-    def __init__(self, pdf_path: str):
+    def __init__(self, pdf_path: str, txt_output_path: str):
         self.pdf_path = pdf_path
         self.azure_endpoint_doc_intel = os.getenv(
             "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT"
-
         )
         self.azure_key_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.txt_output_path = txt_output_path
 
         if not self.azure_endpoint_doc_intel or not self.azure_key_doc_intel:
             raise ValueError(
@@ -29,7 +36,7 @@ class PdfParser:
             )
         self.document_analysis_client = DocumentAnalysisClient(
             endpoint=self.azure_endpoint_doc_intel,
-            credential=AzureKeyCredential(self.azure_key_doc_intel),
+            credential=AzureKeyCredential(self.azure_key_doc_intel)
         )
 
     def run(self):
@@ -40,12 +47,8 @@ class PdfParser:
     def process_pages_in_memory(self, pages_per_part=2):
         pdf = fitz.open(self.pdf_path)
         num_pages = len(pdf)
-        save_dir = Path(__file__).resolve().parent / "uploads"
-        save_dir.mkdir(parents=True, exist_ok=True)
-        pdf_stem = Path(self.pdf_path).stem
-        txt_output_path = save_dir / f"{pdf_stem}_txt.txt"
 
-        with open(txt_output_path, "w", encoding="utf-8") as dosya:
+        with open(self.txt_output_path, "w", encoding="utf-8") as dosya:
             for start_page in range(0, num_pages, pages_per_part):
                 end_page = min(start_page + pages_per_part, num_pages)
 
@@ -85,11 +88,11 @@ class PdfParser:
                             ]
                             base_image = pdf.extract_image(img_xref)
                             image_bytes = base_image["image"]
-                            description = self.describe_image(image_bytes)
+                            description = describe_image(image_bytes, client=self.client)
+                            
+                            updated_description = self.specify_sentence(description, "(Image)")
 
-                            dosya.write(
-                                f"[Image {img_index + 1}]\n\n[Description] = {description}\n---\n"
-                            )
+                            dosya.write(f"[Image {img_index + 1}]\n\n[Description] = {updated_description}\n---\n")
                             occupied_boxes.append(img_polygon)
 
                         except Exception as e:
@@ -97,23 +100,15 @@ class PdfParser:
                             continue
 
                     # Tabloları işle
-                    page_tables = [
-                        t
-                        for t in result.tables
-                        if t.bounding_regions
-                        and t.bounding_regions[0].page_number == (local_page_num + 1)
-                    ]
+                    page_tables = [t for t in result.tables if t.bounding_regions
+                        and t.bounding_regions[0].page_number == (local_page_num + 1)]
+                    
                     for table_counter, table in enumerate(page_tables):
-                        table_regions = [
-                            region.polygon for region in table.bounding_regions
-                        ]
-                        if any(
-                            self.check_overlap(region, occ)
-                            for region in table_regions
-                            for occ in occupied_boxes
-                        ):
+                        table_regions = [region.polygon for region in table.bounding_regions]
+                        
+                        if any(self.check_overlap(region, occ) for region in table_regions for occ in occupied_boxes):
                             continue
-
+                                    
                         dosya.write(f"\n[Table {table_counter + 1}]\n")
                         table_content = []
                         max_col = max(cell.column_index for cell in table.cells)
@@ -121,23 +116,13 @@ class PdfParser:
 
                         for row_index in range(max_row + 1):
                             for col_index in range(max_col + 1):
-                                cell = next(
-                                    (
-                                        cell
-                                        for cell in table.cells
-                                        if cell.row_index == row_index
-                                        and cell.column_index == col_index
-                                    ),
-                                    None,
-                                )
+                                cell = next((cell for cell in table.cells if cell.row_index == row_index and cell.column_index == col_index), None,)
                                 content = cell.content if cell else ""
                                 if content:
-                                    dosya.write(
-                                        f"[{row_index},{col_index}]: {content}\n"
-                                    )
+                                    dosya.write(f"[{row_index},{col_index}]: {content}\n")
                                     table_content.append(content)
 
-                        table_description = self.describe_table(table_content)
+                        table_description = describe_table(table_content, client=self.client)
                         dosya.write(f"[Description] = {table_description}\n")
                         occupied_boxes.extend(table_regions)
 
@@ -166,69 +151,32 @@ class PdfParser:
                 print(f"{start_page+1}-{end_page}. sayfalar bellekte işlendi.")
 
         pdf.close()
-        print(f"Tüm PDF {pdf_stem}_txt.txt dosyasına kaydedildi.")
+        print(f"Tüm PDF {self.txt_output_path} dosyasına kaydedildi.")
 
-    def describe_image(self, image_bytes):
-        try:
-            # client = openai.OpenAI(api_key="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")
-
-            base64_image = base64.b64encode(image_bytes).decode("utf-8")
-
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli grafik mi fotoğraf mı olduğunu belirle. Fotoğrafsa neyi gösterdiğini kısaca söyle, grafikse oldukça detaylı biçimde finans konseptiyle açıkla.",
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "Lütfen bu görseli inceleyip önce türünü belirt, grafikse türünü ve detaylı açıklamasını yap.",
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                },
-                            },
-                        ],
-                    },
-                ],
-                max_tokens=700,
-            )
-
-            description = response.choices[0].message.content
-            return description
-
-        except Exception as e:
-            print(f"Error in GPT image description: {e}")
-            return "Açıklama alınamadı."
-
-    def describe_table(self, table_content):
-        try:
-            table_text = "\n".join([" | ".join(row) for row in table_content])
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Sen uzman bir veri analistisin. Aşağıda bir tablo verilecek. Tabloyu inceleyip detaylıca analiz et, öne çıkan değerleri ve yorumlarını yaz.",
-                    },
-                    {
-                        "role": "user",
-                        "content": f"Tablo:\n{table_text}\n\nLütfen bu tabloyu detaylı yorumla:",
-                    },
-                ],
-                max_tokens=800,
-            )
-            return response.choices[0].message.content
-
-        except Exception as e:
-            print(f"Error in GPT table description: {e}")
-            return "Tablo açıklaması alınamadı."
+    def specify_sentence(self, text, word):
+        """
+        Adds a specified word to the end of each sentence using NLTK for sentence splitting.
+        
+        Args:
+            text (str): Input text.
+            word (str): Word to append at the end of each sentence.
+            
+        Returns:
+            str: Modified text with the word added to each sentence.
+        """
+        sentences = sent_tokenize(text)
+        modified_sentences = []
+        
+        for sentence in sentences:
+            if sentence.strip():  # Skip empty sentences
+                # Check if sentence ends with punctuation
+                if sentence[-1] in {'.', '!', '?'}:
+                    modified_sentence = sentence[:-1] + f" {word}" + sentence[-1]
+                else:
+                    modified_sentence = sentence + f" {word}"
+                modified_sentences.append(modified_sentence)
+        
+        return ' '.join(modified_sentences)
 
     def check_overlap(self, box1, box2):
         """
@@ -252,3 +200,11 @@ class PdfParser:
             return False
 
         return True
+
+
+if __name__ == "__main__":
+    parser = PdfParser(
+        pdf_path="aiiris_backend/files/graphical.pdf",
+        txt_output_path="aiiris_backend/files/graphical_output.txt"
+    )
+    parser.run()

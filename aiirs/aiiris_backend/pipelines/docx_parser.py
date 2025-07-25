@@ -6,7 +6,7 @@ from docx2pdf import convert
 
 
 class DocxParser:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, txt_output_path: str):
         self.file_path = file_path
         self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -20,7 +20,7 @@ class DocxParser:
         output_dir = Path(__file__).resolve().parent / "uploads"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(self.file_path).stem + ".pdf")
-        self.convert_docx_to_pdf(self.file_path, str(output_pdf))
+        convert(self.file_path, str(output_pdf))
 
         file_path = str(output_pdf)
         if not Path(file_path).exists():
@@ -34,6 +34,3 @@ class DocxParser:
                 Path(file_path).unlink()
             except Exception as e:
                 print(f"{file_path} silinemedi: {e}")
-
-    def convert_docx_to_pdf(self, input_path, output_dir):
-        convert(input_path, output_dir)
