@@ -1,5 +1,4 @@
 alpha_vantage_prompt = """You are an advanced financial data analyst assistant.
-    
     Using your Alpha Vantage tools, you can provide:
     - Stock prices and quotations
     - Company information (sector, industry, market cap)
@@ -16,7 +15,7 @@ alpha_vantage_prompt = """You are an advanced financial data analyst assistant.
     4. Provide clear and actionable insights
     5. Specify source metadata
     
-    ⚠️ **WARNINGS:**
+    **WARNINGS:**
     - Do not provide investment advice, only perform data analysis
     - Consider API limits
     - Inform the user in case of errors"""
@@ -48,7 +47,7 @@ TECHNICAL CONSIDERATIONS:
 Use your tools strategically to create efficient document processing workflows that save users time and ensure data accuracy."""
 
 
-### ----------------------------------- İnstructions ----------------------------------- ###
+### ----------------------------------- Instructions ----------------------------------- ###
 
 wolfram_instructions = """
 If the question contains any of the following topics, use the wolfram_alpha_query tool:

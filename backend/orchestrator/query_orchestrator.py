@@ -6,7 +6,7 @@ from backend.orchestrator.query_utils import (
     detect_language,
     detect_intent,
 )
-from backend.llm.llm_engine import generate_answer
+from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.guardrails.pii import mask_pii, pii_unmask

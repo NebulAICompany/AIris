@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from backend.llm.llm_engine import generate_answer
+from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
 from backend.libs.logger import get_logger
 from langchain_core.documents import Document
