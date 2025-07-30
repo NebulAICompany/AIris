@@ -32,7 +32,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         pipeline = UploadPipeline(file_path=file_path)
 
         pipeline.run()
-        save_dir = Path(__file__).resolve().parent.parent / "pipelines/uploads"
+        save_dir = Path(__file__).resolve().parent.parent / "database"
 
         # Step 2: Determine the expected output filename
         # All parsers follow the pattern: original_stem + "_txt.txt"

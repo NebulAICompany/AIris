@@ -6,7 +6,7 @@ from docx import Document
 from openpyxl import Workbook
 from backend.libs.logger import get_logger
 
-FILES_PATH = Path(__file__).parent.parent / "uploads"
+FILES_PATH = Path(__file__).parent.parent / "created_documents"
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 

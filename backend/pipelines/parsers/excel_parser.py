@@ -1,10 +1,13 @@
-import openpyxl, openai, os
-from backend.pipelines.tools import describe_image, describe_chart
+from PIL import Image
+import io
+from pathlib import Path
+import openpyxl
+from backend.pipelines.parsers.tools import describe_image, describe_chart, specify_sentence
 
 class ExcelParser:
-    def __init__(self, file_path: str, txt_output_path: str):
+    def __init__(self, file_path: str, txt_output_path: str, client=None):
         self.file_path = file_path
-        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = client
         self.txt_output_path = txt_output_path
     
     def run(self):
@@ -25,10 +28,22 @@ class ExcelParser:
 
                 # Eğer sheet'te image varsa kontrol et
                 if hasattr(worksheet, "_images") and worksheet._images:
+                    images_dir = Path("images")
+                    images_dir.mkdir(exist_ok=True)
                     for idx, image in enumerate(worksheet._images, start=1):
                         image_bytes = image._data()  # Resmin byte datası
+                        
+                        # Kaydet
+                        image_filename = f"{self.file_path.stem}_{sheet}_image_{idx}.png"
+                        image_path = images_dir / image_filename
+                        
+                        # Görseli kaydet
+                        img = Image.open(io.BytesIO(image_bytes))
+                        img.save(image_path)
+
                         result = describe_image(image_bytes)
-                        f.write(f"[Image {idx}]\n[Description] = {result}\n")
+                        updated_description = specify_sentence(result, f"((Image): {image_filename})")
+                        f.write(f"[Image {idx}]\n[Description] = {updated_description}\n")
 
                 if hasattr(worksheet, "_charts") and worksheet._charts:
                     for idx, chart in enumerate(worksheet._charts, start=1):
