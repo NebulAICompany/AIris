@@ -7,7 +7,7 @@ from backend.orchestrator.query_utils import (
     detect_intent,
 )
 from backend.llm.llm_engine import generate_answer
-from backend.llm.prompt_templates import create_rag_agent
+from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.guardrails.pii_masker import mask_pii
 from backend.guardrails.pii_deneme import pii_unmask
