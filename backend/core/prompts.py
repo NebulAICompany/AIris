@@ -46,3 +46,18 @@ TECHNICAL CONSIDERATIONS:
 
 
 Use your tools strategically to create efficient document processing workflows that save users time and ensure data accuracy."""
+
+
+### ----------------------------------- İnstructions ----------------------------------- ###
+
+wolfram_instructions = """
+If the question contains any of the following topics, use the wolfram_alpha_query tool:
+- Mathematical calculations (equations, derivatives, integrals, etc.)
+- Scientific calculations and data
+- Statistical analyses
+- Unit conversions
+- Current data (population, economic indicators, etc.)
+- Physics, chemistry, or engineering calculations
+
+Use your wolfram_alpha_query function to perform mathematical calculations, scientific data analysis, or statistical analyses
+"""
