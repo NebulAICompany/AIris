@@ -3,7 +3,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from .pii_deneme import pii_mask
+from backend.guardrails.pii import pii_mask
 import json
 from openai import OpenAI
 from pathlib import Path

@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from duckduckgo_search import DDGS
-from backend.llm.llm_engine import generate_answer
+from backend.core.runner import generate_answer
 from typing import List
 
 
