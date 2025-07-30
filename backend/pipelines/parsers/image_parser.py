@@ -26,12 +26,14 @@ class ImageParser:
         images_dir.mkdir(exist_ok=True)
 
         # Görseli kaydet
-        saved_image_path = images_dir / Path(self.file_name).stem
-        image.save(saved_image_path)
+        saved_image_path = images_dir / f"{image_reference}.png"
+        image.save(saved_image_path, format='PNG')
 
+        # Image reference için sadece dosya adını kullan (uzantısız)
+        image_reference = Path(self.file_name).stem
         # Açıklamayı al
         description = describe_image(image_bytes, client=self.client)
-        updated_description = specify_sentence(description, f"((Image):{Path(self.file_name).stem})")
+        updated_description = specify_sentence(description, f"((Image):{image_reference})")
 
         # Açıklama dosyasına yaz
         with open(self.txt_output_path, "w", encoding="utf-8") as f:

@@ -41,8 +41,10 @@ class ExcelParser:
                         img = Image.open(io.BytesIO(image_bytes))
                         img.save(image_path)
 
+                        # Image reference için sadece dosya adını kullan (uzantısız)
+                        image_reference = f"{self.file_path.stem}_{sheet}_image_{idx}"
                         result = describe_image(image_bytes)
-                        updated_description = specify_sentence(result, f"((Image): {image_filename})")
+                        updated_description = specify_sentence(result, f"((Image):{image_reference})")
                         f.write(f"[Image {idx}]\n[Description] = {updated_description}\n")
 
                 if hasattr(worksheet, "_charts") and worksheet._charts:
