@@ -183,6 +183,7 @@ class APIService {
         success: true,
         data: response.data,
         response: response.data.response || response.data,
+        images: response.data.images || [],
         sessionId: response.data.sessionId,
       };
     } catch (error) {
@@ -228,6 +229,7 @@ class APIService {
       return {
         success: false,
         error: errorMessage,
+        images: [], // Error durumunda empty images array
       };
     }
   }

@@ -1,5 +1,82 @@
 /* Components CSS - Specific UI Elements */
 
+/* Image Display Styles */
+.message-images {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-image-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.message-image {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.message-image:hover {
+  border-color: var(--accent-primary, #007bff);
+}
+
+.image-caption {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 0.75em;
+  opacity: 0.9;
+}
+
+/* Modal styles */
+.image-modal {
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+}
+
+/* Dark theme support for images */
+body.dark-theme .message-images {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark-theme .image-caption {
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: var(--text-secondary) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Responsive design for images */
+@media (max-width: 768px) {
+  .message-image {
+    max-width: 100% !important;
+    max-height: 200px !important;
+  }
+  
+  .image-caption {
+    max-width: 100% !important;
+    font-size: 0.7em !important;
+  }
+  
+  .message-images {
+    gap: 8px;
+    padding: 8px !important;
+  }
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;

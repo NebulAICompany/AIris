@@ -39,9 +39,8 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
-backend/uploads/
+backend/database/
 backend/vectorstore/
-backend/pipelines/uploads/
 
 # Ortak .env dosyaları
 .env 
