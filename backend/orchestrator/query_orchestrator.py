@@ -10,11 +10,7 @@ from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.guardrails.pii import mask_pii, pii_unmask
-from backend.guardrails.filters import (
-    check_input_violations,
-    check_output_violations,
-    sanitize_output,
-)
+from backend.guardrails.filters import check_openai_moderation
 from .reflection import reflect_and_retry
 from .chat_history import chat_history_manager, MessageRole
 import os
@@ -302,10 +298,10 @@ async def run_orchestration(
     # 1. Temizlik + analiz
     preprocessed_query, lang, intent = preprocess_query(query)
 
-    # 2. Girdi kontrolü (zararlı içerik var mı?)
-    input_violations = check_input_violations(preprocessed_query)
-    if input_violations:
-        return f"Sorgunuz uygunsuz içerikler içeriyor: {input_violations}"
+    # 2. Girdi kontrolü (OpenAI moderation)
+    input_moderation = check_openai_moderation(preprocessed_query)
+    if input_moderation["flagged"]:
+        return f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
 
     # 3. Hassas bilgileri maskele
     masked_query, pii_map = mask_pii(preprocessed_query)
@@ -431,12 +427,11 @@ async def run_orchestration(
     final_answer = ensure_metadata_in_response(final_answer, docs_for_metadata)
     print(f"   - Applied consistent metadata formatting")
 
-    # 6. Çıktı kontrolü (hallucination, uydurma vs.)
-    output_violations = check_output_violations(final_answer)
-    if output_violations:
-        final_answer = sanitize_output(
-            final_answer, violation_types=None
-        )  # tüm zararlıları sansürle
+    # 6. Çıktı kontrolü (OpenAI moderation)
+    output_moderation = check_openai_moderation(final_answer)
+    if output_moderation["flagged"]:
+        # OpenAI moderation flagged content - return a safe response
+        final_answer = "Üzgünüm, bu yanıt uygun değil. Lütfen farklı bir soru sorun."
 
     # 7. Maske çöz
     final_answer = pii_unmask(final_answer, pii_map)
