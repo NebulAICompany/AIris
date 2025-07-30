@@ -466,6 +466,10 @@ async def run_orchestration(
 
     image_datas = load_images_from_paths(image_paths)
 
+    if image_datas:
+        print(f"   - Found {len(image_datas)} images in context")
+    else:
+        print(f"   - No images found in context")
     # Create the agent with web context and conversation history if available
     agent = create_rag_agent(
         local_context=cleaned_context,

@@ -121,10 +121,18 @@ class PdfParser:
                             filename = f"{images_dir}/{pdf_name}_page_{page_num + 1}_{idx + 1}.png"
                             cropped.save(filename)
 
-                            description = describe_image(cropped, client=self.client)
-                            updated_description = specify_sentence(description, f"((Image): {filename})")
-                            
-                            dosya.write(f"[Image {idx + 1}]\n\n[Description] = {updated_description}\n---\n")
+                            # Image reference için sadece dosya adını kullan (path ve uzantı olmadan)
+                            image_reference = f"{pdf_name}_page_{page_num + 1}_{idx + 1}"
+
+                            # PIL Image'ı bytes'a çevir
+                            img_byte_arr = io.BytesIO()
+                            cropped.save(img_byte_arr, format='PNG')
+                            img_bytes = img_byte_arr.getvalue()
+
+                            description = describe_image(img_bytes, client=self.client)
+                            updated_description = specify_sentence(description, f"((Image):{image_reference})")
+
+                            dosya.write(f"{updated_description}\n---\n")
                             occupied_boxes.append(expanded)
                     pix = None  # Bellek temizleme
 
