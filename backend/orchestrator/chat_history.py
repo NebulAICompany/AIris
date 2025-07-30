@@ -1,8 +1,3 @@
-"""
-Chat History Management System for AIris
-Handles conversation storage, context management, and history reduction.
-"""
-
 import json
 import uuid
 from datetime import datetime
