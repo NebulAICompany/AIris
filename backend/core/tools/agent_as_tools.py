@@ -1,4 +1,22 @@
-from backend.core.agents import office_agent, alpha_vantage_agent
+from agents import Agent
+from backend.core.prompts import alpha_vantage_prompt, office_agent_prompt
+from backend.core.tools.mcp import alpha_vantage_mcp_server
+from backend.core.tools.base_tools import document_tools
+
+alpha_vantage_agent = Agent(
+    name="Alpha Vantage Finance Agent",
+    instructions=alpha_vantage_prompt,
+    mcp_servers=[alpha_vantage_mcp_server],
+)
+
+
+office_agent = Agent(
+    name="office_agent",
+    instructions=office_agent_prompt,
+    tools=[
+        *document_tools,
+    ],
+)
 
 office_agent_tool = office_agent.as_tool(
     tool_name="office_operations",

@@ -1,25 +1,10 @@
-from agents import Agent, Runner
+from agents import Agent
 from .tools.mcp import alpha_vantage_mcp_server
-from .prompts import alpha_vantage_prompt, office_agent_prompt, wolfram_instructions
+from .prompts import wolfram_instructions
 from typing import List
 from agents.tool import WebSearchTool
 from .tools.api import wolfram_alpha_query
-from .tools.base_tools import rag_agent_as_tools, document_tools
-
-alpha_vantage_agent = Agent(
-    name="Alpha Vantage Finance Agent",
-    instructions=alpha_vantage_prompt,
-    mcp_servers=[alpha_vantage_mcp_server],
-)
-
-
-office_agent = Agent(
-    name="office_agent",
-    instructions=office_agent_prompt,
-    tools=[
-        *document_tools,
-    ],
-)
+from .tools.base_tools import rag_agent_as_tools
 
 
 def create_rag_agent(
@@ -136,8 +121,8 @@ Now analyze the query and prepare the most appropriate response! """
 
 async def main():
     await alpha_vantage_mcp_server.connect()
-    result = await Runner.run(alpha_vantage_agent, "What is Tesla stock price?")
-    print(result)
+    #   result = await Runner.run(alpha_vantage_agent, "What is Tesla stock price?")
+    #   print(result)
 
 
 # TODO: This main function is only for connection reminder
