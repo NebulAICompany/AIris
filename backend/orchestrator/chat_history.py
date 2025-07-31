@@ -1,11 +1,48 @@
 import json
 import uuid
+import os
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import asyncio
 from dataclasses import dataclass, asdict
+
+from sqlalchemy import create_engine, Column, String, DateTime, ForeignKey, Text, JSON, inspect
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship, Session as DbSession
+from sqlalchemy.pool import StaticPool
+
+# Define Base class for SQLAlchemy models
+Base = declarative_base()
+
+# Database models
+class DbChatSession(Base):
+    """Database model for chat sessions"""
+    __tablename__ = "chat_sessions"
+    
+    session_id = Column(String, primary_key=True)
+    title = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    meta_data = Column(JSON, nullable=True)
+    
+    # Relationship with messages
+    messages = relationship("DbChatMessage", back_populates="session", cascade="all, delete-orphan")
+    
+class DbChatMessage(Base):
+    """Database model for chat messages"""
+    __tablename__ = "chat_messages"
+    
+    message_id = Column(String, primary_key=True)
+    session_id = Column(String, ForeignKey("chat_sessions.session_id"), nullable=False)
+    role = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    timestamp = Column(DateTime, nullable=False)
+    meta_data = Column(JSON, nullable=True)
+    
+    # Relationship with session
+    session = relationship("DbChatSession", back_populates="messages")
 
 
 class MessageRole(Enum):
@@ -101,12 +138,142 @@ class ChatHistoryManager:
     """Manages chat sessions and history"""
 
     def __init__(self, storage_path: str = "backend/chat_sessions"):
+        # Create database directory if it doesn't exist
+        db_dir = Path("backend/database")
+        db_dir.mkdir(exist_ok=True)
+        
+        # Initialize database connection
+        db_path = os.path.join(db_dir, "chat_history.db")
+        self.engine = create_engine(f"sqlite:///{db_path}", 
+                                   connect_args={"check_same_thread": False},
+                                   poolclass=StaticPool)
+        
+        # Create tables if they don't exist
+        Base.metadata.create_all(self.engine)
+        
+        # Create session factory
+        self.Session = sessionmaker(bind=self.engine)
+        
+        # Keep legacy storage path for migration purposes
         self.storage_path = Path(storage_path)
         self.storage_path.mkdir(exist_ok=True)
+        
         self.active_sessions: Dict[str, ChatSession] = {}
         self.max_context_messages = 20
         self.max_tokens_per_message = 1000  # Approximate token limit per message
         self._pending_saves: List[asyncio.Task] = []
+        
+        # Migrate existing JSON data to database if needed
+        self._migrate_json_to_db()
+        
+    def _migrate_json_to_db(self):
+        """Migrate existing JSON files to the database"""
+        try:
+            # Check if migration has already been done
+            with self.Session() as db_session:
+                # If there are already sessions in the database, skip migration
+                if db_session.query(DbChatSession).first():
+                    return
+                    
+            # Get all JSON files in the storage path
+            json_files = list(self.storage_path.glob("*.json"))
+            if not json_files:
+                return
+                
+            print(f"Migrating {len(json_files)} chat sessions from JSON to database...")
+            
+            # Process each JSON file
+            for session_file in json_files:
+                try:
+                    with open(session_file, "r", encoding="utf-8") as f:
+                        session_data = json.load(f)
+                    
+                    # Create ChatSession object
+                    session = ChatSession.from_dict(session_data)
+                    
+                    # Save to database
+                    self._save_session_to_db(session)
+                    
+                except Exception as e:
+                    print(f"Error migrating session {session_file}: {e}")
+            
+            print("Migration completed successfully.")
+        except Exception as e:
+            print(f"Error during migration: {e}")
+            
+    def _save_session_to_db(self, session: ChatSession):
+        """Save a ChatSession object to the database"""
+        with self.Session() as db_session:
+            # Check if session already exists
+            db_chat_session = db_session.query(DbChatSession).filter_by(session_id=session.session_id).first()
+            
+            if not db_chat_session:
+                # Create new session
+                db_chat_session = DbChatSession(
+                    session_id=session.session_id,
+                    title=session.title,
+                    created_at=session.created_at,
+                    updated_at=session.updated_at,
+                    meta_data=session.metadata
+                )
+                db_session.add(db_chat_session)
+            else:
+                # Update existing session
+                db_chat_session.title = session.title
+                db_chat_session.updated_at = session.updated_at
+                db_chat_session.meta_data = session.metadata
+                
+                # Delete existing messages to avoid duplicates
+                db_session.query(DbChatMessage).filter_by(session_id=session.session_id).delete()
+            
+            # Add messages
+            for message in session.messages:
+                db_message = DbChatMessage(
+                    message_id=message.message_id,
+                    session_id=session.session_id,
+                    role=message.role.value,
+                    content=message.content,
+                    timestamp=message.timestamp,
+                    meta_data=message.metadata
+                )
+                db_session.add(db_message)
+                
+            # Commit changes
+            db_session.commit()
+            
+    def _load_session_from_db(self, session_id: str) -> Optional[ChatSession]:
+        """Load a ChatSession object from the database"""
+        with self.Session() as db_session:
+            # Query session
+            db_chat_session = db_session.query(DbChatSession).filter_by(session_id=session_id).first()
+            
+            if not db_chat_session:
+                return None
+                
+            # Query messages
+            db_messages = db_session.query(DbChatMessage).filter_by(session_id=session_id).all()
+            
+            # Create ChatMessage objects
+            messages = [
+                ChatMessage(
+                    role=MessageRole(msg.role),
+                    content=msg.content,
+                    timestamp=msg.timestamp,
+                    metadata=msg.meta_data,
+                    message_id=msg.message_id
+                )
+                for msg in db_messages
+            ]
+            
+            # Create ChatSession object
+            return ChatSession(
+                session_id=db_chat_session.session_id,
+                title=db_chat_session.title,
+                created_at=db_chat_session.created_at,
+                updated_at=db_chat_session.updated_at,
+                metadata=db_chat_session.meta_data,
+                messages=messages
+            )
 
     def create_session(self, session_id: Optional[str] = None) -> ChatSession:
         """Create a new chat session"""
@@ -203,8 +370,12 @@ class ChatHistoryManager:
 
     def save_session(self, session: ChatSession):
         """Save session to storage (synchronous)"""
-        session_file = self.storage_path / f"{session.session_id}.json"
         try:
+            # Save to database
+            self._save_session_to_db(session)
+            
+            # Also save to JSON for backward compatibility
+            session_file = self.storage_path / f"{session.session_id}.json"
             with open(session_file, "w", encoding="utf-8") as f:
                 json.dump(session.to_dict(), f, ensure_ascii=False, indent=2)
         except Exception as e:
@@ -223,13 +394,22 @@ class ChatHistoryManager:
 
     def load_session(self, session_id: str) -> Optional[ChatSession]:
         """Load session from storage"""
+        # Try to load from database first
+        session = self._load_session_from_db(session_id)
+        if session:
+            return session
+            
+        # Fall back to JSON file for backward compatibility
         session_file = self.storage_path / f"{session_id}.json"
         if not session_file.exists():
             return None
 
         try:
             with open(session_file, "r", encoding="utf-8") as f:
-                return ChatSession.from_dict(json.load(f))
+                session = ChatSession.from_dict(json.load(f))
+                # Save to database for future use
+                self._save_session_to_db(session)
+                return session
         except Exception as e:
             print(f"Error loading session {session_id}: {e}")
             return None
@@ -237,17 +417,42 @@ class ChatHistoryManager:
     def list_sessions(self, limit: int = 50) -> List[Dict[str, Any]]:
         """List all available chat sessions"""
         sessions = []
+        
+        # Get sessions from database
+        with self.Session() as db_session:
+            db_chat_sessions = db_session.query(DbChatSession).all()
+            
+            for db_chat_session in db_chat_sessions:
+                # Count messages for this session
+                message_count = db_session.query(DbChatMessage).filter_by(session_id=db_chat_session.session_id).count()
+                
+                sessions.append({
+                    "session_id": db_chat_session.session_id,
+                    "title": db_chat_session.title or "Untitled Chat",
+                    "created_at": db_chat_session.created_at.isoformat(),
+                    "updated_at": db_chat_session.updated_at.isoformat(),
+                    "message_count": message_count,
+                })
+        
+        # Check for any JSON files not in the database (for backward compatibility)
+        db_session_ids = {session["session_id"] for session in sessions}
         for session_file in self.storage_path.glob("*.json"):
             try:
-                with open(session_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                sessions.append({
-                    "session_id": data["session_id"],
-                    "title": data.get("title", "Untitled Chat"),
-                    "created_at": data["created_at"],
-                    "updated_at": data["updated_at"],
-                    "message_count": len(data.get("messages", [])),
-                })
+                session_id = session_file.stem
+                if session_id not in db_session_ids:
+                    with open(session_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    sessions.append({
+                        "session_id": data["session_id"],
+                        "title": data.get("title", "Untitled Chat"),
+                        "created_at": data["created_at"],
+                        "updated_at": data["updated_at"],
+                        "message_count": len(data.get("messages", [])),
+                    })
+                    # Load and save to database for future use
+                    session = self.load_session(session_id)
+                    if session:
+                        self._save_session_to_db(session)
             except Exception as e:
                 print(f"Error reading session file {session_file}: {e}")
                 
@@ -262,10 +467,19 @@ class ChatHistoryManager:
             if session_id in self.active_sessions:
                 del self.active_sessions[session_id]
                 
-            # Remove file if exists
+            # Delete from database
+            with self.Session() as db_session:
+                # Delete session (cascade will delete messages)
+                db_chat_session = db_session.query(DbChatSession).filter_by(session_id=session_id).first()
+                if db_chat_session:
+                    db_session.delete(db_chat_session)
+                    db_session.commit()
+                
+            # Remove JSON file if exists (for backward compatibility)
             session_file = self.storage_path / f"{session_id}.json"
             if session_file.exists():
                 session_file.unlink()
+                
             return True
         except Exception as e:
             print(f"Error deleting session {session_id}: {e}")
@@ -276,6 +490,38 @@ class ChatHistoryManager:
         cutoff_date = datetime.now() - timedelta(days=days_old)
         deleted_count = 0
 
+        # Delete old sessions from database
+        try:
+            with self.Session() as db_session:
+                # Find old sessions
+                old_sessions = db_session.query(DbChatSession).filter(
+                    DbChatSession.updated_at < cutoff_date
+                ).all()
+                
+                # Get session IDs for JSON file deletion
+                old_session_ids = [session.session_id for session in old_sessions]
+                
+                # Delete sessions from database
+                for session in old_sessions:
+                    db_session.delete(session)
+                    deleted_count += 1
+                
+                db_session.commit()
+                
+                # Remove from active sessions
+                for session_id in old_session_ids:
+                    if session_id in self.active_sessions:
+                        del self.active_sessions[session_id]
+                
+                # Delete corresponding JSON files
+                for session_id in old_session_ids:
+                    session_file = self.storage_path / f"{session_id}.json"
+                    if session_file.exists():
+                        session_file.unlink()
+        except Exception as e:
+            print(f"Error clearing old sessions from database: {e}")
+            
+        # Also check JSON files for any that might not be in the database
         for session_file in self.storage_path.glob("*.json"):
             try:
                 with open(session_file, "r", encoding="utf-8") as f:
