@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.orchestrator.query_orchestrator import run_orchestration
-from backend.orchestrator.chat_history import chat_history_manager
+from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.libs.logger import get_logger
 import shutil
@@ -246,7 +246,13 @@ async def handle_query(request: QueryRequest):
         api_requests_total.labels(status="success").inc()
 
         logger.info("Query processed successfully")
-        return {"response": answer, "sessionId": session_id}
+        
+        return {
+                "response": answer.get("response"),
+                "images": answer.get("images", []),
+                "sessionId": answer.get("session_id", session_id)
+            }
+    
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
         api_requests_total.labels(status="error").inc()
@@ -264,7 +270,7 @@ def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "cch"
         logger.info(f"Pre-embedding process: {preEmbeddingProcess}")
 
         # Ensure uploads directory exists (use absolute path)
-        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir = Path(__file__).parent.parent / "database"
         uploads_dir.mkdir(parents=True, exist_ok=True)
 
         # Save uploaded file
@@ -395,7 +401,7 @@ def list_files():
     """
     try:
         # uploads_dir = Path("uploads")
-        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir = Path(__file__).parent.parent / "database"
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
@@ -429,7 +435,7 @@ def get_metrics():
     """
     try:
         # Get file count
-        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir = Path(__file__).parent.parent / "database"
         file_count = (
             len([f for f in uploads_dir.iterdir() if f.is_file()])
             if uploads_dir.exists()
@@ -496,7 +502,7 @@ def delete_file(filename: str):
         request_counter += 1
 
         # Check if file exists in uploads directory
-        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir = Path(__file__).parent.parent / "database"
         file_path = uploads_dir / filename
 
         logger.debug(f"Checking file existence: {file_path}")
@@ -650,7 +656,7 @@ def download_file(filename: str):
     Download a file from uploads directory.
     """
     try:
-        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir = Path(__file__).parent.parent / "database"
         file_path = uploads_dir / filename
 
         if not file_path.exists():
@@ -674,7 +680,7 @@ def get_file_preview(filename: str):
     Returns different preview types based on file extension.
     """
     try:
-        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir = Path(__file__).parent.parent / "database"
         file_path = uploads_dir / filename
 
         if not file_path.exists():

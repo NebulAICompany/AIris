@@ -462,8 +462,12 @@ class UIComponents {
       const assistantResponse =
         response.response ||
         response.data?.response ||
-
         t('apologizeResponse');
+
+      // Extract images from response
+      const images = response.images || [];
+      
+      console.log(`Received response with ${images.length} images`);
 
       // Update session ID if it was created server-side
       if (response.sessionId && response.sessionId !== this.currentSessionId) {
@@ -472,11 +476,15 @@ class UIComponents {
         await this.loadChatSessions();
       }
 
-      // Add AI response to chat
-      this.addMessageToChat("assistant", assistantResponse);
+      // Add AI response to chat with images
+      this.addMessageToChat("assistant", assistantResponse, images);
 
       // Update chat history
-      this.chatHistory.push({ user: message, assistant: assistantResponse });
+      this.chatHistory.push({ 
+        user: message, 
+        assistant: assistantResponse,
+        images: images 
+      });
     } catch (error) {
       this.hideTypingIndicator();
 
@@ -608,7 +616,7 @@ class UIComponents {
     }
   }
 
-  addMessageToChat(type, content) {
+  addMessageToChat(type, content, images = []) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
@@ -679,6 +687,96 @@ class UIComponents {
     }
 
     chatMessages.appendChild(messageDiv);
+
+    // Add images if any (yeni özellik)
+    if (images && images.length > 0) {
+      console.log(`Adding ${images.length} images to message`);
+      
+      const imagesContainer = document.createElement("div");
+      imagesContainer.className = "message-images";
+      imagesContainer.style.cssText = `
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      `;
+      
+      images.forEach((image, index) => {
+        const imageWrapper = document.createElement("div");
+        imageWrapper.className = "message-image-wrapper";
+        imageWrapper.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+        `;
+        
+        const img = document.createElement("img");
+        img.src = `data:${image.type || 'image/jpeg'};base64,${image.data}`;
+        img.alt = `Attached Image: ${image.filename}`;
+        img.className = "message-image";
+        img.style.cssText = `
+          max-width: 400px;
+          max-height: 300px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          cursor: pointer;
+          transition: all 0.3s ease;
+          object-fit: contain;
+          background: white;
+          border: 2px solid transparent;
+        `;
+        
+        // Hover effects
+        img.addEventListener('mouseenter', () => {
+          img.style.transform = 'scale(1.02)';
+          img.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
+          img.style.borderColor = 'var(--accent-primary, #007bff)';
+        });
+        
+        img.addEventListener('mouseleave', () => {
+          img.style.transform = 'scale(1)';
+          img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          img.style.borderColor = 'transparent';
+        });
+        
+        // Click to expand functionality
+        img.addEventListener('click', () => {
+          this.showImageModal(image);
+        });
+        
+        const caption = document.createElement("div");
+        caption.className = "image-caption";
+        caption.textContent = `📎 ${image.filename}`;
+        caption.style.cssText = `
+          font-size: 0.75em;
+          color: #666;
+          font-family: 'Segoe UI', system-ui, sans-serif;
+          background: rgba(255, 255, 255, 0.9);
+          padding: 4px 8px;
+          border-radius: 4px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          max-width: 400px;
+          word-break: break-all;
+          font-weight: 500;
+        `;
+        
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(caption);
+        imagesContainer.appendChild(imageWrapper);
+      });
+      
+      // Images container'ını message content'in içine ekle
+      const messageContent = messageDiv.querySelector(".message-content");
+      if (messageContent) {
+        messageContent.appendChild(imagesContainer);
+      }
+    }
+
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
     // Apply syntax highlighting and force metadata styling
@@ -720,6 +818,108 @@ class UIComponents {
     if (typingIndicator) {
       typingIndicator.remove();
     }
+  }
+
+  // Image modal for full-size viewing
+  showImageModal(image) {
+    // Remove existing modal if any
+    const existingModal = document.querySelector('.image-modal');
+    if (existingModal) {
+      document.body.removeChild(existingModal);
+    }
+
+    const modal = document.createElement("div");
+    modal.className = "image-modal";
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      cursor: pointer;
+      animation: fadeIn 0.3s ease;
+    `;
+    
+    const img = document.createElement("img");
+    img.src = `data:${image.type || 'image/jpeg'};base64,${image.data}`;
+    img.style.cssText = `
+      max-width: 95%;
+      max-height: 85%;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      object-fit: contain;
+    `;
+    
+    const caption = document.createElement("div");
+    caption.textContent = image.filename;
+    caption.style.cssText = `
+      color: white;
+      font-size: 1.1em;
+      margin-top: 16px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    `;
+    
+    const closeButton = document.createElement("div");
+    closeButton.innerHTML = '✕';
+    closeButton.style.cssText = `
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: white;
+      font-size: 2em;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.5);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    `;
+    
+    closeButton.addEventListener('mouseenter', () => {
+      closeButton.style.background = 'rgba(255, 0, 0, 0.7)';
+    });
+    
+    closeButton.addEventListener('mouseleave', () => {
+      closeButton.style.background = 'rgba(0, 0, 0, 0.5)';
+    });
+    
+    modal.appendChild(img);
+    modal.appendChild(caption);
+    modal.appendChild(closeButton);
+    document.body.appendChild(modal);
+    
+    // Close modal events
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+    
+    closeButton.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+    
+    // ESC key to close
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
   }
 
   clearChat() {
@@ -778,7 +978,10 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          this.addMessageToChat(msg.role, msg.content);
+          // Images are stored in message metadata or content
+          const images = msg.images || [];
+          
+          this.addMessageToChat(msg.role, msg.content, images);
 
           // Update local chat history
           if (msg.role === "user") {
@@ -788,8 +991,8 @@ class UIComponents {
               this.chatHistory.length > 0 &&
               !this.chatHistory[this.chatHistory.length - 1].assistant
             ) {
-              this.chatHistory[this.chatHistory.length - 1].assistant =
-                msg.content;
+              this.chatHistory[this.chatHistory.length - 1].assistant = msg.content;
+              this.chatHistory[this.chatHistory.length - 1].images = images;
             }
           }
         });
