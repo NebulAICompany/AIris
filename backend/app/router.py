@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.orchestrator.query_orchestrator import run_orchestration
-from backend.orchestrator.chat_history import chat_history_manager
+from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.libs.logger import get_logger
 import shutil

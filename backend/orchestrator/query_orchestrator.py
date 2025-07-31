@@ -12,7 +12,7 @@ from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.guardrails.pii import mask_pii, pii_unmask
 from backend.guardrails.filters import check_openai_moderation
 from .reflection import reflect_and_retry
-from .chat_history import chat_history_manager, MessageRole
+from backend.core.chat import chat_history_manager, MessageRole
 import os
 import re
 import base64
