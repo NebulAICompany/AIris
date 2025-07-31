@@ -38,9 +38,9 @@ logs/
 # Kişisel dosyalar
 backend/chat_sessions/
 deneme.txt
-backend/uploads/
+backend/database/
 backend/vectorstore/
-backend/pipelines/uploads/
+backend/images/
 
 # Platform
 Thumbs.db

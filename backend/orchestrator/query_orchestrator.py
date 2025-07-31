@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
 from backend.retrieval.reranker import rerank
 from backend.orchestrator.query_utils import (
     clean_query,
@@ -12,9 +12,10 @@ from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.guardrails.pii import mask_pii, pii_unmask
 from backend.guardrails.filters import check_openai_moderation
 from .reflection import reflect_and_retry
-from .chat_history import chat_history_manager, MessageRole
+from backend.core.chat import chat_history_manager, MessageRole
 import os
 import re
+import base64
 
 VECTORSTORE_PATH = "backend/vectorstore"
 FILES_PATH = "backend/files"
@@ -241,11 +242,69 @@ def preprocess_query(query: str):
 
     return corrected, lang, intent
 
+def extract_image_references_from_context(local_context: str) -> Tuple[str, List[str]]:
+    """
+    Analyze local context for image references and extract image paths.
+    Returns (cleaned_context, image_paths_list)
+    """
+    image_pattern = r'\(\(Image\):([^)]+)\)'
+    image_paths = []
+    
+    print(f"🔍 Analyzing local context for image references...")
+    
+    # Find all image references in the context
+    matches = re.findall(image_pattern, local_context)
+    
+    if matches:
+        print(f"   - Found {len(matches)} image references in context")
+        for match in matches:
+            image_path = match.strip()
+            if image_path not in image_paths:
+                image_paths.append(image_path)
+    
+        # Clean the context from image references
+    cleaned_context = re.sub(image_pattern, '', local_context)
+
+    return cleaned_context, image_paths
+
+def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
+    """
+    Load actual image files based on the extracted paths and convert to base64.
+    Returns list of image data dictionaries.
+    """
+    images_data = []
+    
+    if not image_paths:
+        return images_data
+    
+    print(f"📁 Loading {len(image_paths)} images from filesystem...")
+    
+    for path in image_paths:
+        # Construct the full image path - try both .jpg and .png
+        for ext in ['.jpg', '.png']:
+            image_file_path = f"backend/images/{path}{ext}"
+            
+            if os.path.exists(image_file_path):
+                try:
+                    with open(image_file_path, "rb") as img_file:
+                        img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                        images_data.append({
+                            "filename": f"{path}{ext}",
+                            "data": img_data,
+                            "reference": path,
+                            "type": f"image/{ext[1:]}"  # jpeg or png
+                        })
+                    break  # Found the file, no need to try other extensions
+                except Exception as e:
+                    print(f"   ❌ Error loading image {path}{ext}: {e}")
+
+    
+    return images_data
 
 async def run_orchestration(
     query: str,
-    web_search_enabled: bool,
-    wolfram_enabled: bool = False,
+    web_search_enabled: bool = False,
+    wolfram_enabled: bool = True,
     rag_fusion_enabled: bool = False,
     pre_embedding_process: str = "cch",
     session_id: Optional[str] = None,
@@ -402,11 +461,18 @@ async def run_orchestration(
 
     local_context = "\n\n---\n\n".join(context_entries)
     print(f"   - Local Context: {local_context}")
-    print("using web search ?= ", web_search_enabled)
 
+    cleaned_context, image_paths = extract_image_references_from_context(local_context)
+
+    image_datas = load_images_from_paths(image_paths)
+
+    if image_datas:
+        print(f"   - Found {len(image_datas)} images in context")
+    else:
+        print(f"   - No images found in context")
     # Create the agent with web context and conversation history if available
     agent = create_rag_agent(
-        local_context=local_context,
+        local_context=cleaned_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
         wolfram_enabled=wolfram_enabled,
@@ -444,4 +510,9 @@ async def run_orchestration(
         print(f"   - Added assistant response to session {session_id}")
 
     print(f"🎯 Final response prepared with consistent metadata formatting")
-    return final_answer
+    
+    
+    return {
+        "response":final_answer,
+        "images": image_datas
+    }

@@ -1,4 +1,32 @@
 import base64
+from nltk.tokenize import sent_tokenize
+
+
+def specify_sentence(text, word):
+    """
+    Adds a specified word to the end of each sentence using NLTK for sentence splitting.
+    
+    Args:
+        text (str): Input text.
+        word (str): Word to append at the end of each sentence.
+        
+    Returns:
+        str: Modified text with the word added to each sentence.
+    """
+    sentences = sent_tokenize(text)
+    modified_sentences = []
+    
+    for sentence in sentences:
+        if sentence.strip():  # Skip empty sentences
+            # Check if sentence ends with punctuation
+            if sentence[-1] in {'.', '!', '?'}:
+                modified_sentence = sentence[:-1] + f" {word}" + sentence[-1]
+            else:
+                modified_sentence = sentence + f" {word}"
+            modified_sentences.append(modified_sentence)
+    
+    return ' '.join(modified_sentences)
+
 
 def describe_image(image_bytes, client=None):
         try:

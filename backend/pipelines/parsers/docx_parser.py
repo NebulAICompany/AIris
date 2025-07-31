@@ -1,21 +1,19 @@
-import openai, pythoncom, os
+import pythoncom
 from docx2pdf import convert
-
+from backend.pipelines.uploadpipe import UploadPipeline
+from pathlib import Path
 
 class DocxParser:
-    def __init__(self, file_path: str, txt_output_path: str):
+    def __init__(self, file_path: str, txt_output_path: str, client=None):
         self.file_path = file_path
-        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = client
         self.txt_output_path = txt_output_path
 
     def run(self):
-        from backend.pipelines.uploadpipe import UploadPipeline
-        from pathlib import Path
-
         # Initialize COM at the beginning
         pythoncom.CoInitialize()
 
-        output_dir = Path(__file__).resolve().parent / "uploads"
+        output_dir = Path(__file__).resolve().parent / "database"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(self.file_path).stem + ".pdf")
         convert(self.file_path, str(output_pdf))
