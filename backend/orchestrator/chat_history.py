@@ -1,11 +1,11 @@
 import json
 import uuid
-from datetime import datetime
-from typing import List, Dict, Any, Optional
+from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 import asyncio
 from dataclasses import dataclass, asdict
-from enum import Enum
 
 
 class MessageRole(Enum):
@@ -67,26 +67,13 @@ class ChatSession:
         self.updated_at = datetime.now()
         # Update title if it's the first user message
         if not self.title and message.role == MessageRole.USER:
-            self.title = (
-                message.content[:50] + "..."
-                if len(message.content) > 50
-                else message.content
-            )
+            self.title = message.content[:50] + "..." if len(message.content) > 50 else message.content
 
     def get_context_for_llm(self, max_messages: int = 20) -> List[Dict[str, str]]:
         """Get formatted messages for LLM context"""
         # Get recent messages, prioritizing the most recent ones
-        recent_messages = (
-            self.messages[-max_messages:]
-            if len(self.messages) > max_messages
-            else self.messages
-        )
-
-        context = []
-        for msg in recent_messages:
-            context.append({"role": msg.role.value, "content": msg.content})
-
-        return context
+        recent_messages = self.messages[-max_messages:] if len(self.messages) > max_messages else self.messages
+        return [{"role": msg.role.value, "content": msg.content} for msg in recent_messages]
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
@@ -100,15 +87,13 @@ class ChatSession:
         # Make a copy to avoid modifying the original data
         data_copy = data.copy()
         messages_data = data_copy.pop("messages", [])
-
+        
         # Create session with empty messages list first
         data_copy["messages"] = []
         session = cls(**data_copy)
-
+        
         # Then populate the messages
-        session.messages = [
-            ChatMessage.from_dict(msg_data) for msg_data in messages_data
-        ]
+        session.messages = [ChatMessage.from_dict(msg_data) for msg_data in messages_data]
         return session
 
 
@@ -159,9 +144,7 @@ class ChatHistoryManager:
         metadata: Optional[Dict[str, Any]] = None,
     ) -> ChatMessage:
         """Add a message to a session"""
-        session = self.get_session(session_id)
-        if not session:
-            session = self.create_session(session_id)
+        session = self.get_session(session_id) or self.create_session(session_id)
 
         message = ChatMessage(
             role=role,
@@ -171,10 +154,12 @@ class ChatHistoryManager:
         )
 
         session.add_message(message)
-
-        # Auto-save session (try async first, fallback to sync)
+        self._save_session(session)
+        return message
+        
+    def _save_session(self, session: ChatSession):
+        """Save session with appropriate method (async or sync)"""
         try:
-            # Check if we're in an event loop
             loop = asyncio.get_running_loop()
             task = asyncio.create_task(self.save_session_async(session))
             self._pending_saves.append(task)
@@ -184,18 +169,14 @@ class ChatHistoryManager:
             # No event loop, save synchronously
             self.save_session(session)
 
-        return message
-
     def get_conversation_context(
         self, session_id: str, max_messages: int = None
     ) -> List[Dict[str, str]]:
-        """Get conversation context for LLM"""
+        """Get formatted conversation context for LLM"""
         session = self.get_session(session_id)
         if not session:
             return []
-
-        max_msgs = max_messages or self.max_context_messages
-        return session.get_context_for_llm(max_msgs)
+        return session.get_context_for_llm(max_messages or self.max_context_messages)
 
     def reduce_history(
         self, session: ChatSession, target_messages: int = 10
@@ -204,21 +185,15 @@ class ChatHistoryManager:
         if len(session.messages) <= target_messages:
             return session
 
-        # Always keep the first system message if it exists
-        system_messages = [
-            msg for msg in session.messages if msg.role == MessageRole.SYSTEM
-        ]
-
-        # Keep the most recent messages
+        # Extract system messages and recent messages
+        system_messages = [msg for msg in session.messages if msg.role == MessageRole.SYSTEM]
         recent_messages = session.messages[-target_messages:]
-
-        # Combine system messages with recent messages
-        reduced_messages = system_messages + recent_messages
-
-        # Remove duplicates while preserving order
+        
+        # Combine and deduplicate messages
         seen_ids = set()
         final_messages = []
-        for msg in reduced_messages:
+        
+        for msg in system_messages + recent_messages:
             if msg.message_id not in seen_ids:
                 final_messages.append(msg)
                 seen_ids.add(msg.message_id)
@@ -229,7 +204,6 @@ class ChatHistoryManager:
     def save_session(self, session: ChatSession):
         """Save session to storage (synchronous)"""
         session_file = self.storage_path / f"{session.session_id}.json"
-
         try:
             with open(session_file, "w", encoding="utf-8") as f:
                 json.dump(session.to_dict(), f, ensure_ascii=False, indent=2)
@@ -250,14 +224,12 @@ class ChatHistoryManager:
     def load_session(self, session_id: str) -> Optional[ChatSession]:
         """Load session from storage"""
         session_file = self.storage_path / f"{session_id}.json"
-
         if not session_file.exists():
             return None
 
         try:
             with open(session_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            return ChatSession.from_dict(data)
+                return ChatSession.from_dict(json.load(f))
         except Exception as e:
             print(f"Error loading session {session_id}: {e}")
             return None
@@ -265,41 +237,35 @@ class ChatHistoryManager:
     def list_sessions(self, limit: int = 50) -> List[Dict[str, Any]]:
         """List all available chat sessions"""
         sessions = []
-
         for session_file in self.storage_path.glob("*.json"):
             try:
                 with open(session_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-
-                sessions.append(
-                    {
-                        "session_id": data["session_id"],
-                        "title": data.get("title", "Untitled Chat"),
-                        "created_at": data["created_at"],
-                        "updated_at": data["updated_at"],
-                        "message_count": len(data.get("messages", [])),
-                    }
-                )
+                sessions.append({
+                    "session_id": data["session_id"],
+                    "title": data.get("title", "Untitled Chat"),
+                    "created_at": data["created_at"],
+                    "updated_at": data["updated_at"],
+                    "message_count": len(data.get("messages", [])),
+                })
             except Exception as e:
                 print(f"Error reading session file {session_file}: {e}")
-
+                
         # Sort by updated_at (most recent first)
         sessions.sort(key=lambda x: x["updated_at"], reverse=True)
-
         return sessions[:limit]
 
     def delete_session(self, session_id: str) -> bool:
         """Delete a chat session"""
         try:
-            # Remove from active sessions
+            # Remove from active sessions if exists
             if session_id in self.active_sessions:
                 del self.active_sessions[session_id]
-
-            # Remove file
+                
+            # Remove file if exists
             session_file = self.storage_path / f"{session_id}.json"
             if session_file.exists():
                 session_file.unlink()
-
             return True
         except Exception as e:
             print(f"Error deleting session {session_id}: {e}")
@@ -307,8 +273,6 @@ class ChatHistoryManager:
 
     def clear_old_sessions(self, days_old: int = 30):
         """Clear sessions older than specified days"""
-        from datetime import timedelta
-
         cutoff_date = datetime.now() - timedelta(days=days_old)
         deleted_count = 0
 
@@ -316,18 +280,15 @@ class ChatHistoryManager:
             try:
                 with open(session_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-
                 updated_at = datetime.fromisoformat(data["updated_at"])
                 if updated_at < cutoff_date:
                     session_file.unlink()
                     deleted_count += 1
-
             except Exception as e:
                 print(f"Error processing session file {session_file}: {e}")
 
         print(f"Cleared {deleted_count} old chat sessions")
         return deleted_count
-
 
 # Global chat history manager instance
 chat_history_manager = ChatHistoryManager()
