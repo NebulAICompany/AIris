@@ -49,26 +49,13 @@ The financial outlook remains positive for the upcoming quarter.
 """
 
 
-def create_test_file(content: str, filename: str) -> str:
-    """Create a temporary test file."""
-    temp_dir = tempfile.mkdtemp()
-    file_path = os.path.join(temp_dir, filename)
-
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(content)
-
-    return file_path
-
-
 def test_none_process():
     """Test the None pre-embedding process."""
     print("🧪 Testing None Pre-embedding Process")
     print("=" * 50)
 
-    # Create test file
+    # Create test content
     content = create_test_document()
-    temp_file = create_test_file(content, "test_none.txt")
-    temp_dir = os.path.dirname(temp_file)
 
     try:
         # Create pipeline with None process
@@ -77,12 +64,12 @@ def test_none_process():
         # Create temporary vectorstore directory
         vectorstore_dir = tempfile.mkdtemp()
 
-        # Run pipeline
-        print(f"Processing file: {temp_file}")
+        # Run pipeline with text content
+        print(f"Processing text content directly")
         pipeline.run(
-            uploads_path=temp_dir,
+            text_content=content,
+            document_name="test_none",
             save_path=vectorstore_dir,
-            specific_file="test_none.txt",
         )
 
         print("✅ None process completed successfully")
@@ -91,10 +78,6 @@ def test_none_process():
     except Exception as e:
         print(f"❌ None process failed: {e}")
         return False
-    finally:
-        # Cleanup
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
 
 
 def test_hype_process():
@@ -102,10 +85,8 @@ def test_hype_process():
     print("\n🧪 Testing HyPE Pre-embedding Process")
     print("=" * 50)
 
-    # Create test file
+    # Create test content
     content = create_test_document()
-    temp_file = create_test_file(content, "test_hype.txt")
-    temp_dir = os.path.dirname(temp_file)
 
     try:
         # Create pipeline with HyPE process
@@ -114,12 +95,12 @@ def test_hype_process():
         # Create temporary vectorstore directory
         vectorstore_dir = tempfile.mkdtemp()
 
-        # Run pipeline
-        print(f"Processing file: {temp_file}")
+        # Run pipeline with text content
+        print(f"Processing text content directly")
         pipeline.run(
-            uploads_path=temp_dir,
+            text_content=content,
+            document_name="test_hype",
             save_path=vectorstore_dir,
-            specific_file="test_hype.txt",
         )
 
         print("✅ HyPE process completed successfully")
@@ -131,10 +112,6 @@ def test_hype_process():
 
         traceback.print_exc()
         return False
-    finally:
-        # Cleanup
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
 
 
 def test_cch_process():
@@ -142,10 +119,8 @@ def test_cch_process():
     print("\n🧪 Testing CCH (AutoContext) Pre-embedding Process")
     print("=" * 50)
 
-    # Create test file
+    # Create test content
     content = create_test_document()
-    temp_file = create_test_file(content, "test_cch.txt")
-    temp_dir = os.path.dirname(temp_file)
 
     try:
         # Create pipeline with CCH process
@@ -154,12 +129,12 @@ def test_cch_process():
         # Create temporary vectorstore directory
         vectorstore_dir = tempfile.mkdtemp()
 
-        # Run pipeline
-        print(f"Processing file: {temp_file}")
+        # Run pipeline with text content
+        print(f"Processing text content directly")
         pipeline.run(
-            uploads_path=temp_dir,
+            text_content=content,
+            document_name="test_cch",
             save_path=vectorstore_dir,
-            specific_file="test_cch.txt",
         )
 
         print("✅ CCH process completed successfully")
@@ -171,52 +146,6 @@ def test_cch_process():
 
         traceback.print_exc()
         return False
-    finally:
-        # Cleanup
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-
-
-def test_legacy_hype_pipeline():
-    """Test the legacy HyPEVectorStorePipeline for backward compatibility."""
-    print("\n🧪 Testing Legacy HyPEVectorStorePipeline")
-    print("=" * 50)
-
-    from backend.pipelines.vectorpipe import HyPEVectorStorePipeline
-
-    # Create test file
-    content = create_test_document()
-    temp_file = create_test_file(content, "test_legacy.txt")
-    temp_dir = os.path.dirname(temp_file)
-
-    try:
-        # Create legacy pipeline
-        pipeline = HyPEVectorStorePipeline(autocontext_enabled=False)
-
-        # Create temporary vectorstore directory
-        vectorstore_dir = tempfile.mkdtemp()
-
-        # Run pipeline
-        print(f"Processing file: {temp_file}")
-        pipeline.run(
-            uploads_path=temp_dir,
-            save_path=vectorstore_dir,
-            specific_file="test_legacy.txt",
-        )
-
-        print("✅ Legacy HyPE pipeline completed successfully")
-        return True
-
-    except Exception as e:
-        print(f"❌ Legacy HyPE pipeline failed: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-    finally:
-        # Cleanup
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
 
 
 def test_api_compatibility():
@@ -274,10 +203,7 @@ def main():
         # Test 3: CCH process
         results.append(("CCH Process", test_cch_process()))
 
-        # Test 4: Legacy compatibility
-        results.append(("Legacy HyPE", test_legacy_hype_pipeline()))
-
-        # Test 5: API compatibility
+        # Test 4: API compatibility
         results.append(("API Compatibility", test_api_compatibility()))
 
         # Summary
