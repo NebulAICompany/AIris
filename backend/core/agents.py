@@ -2,8 +2,7 @@ from agents import Agent
 from .tools.mcp import alpha_vantage_mcp_server
 from .prompts import wolfram_instructions
 from typing import List
-from agents.tool import WebSearchTool
-from .tools.api import wolfram_alpha_query
+from .tools.api import wolfram_alpha_query, web_search_tool
 from .tools.base_tools import rag_agent_as_tools
 
 
@@ -20,7 +19,7 @@ def create_rag_agent(
 
     # Include web context
     web_context_part = (
-        f"Use your WebSearchTool to research the topic on the internet and "
+        f"Use your web_search_tool to research the topic on the internet and "
         if web_search_enabled
         else ""
     )
@@ -36,7 +35,7 @@ def create_rag_agent(
 
     tools = rag_agent_as_tools
     if web_search_enabled:
-        tools.append(WebSearchTool())
+        tools.append(web_search_tool)
 
     if wolfram_enabled:
         tools.append(wolfram_alpha_query)
