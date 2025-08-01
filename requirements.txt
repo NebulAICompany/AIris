@@ -42,3 +42,4 @@ openpyxl==3.1.5
 nltk==3.9.1
 langchain_experimental==0.3.4
 sqlalchemy==2.0.29
+azure-ai-textanalytics==5.3.0
