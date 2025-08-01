@@ -19,7 +19,7 @@ text_analytics_client = TextAnalyticsClient(
 def mask_text(text):
     """Mask PII entities in the given text using Azure Text Analytics."""
     result = text_analytics_client.recognize_pii_entities(
-        documents=text,
+        documents=[text],
         string_index_type="UnicodeCodePoint",
         disable_service_logs=True,
         model_version="latest",
@@ -41,17 +41,20 @@ def mask_text(text):
                 masked_text = masked_text[:offset] + mask + masked_text[offset+length:]
         else:
             print(f"Error: {doc.error}")
-
-    with open(map_base_location, "r", encoding="utf-8") as f:
-        try:
-            existing_map = json.load(f)
-        except (json.JSONDecodeError, FileNotFoundError):
-            existing_map = {}
-
-    existing_map.update(masked_map)
-
     with open(map_base_location, "w", encoding="utf-8") as f:
-        json.dump(existing_map, f, ensure_ascii=False, indent=4)
+        json.dump(masked_map, f, ensure_ascii=False, indent=4)
+
+    # with open(map_base_location, "r", encoding="utf-8") as f:
+    #     try:
+    #         existing_map = json.load(f)
+    #     except (FileNotFoundError):
+    #         print("No existing map found, creating a new one.")
+    #         existing_map = {}
+    #
+    # existing_map.update(masked_map)
+    #
+    # with open(map_base_location, "w", encoding="utf-8") as f:
+    #     json.dump(existing_map, f, ensure_ascii=False, indent=4)
 
 
 def unmask_text(text):
