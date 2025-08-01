@@ -6,7 +6,10 @@ from docx import Document
 from openpyxl import Workbook
 from backend.libs.logger import get_logger
 
-FILES_PATH = Path(__file__).parent.parent / "uploads"
+import json
+with open("paths.json", "r") as f:
+    paths = json.load(f)
+FILES_PATH = Path(paths["UPLOADS_PATH"])
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 
