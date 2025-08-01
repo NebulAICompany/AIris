@@ -9,7 +9,10 @@ from backend.pipelines.uploadpipe import UploadPipeline
 import backend.pipelines.vectorpipe as vectorpipe
 
 # Vector store path
-VECTOR_STORE_PATH = "backend/vectorstore"
+import json 
+with open("paths.json", "r") as f:
+    paths = json.load(f)
+VECTOR_STORE_PATH = paths["VECTORSTORE_PATH"]
 
 
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
@@ -18,21 +21,22 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
 
     Args:
         file_path: Path to the uploaded file
-
+        pre_embedding_process: Pre-embedding process to use
     Returns:
         Dictionary with processing results
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
-    _, ext = os.path.splitext(file_path)
-
     try:
         # Step 1: Create UploadPipeline
         pipeline = UploadPipeline(file_path=file_path)
 
         pipeline.run()
-        save_dir = Path(__file__).resolve().parent.parent / "pipelines/uploads"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        save_dir = Path(paths["UPLOADS_PATH"])
 
         # Step 2: Determine the expected output filename
         # All parsers follow the pattern: original_stem + "_txt.txt"
@@ -41,13 +45,9 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
 
         # Step 3: Create or update vector store with the specific file
         from backend.pipelines.vectorpipe import PreEmbeddingProcess
-
-        # Convert string to enum
-        if pre_embedding_process.lower() == "hype":
-            process_enum = PreEmbeddingProcess.HYPE
-        elif pre_embedding_process.lower() == "cch":
-            process_enum = PreEmbeddingProcess.CCH
-        else:
+        try:
+            process_enum = PreEmbeddingProcess[pre_embedding_process.strip().upper()]
+        except (KeyError, AttributeError):
             process_enum = PreEmbeddingProcess.NONE
 
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
