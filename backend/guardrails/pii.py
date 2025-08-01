@@ -41,20 +41,19 @@ def mask_text(text):
                 masked_text = masked_text[:offset] + mask + masked_text[offset+length:]
         else:
             print(f"Error: {doc.error}")
-    with open(map_base_location, "w", encoding="utf-8") as f:
-        json.dump(masked_map, f, ensure_ascii=False, indent=4)
 
-    # with open(map_base_location, "r", encoding="utf-8") as f:
-    #     try:
-    #         existing_map = json.load(f)
-    #     except (FileNotFoundError):
-    #         print("No existing map found, creating a new one.")
-    #         existing_map = {}
-    #
-    # existing_map.update(masked_map)
-    #
-    # with open(map_base_location, "w", encoding="utf-8") as f:
-    #     json.dump(existing_map, f, ensure_ascii=False, indent=4)
+    try:
+        with open(map_base_location, "r", encoding="utf-8") as f:
+            existing_map = json.load(f)
+
+    except:
+        print("No existing map found, creating a new one.")
+        existing_map = {}
+
+    existing_map.update(masked_map)
+
+    with open(map_base_location, "w", encoding="utf-8") as f:
+        json.dump(existing_map, f, ensure_ascii=False, indent=4)
 
 
 def unmask_text(text):
