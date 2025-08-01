@@ -356,16 +356,8 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                     f"🔒 Applying PII masking to all {len(processed_docs)} documents..."
                 )
                 for doc in processed_docs:
-                    masked, mapping = mask_text(doc.page_content)
+                    masked = mask_text(doc.page_content)
                     doc.page_content = masked
-
-                    # Store PII mapping with unique identifier
-                    doc_id = doc.metadata.get("chunk_id")
-                    if doc.metadata.get("content_type") == "hypothetical_prompt":
-                        doc_id = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
-                        doc.metadata["chunk_id"] = doc_id
-
-                    pii_chunk_maps[doc_id] = mapping
 
                 # Add documents to vectorstore
                 print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
@@ -558,16 +550,9 @@ class HyPEVectorStorePipeline(VectorStorePipeline):
                 # PII Masking for all documents (original + prompt documents)
                 print(f"🔒 Applying PII masking to all {enhanced_count} documents...")
                 for doc in enhanced_docs:
-                    masked, mapping = mask_text(doc.page_content)
+                    masked = mask_text(doc.page_content)
                     doc.page_content = masked
 
-                    # Store PII mapping with unique identifier
-                    doc_id = doc.metadata.get("chunk_id")
-                    if doc.metadata.get("content_type") == "hypothetical_prompt":
-                        doc_id = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
-                        doc.metadata["chunk_id"] = doc_id
-
-                    pii_chunk_maps[doc_id] = mapping
 
                 # Add documents to vectorstore
                 print(f"🗄️ Adding {len(enhanced_docs)} documents to vectorstore...")

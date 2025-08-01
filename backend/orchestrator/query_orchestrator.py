@@ -363,7 +363,7 @@ async def run_orchestration(
         return f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
 
     # 3. Hassas bilgileri maskele
-    masked_query, pii_map = mask_text(preprocessed_query)
+    masked_query = mask_text(preprocessed_query)
     print(f"Masked Query: {masked_query}")
 
     rse_enabled = False
