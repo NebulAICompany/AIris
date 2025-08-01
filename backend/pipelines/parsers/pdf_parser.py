@@ -8,13 +8,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class PdfParser:
-    def __init__(self, pdf_path: str, txt_output_path: str, client=None):
+    def __init__(self, pdf_path: str, client=None):
         
         self.pdf_path = pdf_path
         self.client = client
         self.azure_endpoint_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
         self.azure_key_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
-        self.txt_output_path = txt_output_path
         
 
         if not self.azure_endpoint_doc_intel or not self.azure_key_doc_intel:
@@ -32,8 +31,8 @@ class PdfParser:
         # PDF dosyasını analiz et ve sonuçları al
         images_dir = Path(__file__).resolve().parents[2] / "images"
         images_dir.mkdir(parents=True, exist_ok=True)
-        extracted_data = self.process_pages_in_memory(2, images_dir)
-        return extracted_data
+        extracted_text = self.process_pages_in_memory(2, images_dir)
+        return extracted_text
 
     def process_pages_in_memory(self, pages_per_part=2, images_dir=None):
         dpi = 300
@@ -41,8 +40,10 @@ class PdfParser:
         pdf = fitz.open(self.pdf_path)
         num_pages = len(pdf)
 
-        with open(self.txt_output_path, "w", encoding="utf-8") as dosya:
-            for start_page in range(0, num_pages, pages_per_part):
+        # Text content'i bellekte biriktir
+        content_parts = []
+        
+        for start_page in range(0, num_pages, pages_per_part):
                 end_page = min(start_page + pages_per_part, num_pages)
 
                 # Sayfaları bellekte yeni bir PDF olarak oluştur
@@ -63,7 +64,7 @@ class PdfParser:
                 # Sayfa sayfa işleme
                 for local_page_num, page_num in enumerate(range(start_page, end_page)):
                     page = pdf.load_page(page_num)
-                    dosya.write(f"\n------Page {page_num + 1}------\n\n")
+                    content_parts.append(f"\n------Page {page_num + 1}------\n\n")
                     
                     occupied_boxes = []
                     mat = fitz.Matrix(dpi / 72, dpi / 72)
@@ -132,7 +133,7 @@ class PdfParser:
                             description = describe_image(img_bytes, client=self.client)
                             updated_description = specify_sentence(description, f"((Image):{image_reference})")
 
-                            dosya.write(f"{updated_description}\n---\n")
+                            content_parts.append(f"{updated_description}\n---\n")
                             occupied_boxes.append(expanded)
                     pix = None  # Bellek temizleme
 
@@ -147,7 +148,7 @@ class PdfParser:
                         if any(rects_overlap(region, occ) for region in table_regions for occ in occupied_boxes):
                             continue
                                     
-                        dosya.write(f"\n[Table {table_counter + 1}]\n")
+                        content_parts.append(f"\n[Table {table_counter + 1}]\n")
                         table_content = []
                         max_col = max(cell.column_index for cell in table.cells)
                         max_row = max(cell.row_index for cell in table.cells)
@@ -157,15 +158,15 @@ class PdfParser:
                                 cell = next((cell for cell in table.cells if cell.row_index == row_index and cell.column_index == col_index), None,)
                                 content = cell.content if cell else ""
                                 if content:
-                                    dosya.write(f"[{row_index},{col_index}]: {content}\n")
+                                    content_parts.append(f"[{row_index},{col_index}]: {content}\n")
                                     table_content.append(content)
 
                         table_description = describe_table(table_content, client=self.client)
-                        dosya.write(f"[Description] = {table_description}\n")
+                        content_parts.append(f"[Description] = {table_description}\n")
                         occupied_boxes.extend(table_regions)
 
                     if page_tables:
-                        dosya.write("\n---\n")
+                        content_parts.append("\n---\n")
 
                     # Paragrafları işle
                     page_paragraphs = [
@@ -178,13 +179,17 @@ class PdfParser:
                         
                         sentences = nltk.sent_tokenize(paragraph.content)
                         for sentence in sentences:
-                            dosya.write(sentence + " ")
-                        dosya.write("\n")
+                            content_parts.append(sentence + " ")
+                        content_parts.append("\n")
 
                 print(f"{start_page+1}-{end_page}. sayfalar bellekte işlendi.")
 
         pdf.close()
-        print(f"Tüm PDF {self.txt_output_path} dosyasına kaydedildi.")
+        
+        # Tüm content_parts'ı birleştir ve return et
+        extracted_text = "".join(content_parts)
+        print(f"PDF text extraction completed. Total length: {len(extracted_text)} characters")
+        return extracted_text
 
 
 def rects_overlap(r1, r2):
@@ -246,5 +251,7 @@ def convert_to_rect(box):
 if __name__ == "__main__":
     pdf_path = "tcmb.pdf"  # senin pdf yolun
     print("\nTüm görsel elementler genişletilerek ve birleştirilerek tespit ediliyor...")
-    PdfParser(pdf_path, "output.txt").run()
+    parser = PdfParser(pdf_path)
+    extracted_text = parser.run()
+    print(f"Extracted text length: {len(extracted_text)} characters")
     print("\nİşlem tamamlandı!")

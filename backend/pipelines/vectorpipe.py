@@ -248,12 +248,10 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             )
             try:
                 enhanced_docs = self.create_enhanced_documents(docs, file_name)
-                original_count = len(docs)
-                enhanced_count = len(enhanced_docs)
-                prompt_count = enhanced_count - original_count
+                prompt_count = len(enhanced_docs) - len(docs)
 
                 print(
-                    f"✅ HyPE applied: {original_count} original + {prompt_count} prompt documents = {enhanced_count} total"
+                    f"✅ HyPE applied: {prompt_count} times total"
                 )
                 return enhanced_docs
 
@@ -266,32 +264,26 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             print(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
-    def run(self, uploads_path: str, save_path: str, specific_file: str = None):
+    def run(self, text_content: str, document_name: str, save_path: str):
+        """
+        Process text content directly without reading from files
+        
+        Args:
+            text_content: The extracted text content from parser
+            document_name: Name of the document (for metadata)
+            save_path: Path to save the vector store
+        """
         start_time = time.time()
 
         try:
-            if specific_file:
-                # Process only the specific file if provided
-                if os.path.exists(
-                    os.path.join(uploads_path, specific_file)
-                ) and specific_file.endswith((".txt")):
-                    files = [specific_file]
-                    print(f"Processing specific file: {specific_file}")
-                else:
-                    print(f"Specific file {specific_file} not found or not a .txt file")
-                    return
-            else:
-                # Original behavior: process all .txt files
-                files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
-                if not files:
-                    print("No text files found in uploads directory")
-                    return
+            if not text_content or not text_content.strip():
+                print("❌ No valid text content provided")
+                return
 
-            total_text_length = 0
             chunk_idx = 0
             pii_chunk_maps = {}
 
-            # Ensure save_path exists before saving the PII maps or vectorstore
+            # Ensure save_path exists
             os.makedirs(save_path, exist_ok=True)
             vectorstore_path = save_path
 
@@ -308,284 +300,56 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 print("Creating new vector store...")
                 vectorstore = None
 
-            print(
-                f"🚀 Starting vector store processing with pre-embedding process: {self.pre_embedding_process.value}"
-            )
+            print(f"🚀 Processing text content with pre-embedding process: {self.pre_embedding_process.value}")
+            print(f"📖 Processing {len(text_content)} characters from {document_name}")
 
-            for file in files:
-                file_path = os.path.join(uploads_path, file)
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        text = f.read()
-                        if not text.strip():
-                            continue
-                        total_text_length += len(text)
-                        print(f"📖 Read {len(text)} characters from {file}")
-                except Exception as e:
-                    print(f"❌ Error reading file {file}: {str(e)}")
-                    continue
-
-                # Split the text into semantic chunks for this file
-                print(f"✂️ Splitting {file} into semantic chunks...")
-                docs = self.text_splitter.create_documents([text])
-                if not docs:
-                    print(f"⚠️ Warning: No chunks were created for file {file}.")
-                    continue
-
-                print(f"✅ File '{file}' split into {len(docs)} semantic chunks")
-
-                # Add basic metadata to original chunks
-                for doc in docs:
-                    if not hasattr(doc, "metadata") or doc.metadata is None:
-                        doc.metadata = {}
-                    doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
-                    doc.metadata["file_name"] = file
-                    doc.metadata["content_type"] = "original"
-                    chunk_idx += 1
-
-                    if '(Image)' in doc.page_content:  # Check if the chunk contains an image
-                            doc.metadata["contains_image"] = True
-                    else:
-                        doc.metadata["contains_image"] = False
-
-                # Apply selected pre-embedding process
-                processed_docs = self.apply_pre_embedding_process(docs, file)
-
-                # PII Masking for all documents
-                print(
-                    f"🔒 Applying PII masking to all {len(processed_docs)} documents..."
-                )
-                for doc in processed_docs:
-                    masked, mapping = pii_mask(doc.page_content)
-                    doc.page_content = masked
-
-                    # Store PII mapping with unique identifier
-                    doc_id = doc.metadata.get("chunk_id")
-                    if doc.metadata.get("content_type") == "hypothetical_prompt":
-                        doc_id = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
-                        doc.metadata["chunk_id"] = doc_id
-
-                    pii_chunk_maps[doc_id] = mapping
-
-                # Add documents to vectorstore
-                print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
-                if vectorstore is None:
-                    vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
-                else:
-                    vectorstore.add_documents(processed_docs)
-
-                # Clean up processed .txt file
-                if file.endswith(".txt"):
-                    os.remove(file_path)
-                    print(f"🗑️ Deleted processed .txt file: {file}")
-
-            if chunk_idx == 0:
-                print("❌ No valid text content found in files")
+            # Split the text into semantic chunks
+            print(f"✂️ Splitting {document_name} into semantic chunks...")
+            docs = self.text_splitter.create_documents([text_content])
+            if not docs:
+                print(f"⚠️ Warning: No chunks were created for {document_name}.")
                 return
 
-            print(f"📈 Total text processed: {total_text_length} characters")
-            print(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
+            print(f"✅ Document '{document_name}' split into {len(docs)} semantic chunks")
 
-            # Update metrics
-            vectorstore_total_chunks.observe(vectorstore.index.ntotal)
+            # Add basic metadata to original chunks
+            for doc in docs:
+                if not hasattr(doc, "metadata") or doc.metadata is None:
+                    doc.metadata = {}
+                doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
+                doc.metadata["file_name"] = f"{document_name}"  # Keep compatibility with existing code
+                doc.metadata["content_type"] = "original"
+                doc.metadata["contains_image"] = False
+                
+                if '(Image)' in doc.page_content:
+                    doc.metadata["contains_image"] = True
+                
+                chunk_idx += 1
 
-            # Save the PII maps for all chunks
-            pii_map_path = os.path.join(save_path, "pii_chunk_maps.json")
-            with open(pii_map_path, "w", encoding="utf-8") as f:
-                json.dump(pii_chunk_maps, f, ensure_ascii=False, indent=2)
+            # Apply selected pre-embedding process
+            processed_docs = self.apply_pre_embedding_process(docs, document_name)
 
-            # Save the vectorstore
-            vectorstore.save_local(vectorstore_path)
-            print(f"💾 Vector store saved to: {vectorstore_path}")
+            # PII Masking for all documents
+            print(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
+            for doc in processed_docs:
+                masked, mapping = pii_mask(doc.page_content)
+                doc.page_content = masked
 
-            # Log processing time
-            processing_time = time.time() - start_time
-            print(f"⏱️ Processing completed in {processing_time:.2f} seconds")
+                # Store PII mapping with unique identifier
+                doc_id = doc.metadata.get("chunk_id")
+                if doc.metadata.get("content_type") == "hypothetical_prompt":
+                    doc.metadata["chunk_id"] = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
 
-        except Exception as e:
-            print(f"❌ Error in vector store processing: {str(e)}")
-            raise e
+                pii_chunk_maps[doc_id] = mapping
 
-
-# Legacy class for backward compatibility
-class HyPEVectorStorePipeline(VectorStorePipeline):
-    """
-    Legacy HyPE-Enhanced Vector Store Pipeline
-    Maintained for backward compatibility - now uses the new VectorStorePipeline with HyPE process
-    """
-
-    def __init__(self, autocontext_enabled: bool = False):
-        # Convert legacy parameters to new system
-        if autocontext_enabled:
-            process = PreEmbeddingProcess.CCH
-        else:
-            process = PreEmbeddingProcess.HYPE
-
-        super().__init__(pre_embedding_process=process)
-
-        # Keep legacy attribute for compatibility
-        self.autocontext_enabled = autocontext_enabled
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    def run(self, uploads_path: str, save_path: str, specific_file: str = None):
-        start_time = time.time()
-
-        try:
-            if specific_file:
-                # Process only the specific file if provided
-                if os.path.exists(
-                    os.path.join(uploads_path, specific_file)
-                ) and specific_file.endswith((".txt")):
-                    files = [specific_file]
-                    print(f"Processing specific file: {specific_file}")
-                else:
-                    print(f"Specific file {specific_file} not found or not a .txt file")
-                    return
+            # Add documents to vectorstore
+            print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
+            if vectorstore is None:
+                vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
             else:
-                # Original behavior: process all .txt files
-                files = [f for f in os.listdir(uploads_path) if f.endswith((".txt"))]
-                if not files:
-                    print("No text files found in uploads directory")
-                    return
+                vectorstore.add_documents(processed_docs)
 
-            total_text_length = 0
-            chunk_idx = 0
-            pii_chunk_maps = {}
-
-            # Ensure save_path exists before saving the PII maps or vectorstore
-            os.makedirs(save_path, exist_ok=True)
-            vectorstore_path = save_path
-
-            # Load or create vectorstore
-            if os.path.exists(os.path.join(vectorstore_path, "index.faiss")):
-                print("Loading existing vector store...")
-                vectorstore = FAISS.load_local(
-                    vectorstore_path,
-                    self.embeddings,
-                    allow_dangerous_deserialization=True,
-                )
-                print(f"Loaded {vectorstore.index.ntotal} existing chunks")
-            else:
-                print("Creating new vector store...")
-                vectorstore = None
-
-            print("🚀 Starting HyPE (Hypothetical Prompt Embeddings) processing...")
-
-            for file in files:
-                file_path = os.path.join(uploads_path, file)
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        text = f.read()
-                        if not text.strip():
-                            continue
-                        total_text_length += len(text)
-                        print(f"📖 Read {len(text)} characters from {file}")
-                except Exception as e:
-                    print(f"❌ Error reading file {file}: {str(e)}")
-                    continue
-
-                # Split the text into semantic chunks for this file
-                print(f"✂️ Splitting {file} into semantic chunks...")
-                docs = self.text_splitter.create_documents([text])
-                if not docs:
-                    print(f"⚠️ Warning: No chunks were created for file {file}.")
-                    continue
-
-                print(f"✅ File '{file}' split into {len(docs)} semantic chunks")
-
-                # Add basic metadata to original chunks
-                for doc in docs:
-                    if not hasattr(doc, "metadata") or doc.metadata is None:
-                        doc.metadata = {}
-                    doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
-                    doc.metadata["file_name"] = file
-                    doc.metadata["content_type"] = "original"
-                    chunk_idx += 1
-
-                # Apply AutoContext processing if enabled (legacy behavior)
-                if self.autocontext_enabled:
-                    print(f"🔗 Applying AutoContext to {file}...")
-                    try:
-                        # Handle event loop properly for async AutoContext processing
-                        def run_autocontext():
-                            try:
-                                loop = asyncio.get_event_loop()
-                                if loop.is_running():
-                                    # If loop is already running, create a new thread
-                                    import concurrent.futures
-
-                                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                                        future = executor.submit(
-                                            lambda: asyncio.run(
-                                                apply_autocontext(
-                                                    docs, file_name=file, enabled=True
-                                                )
-                                            )
-                                        )
-                                        return future.result()
-                                else:
-                                    return loop.run_until_complete(
-                                        apply_autocontext(
-                                            docs, file_name=file, enabled=True
-                                        )
-                                    )
-                            except RuntimeError:
-                                # No event loop exists, create a new one
-                                return asyncio.run(
-                                    apply_autocontext(
-                                        docs, file_name=file, enabled=True
-                                    )
-                                )
-
-                        docs = run_autocontext()
-                        print(f"✅ AutoContext applied to {len(docs)} chunks")
-                    except Exception as e:
-                        print(f"⚠️ AutoContext processing failed for {file}: {e}")
-                        # Continue with original docs if AutoContext fails
-
-                # Generate hypothetical prompts and create enhanced document set
-                print(f"❓ Generating hypothetical prompts for {file}...")
-                enhanced_docs = self.create_enhanced_documents(docs, file)
-
-                original_count = len(docs)
-                enhanced_count = len(enhanced_docs)
-                prompt_count = enhanced_count - original_count
-
-                print(
-                    f"📊 Enhanced document set: {original_count} original + {prompt_count} prompt documents = {enhanced_count} total"
-                )
-
-                # PII Masking for all documents (original + prompt documents)
-                print(f"🔒 Applying PII masking to all {enhanced_count} documents...")
-                for doc in enhanced_docs:
-                    masked, mapping = pii_mask(doc.page_content)
-                    doc.page_content = masked
-
-                    # Store PII mapping with unique identifier
-                    doc_id = doc.metadata.get("chunk_id")
-                    if doc.metadata.get("content_type") == "hypothetical_prompt":
-                        doc_id = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
-                        doc.metadata["chunk_id"] = doc_id
-
-                    pii_chunk_maps[doc_id] = mapping
-
-                # Add documents to vectorstore
-                print(f"🗄️ Adding {len(enhanced_docs)} documents to vectorstore...")
-                if vectorstore is None:
-                    vectorstore = FAISS.from_documents(enhanced_docs, self.embeddings)
-                else:
-                    vectorstore.add_documents(enhanced_docs)
-
-                # Clean up processed .txt file
-                if file.endswith(".txt"):
-                    os.remove(file_path)
-                    print(f"🗑️ Deleted processed .txt file: {file}")
-
-            if chunk_idx == 0:
-                print("❌ No valid text content found in files")
-                return
-
-            print(f"📈 Total text processed: {total_text_length} characters")
+            print(f"📈 Total text processed: {len(text_content)} characters")
             print(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
 
             # Update metrics

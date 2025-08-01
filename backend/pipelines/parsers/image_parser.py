@@ -4,10 +4,9 @@ import io
 from backend.pipelines.parsers.tools import describe_image, specify_sentence
 
 class ImageParser:
-    def __init__(self, file_path: str, txt_output_path: str, client=None):
+    def __init__(self, file_path: str, client=None):
         self.file_path = file_path
         self.client = client
-        self.txt_output_path = txt_output_path
 
     def run(self):
         image_path = Path(self.file_path)
@@ -25,22 +24,22 @@ class ImageParser:
         images_dir = Path(__file__).parent.parent / "images"
         images_dir.mkdir(exist_ok=True)
 
+        # Image reference için sadece dosya adını kullan (uzantısız)
+        image_reference = Path(self.file_path).stem
+        
         # Görseli kaydet
         saved_image_path = images_dir / f"{image_reference}.png"
         image.save(saved_image_path, format='PNG')
 
-        # Image reference için sadece dosya adını kullan (uzantısız)
-        image_reference = Path(self.file_name).stem
         # Açıklamayı al
         description = describe_image(image_bytes, client=self.client)
         updated_description = specify_sentence(description, f"((Image):{image_reference})")
 
-        # Açıklama dosyasına yaz
-        with open(self.txt_output_path, "w", encoding="utf-8") as f:
-            f.write("Açıklama:\n")
-            f.write(updated_description + "\n")
-
-        print(f"Açıklama {self.txt_output_path} dosyasına kaydedildi.")
+        # Text content'i hazırla
+        content = f"Açıklama:\n{updated_description}\n"
+        
+        print(f"Image text extraction completed. Total length: {len(content)} characters")
+        return content
 
 
     def get_mime_type(self):
