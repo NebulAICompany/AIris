@@ -3,7 +3,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from backend.guardrails.pii import pii_mask
+from backend.guardrails.pii import mask_text
 import json
 from openai import OpenAI
 from pathlib import Path
@@ -356,7 +356,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                     f"🔒 Applying PII masking to all {len(processed_docs)} documents..."
                 )
                 for doc in processed_docs:
-                    masked, mapping = pii_mask(doc.page_content)
+                    masked, mapping = mask_text(doc.page_content)
                     doc.page_content = masked
 
                     # Store PII mapping with unique identifier
@@ -558,7 +558,7 @@ class HyPEVectorStorePipeline(VectorStorePipeline):
                 # PII Masking for all documents (original + prompt documents)
                 print(f"🔒 Applying PII masking to all {enhanced_count} documents...")
                 for doc in enhanced_docs:
-                    masked, mapping = pii_mask(doc.page_content)
+                    masked, mapping = mask_text(doc.page_content)
                     doc.page_content = masked
 
                     # Store PII mapping with unique identifier
