@@ -33,7 +33,7 @@ def mask_text(text):
             masked_spans = []
             for entity in sorted_entities:
                 cat = entity.category.lower()
-                unique_id = str(uuid.uuid4())[:4]
+                unique_id = str(uuid.uuid4())[:8]
                 mask = f"[{cat}-{unique_id}]"
                 masked_spans.append((entity.offset, entity.length, mask, entity.text))
                 masked_map[mask] = entity.text
@@ -42,8 +42,16 @@ def mask_text(text):
         else:
             print(f"Error: {doc.error}")
 
+    with open(map_base_location, "r", encoding="utf-8") as f:
+        try:
+            existing_map = json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            existing_map = {}
+
+    existing_map.update(masked_map)
+
     with open(map_base_location, "w", encoding="utf-8") as f:
-        json.dump(masked_map, f, ensure_ascii=False, indent=4)
+        json.dump(existing_map, f, ensure_ascii=False, indent=4)
 
 
 def unmask_text(text):

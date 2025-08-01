@@ -9,7 +9,7 @@ from backend.orchestrator.query_utils import (
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
-from backend.guardrails.pii import mask_pii, pii_unmask
+from backend.guardrails.pii import mask_text, unmask_text
 from backend.guardrails.filters import check_openai_moderation
 from .reflection import reflect_and_retry
 from backend.core.chat import chat_history_manager, MessageRole
@@ -363,7 +363,7 @@ async def run_orchestration(
         return f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
 
     # 3. Hassas bilgileri maskele
-    masked_query, pii_map = mask_pii(preprocessed_query)
+    masked_query, pii_map = mask_text(preprocessed_query)
     print(f"Masked Query: {masked_query}")
 
     rse_enabled = False
@@ -500,7 +500,7 @@ async def run_orchestration(
         final_answer = "Üzgünüm, bu yanıt uygun değil. Lütfen farklı bir soru sorun."
 
     # 7. Maske çöz
-    final_answer = pii_unmask(final_answer, pii_map)
+    final_answer = unmask_text(final_answer)
 
     # 8. Add assistant response to chat history
     if session_id:
