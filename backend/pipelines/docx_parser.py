@@ -15,7 +15,10 @@ class DocxParser:
         # Initialize COM at the beginning
         pythoncom.CoInitialize()
 
-        output_dir = Path(__file__).resolve().parent / "uploads"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        output_dir = Path(paths["UPLOADS_PATH"])
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(self.file_path).stem + ".pdf")
         convert(self.file_path, str(output_pdf))

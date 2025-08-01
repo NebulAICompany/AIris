@@ -11,9 +11,10 @@ from nltk.tokenize import sent_tokenize
 
 # Download required NLTK data
 try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    nltk.download("punkt", quiet=True)
+    nltk.data.find("tokenizers/punkt_tab")
+except Exception as e:
+    print(f"Error downloading NLTK data: {e}")
+    nltk.download("punkt_tab", quiet=True)
 
 
 class PdfParser:

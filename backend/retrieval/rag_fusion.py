@@ -93,15 +93,22 @@ Generated queries:"""
         return [original_query]
 
 
-def reciprocal_rank_fusion(
-    search_results_dict: Dict[str, List[Dict[str, Any]]], k: int = 60
-) -> List[Dict[str, Any]]:
+def fuse_results(search_results_dict: Dict[str, List[Dict[str, Any]]], combination_method: str = "rrf") -> List[Dict[str, Any]]:
+    """
+    Fuse multiple results into a single result.
+    """
+    if combination_method == "rrf":
+        return reciprocal_rank_fusion(search_results_dict)
+    else:
+        return search_results_dict
+
+
+def reciprocal_rank_fusion(search_results_dict: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
     """
     Apply Reciprocal Rank Fusion to combine search results from multiple queries.
 
     Args:
         search_results_dict: Dictionary mapping query -> list of search results
-        k: RRF parameter (default 60 as commonly used)
 
     Returns:
         List of reranked documents with fused scores
@@ -134,7 +141,7 @@ def reciprocal_rank_fusion(
             if doc_id not in fused_scores:
                 fused_scores[doc_id] = 0
 
-            rrf_score = 1 / (rank + k)
+            rrf_score = 1 / (rank + 60)
             fused_scores[doc_id] += rrf_score
 
             logger.debug(
@@ -185,7 +192,7 @@ async def retrieve_with_fusion(
     query: str,
     k: int = 15,
     num_queries: int = 4,
-    rrf_k: int = 60,
+    excessive_k: int = 60,
     final_rerank: bool = True,
     top_n: int = 5,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
@@ -196,7 +203,7 @@ async def retrieve_with_fusion(
         query: Original user query
         k: Number of documents to retrieve per query
         num_queries: Number of additional queries to generate
-        rrf_k: RRF parameter
+        excessive_k: Fusion parameter
         final_rerank: Whether to apply final reranking with Cohere
         top_n: Final number of documents to return
 
@@ -221,13 +228,12 @@ async def retrieve_with_fusion(
 
         for i, fusion_query in enumerate(queries):
             logger.info(f"  Query {i+1}: {fusion_query}")
-            search_results = retrieve_top_k(fusion_query, k=k)
+            search_results = retrieve_top_k(fusion_query, k=excessive_k)
             all_results[fusion_query] = search_results
             logger.info(f"    Retrieved {len(search_results)} documents")
 
         # Step 3: Apply Reciprocal Rank Fusion
-        logger.info("🔄 RAG Fusion: Applying Reciprocal Rank Fusion")
-        fused_results = reciprocal_rank_fusion(all_results, k=rrf_k)
+        fused_results = fuse_results(all_results, combination_method="rrf")
 
         if not fused_results:
             logger.warning("RAG Fusion: No results after fusion")
@@ -240,7 +246,6 @@ async def retrieve_with_fusion(
         # Step 4: Optional final reranking
         final_docs = fused_results
         if final_rerank and len(fused_results) > 1:
-            logger.info("🎯 RAG Fusion: Applying final reranking")
             try:
                 # Prepare documents for reranking (remove fusion scores for reranker)
                 rerank_docs = []
@@ -281,7 +286,6 @@ async def retrieve_with_fusion(
             "fusion_applied": True,
             "total_queries": len(queries),
             "documents_per_query": k,
-            "rrf_k": rrf_k,
             "final_rerank": final_rerank,
             "total_retrieved": len(fused_results),
             "final_returned": len(result_docs),
