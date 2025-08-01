@@ -2,10 +2,17 @@ import os
 import requests
 import xml.etree.ElementTree as ET
 from agents import function_tool
+from tavily import TavilyClient
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
 
 @function_tool
-def wolfram_alpha_query(query: str, app_id: str = os.getenv("WOLFRAM_APP_ID")) -> str:
+def wolfram_alpha_query(query: str) -> str:
     """
     Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
 
@@ -16,7 +23,7 @@ def wolfram_alpha_query(query: str, app_id: str = os.getenv("WOLFRAM_APP_ID")) -
         The result from Wolfram Alpha as a string
     """
     url = "http://api.wolframalpha.com/v2/query"
-    params = {"input": query, "appid": app_id, "output": "XML"}
+    params = {"input": query, "appid": os.getenv("WOLFRAM_APP_ID"), "output": "XML"}
     try:
         response = requests.get(url, params=params)
 
@@ -57,3 +64,22 @@ def wolfram_alpha_query(query: str, app_id: str = os.getenv("WOLFRAM_APP_ID")) -
 
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+@function_tool
+def web_search_tool(query: str, max_results: int = 5) -> list:
+    """
+    Perform a web search using Tavily and return the results.
+
+    Args:
+        query: The search query to perform.
+        max_results: The maximum number of results to return.
+
+    Returns:
+        A list of search results.
+    """
+    try:
+        response = tavily_client.search(query, max_results=max_results)
+        return response['results']
+    except Exception as e:
+        return [{"error": str(e)}]
