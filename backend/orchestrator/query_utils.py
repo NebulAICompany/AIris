@@ -18,7 +18,7 @@ try:
         jvmPath = getDefaultJVMPath()
         print(f"JVM Path: {jvmPath}")
         zemberek_path = os.path.join(
-            os.path.dirname(__file__), "..", "libs", "zemberek-full.jar"
+            os.path.dirname(__file__), "..", "shared", "zemberek-full.jar"
         )
         startJVM(jvmPath, "-ea", f"-Djava.class.path={zemberek_path}")
 
@@ -109,3 +109,10 @@ def normalize_repeated_chars(word: str) -> str:
         i = j
 
     return "".join(result)
+
+
+if __name__ == "__main__":
+    # Test the functions
+    test_query = "Bu bir test cümlesidir. Bu cümledeki yazım hatalarını kontrol et."
+    print("Original Query:", test_query)
+    print("Detected Language:", detect_language(test_query))

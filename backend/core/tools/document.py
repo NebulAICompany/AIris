@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 from docx import Document
 from openpyxl import Workbook
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 
 import json
 with open("paths.json", "r") as f:
