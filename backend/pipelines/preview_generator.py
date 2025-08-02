@@ -4,36 +4,11 @@ import io
 import tempfile
 from pathlib import Path
 from typing import Dict, Any
-
-try:
-    import fitz  # PyMuPDF for PDF handling
-    FITZ_AVAILABLE = True
-except ImportError:
-    FITZ_AVAILABLE = False
-
-try:
-    from PIL import Image, ImageDraw, ImageFont
-    PIL_AVAILABLE = True
-except ImportError:
-    PIL_AVAILABLE = False
-
-try:
-    import pandas as pd
-    PANDAS_AVAILABLE = True
-except ImportError:
-    PANDAS_AVAILABLE = False
-
-try:
-    from docx import Document as DocxDocument
-    DOCX_AVAILABLE = True
-except ImportError:
-    DOCX_AVAILABLE = False
-
-try:
-    from docx2pdf import convert
-    DOCX2PDF_AVAILABLE = True
-except ImportError:
-    DOCX2PDF_AVAILABLE = False
+import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
+from docx import Document as DocxDocument
+from docx2pdf import convert
+import fitz
 
 
 class PreviewGenerator:
@@ -74,18 +49,6 @@ class PreviewGenerator:
     
     def _generate_pdf_preview(self) -> Dict[str, Any]:
         """Generate preview for PDF files - converts first page to image."""
-        if not FITZ_AVAILABLE:
-            return {
-                "type": "error",
-                "data": "PyMuPDF (fitz) library not available. Cannot generate PDF preview."
-            }
-        
-        if not PIL_AVAILABLE:
-            return {
-                "type": "error",
-                "data": "PIL (Pillow) library not available. Cannot generate PDF preview."
-            }
-        
         pdf_document = None
         try:
             pdf_document = fitz.open(str(self.file_path))
@@ -141,12 +104,6 @@ class PreviewGenerator:
     
     def _generate_image_preview(self) -> Dict[str, Any]:
         """Generate preview for image files."""
-        if not PIL_AVAILABLE:
-            return {
-                "type": "error",
-                "data": "PIL (Pillow) library not available. Cannot generate image preview."
-            }
-        
         try:
             img = Image.open(self.file_path)
             
@@ -181,12 +138,6 @@ class PreviewGenerator:
     
     def _generate_excel_preview(self) -> Dict[str, Any]:
         """Generate preview for Excel files - show first few rows of first sheet."""
-        if not PANDAS_AVAILABLE:
-            return {
-                "type": "error",
-                "data": "Pandas library not available. Cannot generate Excel preview."
-            }
-        
         try:
             # Read the first sheet with limited rows
             df = pd.read_excel(self.file_path, nrows=10)
@@ -223,32 +174,20 @@ class PreviewGenerator:
     
     def _generate_docx_preview(self) -> Dict[str, Any]:
         """Generate preview for DOCX files - converts first page to image when possible."""
-        if not DOCX_AVAILABLE:
-            return {
-                "type": "error",
-                "data": "python-docx library not available. Cannot generate DOCX preview."
-            }
-        
         # Try to convert to PDF first, then to image
-        if DOCX2PDF_AVAILABLE and FITZ_AVAILABLE and PIL_AVAILABLE:
-            try:
-                print(f"Attempting PDF conversion for: {self.file_path.name}")
-                result = self._generate_docx_image_preview()
-                print(f"PDF conversion successful for: {self.file_path.name}")
-                return result
-            except Exception as e:
-                print(f"DOCX to image conversion failed for {self.file_path.name}: {e}, falling back to visual preview")
-        
-        # Fall back to creating a visual text representation
-        if PIL_AVAILABLE:
+        try:
+            print(f"Attempting PDF conversion for: {self.file_path.name}")
+            result = self._generate_docx_image_preview()
+            print(f"PDF conversion successful for: {self.file_path.name}")
+            return result
+        except Exception as e:
+            print(f"DOCX to image conversion failed for {self.file_path.name}: {e}, falling back to visual preview")
             try:
                 return self._generate_docx_visual_preview()
             except Exception as e:
                 print(f"DOCX visual preview failed: {e}, falling back to simple text preview")
-        
-        # Final fallback: simple text preview
-        return self._generate_docx_text_preview()
-    
+                return self._generate_docx_text_preview()
+
     def _generate_docx_image_preview(self) -> Dict[str, Any]:
         """Try to convert DOCX to PDF, then to image with retry logic."""
         return self._convert_docx_with_retry(max_retries=2)
@@ -573,4 +512,4 @@ class PreviewGenerator:
         
         ratio = max_width / img.width
         new_height = int(img.height * ratio)
-        return img.resize((max_width, new_height), Image.Resampling.LANCZOS) 
+        return img.resize((max_width, new_height), Image.Resampling.LANCZOS)

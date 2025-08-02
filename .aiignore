@@ -1,0 +1,55 @@
+# An .aiignore file follows the same syntax as a .gitignore file.
+# .gitignore documentation: https://git-scm.com/docs/gitignore
+# Junie will ask for explicit approval before view or edit the file or file within a directory listed in .aiignore.
+# Only files contents is protected, Junie is still allowed to view file names even if they are listed in .aiignore.
+# Be aware that the files you included in .aiignore can still be accessed by Junie in two cases:
+# - If Brave Mode is turned on.
+# - If a command has been added to the Allowlist — Junie will not ask for confirmation, even if it accesses - files and folders listed in .aiignore.
+
+# Derleme çıktıları ve cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Node.js/Electron
+node_modules/
+
+# Test dökümanları
+tests/test_documents/
+
+# Loglar ve geçici dosyalar
+*.log
+logs/
+*.tmp
+*.bak
+
+# Büyük binary dosyalar
+*.jar
+*.pdf
+
+# IDE/editor ayarları
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Kişisel ve platform dosyaları
+backend/chat_sessions/
+deneme.txt
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+backend/uploads/
+backend/vectorstore/
+backend/pipelines/uploads/
+
+# Ortak .env dosyaları
+.env

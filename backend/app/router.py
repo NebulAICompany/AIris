@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.orchestrator.query_orchestrator import run_orchestration
-from backend.orchestrator.chat_history import chat_history_manager
+from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.libs.logger import get_logger
 import shutil
@@ -242,7 +242,13 @@ async def handle_query(request: QueryRequest):
         api_requests_total.labels(status="success").inc()
 
         logger.info("Query processed successfully")
-        return {"response": answer, "sessionId": session_id}
+        
+        return {
+                "response": answer.get("response"),
+                "images": answer.get("images", []),
+                "sessionId": answer.get("session_id", session_id)
+            }
+    
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
         api_requests_total.labels(status="error").inc()
