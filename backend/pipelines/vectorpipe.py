@@ -281,7 +281,6 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 return
 
             chunk_idx = 0
-            pii_chunk_maps = {}
 
             # Ensure save_path exists
             os.makedirs(save_path, exist_ok=True)
@@ -333,15 +332,13 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             # PII Masking for all documents
             print(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
             for doc in processed_docs:
-                masked, mapping = mask_text(doc.page_content)
+                masked = mask_text(doc.page_content)
                 doc.page_content = masked
 
                 # Store PII mapping with unique identifier
                 doc_id = doc.metadata.get("chunk_id")
                 if doc.metadata.get("content_type") == "hypothetical_prompt":
                     doc.metadata["chunk_id"] = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
-
-                pii_chunk_maps[doc_id] = mapping
 
             # Add documents to vectorstore
             print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
@@ -356,11 +353,6 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
 
             # Update metrics
             vectorstore_total_chunks.observe(vectorstore.index.ntotal)
-
-            # Save the PII maps for all chunks
-            pii_map_path = os.path.join(save_path, "pii_chunk_maps.json")
-            with open(pii_map_path, "w", encoding="utf-8") as f:
-                json.dump(pii_chunk_maps, f, ensure_ascii=False, indent=2)
 
             # Save the vectorstore
             vectorstore.save_local(vectorstore_path)
