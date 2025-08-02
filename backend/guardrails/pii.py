@@ -28,7 +28,8 @@ def mask_text(text):
     masked_map = {}
     for idx, doc in enumerate(result):
         if not doc.is_error:
-            masked_text = getattr(doc, "redacted_text", "NR - "+text)
+            masked_text = getattr(doc, "redacted_text", "NR - " +text)
+
             sorted_entities = sorted(doc.entities, key=lambda e: e.offset)
             masked_spans = []
             for entity in sorted_entities:
