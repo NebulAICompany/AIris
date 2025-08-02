@@ -195,7 +195,6 @@ class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
     wolframEnabled: bool = False
-    ragFusionEnabled: bool = False
     preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
@@ -219,7 +218,6 @@ async def handle_query(request: QueryRequest):
         query = request.query
         web_search_enabled = request.webSearchEnabled
         wolfram_enabled = request.wolframEnabled
-        rag_fusion_enabled = request.ragFusionEnabled
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
@@ -228,7 +226,6 @@ async def handle_query(request: QueryRequest):
         print(f"   - Query: {query}")
         print(f"   - Web Search Enabled: {web_search_enabled}")
         print(f"   - Wolfram Enabled: {wolfram_enabled}")
-        print(f"   - RAG Fusion Enabled: {rag_fusion_enabled}")
         print(f"   - Pre-embedding Process: {pre_embedding_process}")
         print(f"   - Session ID: {session_id}")
         print(f"   - Selected Files: {selected_files}")
@@ -237,7 +234,6 @@ async def handle_query(request: QueryRequest):
             query,
             web_search_enabled,
             wolfram_enabled,
-            rag_fusion_enabled,
             pre_embedding_process,
             session_id,
             selected_files,
@@ -260,7 +256,7 @@ async def handle_query(request: QueryRequest):
 
 
 @router.post("/upload")
-def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "cch"):
+def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "none"):
     global request_counter
     try:
         # Increment simple counter
@@ -270,7 +266,10 @@ def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "cch"
         logger.info(f"Pre-embedding process: {preEmbeddingProcess}")
 
         # Ensure uploads directory exists (use absolute path)
-        uploads_dir = Path(__file__).parent.parent / "database" / "uploads"
+        import json 
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        uploads_dir = Path(paths["UPLOADS_PATH"])
         uploads_dir.mkdir(parents=True, exist_ok=True)
 
         # Save uploaded file
@@ -400,8 +399,10 @@ def list_files():
     Returns a list of files in the uploads directory with metadata.
     """
     try:
-        # uploads_dir = Path("uploads")
-        uploads_dir = Path(__file__).parent.parent / "database" / "uploads"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        uploads_dir = Path(paths["UPLOADS_PATH"])
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
@@ -435,7 +436,10 @@ def get_metrics():
     """
     try:
         # Get file count
-        uploads_dir = Path(__file__).parent.parent / "database"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        uploads_dir = Path(paths["UPLOADS_PATH"])
         file_count = (
             len([f for f in uploads_dir.iterdir() if f.is_file()])
             if uploads_dir.exists()
@@ -443,7 +447,10 @@ def get_metrics():
         )
 
         # Get vector store info
-        vectorstore_dir = Path(__file__).parent.parent / "vectorstore"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        vectorstore_dir = Path(paths["VECTORSTORE_PATH"])
         vectorstore_exists = (
             vectorstore_dir.exists() and (vectorstore_dir / "index.faiss").exists()
         )
@@ -502,7 +509,10 @@ def delete_file(filename: str):
         request_counter += 1
 
         # Check if file exists in uploads directory
-        uploads_dir = Path(__file__).parent.parent / "database"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        uploads_dir = Path(paths["UPLOADS_PATH"])
         file_path = uploads_dir / filename
 
         logger.debug(f"Checking file existence: {file_path}")
@@ -513,7 +523,10 @@ def delete_file(filename: str):
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
         # Load vector store and PII mappings
-        vectorstore_dir = Path(__file__).parent.parent / "vectorstore"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        vectorstore_dir = Path(paths["VECTORSTORE_PATH"])
 
         logger.debug(f"Vector store directory: {vectorstore_dir}")
         logger.debug(f"Vector store exists: {vectorstore_dir.exists()}")
@@ -656,7 +669,10 @@ def download_file(filename: str):
     Download a file from uploads directory.
     """
     try:
-        uploads_dir = Path(__file__).parent.parent / "database"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        uploads_dir = Path(paths["UPLOADS_PATH"])
         file_path = uploads_dir / filename
 
         if not file_path.exists():
@@ -680,7 +696,10 @@ def get_file_preview(filename: str):
     Returns different preview types based on file extension.
     """
     try:
-        uploads_dir = Path(__file__).parent.parent / "database" / "uploads"
+        import json
+        with open("paths.json", "r") as f:
+            paths = json.load(f)
+        uploads_dir = Path(paths["UPLOADS_PATH"])
         file_path = uploads_dir / filename
 
         if not file_path.exists():
