@@ -12,7 +12,7 @@ class DocxParser:
         # Initialize COM at the beginning
         pythoncom.CoInitialize()
 
-        output_dir = Path(__file__).resolve().parent.parent / "database"
+        output_dir = Path(__file__).resolve().parent.parent / "database" / "uploads"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(self.file_path).stem + ".pdf")
         convert(self.file_path, str(output_pdf))

@@ -7,7 +7,7 @@ langchain-openai==0.3.24
 langchain-huggingface==0.3.0
 sentence-transformers==4.1.0
 faiss-cpu==1.11.0
-openai==1.90.0
+openai==1.98.0
 langdetect==1.0.9
 jpype1==1.5.2
 azure-ai-formrecognizer==3.3.3

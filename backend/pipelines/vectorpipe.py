@@ -290,6 +290,11 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 doc.page_content = masked
 
 
+                # Store PII mapping with unique identifier
+                doc_id = doc.metadata.get("chunk_id")
+                if doc.metadata.get("content_type") == "hypothetical_prompt":
+                    doc.metadata["chunk_id"] = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
+
             print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             if vectorstore is None:
                 vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
