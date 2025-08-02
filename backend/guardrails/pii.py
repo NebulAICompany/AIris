@@ -28,7 +28,7 @@ def mask_text(text):
     masked_map = {}
     for idx, doc in enumerate(result):
         if not doc.is_error:
-            masked_text = text[idx]
+            masked_text = getattr(doc, "redacted_text", "NR - "+text)
             sorted_entities = sorted(doc.entities, key=lambda e: e.offset)
             masked_spans = []
             for entity in sorted_entities:
@@ -54,7 +54,7 @@ def mask_text(text):
     with open(map_base_location, "w", encoding="utf-8") as f:
         json.dump(existing_map, f, ensure_ascii=False, indent=4)
 
-    return masked_text, masked_map
+    return masked_text
 
 
 def unmask_text(text):
