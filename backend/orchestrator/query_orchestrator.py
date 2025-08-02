@@ -18,137 +18,6 @@ import base64
 VECTORSTORE_PATH = "backend/vectorstore"
 
 
-def format_metadata_from_docs(docs: List) -> str:
-    """
-    Extract and format metadata from retrieved documents into a consistent format.
-    """
-    metadata_entries = []
-    processed_sources = set()  # Avoid duplicate sources
-
-    for doc in docs:
-        metadata = doc.get("metadata", {})
-        if not metadata:
-            continue
-
-        # Get source filename
-        source = metadata.get("file_name", "Bilinmeyen")
-        if source in processed_sources:
-            continue
-        processed_sources.add(source)
-
-        # Build metadata entry
-        entry_lines = []
-        entry_lines.append(f"Kaynak: {source}")
-
-        # Add other metadata if available
-        if metadata.get("page_number"):
-            entry_lines.append(f"Sayfa: {metadata['page_number']}")
-        if metadata.get("document_type"):
-            entry_lines.append(f"Belge Türü: {metadata['document_type']}")
-        if metadata.get("created_date"):
-            entry_lines.append(f"Tarih: {metadata['created_date']}")
-        if metadata.get("category"):
-            entry_lines.append(f"Kategori: {metadata['category']}")
-
-        # Try to categorize based on filename extension
-        if "." in source:
-            ext = source.split(".")[-1].lower()
-            if ext in ["pdf", "docx", "xlsx", "txt", "jpg", "png"]:
-                categories = {
-                    "pdf": "PDF Belgesi",
-                    "docx": "Word Belgesi",
-                    "xlsx": "Excel Çalışma Sayfası",
-                    "txt": "Metin Dosyası",
-                    "jpg": "Görüntü Dosyası",
-                    "png": "Görüntü Dosyası",
-                }
-                if "Kategori:" not in "\n".join(entry_lines):
-                    entry_lines.append(f"Kategori: {categories.get(ext, 'Belge')}")
-
-        metadata_entries.append("\n".join(entry_lines))
-
-    if not metadata_entries:
-        return ""
-
-    # Format the complete metadata section
-    formatted_metadata = "\n🗂️ Kullanılan Bilgi Metadataları:\n"
-    for i, entry in enumerate(metadata_entries, 1):
-        # Add proper indentation for each metadata entry
-        indented_entry = "\n".join([f"- {line}" for line in entry.split("\n")])
-        formatted_metadata += f"\n{indented_entry}\n"
-
-    return formatted_metadata
-
-
-def ensure_metadata_in_response(response: str, docs: List) -> str:
-    """
-    Ensure that metadata is properly included in the response.
-    If metadata section is missing or incomplete, add/fix it.
-    """
-    # Check if response already has metadata section
-    metadata_patterns = [
-        r"🗂️\s*Kullanılan Bilgi Metadataları:",
-        r"📊\s*Kullanılan Bilgi Metadataları:",
-        r"Kullanılan Bilgi Metadataları:",
-        r"Kaynak:\s*\w+",  # Simple source pattern
-    ]
-
-    has_metadata = any(
-        re.search(pattern, response, re.IGNORECASE) for pattern in metadata_patterns
-    )
-
-    if has_metadata:
-        # Metadata exists, but might be incomplete - enhance it
-        return enhance_existing_metadata(response, docs)
-    else:
-        # No metadata found, add it
-        formatted_metadata = format_metadata_from_docs(docs)
-        if formatted_metadata:
-            return response + "\n\n" + formatted_metadata
-        return response
-
-
-def enhance_existing_metadata(response: str, docs: List) -> str:
-    """
-    Enhance existing metadata in the response to ensure consistency.
-    """
-    # Check if we have a proper metadata header
-    has_header = re.search(r"🗂️\s*Kullanılan Bilgi Metadataları:", response)
-
-    if not has_header:
-        # Look for simple metadata lines (like "Kaynak: filename")
-        lines = response.split("\n")
-        metadata_lines = []
-        other_lines = []
-
-        for line in lines:
-            line_stripped = line.strip()
-            if (
-                line_stripped.startswith("Kaynak:")
-                or line_stripped.startswith("Kategori:")
-                or line_stripped.startswith("Tarih:")
-                or line_stripped.startswith("- Kaynak:")
-                or line_stripped.startswith("- Kategori:")
-                or line_stripped.startswith("- Tarih:")
-            ):
-                metadata_lines.append(line_stripped)
-            else:
-                other_lines.append(line)
-
-        if metadata_lines:
-            # Reconstruct response with proper metadata formatting
-            main_content = "\n".join(other_lines).strip()
-            formatted_metadata = "\n🗂️ Kullanılan Bilgi Metadataları:\n"
-            for line in metadata_lines:
-                if not line.startswith("- "):
-                    line = f"- {line}"
-                formatted_metadata += f"{line}\n"
-
-            return main_content + "\n\n" + formatted_metadata
-
-    return response
-
-
 def filter_docs_by_selected_files(
     docs: List, selected_files: Optional[List[str]]
 ) -> List:
@@ -174,67 +43,13 @@ def filter_docs_by_selected_files(
     return filtered_docs
 
 
-def extract_and_format_metadata(response: str) -> tuple:
-    """
-    Extract metadata from response and return (main_content, formatted_metadata).
-    This helps ensure UI gets consistent metadata formatting.
-    """
-    # Split response into main content and metadata
-    metadata_match = re.search(
-        r"(🗂️\s*Kullanılan Bilgi Metadataları:.*)", response, re.IGNORECASE | re.DOTALL
-    )
-
-    if metadata_match:
-        metadata_section = metadata_match.group(1).strip()
-        main_content = response[: metadata_match.start()].strip()
-        return main_content, metadata_section
-
-    # Look for simple metadata patterns
-    lines = response.split("\n")
-    metadata_lines = []
-    main_lines = []
-
-    in_metadata_section = False
-    for line in lines:
-        line_stripped = line.strip()
-        if (
-            line_stripped.startswith("Kaynak:")
-            or line_stripped.startswith("Kategori:")
-            or line_stripped.startswith("Tarih:")
-            or line_stripped.startswith("- Kaynak:")
-            or line_stripped.startswith("- Kategori:")
-            or line_stripped.startswith("- Tarih:")
-        ):
-            in_metadata_section = True
-            metadata_lines.append(line_stripped)
-        elif in_metadata_section and line_stripped == "":
-            # Empty line in metadata section
-            continue
-        elif in_metadata_section and not line_stripped:
-            # End of metadata section
-            in_metadata_section = False
-        elif not in_metadata_section:
-            main_lines.append(line)
-
-    if metadata_lines:
-        main_content = "\n".join(main_lines).strip()
-        formatted_metadata = "🗂️ Kullanılan Bilgi Metadataları:\n"
-        for line in metadata_lines:
-            if not line.startswith("- "):
-                line = f"- {line}"
-            formatted_metadata += f"{line}\n"
-        return main_content, formatted_metadata
-
-    return response, ""
-
-
 def preprocess_query(query: str):
-    corrected = spell_check(query)
-    print(f"Corrected Query: {corrected}")
-    lang = detect_language(corrected)
+    lang = detect_language(query)
     print(f"Detected Language: {lang}")
-
-    return corrected, lang
+    if lang=="Turkish":
+        corrected = spell_check(query)
+        return corrected, lang
+    return query, lang
 
 def extract_image_references_from_context(local_context: str) -> Tuple[str, List[str]]:
     """
@@ -459,10 +274,6 @@ async def run_orchestration(
 
     image_datas = load_images_from_paths(image_paths)
 
-    if image_datas:
-        print(f"   - Found {len(image_datas)} images in context")
-    else:
-        print(f"   - No images found in context")
     # Create the agent with web context and conversation history if available
     agent = create_rag_agent(
         local_context=cleaned_context,
@@ -483,8 +294,7 @@ async def run_orchestration(
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted
     docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
-    final_answer = ensure_metadata_in_response(final_answer, docs_for_metadata)
-    print(f"   - Applied consistent metadata formatting")
+
 
     # 6. Çıktı kontrolü (OpenAI moderation)
     output_moderation = check_openai_moderation(final_answer)
@@ -500,9 +310,6 @@ async def run_orchestration(
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer
         )
-        print(f"   - Added assistant response to session {session_id}")
-
-    print(f"🎯 Final response prepared with consistent metadata formatting")
     
     
     return {

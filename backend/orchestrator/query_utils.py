@@ -109,3 +109,10 @@ def normalize_repeated_chars(word: str) -> str:
         i = j
 
     return "".join(result)
+
+
+if __name__ == "__main__":
+    # Test the functions
+    test_query = "Bu bir test cümlesidir. Bu cümledeki yazım hatalarını kontrol et."
+    print("Original Query:", test_query)
+    print("Detected Language:", detect_language(test_query))
