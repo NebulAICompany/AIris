@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from backend.orchestrator.query_orchestrator import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 import shutil
 from pathlib import Path
 from datetime import datetime
