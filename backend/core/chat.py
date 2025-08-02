@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-import asyncio
 from dataclasses import dataclass, asdict
 
 from sqlalchemy import create_engine, inspect
@@ -15,7 +14,7 @@ from sqlalchemy.orm import sessionmaker, Session as DbSession
 from sqlalchemy.pool import StaticPool
 
 # Import database models from their new location
-from backend.database.models import Base, DbChatSession, DbChatMessage
+from backend.core.tools.models import DbChatSession, DbChatMessage
 
 
 class MessageRole(Enum):
