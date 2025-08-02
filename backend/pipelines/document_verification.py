@@ -55,7 +55,6 @@ class DocumentVerificationPipeline:
         self.openai_client = OpenAI(
             api_key=os.getenv(
                 "OPENAI_API_KEY",
-                "***REMOVED***",
             )
         )
 
