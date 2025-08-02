@@ -3,7 +3,7 @@ from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k
 from backend.retrieval.reranker import rerank
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 
 logger = get_logger("RAG_FUSION")
 
