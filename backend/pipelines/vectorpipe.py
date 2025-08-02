@@ -3,7 +3,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from backend.guardrails.pii import pii_mask
+from backend.guardrails.pii import mask_text
 import json
 from openai import OpenAI
 from pathlib import Path
@@ -308,6 +308,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             docs = self.text_splitter.create_documents([text_content])
             if not docs:
                 print(f"⚠️ Warning: No chunks were created for {document_name}.")
+
                 return
 
             print(f"✅ Document '{document_name}' split into {len(docs)} semantic chunks")
@@ -348,6 +349,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
             else:
                 vectorstore.add_documents(processed_docs)
+
 
             print(f"📈 Total text processed: {len(text_content)} characters")
             print(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
