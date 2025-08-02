@@ -7,8 +7,8 @@ from backend.orchestrator.query_utils import (
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
-from backend.guardrails.pii import mask_text, unmask_text
-from backend.guardrails.filters import check_openai_moderation
+from backend.security.pii import mask_text, unmask_text
+from backend.security.filters import check_openai_moderation
 from .reflection import reflect_and_retry
 from backend.core.chat import chat_history_manager, MessageRole
 import os
