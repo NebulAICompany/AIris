@@ -1,4 +1,13 @@
 import logging
+import os
+from dotenv import load_dotenv
+from azure.ai.textanalytics import TextAnalyticsClient
+from azure.core.credentials import AzureKeyCredential
+
+load_dotenv()
+
+language_key = os.environ.get('AZURE_LANGUAGE_KEY')
+language_endpoint = os.environ.get('AZURE_LANGUAGE_ENDPOINT')
 
 try:
     import jpype
@@ -64,17 +73,17 @@ def spell_check(query: str) -> str:
 
 
 def detect_language(query: str) -> str:
-    # if not query or not isinstance(query, str) or len(query.strip()) < 3:
-    #     return "unknown"
-    # if not LANGDETECT_AVAILABLE:
-    #     logger.warning("Langdetect is not available. Skipping language detection.")
-    #     return "unknown"
-    #
-    # try:
-    #     return langdetect_detect(query)
-    # except Exception as e:
-    #     logger.error(f"Error in language detection: {e}")
-    return "unknown"
+    try:
+        ta_credential = AzureKeyCredential(language_key)
+        text_analytics_client = TextAnalyticsClient(
+            endpoint=language_endpoint,
+            credential=ta_credential)
+
+        response = text_analytics_client.detect_language(documents=[query], country_hint='tr')[0]
+        return response.primary_language.name
+
+    except Exception as err:
+        print("Encountered exception. {}".format(err))
 
 
 def normalize_repeated_chars(word: str) -> str:
