@@ -45,7 +45,6 @@ def mask_text(text):
     try:
         with open(map_base_location, "r", encoding="utf-8") as f:
             existing_map = json.load(f)
-
     except:
         print("No existing map found, creating a new one.")
         existing_map = {}
@@ -54,6 +53,8 @@ def mask_text(text):
 
     with open(map_base_location, "w", encoding="utf-8") as f:
         json.dump(existing_map, f, ensure_ascii=False, indent=4)
+
+    return masked_text, masked_map
 
 
 def unmask_text(text):

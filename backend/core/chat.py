@@ -9,13 +9,42 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session as DbSession
 from sqlalchemy.pool import StaticPool
 
-# Import database models from their new location
-from backend.core.tools.models import DbChatSession, DbChatMessage
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, JSON
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
+Base = declarative_base()
+
+
+class DbChatSession(Base):
+    """Database model for chat sessions"""
+    __tablename__ = "chat_sessions"
+    
+    session_id = Column(String, primary_key=True)
+    title = Column(String, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    meta_data = Column(JSON, nullable=True)
+
+    messages = relationship("DbChatMessage", back_populates="session", cascade="all, delete-orphan")
+
+
+class DbChatMessage(Base):
+    """Database model for chat messages"""
+    __tablename__ = "chat_messages"
+
+    message_id = Column(String, primary_key=True)
+    session_id = Column(String, ForeignKey("chat_sessions.session_id"), nullable=False)
+    role = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    timestamp = Column(DateTime, nullable=False)
+    meta_data = Column(JSON, nullable=True)
+    
+    session = relationship("DbChatSession", back_populates="messages")
 
 class MessageRole(Enum):
     USER = "user"

@@ -333,7 +333,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             # PII Masking for all documents
             print(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
             for doc in processed_docs:
-                masked, mapping = pii_mask(doc.page_content)
+                masked, mapping = mask_text(doc.page_content)
                 doc.page_content = masked
 
                 # Store PII mapping with unique identifier
