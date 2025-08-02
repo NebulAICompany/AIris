@@ -270,7 +270,7 @@ def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "cch"
         logger.info(f"Pre-embedding process: {preEmbeddingProcess}")
 
         # Ensure uploads directory exists (use absolute path)
-        uploads_dir = Path(__file__).parent.parent / "database"
+        uploads_dir = Path(__file__).parent.parent / "database" / "uploads"
         uploads_dir.mkdir(parents=True, exist_ok=True)
 
         # Save uploaded file
@@ -401,7 +401,7 @@ def list_files():
     """
     try:
         # uploads_dir = Path("uploads")
-        uploads_dir = Path(__file__).parent.parent / "database"
+        uploads_dir = Path(__file__).parent.parent / "database" / "uploads"
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
@@ -680,7 +680,7 @@ def get_file_preview(filename: str):
     Returns different preview types based on file extension.
     """
     try:
-        uploads_dir = Path(__file__).parent.parent / "database"
+        uploads_dir = Path(__file__).parent.parent / "database" / "uploads"
         file_path = uploads_dir / filename
 
         if not file_path.exists():
