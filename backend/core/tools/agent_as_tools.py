@@ -1,7 +1,9 @@
 from agents import Agent
 from backend.core.prompts import alpha_vantage_prompt, office_agent_prompt
 from backend.core.tools.mcp import alpha_vantage_mcp_server
-from backend.core.tools.base_tools import document_tools
+from .document import create_excel_from_table, create_word_document
+
+document_tools = [create_excel_from_table, create_word_document]
 
 alpha_vantage_agent = Agent(
     name="Alpha Vantage Finance Agent",
