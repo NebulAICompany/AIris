@@ -437,7 +437,6 @@ class UIComponents {
         message,
         this.webSearchEnabled,
         this.wolframEnabled,
-        false, // ragFusionEnabled - hardcoded to false
         this.currentSessionId,
         2, // maxRetries
         this.selectedFiles.length > 0 ? this.selectedFiles : null // selectedFiles
@@ -518,7 +517,6 @@ class UIComponents {
     message,
     webSearchEnabled,
     wolframEnabled,
-    ragFusionEnabled,
     sessionId,
     maxRetries = 2,
     selectedFiles = null
@@ -533,7 +531,6 @@ class UIComponents {
           message,
           webSearchEnabled,
           wolframEnabled,
-          ragFusionEnabled,
           sessionId,
           selectedFiles
         );

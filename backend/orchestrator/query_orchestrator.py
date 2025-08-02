@@ -16,7 +16,6 @@ import re
 import base64
 
 VECTORSTORE_PATH = "backend/vectorstore"
-FILES_PATH = "backend/files"
 
 
 def format_metadata_from_docs(docs: List) -> str:
@@ -298,10 +297,16 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
 
 async def run_orchestration(
     query: str,
+<<<<<<< HEAD
+    web_search_enabled: bool,
+    wolfram_enabled: bool = False,
+    pre_embedding_process: str = "none",
+=======
     web_search_enabled: bool = False,
     wolfram_enabled: bool = True,
     rag_fusion_enabled: bool = False,
     pre_embedding_process: str = "cch",
+>>>>>>> test
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
@@ -309,7 +314,6 @@ async def run_orchestration(
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
     print(f"   - Wolfram Enabled: {wolfram_enabled}")
-    print(f"   - RAG Fusion Enabled: {rag_fusion_enabled}")
     print(f"   - Pre-embedding Process: {pre_embedding_process}")
     print(f"   - Session ID: {session_id}")
     print(f"   - Selected Files: {selected_files}")
@@ -361,13 +365,14 @@ async def run_orchestration(
     masked_query = mask_text(preprocessed_query)
     print(f"Masked Query: {masked_query}")
 
-    rse_enabled = False
-    if rag_fusion_enabled:
+    ENABLED_RAG_TECHNIQUES = ["rse"]
+
+    if "rag_fusion" in ENABLED_RAG_TECHNIQUES:
         # 4. Enhanced Retrieval with RAG Fusion (Multiple Query Generation + RRF)
         from backend.retrieval.rag_fusion import retrieve_with_fusion
 
         fusion_docs, fusion_metadata = await retrieve_with_fusion(
-            preprocessed_query, k=15, num_queries=4, top_n=5
+            preprocessed_query, k=15, num_queries=4, top_n=5, final_rerank=True, excessive_k=60
         )
 
         if not fusion_docs:
@@ -388,12 +393,12 @@ async def run_orchestration(
 
         # Use filtered fusion docs directly (they're already optimized and reranked)
         reranked_docs = filtered_fusion_docs
-    elif rse_enabled:
+    elif "rse" in ENABLED_RAG_TECHNIQUES:
         # 4. Enhanced Retrieval with RSE (Relevant Segment Extraction)
         from backend.retrieval.rse import retrieve_with_rse
 
         rse_chunks, rse_scores = retrieve_with_rse(
-            preprocessed_query, k=15, preset="balanced"
+            preprocessed_query, k=15
         )
 
         if not rse_chunks:
@@ -416,7 +421,6 @@ async def run_orchestration(
         retrieved_docs = retrieve_top_k(
             preprocessed_query, k=15
         )  # Get more docs for better reranking
-        print(type(retrieved_docs))
 
         if not retrieved_docs:
             return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
@@ -455,7 +459,12 @@ async def run_orchestration(
         )
 
     local_context = "\n\n---\n\n".join(context_entries)
+<<<<<<< HEAD
+    # print(f"   - Local Context: {local_context}")
+    print("using web search ?= ", web_search_enabled)
+=======
     print(f"   - Local Context: {local_context}")
+>>>>>>> test
 
     cleaned_context, image_paths = extract_image_references_from_context(local_context)
 
@@ -473,14 +482,14 @@ async def run_orchestration(
         wolfram_enabled=wolfram_enabled,
         conversation_history=conversation_context,
     )
-
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
-
+    print(f"🧠 Answer: {answer}")
     # Apply reflection and potential retries
     final_answer = await reflect_and_retry(
         prompt=masked_query, initial_answer=answer, agent=agent, max_retries=2
     )
+    print(f"🧠 Final Answer: {final_answer}")
 
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted

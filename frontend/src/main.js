@@ -171,13 +171,20 @@ class AIrisApp {
         const path = require("path");
 
         // Construct the file path
-        const uploadsDir = path.join(
-          __dirname,
-          "..",
-          "..",
-          "backend",
-          "uploads"
-        );
+        // Dynamically get UPLOADS_PATH from paths.json
+        const fs = require("fs");
+        const pathsJsonPath = path.join(__dirname, "..", "..", "paths.json");
+        let uploadsDir;
+        try {
+          const pathsData = fs.readFileSync(pathsJsonPath, "utf-8");
+          const paths = JSON.parse(pathsData);
+          uploadsDir = path.isAbsolute(paths.UPLOADS_PATH)
+            ? paths.UPLOADS_PATH
+            : path.join(__dirname, "..", "..", paths.UPLOADS_PATH);
+        } catch (err) {
+          // Fallback to default if paths.json is missing or invalid
+          uploadsDir = path.join(__dirname, "..", "..", "backend", "uploads");
+        }
         const filePath = path.join(uploadsDir, fileName);
 
         // Check if file exists
@@ -306,7 +313,6 @@ class AIrisApp {
           query,
           webSearchEnabled = false,
           wolframEnabled = false,
-          ragFusionEnabled = false,
         }
       ) => {
         try {
@@ -330,7 +336,6 @@ class AIrisApp {
               query,
               webSearchEnabled,
               wolframEnabled,
-              ragFusionEnabled: false,
             }),
           });
 

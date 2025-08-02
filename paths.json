@@ -1,0 +1,4 @@
+{
+    "VECTORSTORE_PATH": "backend/vectorstore",
+    "UPLOADS_PATH": "backend/uploads"
+}
