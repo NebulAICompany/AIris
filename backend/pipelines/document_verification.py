@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import fitz  # PyMuPDF
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 from openai import OpenAI
 import os
 import io

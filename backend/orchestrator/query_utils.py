@@ -18,7 +18,7 @@ try:
         jvmPath = getDefaultJVMPath()
         print(f"JVM Path: {jvmPath}")
         zemberek_path = os.path.join(
-            os.path.dirname(__file__), "..", "libs", "zemberek-full.jar"
+            os.path.dirname(__file__), "..", "shared", "zemberek-full.jar"
         )
         startJVM(jvmPath, "-ea", f"-Djava.class.path={zemberek_path}")
 
