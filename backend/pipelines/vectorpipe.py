@@ -4,7 +4,6 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from backend.guardrails.pii import mask_text
-import json
 from openai import OpenAI
 from pathlib import Path
 from typing import List, Dict
@@ -17,13 +16,10 @@ from backend.monitoring.metrics import (
     vectorstore_total_chunks,
 )
 from backend.retrieval.autocontext import apply_autocontext
+from dotenv import load_dotenv
 
-# Get OpenAI client
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-import dotenv
 
-env_path = PROJECT_ROOT / ".env"
-dotenv.load_dotenv(env_path)
+load_dotenv()
 
 
 class PreEmbeddingProcess(Enum):
@@ -44,17 +40,14 @@ class VectorStorePipeline:
         self, pre_embedding_process: PreEmbeddingProcess = PreEmbeddingProcess.NONE
     ):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        # Adjust semantic chunker parameters
         self.text_splitter = SemanticChunker(
             self.embeddings,
             breakpoint_threshold_type="percentile",
-            breakpoint_threshold_amount=80,  # Lower threshold to create more chunks
+            breakpoint_threshold_amount=80,
         )
         self.pre_embedding_process = pre_embedding_process
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        # Initialize OpenAI client if HyPE is enabled
-        if self.pre_embedding_process == PreEmbeddingProcess.HYPE:
-            self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     def generate_hypothetical_prompts(
         self, original_chunk: str, chunk_metadata: Dict
@@ -62,86 +55,47 @@ class VectorStorePipeline:
         """
         Generate hypothetical prompts/queries that users might ask to find this document chunk
         """
-        try:
-            # Determine content type from metadata for better prompts
-            file_name = chunk_metadata.get("file_name", "document")
-            content_type = "general"
 
-            if any(
-                keyword in file_name.lower()
-                for keyword in ["financial", "budget", "report"]
-            ):
-                content_type = "financial"
-            elif any(
-                keyword in file_name.lower()
-                for keyword in ["technical", "manual", "guide"]
-            ):
-                content_type = "technical"
-            elif any(
-                keyword in file_name.lower()
-                for keyword in ["legal", "contract", "agreement"]
-            ):
-                content_type = "legal"
+        system_prompt = """Sen bir finansal belge analisti ve soru üretim uzmanısın. 
+                    Verilen belge parçası için kullanıcıların sorabileceği hipotetik sorular üret.
+                    Sorular finansal terimler, sayısal veriler ve analiz odaklı olmalı."""
 
-            # Create prompts based on content type
-            if content_type == "financial":
-                system_prompt = """Sen bir finansal belge analisti ve soru üretim uzmanısın. 
-                Verilen belge parçası için kullanıcıların sorabileceği hipotetik sorular üret.
-                Sorular finansal terimler, sayısal veriler ve analiz odaklı olmalı."""
-            elif content_type == "technical":
-                system_prompt = """Sen bir teknik belge analisti ve soru üretim uzmanısın.
-                Verilen belge parçası için kullanıcıların sorabileceği hipotetik sorular üret.
-                Sorular teknik prosedürler, özellikler ve nasıl yapılır odaklı olmalı."""
-            elif content_type == "legal":
-                system_prompt = """Sen bir hukuki belge analisti ve soru üretim uzmanısın.
-                Verilen belge parçası için kullanıcıların sorabileceği hipotetik sorular üret.
-                Sorular yasal şartlar, yükümlülükler ve haklar odaklı olmalı."""
-            else:
-                system_prompt = """Sen bir belge analisti ve soru üretim uzmanısın.
-                Verilen belge parçası için kullanıcıların sorabileceği hipotetik sorular üret.
-                Sorular belgenin içeriği ve konusu hakkında olmalı."""
-
-            user_prompt = f"""Belge içeriği:
+        user_prompt = f"""Belge içeriği:
 {original_chunk}
 
 Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik soru/sorgu üret:"""
 
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=800,
-                temperature=0.8,
-            )
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens=800,
+            temperature=0.8,
+        )
 
-            generated_text = response.choices[0].message.content.strip()
+        generated_text = response.choices[0].message.content.strip()
 
-            # Split by separator and clean
-            hypothetical_prompts = [
-                prompt.strip()
-                for prompt in generated_text.split("|||")
-                if prompt.strip() and len(prompt.strip()) > 10
-            ]
+        hypothetical_prompts = [
+            prompt.strip()
+            for prompt in generated_text.split("|||")
+            if prompt.strip() and len(prompt.strip()) > 10
+        ]
 
-            # Limit to 3 hypothetical prompts per chunk
-            hypothetical_prompts = hypothetical_prompts[:3]
+        # Limit to 3 hypothetical prompts per chunk
+        hypothetical_prompts = hypothetical_prompts[:3]
 
-            # Update metrics
-            hype_hypothetical_content_generated.inc(len(hypothetical_prompts))
+        # Update metrics
+        hype_hypothetical_content_generated.inc(len(hypothetical_prompts))
 
-            print(
-                f"❓ Generated {len(hypothetical_prompts)} hypothetical prompts for chunk"
-            )
-            for i, prompt in enumerate(hypothetical_prompts[:3]):  # Show first 3
-                print(f"   {i+1}. {prompt}")
+        print(
+            f"❓ Generated {len(hypothetical_prompts)} hypothetical prompts for chunk"
+        )
+        for i, prompt in enumerate(hypothetical_prompts[:3]):  # Show first 3
+            print(f"   {i+1}. {prompt}")
 
-            return hypothetical_prompts
-
-        except Exception as e:
-            print(f"❌ Error generating hypothetical prompts: {e}")
-            return []
+        return hypothetical_prompts
 
     def create_enhanced_documents(
         self, original_docs: List[Document], file_name: str
@@ -281,7 +235,6 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 return
 
             chunk_idx = 0
-            pii_chunk_maps = {}
 
             # Ensure save_path exists
             os.makedirs(save_path, exist_ok=True)
@@ -333,17 +286,10 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             # PII Masking for all documents
             print(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
             for doc in processed_docs:
-                masked, mapping = mask_text(doc.page_content)
+                masked = mask_text(doc.page_content)
                 doc.page_content = masked
 
-                # Store PII mapping with unique identifier
-                doc_id = doc.metadata.get("chunk_id")
-                if doc.metadata.get("content_type") == "hypothetical_prompt":
-                    doc.metadata["chunk_id"] = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
 
-                pii_chunk_maps[doc_id] = mapping
-
-            # Add documents to vectorstore
             print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             if vectorstore is None:
                 vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
@@ -357,10 +303,6 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             # Update metrics
             vectorstore_total_chunks.observe(vectorstore.index.ntotal)
 
-            # Save the PII maps for all chunks
-            pii_map_path = os.path.join(save_path, "pii_chunk_maps.json")
-            with open(pii_map_path, "w", encoding="utf-8") as f:
-                json.dump(pii_chunk_maps, f, ensure_ascii=False, indent=2)
 
             # Save the vectorstore
             vectorstore.save_local(vectorstore_path)

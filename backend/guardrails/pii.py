@@ -54,7 +54,7 @@ def mask_text(text):
     with open(map_base_location, "w", encoding="utf-8") as f:
         json.dump(existing_map, f, ensure_ascii=False, indent=4)
 
-    return masked_text, masked_map
+    return masked_text
 
 
 def unmask_text(text):
