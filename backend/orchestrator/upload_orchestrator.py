@@ -29,7 +29,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     try:
-        # Step 1: Create UploadPipeline
+        # Step 1: Create UploadPipeline and get extracted text
         pipeline = UploadPipeline(file_path=file_path)
 
         pipeline.run()
@@ -43,17 +43,20 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         original_stem = Path(file_path).stem
         expected_output_filename = f"{original_stem}_txt.txt"
 
-        # Step 3: Create or update vector store with the specific file
+        # Step 2: Create or update vector store directly with the extracted text
         from backend.pipelines.vectorpipe import PreEmbeddingProcess
         try:
             process_enum = PreEmbeddingProcess[pre_embedding_process.strip().upper()]
         except (KeyError, AttributeError):
             process_enum = PreEmbeddingProcess.NONE
 
+        # Get original filename for reference
+        original_stem = Path(file_path).stem
+        
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
-            uploads_path=save_dir,
+            text_content=extracted_text,
+            document_name=original_stem,
             save_path=VECTOR_STORE_PATH,
-            specific_file=expected_output_filename,
         )
 
         return {

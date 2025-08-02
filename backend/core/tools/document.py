@@ -9,7 +9,7 @@ from backend.libs.logger import get_logger
 import json
 with open("paths.json", "r") as f:
     paths = json.load(f)
-FILES_PATH = Path(paths["UPLOADS_PATH"])
+FILES_PATH = Path(paths["CREATED_DOCUMENTS_PATH"])
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 
