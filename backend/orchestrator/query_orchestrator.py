@@ -297,16 +297,9 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
 
 async def run_orchestration(
     query: str,
-<<<<<<< HEAD
     web_search_enabled: bool,
     wolfram_enabled: bool = False,
     pre_embedding_process: str = "none",
-=======
-    web_search_enabled: bool = False,
-    wolfram_enabled: bool = True,
-    rag_fusion_enabled: bool = False,
-    pre_embedding_process: str = "cch",
->>>>>>> test
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
@@ -459,12 +452,8 @@ async def run_orchestration(
         )
 
     local_context = "\n\n---\n\n".join(context_entries)
-<<<<<<< HEAD
-    # print(f"   - Local Context: {local_context}")
-    print("using web search ?= ", web_search_enabled)
-=======
     print(f"   - Local Context: {local_context}")
->>>>>>> test
+    print("using web search ?= ", web_search_enabled)
 
     cleaned_context, image_paths = extract_image_references_from_context(local_context)
 
