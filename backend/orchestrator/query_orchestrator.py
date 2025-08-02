@@ -1,10 +1,8 @@
 from typing import List, Optional, Dict, Tuple
 from backend.retrieval.reranker import rerank
 from backend.orchestrator.query_utils import (
-    clean_query,
     spell_check,
     detect_language,
-    detect_intent,
 )
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
@@ -232,15 +230,12 @@ def extract_and_format_metadata(response: str) -> tuple:
 
 
 def preprocess_query(query: str):
-    cleaned = clean_query(query)
-    print(f"Cleaned Query: {cleaned}")
-    corrected = spell_check(cleaned)
+    corrected = spell_check(query)
     print(f"Corrected Query: {corrected}")
     lang = detect_language(corrected)
     print(f"Detected Language: {lang}")
-    intent, score = detect_intent(corrected)
 
-    return corrected, lang, intent
+    return corrected, lang
 
 def extract_image_references_from_context(local_context: str) -> Tuple[str, List[str]]:
     """
@@ -355,7 +350,7 @@ async def run_orchestration(
         load_vectorstore(VECTORSTORE_PATH)
 
     # 1. Temizlik + analiz
-    preprocessed_query, lang, intent = preprocess_query(query)
+    preprocessed_query, lang = preprocess_query(query)
 
     # 2. Girdi kontrolü (OpenAI moderation)
     input_moderation = check_openai_moderation(preprocessed_query)
