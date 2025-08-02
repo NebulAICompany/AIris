@@ -18,7 +18,7 @@ import os
 import io
 
 # Import Wolfram Alpha tool for mathematical verification
-from core.tools.api import wolfram_alpha_query
+from backend.core.tools.api import wolfram_alpha_query
 
 logger = get_logger("DOCUMENT_VERIFICATION")
 
