@@ -1,7 +1,6 @@
 import pythoncom
 from docx2pdf import convert
 from pathlib import Path
-from paths.json import paths
 from PIL import Image
 import io
 import openpyxl
@@ -53,7 +52,7 @@ def ImageParser(file_path: str, client=None):
     image.save(saved_image_path, format='PNG')
 
     # Açıklamayı al
-    description = describe_image(image_bytes, client=client)
+    description = describe_image(image_bytes)
     updated_description = specify_sentence(description, f"((Image):{image_reference})")
 
     # Text content'i hazırla
@@ -61,6 +60,7 @@ def ImageParser(file_path: str, client=None):
     
     print(f"Image text extraction completed. Total length: {len(content)} characters")
     return content
+
 
 def TxtParser(file_path: str):
         content_parts = []
@@ -73,11 +73,12 @@ def TxtParser(file_path: str):
         print(f"TXT text extraction completed. Total length: {len(extracted_text)} characters")
         return extracted_text
 
-def DocxParser(client: None, file_path: str):
+
+def DocxParser(file_path: str):
         # Initialize COM at the beginning
         pythoncom.CoInitialize()
 
-        output_dir = paths["UPLOADS_PATH"]
+        output_dir = "backend/database/uploads"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(file_path).stem + ".pdf")
         convert(file_path, str(output_pdf))
@@ -89,7 +90,7 @@ def DocxParser(client: None, file_path: str):
         else:
             # PDF'i parse et ve text'i al
             from backend.pipelines.parsers.pdf_parser import PdfParser
-            pdf_parser = PdfParser(file_path, client)
+            pdf_parser = PdfParser(file_path)
             extracted_text = pdf_parser.run()
             
             print("DOCX to PDF ve text extraction işlemi tamamlandı.")
