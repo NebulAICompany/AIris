@@ -29,6 +29,7 @@ def mask_text(text):
         for offset, length, mask, _ in reversed(masked_spans):
             masked_text = masked_text[:offset] + mask + masked_text[offset + length:]
     else:
+        masked_text = text
         print(f"Error: {result[0].error}")
 
     try:
