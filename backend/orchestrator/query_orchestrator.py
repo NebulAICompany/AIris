@@ -9,7 +9,7 @@ from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from .reflection import reflect_and_retry
+from backend.utils.query_utils import reflect_and_retry
 from backend.core.chat import chat_history_manager, MessageRole
 import os
 import re
@@ -286,8 +286,8 @@ async def run_orchestration(
     answer = await generate_answer(prompt=masked_query, agent=agent)
     print(f"🧠 Answer: {answer}")
     # Apply reflection and potential retries
-    final_answer = await reflect_and_retry(
-        prompt=masked_query, initial_answer=answer, agent=agent, max_retries=2
+    final_answer = reflect_and_retry(
+        prompt=masked_query, initial_answer=answer, max_retries=2
     )
     print(f"🧠 Final Answer: {final_answer}")
 
