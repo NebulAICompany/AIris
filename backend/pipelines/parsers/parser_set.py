@@ -6,7 +6,7 @@ import io
 import openpyxl
 from backend.pipelines.parsers.tools import describe_image, specify_sentence
 
-def ExcelParser(file_path: str, client=None):
+def ExcelParser(file_path: str):
         wb_obj = openpyxl.load_workbook(file_path)
         
         content_parts = []
@@ -28,7 +28,7 @@ def ExcelParser(file_path: str, client=None):
         print(f"Excel text extraction completed. Total length: {len(extracted_text)} characters")
         return extracted_text
 
-def ImageParser(file_path: str, client=None):
+def ImageParser(file_path: str):
     image_path = Path(file_path)
     if not image_path.exists():
         print(f"Görsel dosyası bulunamadı: {file_path}")
