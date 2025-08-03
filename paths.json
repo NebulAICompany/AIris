@@ -1,5 +1,6 @@
 {
     "VECTORSTORE_PATH": "backend/vectorstore",
     "UPLOADS_PATH": "backend/database/uploads",
-    "CREATED_DOCUMENTS_PATH": "backend/database/created_documents"
+    "CREATED_DOCUMENTS_PATH": "backend/database/created_documents",
+    "IMAGES_PATH": "backend/database/uploads/images"
 }

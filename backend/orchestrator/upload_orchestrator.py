@@ -21,29 +21,24 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     try:
-        # Step 1: Create UploadPipeline and get extracted text
-        # pipeline = UploadPipeline(file_path=file_path)
-        # extracted_text = pipeline.run()
-
-        from backend.pipelines.parsers.pdf_parser import PdfParser
-        from backend.pipelines.parsers.parser_set import TxtParser, ImageParser, ExcelParser, DocxParser 
+        # Step 1: Call parser and get extracted text
+        from backend.pipelines.parsers.parser_set import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
   
         file_extension = Path(file_path).suffix.lower()
 
+        extracted_text = ""
         if file_extension == '.pdf':
-            parser = PdfParser(file_path)
+            extracted_text = PdfParser(file_path)
         elif file_extension == '.docx':
-            parser = DocxParser(file_path)
+            extracted_text = DocxParser(file_path)
         elif file_extension in ('.xlsx', '.xls'):
-            parser = ExcelParser(file_path)
+            extracted_text = ExcelParser(file_path)
         elif file_extension == '.txt':
-            parser = TxtParser(file_path)
+            extracted_text = TxtParser(file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
-            parser = ImageParser(file_path)
+            extracted_text = ImageParser(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
-        
-        extracted_text = parser.run()
 
         # Step 2: Create or update vector store directly with the extracted text
         from backend.pipelines.vectorpipe import PreEmbeddingProcess
