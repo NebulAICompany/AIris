@@ -62,7 +62,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            vectorstore_path=VECTOR_STORE_PATH,
+            save_path=VECTOR_STORE_PATH,
         )
 
         return {
