@@ -33,3 +33,6 @@ text_analytics_client = TextAnalyticsClient(
         endpoint=AZURE_LANGUAGE_ENDPOINT,
         credential=ta_credential)
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
+
+# Constants for file paths
+# TODO:

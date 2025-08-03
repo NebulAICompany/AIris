@@ -233,11 +233,3 @@ def convert_to_rect(box):
         return (min(xs), min(ys), max(xs), max(ys))
     else:
         raise ValueError(f"Geçersiz bbox formatı: {box}")
-    
-if __name__ == "__main__":
-    pdf_path = "tcmb.pdf"  # senin pdf yolun
-    print("\nTüm görsel elementler genişletilerek ve birleştirilerek tespit ediliyor...")
-    parser = PdfParser(pdf_path)
-    extracted_text = parser.run()
-    print(f"Extracted text length: {len(extracted_text)} characters")
-    print("\nİşlem tamamlandı!")
