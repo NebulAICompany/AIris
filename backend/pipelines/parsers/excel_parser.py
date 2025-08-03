@@ -1,9 +1,8 @@
 import openpyxl
 
 class ExcelParser:
-    def __init__(self, file_path: str, client=None):
+    def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = client
     
     def run(self):
         wb_obj = openpyxl.load_workbook(self.file_path)

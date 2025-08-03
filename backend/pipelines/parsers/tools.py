@@ -1,6 +1,6 @@
 import base64
 from nltk.tokenize import sent_tokenize
-
+from backend.shared.constants import openai_client
 
 def specify_sentence(text, word):
     """
@@ -28,11 +28,11 @@ def specify_sentence(text, word):
     return ' '.join(modified_sentences)
 
 
-def describe_image(image_bytes, client=None):
+def describe_image(image_bytes):
         try:
             base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
-            response = client.chat.completions.create(
+            response = openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
@@ -64,10 +64,10 @@ def describe_image(image_bytes, client=None):
             print(f"Error in GPT image description: {e}")
             return "Açıklama alınamadı."
         
-def describe_table(table_content, client=None):
+def describe_table(table_content):
         try:
             table_text = "\n".join([" | ".join(row) for row in table_content])
-            response = client.chat.completions.create(
+            response = openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
