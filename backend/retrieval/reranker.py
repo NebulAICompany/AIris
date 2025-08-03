@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 import cohere
 import os
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 
 logger = get_logger("RERANKER")
 

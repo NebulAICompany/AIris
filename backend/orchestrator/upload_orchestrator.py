@@ -1,16 +1,15 @@
 import os
 import sys
 from pathlib import Path
-
-# Add the project root to system path to allow imports
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
-
 from backend.pipelines.uploadpipe import UploadPipeline
 import backend.pipelines.vectorpipe as vectorpipe
+import json
 
-# Vector store path
-VECTOR_STORE_PATH = "backend/vectorstore"
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
+with open("paths.json", "r") as f:
+    paths = json.load(f)
+VECTOR_STORE_PATH = paths["VECTORSTORE_PATH"]
 
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
@@ -45,7 +44,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
 
         # Get original filename for reference
         original_stem = Path(file_path).stem
-        
+
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,

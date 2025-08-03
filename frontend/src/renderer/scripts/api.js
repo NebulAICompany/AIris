@@ -147,7 +147,6 @@ class APIService {
     query,
     webSearchEnabled = false,
     wolframEnabled = false,
-    ragFusionEnabled = false,
     sessionId = null,
     selectedFiles = null
   ) {
@@ -170,7 +169,6 @@ class APIService {
           query: query.trim(),
           webSearchEnabled: webSearchEnabled,
           wolframEnabled: wolframEnabled,
-          ragFusionEnabled: false, // Hardcoded to false
           sessionId: sessionId,
           selectedFiles: selectedFiles,
         },
