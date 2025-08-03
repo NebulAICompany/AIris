@@ -49,14 +49,14 @@ class VectorStorePipeline:
         Generate hypothetical prompts/queries that users might ask to find this document chunk
         """
 
-        system_prompt = """Sen bir finansal belge analisti ve soru üretim uzmanısın. 
-                    Verilen belge parçası için kullanıcıların sorabileceği hipotetik sorular üret.
-                    Sorular finansal terimler, sayısal veriler ve analiz odaklı olmalı."""
+        system_prompt = """You are a text analyst and question generation expert.
+                    For the given document chunk, generate hypothetical questions that users might ask.
+                    The questions should focus on text content. You should generate questions in the same language as the document. Output only the questions separated by 2 new lines, no other text."""
 
-        user_prompt = f"""Belge içeriği:
+        user_prompt = f"""Document content:
 {original_chunk}
 
-Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik soru/sorgu üret:"""
+Generate 3 different hypothetical questions/queries that users might ask about this document content:"""
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
@@ -72,7 +72,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
 
         hypothetical_prompts = [
             prompt.strip()
-            for prompt in generated_text.split("|||")
+            for prompt in generated_text.split("\n\n")
             if prompt.strip() and len(prompt.strip()) > 10
         ]
 
@@ -86,7 +86,7 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             f"❓ Generated {len(hypothetical_prompts)} hypothetical prompts for chunk"
         )
         for i, prompt in enumerate(hypothetical_prompts[:3]):  # Show first 3
-            print(f"   {i+1}. {prompt}")
+            print(f"   {i+1}. {prompt}\n--------------------------------\n")
 
         return hypothetical_prompts
 
@@ -254,7 +254,6 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             docs = self.text_splitter.create_documents([text_content])
             if not docs:
                 print(f"⚠️ Warning: No chunks were created for {document_name}.")
-
                 return
 
             print(f"✅ Document '{document_name}' split into {len(docs)} semantic chunks")
@@ -282,7 +281,6 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
                 masked = mask_text(doc.page_content)
                 doc.page_content = masked
 
-
                 # Store PII mapping with unique identifier
                 doc_id = doc.metadata.get("chunk_id")
                 if doc.metadata.get("content_type") == "hypothetical_prompt":
@@ -294,14 +292,11 @@ Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik sor
             else:
                 vectorstore.add_documents(processed_docs)
 
-
             print(f"📈 Total text processed: {len(text_content)} characters")
             print(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
 
             # Update metrics
             vectorstore_total_chunks.observe(vectorstore.index.ntotal)
-
-
             # Save the vectorstore
             vectorstore.save_local(vectorstore_path)
             print(f"💾 Vector store saved to: {vectorstore_path}")

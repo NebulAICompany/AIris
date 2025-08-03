@@ -256,14 +256,14 @@ async def handle_query(request: QueryRequest):
 
 
 @router.post("/upload")
-def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "none"):
+def handle_upload(file: UploadFile = File(...)):
     global request_counter
     try:
         # Increment simple counter
         request_counter += 1
 
         logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
-        logger.info(f"Pre-embedding process: {preEmbeddingProcess}")
+        
 
         # Ensure uploads directory exists (use absolute path)
         import json 
@@ -283,8 +283,8 @@ def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "none
         from backend.orchestrator.upload_orchestrator import process_file
 
         logger.info("Processing uploaded file...")
-
-        result = process_file(str(file_path), pre_embedding_process=preEmbeddingProcess)
+        pre_embedding_process = "hype"
+        result = process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
 
@@ -294,7 +294,7 @@ def handle_upload(file: UploadFile = File(...), preEmbeddingProcess: str = "none
             "status": "success",
             "message": "Dosya başarıyla yüklendi ve işlendi",
             "result": result,
-            "preEmbeddingProcess": preEmbeddingProcess,
+            "preEmbeddingProcess": pre_embedding_process,
         }
     except Exception as e:
         error_message = str(e)
