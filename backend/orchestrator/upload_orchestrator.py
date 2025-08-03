@@ -3,8 +3,6 @@ import sys
 from pathlib import Path
 import backend.pipelines.vectorpipe as vectorpipe
 import json
-import openai
-
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 with open("paths.json", "r") as f:
@@ -26,24 +24,22 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         # Step 1: Create UploadPipeline and get extracted text
         # pipeline = UploadPipeline(file_path=file_path)
         # extracted_text = pipeline.run()
-        
-        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        
+
         from backend.pipelines.parsers.pdf_parser import PdfParser
         from backend.pipelines.parsers.parser_set import TxtParser, ImageParser, ExcelParser, DocxParser 
   
         file_extension = Path(file_path).suffix.lower()
 
         if file_extension == '.pdf':
-            parser = PdfParser(file_path, client)
+            parser = PdfParser(file_path)
         elif file_extension == '.docx':
-            parser = DocxParser(file_path, client)
+            parser = DocxParser(file_path)
         elif file_extension in ('.xlsx', '.xls'):
-            parser = ExcelParser(file_path, client)
+            parser = ExcelParser(file_path)
         elif file_extension == '.txt':
             parser = TxtParser(file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
-            parser = ImageParser(file_path, client)
+            parser = ImageParser(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
         

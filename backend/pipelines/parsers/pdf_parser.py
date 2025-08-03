@@ -3,15 +3,14 @@ import fitz, nltk, io
 from pathlib import Path
 from backend.pipelines.parsers.tools import describe_image, describe_table, specify_sentence
 from dotenv import load_dotenv
+from backend.shared.constants import document_analysis_client
 
 
 load_dotenv()
 
 class PdfParser:
     def __init__(self, pdf_path: str):
-        
         self.pdf_path = pdf_path
-
 
     def run(self):
         # PDF dosyasını analiz et ve sonuçları al
@@ -42,7 +41,7 @@ class PdfParser:
                 temp_pdf.close()
 
                 # Azure Document Intelligence ile analiz et
-                poller = self.document_analysis_client.begin_analyze_document(
+                poller = document_analysis_client.begin_analyze_document(
                     "prebuilt-layout", document=io.BytesIO(pdf_bytes)
                 )
                 result = poller.result()

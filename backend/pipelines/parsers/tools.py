@@ -96,7 +96,7 @@ def describe_chart(self, chart_data):
     try:
         # Grafik verilerini metin formatında birleştir
         chart_text = "\n".join(chart_data)
-        response = self.client.chat.completions.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {

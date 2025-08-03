@@ -1018,7 +1018,7 @@ class DocumentVerificationPipeline:
     def _get_llm_response(self, prompt: str) -> str:
         """Get response from LLM for document analysis"""
         try:
-            response = self.openai_client.chat.completions.create(
+            response = openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {
