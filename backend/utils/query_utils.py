@@ -1,8 +1,8 @@
 import logging
-from dotenv import load_dotenv
 from backend.shared.constants import openai_client
-
-load_dotenv()
+from typing import List, Dict, Tuple
+import re
+import base64
 
 try:
     import jpype
@@ -169,3 +169,63 @@ def reflect_and_retry(
             return current_answer
 
     return current_answer
+
+
+def extract_image_references_from_context(local_context: str) -> Tuple[str, List[str]]:
+    """
+    Analyze local context for image references and extract image paths.
+    Returns (cleaned_context, image_paths_list)
+    """
+    image_pattern = r'\(\(Image\):([^)]+)\)'
+    image_paths = []
+
+    print(f"🔍 Analyzing local context for image references...")
+
+    # Find all image references in the context
+    matches = re.findall(image_pattern, local_context)
+
+    if matches:
+        print(f"   - Found {len(matches)} image references in context")
+        for match in matches:
+            image_path = match.strip()
+            if image_path not in image_paths:
+                image_paths.append(image_path)
+
+        # Clean the context from image references
+    cleaned_context = re.sub(image_pattern, '', local_context)
+
+    return cleaned_context, image_paths
+
+
+def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
+    """
+    Load actual image files based on the extracted paths and convert to base64.
+    Returns list of image data dictionaries.
+    """
+    images_data = []
+
+    if not image_paths:
+        return images_data
+
+    print(f"📁 Loading {len(image_paths)} images from filesystem...")
+
+    for path in image_paths:
+        # Construct the full image path - try both .jpg and .png
+        for ext in ['.jpg', '.png']:
+            image_file_path = f"backend/images/{path}{ext}"
+
+            if os.path.exists(image_file_path):
+                try:
+                    with open(image_file_path, "rb") as img_file:
+                        img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                        images_data.append({
+                            "filename": f"{path}{ext}",
+                            "data": img_data,
+                            "reference": path,
+                            "type": f"image/{ext[1:]}"
+                        })
+                    break
+                except Exception as e:
+                    print(f"   ❌ Error loading image {path}{ext}: {e}")
+
+    return images_data
