@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Tuple
 from backend.retrieval.reranker import rerank
-from backend.orchestrator.query_utils import (
+from backend.utils.query_utils import (
     spell_check,
     detect_language,
 )

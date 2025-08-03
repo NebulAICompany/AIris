@@ -1,15 +1,7 @@
-import os
 import requests
 import xml.etree.ElementTree as ET
 from agents import function_tool
-from tavily import TavilyClient
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
-
+from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
 
 @function_tool
 def wolfram_alpha_query(query: str) -> str:
@@ -23,7 +15,7 @@ def wolfram_alpha_query(query: str) -> str:
         The result from Wolfram Alpha as a string
     """
     url = "http://api.wolframalpha.com/v2/query"
-    params = {"input": query, "appid": os.getenv("WOLFRAM_APP_ID"), "output": "XML"}
+    params = {"input": query, "appid": WOLFRAM_APP_ID, "output": "XML"}
     try:
         response = requests.get(url, params=params)
 

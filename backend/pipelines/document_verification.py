@@ -1,8 +1,3 @@
-"""
-Document Verification Pipeline for AIRIS
-Implements comprehensive document verification using LLM-based analysis and Wolfram Alpha mathematical validation.
-"""
-
 import cv2
 import pytesseract
 from PIL import Image
@@ -11,9 +6,9 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-import fitz  # PyMuPDF
+import fitz
 from backend.shared.logger import get_logger
-from openai import OpenAI
+from backend.shared.constants import openai_client
 import os
 import io
 
@@ -51,12 +46,6 @@ class DocumentVerificationPipeline:
         # Turkish OCR configuration
         self.tesseract_config = r"--oem 3 --psm 6 -l tur+eng"
 
-        # Initialize OpenAI client for LLM analysis
-        self.openai_client = OpenAI(
-            api_key=os.getenv(
-                "OPENAI_API_KEY",
-            )
-        )
 
     def verify_document(
         self,

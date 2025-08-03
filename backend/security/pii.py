@@ -1,20 +1,10 @@
-import os
-from azure.core.credentials import AzureKeyCredential
-from azure.ai.textanalytics import TextAnalyticsClient
-from dotenv import load_dotenv
 import uuid
 import json
 from pathlib import Path
+from backend.shared.constants import text_analytics_client
 
-load_dotenv()
-
-endpoint = os.environ["AZURE_LANGUAGE_ENDPOINT"]
-key = os.environ["AZURE_LANGUAGE_KEY"]
 map_base_location = Path(__file__).parent.parent / "database" / "masked_map.json"
 
-text_analytics_client = TextAnalyticsClient(
-    endpoint=endpoint, credential=AzureKeyCredential(key)
-)
 
 def mask_text(text):
     """Mask PII entities in the given text using Azure Text Analytics."""
@@ -26,22 +16,20 @@ def mask_text(text):
     )
 
     masked_map = {}
-    for idx, doc in enumerate(result):
-        if not doc.is_error:
-            masked_text = getattr(doc, "redacted_text", "NR - " +text)
-
-            sorted_entities = sorted(doc.entities, key=lambda e: e.offset)
-            masked_spans = []
-            for entity in sorted_entities:
-                cat = entity.category.lower()
-                unique_id = str(uuid.uuid4())[:8]
-                mask = f"[{cat}-{unique_id}]"
-                masked_spans.append((entity.offset, entity.length, mask, entity.text))
-                masked_map[mask] = entity.text
-            for offset, length, mask, _ in reversed(masked_spans):
-                masked_text = masked_text[:offset] + mask + masked_text[offset+length:]
-        else:
-            print(f"Error: {doc.error}")
+    if not result[0].is_error:
+        masked_text = getattr(result[0], "redacted_text", "NR - " + text)
+        sorted_entities = sorted(result[0].entities, key=lambda e: e.offset)
+        masked_spans = []
+        for entity in sorted_entities:
+            cat = entity.category.lower()
+            unique_id = str(uuid.uuid4())[:8]
+            mask = f"[{cat}-{unique_id}]"
+            masked_spans.append((entity.offset, entity.length, mask, entity.text))
+            masked_map[mask] = entity.text
+        for offset, length, mask, _ in reversed(masked_spans):
+            masked_text = masked_text[:offset] + mask + masked_text[offset + length:]
+    else:
+        print(f"Error: {result[0].error}")
 
     try:
         with open(map_base_location, "r", encoding="utf-8") as f:

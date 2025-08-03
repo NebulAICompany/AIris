@@ -4,8 +4,7 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from backend.security.pii import mask_text
-from openai import OpenAI
-from pathlib import Path
+from backend.shared.constants import openai_client
 from typing import List, Dict
 import time
 import asyncio
@@ -16,10 +15,6 @@ from backend.monitoring.metrics import (
     vectorstore_total_chunks,
 )
 from backend.retrieval.autocontext import apply_autocontext
-from dotenv import load_dotenv
-
-
-load_dotenv()
 
 
 class PreEmbeddingProcess(Enum):
@@ -46,8 +41,6 @@ class VectorStorePipeline:
             breakpoint_threshold_amount=80,
         )
         self.pre_embedding_process = pre_embedding_process
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 
     def generate_hypothetical_prompts(
         self, original_chunk: str, chunk_metadata: Dict
@@ -65,7 +58,7 @@ class VectorStorePipeline:
 
 Bu belge içeriği için kullanıcıların sorabileceği 3 farklı hipotetik soru/sorgu üret:"""
 
-        response = self.client.chat.completions.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},

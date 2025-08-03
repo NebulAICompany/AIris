@@ -1,12 +1,7 @@
 from typing import List, Dict, Any
-import cohere
-import os
 from backend.shared.logger import get_logger
 
 logger = get_logger("RERANKER")
-
-api_key = os.getenv("COHERE_API_KEY")
-
 
 def rerank(
     query: str,
@@ -20,13 +15,8 @@ def rerank(
         return []
 
     try:
-        co = cohere.ClientV2(api_key=api_key)
-
+        from backend.shared.constants import co
         doc_contents = [doc["content"] for doc in documents]
-
-        logger.info(
-            f"Reranking {len(documents)} documents using Cohere model: {model_name}"
-        )
 
         response = co.rerank(
             model=model_name,
