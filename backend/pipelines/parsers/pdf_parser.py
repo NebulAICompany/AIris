@@ -1,31 +1,17 @@
 from PIL import Image
-from azure.core.credentials import AzureKeyCredential
-from azure.ai.formrecognizer import DocumentAnalysisClient
-import os, fitz, nltk, io
+import fitz, nltk, io
 from pathlib import Path
 from backend.pipelines.parsers.tools import describe_image, describe_table, specify_sentence
 from dotenv import load_dotenv
+
+
 load_dotenv()
 
 class PdfParser:
-    def __init__(self, pdf_path: str, client=None):
+    def __init__(self, pdf_path: str):
         
         self.pdf_path = pdf_path
-        self.client = client
-        self.azure_endpoint_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
-        self.azure_key_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
-        
 
-        if not self.azure_endpoint_doc_intel or not self.azure_key_doc_intel:
-            raise ValueError(
-                "Azure Document Intelligence credentials not provided. "
-                "Set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT and AZURE_DOCUMENT_INTELLIGENCE_KEY "
-                "environment variables or pass them as parameters."
-            )
-        
-        self.document_analysis_client = DocumentAnalysisClient(
-            endpoint=self.azure_endpoint_doc_intel,
-            credential=AzureKeyCredential(self.azure_key_doc_intel))
 
     def run(self):
         # PDF dosyasını analiz et ve sonuçları al
@@ -130,7 +116,7 @@ class PdfParser:
                             cropped.save(img_byte_arr, format='PNG')
                             img_bytes = img_byte_arr.getvalue()
 
-                            description = describe_image(img_bytes, client=self.client)
+                            description = describe_image(img_bytes)
                             updated_description = specify_sentence(description, f"((Image):{image_reference})")
 
                             content_parts.append(f"{updated_description}\n---\n")
@@ -161,7 +147,7 @@ class PdfParser:
                                     content_parts.append(f"[{row_index},{col_index}]: {content}\n")
                                     table_content.append(content)
 
-                        table_description = describe_table(table_content, client=self.client)
+                        table_description = describe_table(table_content)
                         content_parts.append(f"[Description] = {table_description}\n")
                         occupied_boxes.extend(table_regions)
 
@@ -247,11 +233,3 @@ def convert_to_rect(box):
         return (min(xs), min(ys), max(xs), max(ys))
     else:
         raise ValueError(f"Geçersiz bbox formatı: {box}")
-    
-if __name__ == "__main__":
-    pdf_path = "tcmb.pdf"  # senin pdf yolun
-    print("\nTüm görsel elementler genişletilerek ve birleştirilerek tespit ediliyor...")
-    parser = PdfParser(pdf_path)
-    extracted_text = parser.run()
-    print(f"Extracted text length: {len(extracted_text)} characters")
-    print("\nİşlem tamamlandı!")

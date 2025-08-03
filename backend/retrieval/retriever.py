@@ -2,6 +2,7 @@ from typing import List, Dict, Any
 import os
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
+from backend.shared.constants import OPENAI_API_KEY, HUGGINGFACE_API_KEY
 
 _vectorstore = None
 
@@ -12,7 +13,7 @@ def _get_embeddings() -> Embeddings:
 
         return OpenAIEmbeddings(
             model="text-embedding-3-small",
-            api_key=os.getenv("OPENAI_API_KEY"),
+            api_key=OPENAI_API_KEY,
         )
     except (ImportError, Exception) as e:
         try:
@@ -20,7 +21,7 @@ def _get_embeddings() -> Embeddings:
 
             return HuggingFaceEmbeddings(
                 model_name="sentence-transformers/all-MiniLM-L6-v2",
-                api_key=os.getenv("HUGGINGFACE_API_KEY"),
+                api_key=HUGGINGFACE_API_KEY,
             )
         except (ImportError, Exception) as e:
             raise ImportError(

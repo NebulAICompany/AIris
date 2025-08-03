@@ -1,12 +1,10 @@
 import pythoncom
 from docx2pdf import convert
-from backend.pipelines.uploadpipe import UploadPipeline
 from pathlib import Path
 
 class DocxParser:
-    def __init__(self, file_path: str, client=None):
+    def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = client
 
     def run(self):
         # Initialize COM at the beginning
@@ -24,7 +22,7 @@ class DocxParser:
         else:
             # PDF'i parse et ve text'i al
             from backend.pipelines.parsers.pdf_parser import PdfParser
-            pdf_parser = PdfParser(file_path, self.client)
+            pdf_parser = PdfParser(file_path)
             extracted_text = pdf_parser.run()
             
             print("DOCX to PDF ve text extraction işlemi tamamlandı.")
