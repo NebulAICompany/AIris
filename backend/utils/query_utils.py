@@ -1,13 +1,11 @@
 import logging
-import os
 from dotenv import load_dotenv
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 
 load_dotenv()
 
-language_key = os.environ.get('AZURE_LANGUAGE_KEY')
-language_endpoint = os.environ.get('AZURE_LANGUAGE_ENDPOINT')
+
 
 try:
     import jpype
@@ -22,7 +20,6 @@ try:
         )
         startJVM(jvmPath, "-ea", f"-Djava.class.path={zemberek_path}")
 
-    # Initialize Zemberek classes
     TurkishMorphology = JClass("zemberek.morphology.TurkishMorphology")
     turkish_morphology = TurkishMorphology.createWithDefaults()
 
@@ -74,11 +71,7 @@ def spell_check(query: str) -> str:
 
 def detect_language(query: str) -> str:
     try:
-        ta_credential = AzureKeyCredential(language_key)
-        text_analytics_client = TextAnalyticsClient(
-            endpoint=language_endpoint,
-            credential=ta_credential)
-
+        from backend.shared.constants import text_analytics_client
         response = text_analytics_client.detect_language(documents=[query], country_hint='tr')[0]
         return response.primary_language.name
 
@@ -109,10 +102,3 @@ def normalize_repeated_chars(word: str) -> str:
         i = j
 
     return "".join(result)
-
-
-if __name__ == "__main__":
-    # Test the functions
-    test_query = "Bu bir test cümlesidir. Bu cümledeki yazım hatalarını kontrol et."
-    print("Original Query:", test_query)
-    print("Detected Language:", detect_language(test_query))

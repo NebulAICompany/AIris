@@ -8,9 +8,10 @@ and formatting the responses.
 from typing import Any, Dict, Optional
 import httpx
 import os
+from backend.shared.constants import ALPHA_VANTAGE_API_KEY
 
 ALPHA_VANTAGE_BASE = "https://www.alphavantage.co/query"
-API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
+API_KEY = ALPHA_VANTAGE_API_KEY
 
 async def make_alpha_request(client: httpx.AsyncClient, function: str, symbol: Optional[str], additional_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any] | str:
     """Make a request to the Alpha Vantage API with proper error handling.

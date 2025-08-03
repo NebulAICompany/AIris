@@ -1,5 +1,7 @@
 from pathlib import Path
-import os, logging, warnings, traceback, openai
+import os, logging, warnings
+from backend.shared.constants import openai_client
+
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
@@ -7,7 +9,6 @@ warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 class UploadPipeline:
     def __init__(self, file_path: str):
         self.file_path = file_path
-        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     
     def run(self):
 
@@ -20,15 +21,15 @@ class UploadPipeline:
         file_extension = Path(self.file_path).suffix.lower()
 
         if file_extension == '.pdf':
-            parser = PdfParser(self.file_path, self.client)
+            parser = PdfParser(self.file_path)
         elif file_extension == '.docx':
-            parser = DocxParser(self.file_path, self.client)
+            parser = DocxParser(self.file_path)
         elif file_extension in ('.xlsx', '.xls'):
-            parser = ExcelParser(self.file_path, self.client)
+            parser = ExcelParser(self.file_path)
         elif file_extension == '.txt':
             parser = TxtParser(self.file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
-            parser = ImageParser(self.file_path, self.client)
+            parser = ImageParser(self.file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
         
