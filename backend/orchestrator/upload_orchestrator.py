@@ -1,9 +1,9 @@
 import os
 import sys
 from pathlib import Path
-from backend.pipelines.uploadpipe import UploadPipeline
 import backend.pipelines.vectorpipe as vectorpipe
 import json
+import openai
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
@@ -14,22 +14,40 @@ VECTOR_STORE_PATH = paths["VECTORSTORE_PATH"]
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
     Process an uploaded file synchronously.
-
     Args:
         file_path: Path to the uploaded file
-
     Returns:
         Dictionary with processing results
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
-    _, ext = os.path.splitext(file_path)
-
     try:
         # Step 1: Create UploadPipeline and get extracted text
-        pipeline = UploadPipeline(file_path=file_path)
-        extracted_text = pipeline.run()
+        # pipeline = UploadPipeline(file_path=file_path)
+        # extracted_text = pipeline.run()
+        
+        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
+        from backend.pipelines.parsers.pdf_parser import PdfParser
+        from backend.pipelines.parsers.parser_set import TxtParser, ImageParser, ExcelParser, DocxParser 
+  
+        file_extension = Path(file_path).suffix.lower()
+
+        if file_extension == '.pdf':
+            parser = PdfParser(file_path, client)
+        elif file_extension == '.docx':
+            parser = DocxParser(file_path, client)
+        elif file_extension in ('.xlsx', '.xls'):
+            parser = ExcelParser(file_path, client)
+        elif file_extension == '.txt':
+            parser = TxtParser(file_path)
+        elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
+            parser = ImageParser(file_path, client)
+        else:
+            raise ValueError(f"Unsupported file type: {file_extension}")
+        
+        extracted_text = parser.run()
 
         # Step 2: Create or update vector store directly with the extracted text
         from backend.pipelines.vectorpipe import PreEmbeddingProcess
@@ -48,7 +66,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            save_path=VECTOR_STORE_PATH,
+            vectorstore_path=VECTOR_STORE_PATH,
         )
 
         return {

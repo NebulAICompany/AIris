@@ -14,7 +14,6 @@ class PdfParser:
         self.client = client
         self.azure_endpoint_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
         self.azure_key_doc_intel = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
-        
 
         if not self.azure_endpoint_doc_intel or not self.azure_key_doc_intel:
             raise ValueError(
