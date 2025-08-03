@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 from langchain_core.documents import Document
 import re
 
@@ -21,9 +21,6 @@ class AutoContextProcessor:
         self,
         use_document_summary: bool = True,
         use_section_summaries: bool = True,
-        document_title_guidance: str = None,
-        document_summary_guidance: str = None,
-        section_summary_guidance: str = None,
     ):
         """
         Initialize the AutoContext processor.
@@ -31,23 +28,9 @@ class AutoContextProcessor:
         Args:
             use_document_summary: Whether to generate document-level summaries
             use_section_summaries: Whether to generate section-level summaries
-            document_title_guidance: Custom guidance for document title generation
-            document_summary_guidance: Custom guidance for document summary generation
-            section_summary_guidance: Custom guidance for section summary generation
         """
         self.use_document_summary = use_document_summary
         self.use_section_summaries = use_section_summaries
-        self.document_title_guidance = (
-            document_title_guidance
-            or "Generate a concise, descriptive title for this document"
-        )
-        self.document_summary_guidance = (
-            document_summary_guidance
-            or "Provide a brief summary of the document's main content and purpose"
-        )
-        self.section_summary_guidance = (
-            section_summary_guidance or "Summarize the key points of this section"
-        )
 
     async def generate_document_title(
         self, document_text: str, existing_title: str = None
@@ -71,24 +54,22 @@ class AutoContextProcessor:
                 local_context="",
                 web_search_enabled=False,
                 query="Generate document title",
-                instruction="Generate a concise, descriptive title for the given document",
+                instruction="Belgenin kısa ve açıklayıcı bir başlığını oluşturun",
             )
 
-            title_prompt = f"""You are a document analyst. Generate a concise, descriptive title for the following document.
+            title_prompt = f"""Bir belge analistisiniz. Aşağıdaki belgenin kısa ve açıklayıcı bir başlığını oluşturun.
 
-{self.document_title_guidance}
-
-Document content (first 2000 characters):
+Belge içeriği (ilk 2000 karakter):
 {document_text[:2000]}
 
-Requirements:
-- Keep the title under 100 characters
-- Make it descriptive and specific
-- Focus on the main topic or purpose
-- Use professional language
-- Do not include quotes or special formatting
+Gereksinimler:
+- Başlığın 100 karakterden az olması gerekiyor
+- Açıklayıcı ve spesifik olmalı
+- Ana konuya veya amaca odaklanmalı
+- Profesyonel bir dil kullanın
+- Alıntı veya özel biçimlendirme kullanmayın
 
-Generated title:"""
+Oluşturulan başlık:"""
 
             response = await generate_answer(title_prompt, agent)
 
@@ -135,8 +116,6 @@ Generated title:"""
             summary_prompt = f"""Bir belge analistisiniz. Aşağıdaki belgenin kapsamlı bir özetini oluşturun.
 
 Belge Başlığı: {document_title}
-
-{self.document_summary_guidance}
 
 Belge içeriği (ilk 4000 karakter):
 {document_text[:4000]}
@@ -284,12 +263,10 @@ Belge özeti:"""
                 instruction="Belge bölümünün özetini oluştur",
             )
 
-            summary_prompt = f"""Bir belge analistisiniz. Lütfen aşağıdaki bölümün kısa ve öz bir özetini oluşturun.
+            summary_prompt = f"""Bir belge analistisiniz. Aşağıdaki bölümün kısa ve öz bir özetini oluşturun.
 
 Belge Başlığı: {document_title}
 Bölüm Başlığı: {section_title}
-
-{self.section_summary_guidance}
 
 Bölüm içeriği (ilk 2000 karakter):
 {section_content[:2000]}

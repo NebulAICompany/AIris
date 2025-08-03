@@ -12,13 +12,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import fitz  # PyMuPDF
-from backend.libs.logger import get_logger
+from backend.shared.logger import get_logger
 from openai import OpenAI
 import os
 import io
 
 # Import Wolfram Alpha tool for mathematical verification
-from core.tools.api import wolfram_alpha_query
+from backend.core.tools.api import wolfram_alpha_query
 
 logger = get_logger("DOCUMENT_VERIFICATION")
 

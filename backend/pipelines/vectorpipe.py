@@ -3,7 +3,7 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from backend.guardrails.pii import mask_text
+from backend.security.pii import mask_text
 from openai import OpenAI
 from pathlib import Path
 from typing import List, Dict

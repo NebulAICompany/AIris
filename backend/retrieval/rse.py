@@ -1,5 +1,8 @@
 import numpy as np
 from typing import List, Dict, Any, Tuple
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_best_segments(all_relevance_values: list[list], document_splits: list[int], max_length: int, overall_max_length: int, minimum_value: float):
     """
@@ -71,6 +74,22 @@ def get_best_segments(all_relevance_values: list[list], document_splits: list[in
     
     return best_segments, scores
 
+def derive_chunk_index(result: dict):
+    """Derive chunk index from metadata"""
+    chunk_index = result["metadata"].get("chunk_index")
+    if chunk_index is None:
+        chunk_id = result["metadata"].get("chunk_id", "")
+        if "chunk_" in chunk_id:
+            try:
+                chunk_index = int(chunk_id.split("chunk_")[1].split("_")[0])
+            except (ValueError, IndexError):
+                chunk_index = 0  # fallback
+        else:
+            chunk_index = 0
+    else:
+        chunk_index = int(chunk_index)
+    return chunk_index
+
 def get_meta_document(all_ranked_results: list[list], top_k_for_document_selection: int):
     """Create meta-document from top results across all queries"""
     # get the top_k results for each query - and the document IDs for the top results across all queries
@@ -94,18 +113,7 @@ def get_meta_document(all_ranked_results: list[list], top_k_for_document_selecti
                 result_doc_id = result["metadata"].get("doc_id") or result["metadata"].get("file_name")
                 if result_doc_id == document_id:
                     # Derive chunk index from metadata
-                    chunk_index = result["metadata"].get("chunk_index")
-                    if chunk_index is None:
-                        chunk_id = result["metadata"].get("chunk_id", "")
-                        if "chunk_" in chunk_id:
-                            try:
-                                chunk_index = int(chunk_id.split("chunk_")[1].split("_")[0])
-                            except (ValueError, IndexError):
-                                chunk_index = 0  # fallback
-                        else:
-                            chunk_index = 0
-                    else:
-                        chunk_index = int(chunk_index)
+                    chunk_index = derive_chunk_index(result)
                     max_chunk_index = max(max_chunk_index, chunk_index)
         document_start_points[document_id] = document_splits[-1] if document_splits else 0
         document_splits.append(int(max_chunk_index + document_splits[-1] + 1 if document_splits else max_chunk_index + 1)) # basically the start point of the next document
@@ -144,18 +152,7 @@ def get_relevance_values(all_ranked_results: list[list], meta_document_length: i
                 continue
             
             # For current format, derive chunk_index from chunk_id or use rank as fallback
-            chunk_index = result["metadata"].get("chunk_index")
-            if chunk_index is None:
-                chunk_id = result["metadata"].get("chunk_id", "")
-                if "chunk_" in chunk_id:
-                    try:
-                        chunk_index = int(chunk_id.split("chunk_")[1].split("_")[0])
-                    except (ValueError, IndexError):
-                        chunk_index = rank  # fallback to rank
-                else:
-                    chunk_index = rank
-            else:
-                chunk_index = int(chunk_index)
+            chunk_index = derive_chunk_index(result)
                 
             meta_document_index = int(document_start_points[document_id] + chunk_index) # find the correct index for this chunk in the meta-document
             
@@ -201,47 +198,12 @@ def adjust_relevance_values_for_chunk_length(relevance_values: list[float], chun
     
     return adjusted_relevance_values
 
-# RSE parameter presets
-RSE_PARAMS_PRESETS = {
-    "balanced": {
-        'max_length': 15,
-        'overall_max_length': 30,
-        'minimum_value': 0.5,
-        'irrelevant_chunk_penalty': 0.18,
-        'overall_max_length_extension': 5,
-        'decay_rate': 30,
-        'top_k_for_document_selection': 10,
-        'chunk_length_adjustment': True,
-    },
-    "precision": {
-        'max_length': 15,
-        'overall_max_length': 30,
-        'minimum_value': 0.7,
-        'irrelevant_chunk_penalty': 0.2,
-        'overall_max_length_extension': 5,
-        'decay_rate': 30,
-        'top_k_for_document_selection': 10,
-        'chunk_length_adjustment': True,
-    },
-    "find_all": {
-        'max_length': 40,
-        'overall_max_length': 200,
-        'minimum_value': 0.4,
-        'irrelevant_chunk_penalty': 0.18,
-        'overall_max_length_extension': 0,
-        'decay_rate': 200,
-        'top_k_for_document_selection': 200,
-        'chunk_length_adjustment': True,
-    },
-}
-
-def apply_rse(all_ranked_results: List[List[Dict[str, Any]]], preset: str = "balanced") -> Tuple[List[Dict[str, Any]], List[float]]:
+def apply_rse(all_ranked_results: List[List[Dict[str, Any]]]) -> Tuple[List[Dict[str, Any]], List[float]]:
     """
     Apply Relevant Segment Extraction to improve RAG retrieval.
     
     Args:
         all_ranked_results: List of lists of ranked results for each query
-        preset: RSE parameter preset ('balanced', 'precision', 'find_all')
         
     Returns:
         Tuple of (selected_chunks, segment_scores)
@@ -250,7 +212,16 @@ def apply_rse(all_ranked_results: List[List[Dict[str, Any]]], preset: str = "bal
         return [], []
     
     # Get RSE parameters
-    params = RSE_PARAMS_PRESETS.get(preset, RSE_PARAMS_PRESETS["balanced"])
+    params = {
+        'max_length': 15,
+        'overall_max_length': 30,
+        'minimum_value': 0.5,
+        'irrelevant_chunk_penalty': 0.18,
+        'overall_max_length_extension': 5,
+        'decay_rate': 30,
+        'top_k_for_document_selection': 10,
+        'chunk_length_adjustment': True,
+    }
     
     # Step 1: Create meta-document
     document_splits, document_start_points, unique_document_ids = get_meta_document(
@@ -296,22 +267,12 @@ def apply_rse(all_ranked_results: List[List[Dict[str, Any]]], preset: str = "bal
             document_id = result["metadata"].get("doc_id") or result["metadata"].get("file_name")
             if document_id in unique_document_ids:
                 # Derive chunk index from metadata
-                chunk_index = result["metadata"].get("chunk_index")
-                if chunk_index is None:
-                    chunk_id = result["metadata"].get("chunk_id", "")
-                    if "chunk_" in chunk_id:
-                        try:
-                            chunk_index = int(chunk_id.split("chunk_")[1].split("_")[0])
-                        except (ValueError, IndexError):
-                            chunk_index = 0  # fallback
-                    else:
-                        chunk_index = 0
-                else:
-                    chunk_index = int(chunk_index)
+                chunk_index = derive_chunk_index(result)
                 meta_document_index = int(document_start_points[document_id] + chunk_index)
                 chunk_lookup[meta_document_index] = result
     
     # Extract chunks for each best segment
+    print(f"🧠 Best segments: {best_segments}")
     for segment_start, segment_end in best_segments:
         for idx in range(segment_start, segment_end):
             if idx in chunk_lookup:
@@ -325,7 +286,7 @@ def apply_rse(all_ranked_results: List[List[Dict[str, Any]]], preset: str = "bal
     
     return selected_chunks, scores
 
-def apply_rse_single_query(ranked_results: List[Dict[str, Any]], preset: str = "balanced") -> Tuple[List[Dict[str, Any]], List[float]]:
+def apply_rse_single_query(ranked_results: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[float]]:
     """
     Apply RSE to a single query's results by treating it as multiple queries.
     This is a fallback when we only have one query.
@@ -337,16 +298,15 @@ def apply_rse_single_query(ranked_results: List[Dict[str, Any]], preset: str = "
     # or use the same results multiple times with different focus
     all_ranked_results = [ranked_results]  # Simple approach: use the same results
     
-    return apply_rse(all_ranked_results, preset)
+    return apply_rse(all_ranked_results)
 
-def retrieve_with_rse(query: str, k: int = 15, preset: str = "balanced") -> Tuple[List[Dict[str, Any]], List[float]]:
+def retrieve_with_rse(query: str, k: int = 15) -> Tuple[List[Dict[str, Any]], List[float]]:
     """
     Retrieve documents using RSE enhancement.
     
     Args:
         query: The search query
         k: Number of initial documents to retrieve
-        preset: RSE parameter preset
         
     Returns:
         Tuple of (rse_enhanced_chunks, segment_scores)
@@ -370,8 +330,10 @@ def retrieve_with_rse(query: str, k: int = 15, preset: str = "balanced") -> Tupl
         return [], []
     
     # Apply RSE to single query results
-    rse_chunks, scores = apply_rse_single_query(initial_results, preset)
-    
+    rse_chunks, scores = apply_rse_single_query(initial_results)
+    sorted_rse_chunks = sorted(rse_chunks, key=lambda x: int(x['metadata']['chunk_id'].split('_')[1]))
+    print(f"🧠 RSE Chunks: {sorted_rse_chunks}")
+    print(f"initial results: {initial_results}")
     print(f"🧠 RSE Enhancement: {len(initial_results)} initial chunks → {len(rse_chunks)} optimized segments")
     if scores:
         print(f"📊 RSE Segment scores: {[f'{score:.3f}' for score in scores[:3]]}")
