@@ -13,8 +13,7 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from backend.pipelines.vectorpipe import VectorStorePipeline, PreEmbeddingProcess
-from langchain_core.documents import Document
+from backend.orchestrator.vector import VectorStorePipeline, PreEmbeddingProcess
 
 
 def create_test_document():
