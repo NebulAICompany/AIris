@@ -7,9 +7,8 @@ from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query_utils import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
+from backend.shared.constants import VECTORSTORE_PATH
 import os
-
-VECTORSTORE_PATH = "backend/vectorstore"
 
 def preprocess_query(query: str):
     lang = detect_language(query)
@@ -127,7 +126,7 @@ async def run_orchestration(
 
         if not filtered_rse_chunks:
             if selected_files:
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
             else:
                 return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
@@ -140,7 +139,7 @@ async def run_orchestration(
         )  # Get more docs for better reranking
 
         if not retrieved_docs:
-            return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
+            return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı."
 
         # Filter retrieved docs by selected files
         filtered_retrieved_docs = filter_docs_by_selected_files(
@@ -149,9 +148,9 @@ async def run_orchestration(
 
         if not filtered_retrieved_docs:
             if selected_files:
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
             else:
-                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadı."
 
         # Extract only the content from the filtered retrieved docs before reranking
         doc_contents = [
