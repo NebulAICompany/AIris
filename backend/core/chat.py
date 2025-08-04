@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
+from backend.shared.constants import CHAT_HISTORY_DB_PATH_STR, DATABASE_DIR
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session as DbSession
@@ -139,13 +140,11 @@ class ChatHistoryManager:
     """Manages chat sessions and history"""
 
     def __init__(self):
-        # Create database directory if it doesn't exist
-        db_dir = Path("backend/database")
-        db_dir.mkdir(exist_ok=True)
-        
+        # Ensure database directory exists
+        DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+
         # Initialize database connection
-        db_path = os.path.join(db_dir, "chat_history.db")
-        self.engine = create_engine(f"sqlite:///{db_path}", 
+        self.engine = create_engine(f"sqlite:///{CHAT_HISTORY_DB_PATH_STR}",
                                    connect_args={"check_same_thread": False},
                                    poolclass=StaticPool)
         

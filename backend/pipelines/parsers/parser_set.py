@@ -8,13 +8,10 @@ import openpyxl
 import fitz, nltk
 from backend.pipelines.parsers.tools import describe_image, describe_table, specify_sentence
 from dotenv import load_dotenv
-from backend.shared.constants import document_analysis_client
+from backend.shared.constants import document_analysis_client, IMAGES_PATH, UPLOADS_PATH
 
 load_dotenv()
 
-with open("paths.json", "r") as f:
-    paths = json.load(f)
-IMAGES_PATH = paths["IMAGES_PATH"]
 
 def PdfParser(file_path: str):
     pages_per_part = 2
@@ -306,7 +303,8 @@ def DocxParser(file_path: str):
         # Initialize COM at the beginning
         pythoncom.CoInitialize()
 
-        output_dir = "backend/database/uploads"
+        from backend.shared.constants import UPLOADS_PATH
+        output_dir = Path(UPLOADS_PATH)
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(file_path).stem + ".pdf")
         convert(file_path, str(output_pdf))
@@ -317,10 +315,8 @@ def DocxParser(file_path: str):
             return None
         else:
             # PDF'i parse et ve text'i al
-            from backend.pipelines.parsers.pdf_parser import PdfParser
-            pdf_parser = PdfParser(file_path)
-            extracted_text = pdf_parser.run()
-            
+            extracted_text = PdfParser(file_path)
+
             print("DOCX to PDF ve text extraction işlemi tamamlandı.")
             
             # Geçici PDF dosyasını sil

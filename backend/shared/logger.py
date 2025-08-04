@@ -4,6 +4,8 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import colorama
 from colorama import Fore, Style
+from pathlib import Path
+from backend.shared.constants import LOGS_DIR, BACKEND_LOG_PATH_STR, BACKEND_ERROR_LOG_PATH_STR
 
 # Initialize colorama for Windows
 colorama.init()
@@ -58,9 +60,7 @@ def setup_base_logger():
         return
 
     # Create logs directory if it doesn't exist
-    logs_dir = os.path.join(os.getcwd(), "logs")
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Create base logger
     base_logger = logging.getLogger("backend")
@@ -70,14 +70,14 @@ def setup_base_logger():
     base_logger.handlers.clear()
 
     # File handler with rotation (10MB max, keep 5 files)
-    log_file = os.path.join(logs_dir, "backend.log")
+    log_file = BACKEND_LOG_PATH_STR
     file_handler = RotatingFileHandler(
         log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"  # 10MB
     )
     file_handler.setLevel(logging.DEBUG)
 
     # Separate error log file
-    error_log_file = os.path.join(logs_dir, "backend_errors.log")
+    error_log_file = BACKEND_ERROR_LOG_PATH_STR
     error_handler = RotatingFileHandler(
         error_log_file,
         maxBytes=10 * 1024 * 1024,  # 10MB
@@ -156,9 +156,36 @@ def get_logger(context_tag=None):
 
 # For backward compatibility
 def setup_logger():
-    """Deprecated: Use get_logger() instead"""
-    setup_base_logger()
-    return logging.getLogger("backend")
+    """
+    Setup logging configuration for the backend.
+    """
+    # Ensure logs directory exists
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Configure the root logger
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[
+            # Console handler
+            logging.StreamHandler(),
+            # File handler for all logs
+            logging.FileHandler(BACKEND_LOG_PATH_STR, encoding="utf-8"),
+        ],
+    )
+
+    # Error-only file handler
+    error_handler = logging.FileHandler(BACKEND_ERROR_LOG_PATH_STR, encoding="utf-8")
+    error_handler.setLevel(logging.ERROR)
+    error_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
+
+    # Add error handler to root logger
+    logging.getLogger().addHandler(error_handler)
+
+    print(f"Logging setup complete. Logs will be written to: {BACKEND_LOG_PATH_STR}")
+    print(f"Error logs will be written to: {BACKEND_ERROR_LOG_PATH_STR}")
 
 
 # Initialize the base logger

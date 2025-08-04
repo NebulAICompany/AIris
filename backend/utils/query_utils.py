@@ -1,21 +1,19 @@
 import logging
-from backend.shared.constants import openai_client
+from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
 from typing import List, Dict, Tuple
 import re
 import base64
+from typing import Optional
+import os
 
 try:
     import jpype
-    import os
     from jpype import JClass, getDefaultJVMPath, startJVM
 
     if not jpype.isJVMStarted():
         jvmPath = getDefaultJVMPath()
         print(f"JVM Path: {jvmPath}")
-        zemberek_path = os.path.join(
-            os.path.dirname(__file__), "..", "shared", "zemberek-full.jar"
-        )
-        startJVM(jvmPath, "-ea", f"-Djava.class.path={zemberek_path}")
+        startJVM(jvmPath, "-ea", f"-Djava.class.path={ZEMBEREK_JAR_PATH_STR}")
 
     TurkishMorphology = JClass("zemberek.morphology.TurkishMorphology")
     turkish_morphology = TurkishMorphology.createWithDefaults()
@@ -140,7 +138,7 @@ def reflect_and_retry(
             max_tokens=800,
             temperature=0.0,
         )
-        reflection = reflection_result.final_output
+        reflection = reflection_result.choices[0].message.content.strip()
 
         # Check if the answer needs improvement
         if "Overall Assessment: Fail" in reflection:
@@ -164,7 +162,7 @@ def reflect_and_retry(
                     max_tokens=800,
                     temperature=0.0,
                 )
-                current_answer = result.final_output
+                current_answer = result.choices[0].message.content.strip()
         else:
             return current_answer
 
@@ -229,3 +227,27 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
                     print(f"   ❌ Error loading image {path}{ext}: {e}")
 
     return images_data
+
+def filter_docs_by_selected_files(
+    docs: List, selected_files: Optional[List[str]]
+) -> List:
+    """
+    Filter retrieved documents to only include those from selected files.
+    If selected_files is None or empty, return all documents.
+    """
+    if not selected_files or len(selected_files) == 0:
+        return docs
+
+    filtered_docs = []
+    for doc in docs:
+        metadata = doc.get("metadata", {})
+        file_name = metadata.get("file_name", "")
+
+        # Check if this document's file is in the selected files list
+        if file_name in selected_files:
+            filtered_docs.append(doc)
+
+    print(
+        f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
+    )
+    return filtered_docs

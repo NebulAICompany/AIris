@@ -1,10 +1,10 @@
 import subprocess
 import os
+from backend.shared.constants import FRONTEND_DIR
 
 if __name__ == "__main__":
     # frontend klasörüne geç
-    frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
-    os.chdir(frontend_dir)
+    os.chdir(str(FRONTEND_DIR))
     # npm run dev komutunu başlat
     process = subprocess.Popen(["npm", "run", "dev"], shell=True)
     process.communicate()

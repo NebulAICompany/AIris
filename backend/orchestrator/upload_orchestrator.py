@@ -2,12 +2,8 @@ import os
 import sys
 from pathlib import Path
 import backend.pipelines.vectorpipe as vectorpipe
-import json
+from backend.shared.constants import VECTORSTORE_PATH
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
-
-with open("paths.json", "r") as f:
-    paths = json.load(f)
-VECTOR_STORE_PATH = paths["VECTORSTORE_PATH"]
 
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
@@ -57,13 +53,13 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            save_path=VECTOR_STORE_PATH,
+            save_path=VECTORSTORE_PATH,
         )
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTOR_STORE_PATH,
+            "vector_store_path": VECTORSTORE_PATH,
         }
     except Exception as e:
         print(f"Error processing file: {str(e)}")
