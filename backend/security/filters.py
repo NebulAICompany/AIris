@@ -1,5 +1,5 @@
 import openai
-from typing import Dict, List, Optional
+from typing import Dict
 from backend.monitoring.metrics import guard_violations_total
 
 

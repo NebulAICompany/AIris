@@ -1,22 +1,19 @@
 import logging
-from backend.shared.constants import openai_client
+from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
 from typing import List, Dict, Tuple
 import re
 import base64
 from typing import Optional
+import os
 
 try:
     import jpype
-    import os
     from jpype import JClass, getDefaultJVMPath, startJVM
 
     if not jpype.isJVMStarted():
         jvmPath = getDefaultJVMPath()
         print(f"JVM Path: {jvmPath}")
-        zemberek_path = os.path.join(
-            os.path.dirname(__file__), "..", "shared", "zemberek-full.jar"
-        )
-        startJVM(jvmPath, "-ea", f"-Djava.class.path={zemberek_path}")
+        startJVM(jvmPath, "-ea", f"-Djava.class.path={ZEMBEREK_JAR_PATH_STR}")
 
     TurkishMorphology = JClass("zemberek.morphology.TurkishMorphology")
     turkish_morphology = TurkishMorphology.createWithDefaults()
@@ -231,7 +228,7 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
 
     return images_data
 
-def filter_docs_by_selected_files(
+def filter_docs_by_selecteda_files(
     docs: List, selected_files: Optional[List[str]]
 ) -> List:
     """
