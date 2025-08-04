@@ -8,11 +8,14 @@ from backend.security.filters import check_openai_moderation
 from backend.utils.query import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH
+from backend.shared.logger import get_logger
 import os
+
+logger = get_logger("QUERY_PIPELINE")
 
 def preprocess_query(query: str):
     lang = detect_language(query)
-    print(f"Detected Language: {lang}")
+    logger.debug(f"Detected Language: {lang}")
     if lang=="Turkish":
         corrected = spell_check(query)
         return corrected, lang
@@ -26,12 +29,14 @@ async def run_orchestration(
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
-    print(f"🔍 Query Orchestrator started:")
-    print(f"   - Query: {query}")
-    print(f"   - Web Search Enabled: {web_search_enabled}")
-    print(f"   - Pre-embedding Process: {pre_embedding_process}")
-    print(f"   - Session ID: {session_id}")
-    print(f"   - Selected Files: {selected_files}")
+
+    logger.info(f"🔍 Query Orchestrator started:")
+    logger.info(f"   - Query: {query}")
+    logger.info(f"   - Web Search Enabled: {web_search_enabled}")
+    logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+    logger.info(f"   - Session ID: {session_id}")
+    logger.info(f"   - Selected Files: {selected_files}")
+
 
     # Handle chat history and session management
     if session_id:
@@ -42,29 +47,29 @@ async def run_orchestration(
         conversation_context = chat_history_manager.get_conversation_context(
             session_id, max_messages=10
         )
-        print(f"   - Conversation context: {len(conversation_context)} messages")
+        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
 
         # Reduce history if too long
         session = chat_history_manager.get_session(session_id)
         if session and len(session.messages) > 30:
-            print(f"   - Reducing chat history from {len(session.messages)} messages")
+            logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
             chat_history_manager.reduce_history(session, target_messages=20)
     else:
         conversation_context = []
-        print(f"   - No session ID provided, processing as standalone query")
+        logger.debug(f"   - No session ID provided, processing as standalone query")
 
     if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
-        print(f"Loading vectorstore from {VECTORSTORE_PATH}")
+        logger.info(f"Loading vectorstore from {VECTORSTORE_PATH}")
         if pre_embedding_process == "cch":
-            print(
+            logger.info(
                 "   - Contextual Chunk Headers (CCH) enhanced chunks will be used for retrieval"
             )
         elif pre_embedding_process == "hype":
-            print(
+            logger.info(
                 "   - HyPE (Hypothetical Prompt Embeddings) enhanced chunks will be used for retrieval"
             )
         else:
-            print("   - Standard chunks will be used for retrieval")
+            logger.info("   - Standard chunks will be used for retrieval")
         load_vectorstore(VECTORSTORE_PATH)
 
     # 1. Temizlik + analiz
@@ -77,7 +82,7 @@ async def run_orchestration(
 
     # 3. Hassas bilgileri maskele
     masked_query = mask_text(preprocessed_query)
-    print(f"Masked Query: {masked_query}")
+    logger.debug(f"Masked Query: {masked_query}")
 
     ENABLED_RAG_TECHNIQUES = ["rse"]
 
@@ -92,7 +97,7 @@ async def run_orchestration(
         if not fusion_docs:
             return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
-        print(f"🔀 RAG Fusion Results: {fusion_metadata}")
+        logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
 
         # Filter fusion docs by selected files
         filtered_fusion_docs = filter_docs_by_selected_files(
@@ -117,7 +122,7 @@ async def run_orchestration(
 
         if not rse_chunks:
             return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
-        # print(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
+        # logger.debug(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
 
         # Filter RSE chunks by selected files
         filtered_rse_chunks = filter_docs_by_selected_files(rse_chunks, selected_files)
@@ -173,8 +178,8 @@ async def run_orchestration(
         )
 
     local_context = "\n\n---\n\n".join(context_entries)
-    print(f"   - Local Context: {local_context}")
-    print("using web search ?= ", web_search_enabled)
+    logger.debug(f"   - Local Context: {local_context}")
+    logger.debug("using web search ?= ", web_search_enabled)
 
     cleaned_context, image_paths = extract_image_references_from_context(local_context)
 
@@ -189,12 +194,12 @@ async def run_orchestration(
     )
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
-    print(f"🧠 Answer: {answer}")
+    logger.debug(f"🧠 Answer: {answer}")
     # Apply reflection and potential retries
     final_answer = reflect_and_retry(
         prompt=masked_query, initial_answer=answer, max_retries=2
     )
-    print(f"🧠 Final Answer: {final_answer}")
+    logger.debug(f"🧠 Final Answer: {final_answer}")
 
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted
