@@ -3,6 +3,7 @@ from backend.shared.constants import openai_client
 from typing import List, Dict, Tuple
 import re
 import base64
+from typing import Optional
 
 try:
     import jpype
@@ -229,3 +230,27 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
                     print(f"   ❌ Error loading image {path}{ext}: {e}")
 
     return images_data
+
+def filter_docs_by_selected_files(
+    docs: List, selected_files: Optional[List[str]]
+) -> List:
+    """
+    Filter retrieved documents to only include those from selected files.
+    If selected_files is None or empty, return all documents.
+    """
+    if not selected_files or len(selected_files) == 0:
+        return docs
+
+    filtered_docs = []
+    for doc in docs:
+        metadata = doc.get("metadata", {})
+        file_name = metadata.get("file_name", "")
+
+        # Check if this document's file is in the selected files list
+        if file_name in selected_files:
+            filtered_docs.append(doc)
+
+    print(
+        f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
+    )
+    return filtered_docs
