@@ -1,18 +1,16 @@
 from agents import Agent
-from .tools.mcp import alpha_vantage_mcp_server
 from .prompts import wolfram_instructions
 from typing import List
-from .tools.api import wolfram_alpha_query, web_search_tool
+from .tools.api import web_search_tool, wolfram_alpha_query
 from .tools.agent_as_tools import alpha_vantage_agent, office_agent
 
-rag_agent_as_tools = [alpha_vantage_agent, office_agent]
+rag_agent_as_tools = [alpha_vantage_agent, office_agent, wolfram_alpha_query]
 
 def create_rag_agent(
     local_context: str,
     web_search_enabled: bool,
     query: str,
     instruction: str = None,
-    wolfram_enabled: bool = False,
     conversation_history: List = None,
 ) -> Agent:
 
@@ -29,7 +27,7 @@ def create_rag_agent(
     conversation_context_part = ""
     if conversation_history and len(conversation_history) > 0:
         conversation_context_part = "\n**Conversation History:**\n"
-        for i, msg in enumerate(conversation_history[-5:]):  # Show last 5 messages
+        for msg in conversation_history[-5:]:  # Show last 5 messages
             role = "User" if msg["role"] == "user" else "Assistant"
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
@@ -37,9 +35,6 @@ def create_rag_agent(
     tools = rag_agent_as_tools
     if web_search_enabled:
         tools.append(web_search_tool)
-
-    if wolfram_enabled:
-        tools.append(wolfram_alpha_query)
 
     agent_instructions = f"""You are an advanced RAG (Retrieval-Augmented Generation) Assistant. 
 

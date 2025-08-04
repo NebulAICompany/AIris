@@ -20,7 +20,6 @@ request_counter = 0
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
-    wolframEnabled: bool = False
     preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
@@ -41,23 +40,22 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
-        wolfram_enabled = request.wolframEnabled
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
+
         logger.info(f"📝 API Router received:")
         logger.info(f"   - Query: {query}")
         logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-        logger.info(f"   - Wolfram Enabled: {wolfram_enabled}")
         logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
         logger.info(f"   - Session ID: {session_id}")
         logger.info(f"   - Selected Files: {selected_files}")
 
+
         answer = await run_orchestration(
             query,
             web_search_enabled,
-            wolfram_enabled,
             pre_embedding_process,
             session_id,
             selected_files,
@@ -536,17 +534,16 @@ async def get_finance_news():
 async def verify_document(
     file: UploadFile = File(...),
     verification_type: str = "auto",
-    wolfram_enabled: bool = False,
 ):
     """
-    Verify a document using the LLM-based verification pipeline with optional Wolfram Alpha mathematical verification
+    Verify a document using the LLM-based verification pipeline with Wolfram Alpha mathematical verification (always enabled)
     """
     global request_counter
     try:
         # Increment request counter
         request_counter += 1
 
-        logger.info(f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})")
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type})")
 
         # Check file type
         allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
@@ -572,9 +569,9 @@ async def verify_document(
         # Import and run verification pipeline
         from backend.utils.verification import verification_pipeline
 
-        # Run verification with Wolfram Alpha if enabled
+        # Run verification with Wolfram Alpha (always enabled)
         verification_result = verification_pipeline.verify_document(
-            str(temp_file_path), verification_type, wolfram_enabled
+            str(temp_file_path), verification_type 
         )
 
         # Clean up temporary file

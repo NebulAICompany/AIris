@@ -17,7 +17,6 @@ class LanguageService {
         logoText: 'AIris',
         logoSubtitle: 'Financial AI',
         webSearch: 'Web Search',
-        wolframAlpha: 'Wolfram Alpha',
         ragFusion: 'RAG Fusion',
         toggleTheme: 'Toggle theme',
         connecting: 'Connecting...',

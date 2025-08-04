@@ -146,7 +146,6 @@ class APIService {
   async sendQuery(
     query,
     webSearchEnabled = false,
-    wolframEnabled = false,
     sessionId = null,
     selectedFiles = null
   ) {
@@ -154,13 +153,12 @@ class APIService {
       // Determine timeout based on enabled features
       let timeout = 90000; // Base timeout: 90 seconds
       if (webSearchEnabled) timeout += 30000; // Add 30s for web search
-      if (wolframEnabled) timeout += 30000; // Add 30s for Wolfram
       // RAG Fusion disabled - no timeout adjustment needed
 
       console.log(
         `[API] AI Query timeout set to: ${
           timeout / 1000
-        }s (Web: ${webSearchEnabled}, Wolfram: ${wolframEnabled}, RAG Fusion: disabled)`
+        }s (Web: ${webSearchEnabled}, RAG Fusion: disabled)`
       );
 
       const response = await this.api.post(
@@ -168,7 +166,6 @@ class APIService {
         {
           query: query.trim(),
           webSearchEnabled: webSearchEnabled,
-          wolframEnabled: wolframEnabled,
           sessionId: sessionId,
           selectedFiles: selectedFiles,
         },
@@ -195,13 +192,8 @@ class APIService {
         error.message.includes("zaman aşımı")
       ) {
         let timeoutReason = "AI sorgusu";
-        if (webSearchEnabled && wolframEnabled) {
-          timeoutReason =
-            "web araması ve Wolfram Alpha ile karmaşık AI sorgusu";
-        } else if (webSearchEnabled) {
+        if (webSearchEnabled) {
           timeoutReason = "web araması ile AI sorgusu";
-        } else if (wolframEnabled) {
-          timeoutReason = "Wolfram Alpha ile AI sorgusu";
         }
 
         errorMessage = `${timeoutReason} tamamlanması çok uzun sürdü. Lütfen daha kısa bir soru deneyin veya birkaç saniye bekleyip tekrar deneyin.`;
@@ -601,12 +593,11 @@ class APIService {
     }
   }
 
-  async verifyDocument(file, verificationType = "auto", wolframEnabled = false, progressCallback) {
+  async verifyDocument(file, verificationType = "auto", progressCallback) {
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("verification_type", verificationType);
-      formData.append("wolfram_enabled", wolframEnabled);
 
       const config = {
         timeout: 120000, // 2 minutes for document verification
@@ -661,13 +652,13 @@ class APIService {
   }
 
   // Batch document verification
-  async batchVerifyDocuments(files, verificationType = "auto", wolframEnabled = false, progressCallback) {
+  async batchVerifyDocuments(files, verificationType = "auto", progressCallback) {
     const results = [];
     let completed = 0;
 
     for (const file of files) {
       try {
-        const result = await this.verifyDocument(file, verificationType, wolframEnabled, (fileProgress, status) => {
+        const result = await this.verifyDocument(file, verificationType, (fileProgress, status) => {
           if (progressCallback) {
             const totalProgress = Math.round(
               ((completed + fileProgress / 100) / files.length) * 100

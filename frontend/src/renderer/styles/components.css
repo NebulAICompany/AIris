@@ -1767,7 +1767,7 @@ body [data-theme="dark"] .message-text pre,
   color: var(--text-secondary);
 }
 
-/* Toggle Switch for Web Search & Wolfram */
+/* Toggle Switch for Web Search */
 .toggle-switch {
   position: relative;
   display: inline-block;
@@ -2211,55 +2211,6 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Wolfram Alpha Verification Toggle */
-.verification-wolfram-section {
-  margin: 20px 0;
-  padding: 15px;
-  background: rgba(255, 165, 0, 0.05);
-  border: 1px solid rgba(255, 165, 0, 0.2);
-  border-radius: 8px;
-}
-
-.wolfram-toggle-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.wolfram-label-container {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.wolfram-label {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 14px;
-}
-
-.wolfram-description {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-[data-theme="dark"] .verification-wolfram-section,
-body.dark-theme .verification-wolfram-section {
-  background: rgba(255, 165, 0, 0.08);
-  border-color: rgba(255, 165, 0, 0.25);
-}
-
-[data-theme="dark"] .wolfram-label,
-body.dark-theme .wolfram-label {
-  color: #ffa500;
-}
-
-[data-theme="dark"] .wolfram-description,
-body.dark-theme .wolfram-description {
-  color: var(--text-muted);
 }
 
 .verification-actions {
@@ -2715,15 +2666,6 @@ body.dark-theme .wolfram-description {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
-  }
-
-  .wolfram-toggle-container {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .verification-wolfram-section {
-    padding: 12px;
   }
 }
 

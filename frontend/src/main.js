@@ -306,7 +306,6 @@ class AIrisApp {
         {
           query,
           webSearchEnabled = false,
-          wolframEnabled = false,
         }
       ) => {
         try {
@@ -315,8 +314,6 @@ class AIrisApp {
             "IPC",
             "Web search enabled:",
             webSearchEnabled,
-            "Wolfram enabled:",
-            wolframEnabled,
             "RAG Fusion enabled:",
             false
           );
@@ -329,7 +326,6 @@ class AIrisApp {
             body: JSON.stringify({
               query,
               webSearchEnabled,
-              wolframEnabled,
             }),
           });
 
