@@ -1,9 +1,7 @@
 import os
-import sys
 from pathlib import Path
 import backend.orchestrator.vector as vectorpipe
 from backend.shared.constants import VECTORSTORE_PATH
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
@@ -18,7 +16,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
 
     try:
         # Step 1: Call parser and get extracted text
-        from backend.pipelines.parsers.parser_set import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
+        from backend.utils.parser import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
   
         file_extension = Path(file_path).suffix.lower()
 
