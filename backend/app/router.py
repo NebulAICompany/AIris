@@ -5,8 +5,7 @@ from backend.orchestrator.query_orchestrator import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import (
-    UPLOADS_PATH, VECTORSTORE_PATH)
+from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH
 import shutil
 from pathlib import Path
 from datetime import datetime
