@@ -233,6 +233,25 @@ class UIComponents {
         this.switchTab(e.target.dataset.tab);
       }
 
+      // Handle markdown download links in chat messages
+      if (e.target.tagName === "A" && e.target.href && e.target.href.includes("/api/created-documents/")) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        const url = e.target.href;
+        
+        // Extract filename for notification
+        const urlParts = url.split('/');
+        const filename = decodeURIComponent(urlParts[urlParts.indexOf('created-documents') + 1]);
+        
+        // Open the download URL in a new tab/window
+        window.open(url, "_blank");
+        this.showNotification(`${t('downloadingFile')} ${filename}...`, "info");
+        
+        return;
+      }
+
       // Handle delete button clicks
       if (e.target.closest(".delete-btn")) {
         e.preventDefault();
@@ -241,6 +260,17 @@ class UIComponents {
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
           this.deleteFile(fileName);
+        }
+      }
+
+      // Handle download button clicks for created documents
+      if (e.target.closest(".download-btn")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const downloadBtn = e.target.closest(".download-btn");
+        const fileName = downloadBtn.dataset.filename;
+        if (fileName) {
+          this.openCreatedDocument(fileName);
         }
       }
 
@@ -311,6 +341,9 @@ class UIComponents {
     switch (tabId) {
       case "files":
         await this.loadFileLibrary();
+        break;
+      case "created-documents":
+        await this.loadCreatedDocumentsLibrary();
         break;
       case "analytics":
         await this.loadAnalytics();
@@ -1216,6 +1249,9 @@ class UIComponents {
       return content;
     }
 
+    // First, convert download URLs to clickable links
+    content = this.convertUrlsToLinks(content);
+
     // More flexible patterns to catch metadata sections with various formatting
     const metadataPatterns = [
       /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:/gi,
@@ -1288,6 +1324,31 @@ class UIComponents {
     result += formattedMetadata;
 
     return result;
+  }
+
+  convertUrlsToLinks(content) {
+    if (!content || typeof content !== "string") {
+      return content;
+    }
+
+    // Pattern to match download URLs and convert them to clickable links
+    const urlPattern = /(http:\/\/localhost:8000\/api\/created-documents\/[^\/\s]+\/download)/g;
+    
+    // Replace URLs with clickable download buttons
+    content = content.replace(urlPattern, (match, url) => {
+      // Extract filename from URL
+      const filename = decodeURIComponent(url.split('/').slice(-2, -1)[0]);
+      return `[📥 Download ${filename}](${url})`;
+    });
+
+    // Also handle direct file path mentions and convert them to download links
+    const filePathPattern = /Download:\s*(http:\/\/localhost:8000\/api\/created-documents\/[^\/\s]+\/download)/g;
+    content = content.replace(filePathPattern, (match, url) => {
+      const filename = decodeURIComponent(url.split('/').slice(-2, -1)[0]);
+      return `**Download:** [📥 ${filename}](${url})`;
+    });
+
+    return content;
   }
 
   fixExistingMetadataFormatting() {
@@ -1948,6 +2009,92 @@ class UIComponents {
     }
   }
 
+  async loadCreatedDocumentsLibrary() {
+    try {
+      // Fetch the created documents list with metadata from the backend
+      const response = await fetch("http://localhost:8000/api/created-documents");
+      if (!response.ok) throw new Error("Failed to fetch created documents list");
+      const data = await response.json();
+      const files = data.files || [];
+      
+      // Get the created documents library container
+      const documentsLibrary = document.getElementById("created-documents-grid");
+      if (!documentsLibrary) return;
+      documentsLibrary.innerHTML = "";
+
+      if (files.length === 0) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        documentsLibrary.innerHTML = `<div class="empty-state">
+          <i class="fas fa-file-invoice"></i>
+          <h3>${t('noCreatedDocuments')}</h3>
+          <p>${t('askAiToCreateDocuments')}</p>
+          <button class="cta-button" data-tab="chat">${t('startChatBtn')}</button>
+        </div>`;
+        return;
+      }
+
+      // Render each created document with metadata
+      files.forEach((file) => {
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-card";
+        fileItem.style.cursor = "pointer";
+        fileItem.dataset.fileName = file.name;
+        fileItem.innerHTML = `
+          <div class="file-card-header">
+            <div class="file-card-main">
+              <div class="file-card-icon">
+                <i class="${Utils.getFileIcon(file.name)}"></i>
+              </div>
+              <div class="file-card-info">
+                <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
+                <div class="file-card-details">${Utils.formatFileSize(
+                  file.size
+                )} • ${Utils.formatDate(file.created_at)}</div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <button class="file-action-btn download-btn" data-filename="${Utils.escapeHtml(
+                file.name
+              )}" title="Download created document">
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
+          <div class="file-card-preview" id="created-preview-${Utils.escapeHtml(file.name).replace(/[^a-zA-Z0-9]/g, '_')}">
+            <div class="preview-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span data-i18n="previewLoading">Loading preview...</span>
+            </div>
+          </div>
+        `;
+
+        // Add click handler to open created document (but not on action buttons)
+        fileItem.addEventListener("click", (e) => {
+          // Don't open file if clicking on action buttons or preview area
+          if (!e.target.closest(".file-card-actions") && !e.target.closest(".file-card-preview")) {
+            this.openCreatedDocument(file.name);
+          }
+        });
+
+        documentsLibrary.appendChild(fileItem);
+        
+        // Load preview for this created document
+        this.loadCreatedDocumentPreview(file.name);
+      });
+    } catch (error) {
+      const documentsLibrary = document.getElementById("created-documents-grid");
+      if (documentsLibrary) {
+        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        documentsLibrary.innerHTML = `<div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>${t('error')}</h3>
+          <p>${t('errorLoadingFiles')}</p>
+        </div>`;
+      }
+      console.error("Error loading created documents library:", error);
+    }
+  }
+
   async loadFilePreview(fileName) {
     const previewId = `preview-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}`;
     const previewElement = document.getElementById(previewId);
@@ -2047,6 +2194,36 @@ class UIComponents {
     }
   }
 
+  async loadCreatedDocumentPreview(fileName) {
+    const previewId = `created-preview-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const previewElement = document.getElementById(previewId);
+    
+    if (!previewElement) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/created-documents/${encodeURIComponent(fileName)}/preview`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to load preview: ${response.statusText}`);
+      }
+      
+      const previewData = await response.json();
+      this.renderFilePreview(previewElement, previewData);
+    } catch (error) {
+      console.error(`Error loading preview for created document ${fileName}:`, error);
+      previewElement.innerHTML = `
+        <div class="preview-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Preview unavailable: ${Utils.escapeHtml(error.message || 'Network error')}</span>
+        </div>
+      `;
+    }
+  }
+
   async openFile(fileName) {
     try {
       const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
@@ -2093,6 +2270,33 @@ class UIComponents {
       }
     } catch (error) {
       console.error("Error opening file:", error);
+      this.showNotification(
+        `${t('failedToOpenFile')} ${fileName}. ${t('sorryEncounteredError')}`,
+        "error"
+      );
+    }
+  }
+
+  async openCreatedDocument(fileName) {
+    try {
+      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      
+      // Try to download the created document through the web API
+      try {
+        const downloadUrl = `http://localhost:8000/api/created-documents/${encodeURIComponent(
+          fileName
+        )}/download`;
+        window.open(downloadUrl, "_blank");
+        this.showNotification(`${t('downloadingFile')} ${fileName}...`, "info");
+      } catch (downloadError) {
+        console.error("Download failed:", downloadError);
+        this.showNotification(
+          `${t('failedToOpenFile')} ${fileName}. ${t('sorryEncounteredError')}`,
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error opening created document:", error);
       this.showNotification(
         `${t('failedToOpenFile')} ${fileName}. ${t('sorryEncounteredError')}`,
         "error"

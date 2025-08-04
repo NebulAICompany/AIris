@@ -106,6 +106,10 @@
               <i class="fas fa-file-alt"></i>
               <span data-i18n="myFiles">My Files</span>
             </button>
+            <button class="nav-item" data-tab="created-documents">
+              <i class="fas fa-file-invoice"></i>
+              <span data-i18n="createdDocuments">Created Documents</span>
+            </button>
             <button class="nav-item" data-tab="verification">
               <i class="fas fa-shield-alt"></i>
               <span data-i18n="documentVerification">Document Verification</span>
@@ -330,6 +334,27 @@
                   <p data-i18n="uploadToGetStarted">Upload some documents to get started</p>
                   <button class="cta-button" data-tab="upload" data-i18n="uploadFilesBtn">
                     Upload Files
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Created Documents Tab -->
+          <div id="created-documents-tab" class="tab-content">
+            <div class="files-container">
+              <div class="files-header">
+                <h2 data-i18n="createdDocumentsLibrary">Created Documents Library</h2>
+                <p data-i18n="manageCreatedDocuments">View and manage AI-generated financial documents</p>
+              </div>
+
+              <div class="files-grid" id="created-documents-grid">
+                <div class="empty-state">
+                  <i class="fas fa-file-invoice"></i>
+                  <h3 data-i18n="noCreatedDocuments">No created documents yet</h3>
+                  <p data-i18n="askAiToCreateDocuments">Ask the AI to create financial reports and documents</p>
+                  <button class="cta-button" data-tab="chat" data-i18n="startChatBtn">
+                    Start Chat
                   </button>
                 </div>
               </div>
