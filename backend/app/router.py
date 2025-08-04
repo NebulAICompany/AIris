@@ -5,7 +5,7 @@ from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, FAISS_INDEX_PATH
+from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, FAISS_INDEX_PATH, CREATED_DOCUMENTS_PATH
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -242,6 +242,39 @@ def list_files():
         error_message = str(e)
         raise HTTPException(
             status_code=500, detail=f"Error listing files: {error_message}"
+        )
+
+
+@router.get("/created-documents")
+def list_created_documents():
+    """
+    Returns a list of files in the created_documents directory with metadata.
+    """
+    try:
+        created_documents_dir = Path(CREATED_DOCUMENTS_PATH)
+        if not created_documents_dir.exists():
+            return {"files": []}  # Return an empty list if the directory doesn't exist
+
+        files = []
+        for file in created_documents_dir.iterdir():
+            if file.is_file():
+                files.append(
+                    {
+                        "name": file.name,
+                        "size": file.stat().st_size,  # File size in bytes
+                        "created_at": datetime.fromtimestamp(
+                            file.stat().st_ctime
+                        ).isoformat(),  # Creation time in ISO 8601
+                        "modified_at": datetime.fromtimestamp(
+                            file.stat().st_mtime
+                        ).isoformat(),  # Last modification time in ISO 8601
+                    }
+                )
+        return {"files": files}
+    except Exception as e:
+        error_message = str(e)
+        raise HTTPException(
+            status_code=500, detail=f"Error listing created documents: {error_message}"
         )
 
 
@@ -499,6 +532,59 @@ def get_file_preview(filename: str):
     except Exception as e:
         error_message = str(e)
         logger.error(f"Error generating preview for {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating preview: {error_message}"
+        )
+
+
+@router.get("/created-documents/{filename}/download")
+def download_created_document(filename: str):
+    """
+    Download a file from created_documents directory.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        return FileResponse(
+            path=file_path, filename=filename, media_type="application/octet-stream"
+        )
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error downloading created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error downloading created document: {error_message}"
+        )
+
+
+@router.get("/created-documents/{filename}/preview")
+def get_created_document_preview(filename: str):
+    """
+    Generate a preview for the specified created document.
+    Returns different preview types based on file extension.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        from backend.utils.preview import PreviewGenerator
+
+        preview_generator = PreviewGenerator(str(file_path))
+        preview_data = preview_generator.generate_preview()
+
+        return {
+            "filename": filename,
+            "preview_type": preview_data["type"],
+            "preview_data": preview_data["data"],
+            "success": True,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error generating preview for created document {filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Error generating preview: {error_message}"
         )

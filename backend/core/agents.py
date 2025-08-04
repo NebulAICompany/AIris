@@ -2,9 +2,9 @@ from agents import Agent
 from .prompts import wolfram_instructions
 from typing import List
 from .tools.api import web_search_tool, wolfram_alpha_query
-from .tools.agent_as_tools import alpha_vantage_agent, office_agent
+from .tools.agent_as_tools import alpha_vantage_tool, office_agent_tool
 
-rag_agent_as_tools = [alpha_vantage_agent, office_agent, wolfram_alpha_query]
+rag_agent_as_tools = [alpha_vantage_tool, office_agent_tool, wolfram_alpha_query]
 
 def create_rag_agent(
     local_context: str,

@@ -340,6 +340,24 @@ class APIService {
     }
   }
 
+  // Get created documents list
+  async getCreatedDocuments() {
+    try {
+      const response = await this.api.get("/api/created-documents");
+      return {
+        success: true,
+        files: response.data.files || [],
+      };
+    } catch (error) {
+      console.error("Error fetching created documents:", error);
+      return {
+        success: false,
+        error: error.message,
+        files: [],
+      };
+    }
+  }
+
   // Get system metrics (Prometheus endpoint)
   async getMetrics() {
     try {
