@@ -9,16 +9,14 @@ if sys.platform == "win32":
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
-from backend.shared.logger import setup_logger, get_logger
+from backend.shared.logger import get_logger
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
 from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR, FAISS_INDEX_PATH
 from backend.core.tools.mcp import mcp_servers
 
-# Initialize logging first
-setup_logger()
-logger = get_logger(__name__)
+logger = get_logger("MAIN")
 
 # Fast API app start
 app = FastAPI(
@@ -40,24 +38,24 @@ async def startup_event():
             try:
                 await mcp_server.connect()
             except Exception as e:
-                print(f"Error connecting to MCP server: {e}")
+                logger.error(f"Error connecting to MCP server: {e}")
 
         if not os.path.exists(VECTORSTORE_PATH_STR):
             os.makedirs(VECTORSTORE_PATH_STR)
-            print(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
+            logger.info(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
 
 
         # Check if the vectorstore files exist, if not, we can't load it.
         # The user should upload files first.
         if os.path.exists(FAISS_INDEX_PATH):
-            print("Loading vectorstore...")
+            logger.info("Loading vectorstore...")
             load_vectorstore(VECTORSTORE_PATH_STR)
-            print("Vectorstore loaded successfully.")
+            logger.info("Vectorstore loaded successfully.")
         else:
-            print("Vectorstore not found. Please upload files to create it.")
+            logger.warning("Vectorstore not found. Please upload files to create it.")
 
     except Exception as e:
-        print(f"Error during startup: {e}")
+        logger.error(f"Error during startup: {e}")
         # Depending on the desired behavior, you might want to raise the exception
         # to prevent the app from starting with a misconfigured state.
         # raise e

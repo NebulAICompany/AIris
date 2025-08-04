@@ -1,4 +1,17 @@
 import os
+import pickle
+from pathlib import Path
+from typing import List, Optional
+
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from backend.shared.constants import VECTORSTORE_PATH_STR, VECTORSTORE_PATH
+from backend.shared.logger import get_logger
+
+logger = get_logger("VECTOR_PIPELINE")
+
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -82,11 +95,11 @@ Generate 3 different hypothetical questions/queries that users might ask about t
         # Update metrics
         hype_hypothetical_content_generated.inc(len(hypothetical_prompts))
 
-        print(
+        logger.info(
             f"❓ Generated {len(hypothetical_prompts)} hypothetical prompts for chunk"
         )
         for i, prompt in enumerate(hypothetical_prompts[:3]):  # Show first 3
-            print(f"   {i+1}. {prompt}\n--------------------------------\n")
+            logger.info(f"   {i+1}. {prompt}\n--------------------------------\n")
 
         return hypothetical_prompts
 
@@ -141,11 +154,11 @@ Generate 3 different hypothetical questions/queries that users might ask about t
         Apply the selected pre-embedding process to the documents
         """
         if self.pre_embedding_process == PreEmbeddingProcess.NONE:
-            print(f"📝 No pre-embedding processing applied to {file_name}")
+            logger.info(f"📝 No pre-embedding processing applied to {file_name}")
             return docs
 
         elif self.pre_embedding_process == PreEmbeddingProcess.CCH:
-            print(
+            logger.info(
                 f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}..."
             )
             try:
@@ -179,36 +192,36 @@ Generate 3 different hypothetical questions/queries that users might ask about t
                         )
 
                 processed_docs = run_autocontext()
-                print(
+                logger.info(
                     f"✅ Contextual Chunk Headers applied to {len(processed_docs)} chunks"
                 )
                 return processed_docs
 
             except Exception as e:
-                print(f"⚠️ AutoContext processing failed for {file_name}: {e}")
-                print("   Continuing with original chunks...")
+                logger.warning(f"⚠️ AutoContext processing failed for {file_name}: {e}")
+                logger.warning("   Continuing with original chunks...")
                 return docs
 
         elif self.pre_embedding_process == PreEmbeddingProcess.HYPE:
-            print(
+            logger.info(
                 f"❓ Applying HyPE (Hypothetical Prompt Embeddings) to {file_name}..."
             )
             try:
                 enhanced_docs = self.create_enhanced_documents(docs, file_name)
                 prompt_count = len(enhanced_docs) - len(docs)
 
-                print(
+                logger.info(
                     f"✅ HyPE applied: {prompt_count} times total"
                 )
                 return enhanced_docs
 
             except Exception as e:
-                print(f"⚠️ HyPE processing failed for {file_name}: {e}")
-                print("   Continuing with original chunks...")
+                logger.warning(f"⚠️ HyPE processing failed for {file_name}: {e}")
+                logger.warning("   Continuing with original chunks...")
                 return docs
 
         else:
-            print(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
+            logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
     def run(self, text_content: str, document_name: str, save_path: str):
@@ -224,7 +237,7 @@ Generate 3 different hypothetical questions/queries that users might ask about t
 
         try:
             if not text_content or not text_content.strip():
-                print("❌ No valid text content provided")
+                logger.error("❌ No valid text content provided")
                 return
 
             chunk_idx = 0
@@ -235,28 +248,28 @@ Generate 3 different hypothetical questions/queries that users might ask about t
 
             # Load or create vectorstore
             if os.path.exists(os.path.join(vectorstore_path, "index.faiss")):
-                print("Loading existing vector store...")
+                logger.info("Loading existing vector store...")
                 vectorstore = FAISS.load_local(
                     vectorstore_path,
                     self.embeddings,
                     allow_dangerous_deserialization=True,
                 )
-                print(f"Loaded {vectorstore.index.ntotal} existing chunks")
+                logger.info(f"Loaded {vectorstore.index.ntotal} existing chunks")
             else:
-                print("Creating new vector store...")
+                logger.info("Creating new vector store...")
                 vectorstore = None
 
-            print(f"🚀 Processing text content with pre-embedding process: {self.pre_embedding_process.value}")
-            print(f"📖 Processing {len(text_content)} characters from {document_name}")
+            logger.info(f"🚀 Processing text content with pre-embedding process: {self.pre_embedding_process.value}")
+            logger.info(f"📖 Processing {len(text_content)} characters from {document_name}")
 
             # Split the text into semantic chunks
-            print(f"✂️ Splitting {document_name} into semantic chunks...")
+            logger.info(f"✂️ Splitting {document_name} into semantic chunks...")
             docs = self.text_splitter.create_documents([text_content])
             if not docs:
-                print(f"⚠️ Warning: No chunks were created for {document_name}.")
+                logger.warning(f"⚠️ Warning: No chunks were created for {document_name}.")
                 return
 
-            print(f"✅ Document '{document_name}' split into {len(docs)} semantic chunks")
+            logger.info(f"✅ Document '{document_name}' split into {len(docs)} semantic chunks")
 
             # Add basic metadata to original chunks
             for doc in docs:
@@ -276,7 +289,7 @@ Generate 3 different hypothetical questions/queries that users might ask about t
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
 
             # PII Masking for all documents
-            print(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
+            logger.info(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
             for doc in processed_docs:
                 masked = mask_text(doc.page_content)
                 doc.page_content = masked
@@ -286,25 +299,25 @@ Generate 3 different hypothetical questions/queries that users might ask about t
                 if doc.metadata.get("content_type") == "hypothetical_prompt":
                     doc.metadata["chunk_id"] = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
 
-            print(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
+            logger.info(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             if vectorstore is None:
                 vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
             else:
                 vectorstore.add_documents(processed_docs)
 
-            print(f"📈 Total text processed: {len(text_content)} characters")
-            print(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
+            logger.info(f"📈 Total text processed: {len(text_content)} characters")
+            logger.info(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
 
             # Update metrics
             vectorstore_total_chunks.observe(vectorstore.index.ntotal)
             # Save the vectorstore
             vectorstore.save_local(vectorstore_path)
-            print(f"💾 Vector store saved to: {vectorstore_path}")
+            logger.info(f"💾 Vector store saved to: {vectorstore_path}")
 
             # Log processing time
             processing_time = time.time() - start_time
-            print(f"⏱️ Processing completed in {processing_time:.2f} seconds")
+            logger.info(f"⏱️ Processing completed in {processing_time:.2f} seconds")
 
         except Exception as e:
-            print(f"❌ Error in vector store processing: {str(e)}")
+            logger.error(f"❌ Error in vector store processing: {str(e)}")
             raise e
