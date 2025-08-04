@@ -44,12 +44,14 @@ async def handle_query(request: QueryRequest):
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
-        print(f"📝 API Router received:")
-        print(f"   - Query: {query}")
-        print(f"   - Web Search Enabled: {web_search_enabled}")
-        print(f"   - Pre-embedding Process: {pre_embedding_process}")
-        print(f"   - Session ID: {session_id}")
-        print(f"   - Selected Files: {selected_files}")
+
+        logger.info(f"📝 API Router received:")
+        logger.info(f"   - Query: {query}")
+        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
+        logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+        logger.info(f"   - Session ID: {session_id}")
+        logger.info(f"   - Selected Files: {selected_files}")
+
 
         answer = await run_orchestration(
             query,
@@ -367,19 +369,21 @@ def delete_file(filename: str):
                 if doc_filename == base_filename:
                     chunks_to_delete.append(doc_id)
 
-        print(f"🔍 Found {len(chunks_to_delete)} chunks to delete for file '{filename}'")
+        logger.info(
+            f"🔍 Found {len(chunks_to_delete)} chunks to delete for file '{filename}' (checking: {possible_processed_names})"
+        )
 
         # Find chunk IDs to remove from PII maps BEFORE deleting from vector store
         chunks_to_remove_from_pii = []
         pii_map_path = MASKED_MAP_JSON_PATH
-        print(f"📋 PII map path: {pii_map_path}")
-        print(f"📋 PII map exists: {pii_map_path.exists()}")
+        logger.info(f"📋 PII map path: {pii_map_path}")
+        logger.info(f"📋 PII map exists: {pii_map_path.exists()}")
 
         if pii_map_path.exists():
             with open(pii_map_path, "r", encoding="utf-8") as f:
                 pii_maps = json.load(f)
 
-            print(f"📋 Loaded PII maps with {len(pii_maps)} entries")
+            logger.info(f"📋 Loaded PII maps with {len(pii_maps)} entries")
 
             # Find chunk IDs to remove from PII maps
             # We need to find chunks by their chunk_id metadata BEFORE deletion
@@ -390,23 +394,26 @@ def delete_file(filename: str):
                         chunk_id = document.metadata.get("chunk_id")
                         if chunk_id and chunk_id in pii_maps:
                             chunks_to_remove_from_pii.append(chunk_id)
-                            print(f"📋 Found PII entry to remove: {chunk_id}")
+                            logger.info(f"📋 Found PII entry to remove: {chunk_id}")
 
         # Delete chunks from vector store if any found
         if chunks_to_delete:
-            print(f"🗑️ Deleting {len(chunks_to_delete)} chunks from vector store...")
+            logger.info(f"🗑️ Deleting {len(chunks_to_delete)} chunks from vector store...")
             vectorstore.delete(ids=chunks_to_delete)
 
             # Save updated vector store
-            print(f"💾 Saving updated vector store...")
+            logger.info(f"💾 Saving updated vector store...")
             vectorstore.save_local(str(vectorstore_dir))
-            print(f"✅ Deleted {len(chunks_to_delete)} chunks from vector store")
+            logger.info(f"✅ Deleted {len(chunks_to_delete)} chunks from vector store")
         else:
-            print(f"⚠️ No chunks found to delete for file '{filename}'")
+            logger.warning(f"⚠️ No chunks found to delete for file '{filename}'")
 
         # Update PII mappings - remove entries for deleted chunks
         if chunks_to_remove_from_pii and pii_map_path.exists():
-            print(f"📋 Removing {len(chunks_to_remove_from_pii)} entries from PII mappings...")
+
+            logger.info(
+                f"📋 Removing {len(chunks_to_remove_from_pii)} entries from PII mappings..."
+            )
             # Remove from PII maps
             for chunk_id in chunks_to_remove_from_pii:
                 pii_maps.pop(chunk_id, None)
@@ -415,14 +422,14 @@ def delete_file(filename: str):
             with open(pii_map_path, "w", encoding="utf-8") as f:
                 json.dump(pii_maps, f, ensure_ascii=False, indent=2)
 
-            print(
+            logger.info(
                 f"✅ Removed {len(chunks_to_remove_from_pii)} entries from PII mappings"
             )
 
         # Delete the actual file
-        print(f"🗑️ Deleting physical file: {file_path}")
+        logger.info(f"🗑️ Deleting physical file: {file_path}")
         file_path.unlink()
-        print(f"✅ Physical file deleted successfully: {filename}")
+        logger.info(f"✅ Physical file deleted successfully: {filename}")
 
         result = {
             "message": f"File '{filename}' deleted successfully",
@@ -430,16 +437,17 @@ def delete_file(filename: str):
             "pii_entries_removed": len(chunks_to_remove_from_pii),
             "file_path": str(file_path),
         }
-        print(f"🎉 Deletion completed successfully: {result}")
+        logger.info(f"🎉 Deletion completed successfully: {result}")
         return result
 
     except HTTPException:
-        print(f"❌ HTTP Exception during deletion: {filename}")
+        logger.error(f"❌ HTTP Exception during deletion: {filename}")
         raise
     except Exception as e:
-        print(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
+        logger.error(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
         import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
 

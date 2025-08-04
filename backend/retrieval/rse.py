@@ -1,8 +1,8 @@
 import numpy as np
 from typing import List, Dict, Any, Tuple
-import logging
+from backend.shared.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger("RSE")
 
 def get_best_segments(all_relevance_values: list[list], document_splits: list[int], max_length: int, overall_max_length: int, minimum_value: float):
     """
@@ -272,7 +272,7 @@ def apply_rse(all_ranked_results: List[List[Dict[str, Any]]]) -> Tuple[List[Dict
                 chunk_lookup[meta_document_index] = result
     
     # Extract chunks for each best segment
-    print(f"🧠 Best segments: {best_segments}")
+    logger.debug(f"🧠 Best segments: {best_segments}")
     for segment_start, segment_end in best_segments:
         for idx in range(segment_start, segment_end):
             if idx in chunk_lookup:
@@ -324,7 +324,7 @@ def retrieve_with_rse(query: str, k: int = 15) -> Tuple[List[Dict[str, Any]], Li
             duplicate_cleared_initial_results.append(r)
     initial_results = duplicate_cleared_initial_results[:k]
 
-    print(f"Initial Results: {[r['metadata']['chunk_id'] for r in duplicate_cleared_initial_results]}")
+    logger.debug(f"Initial Results: {[r['metadata']['chunk_id'] for r in duplicate_cleared_initial_results]}")
     
     if not duplicate_cleared_initial_results:
         return [], []
@@ -332,10 +332,10 @@ def retrieve_with_rse(query: str, k: int = 15) -> Tuple[List[Dict[str, Any]], Li
     # Apply RSE to single query results
     rse_chunks, scores = apply_rse_single_query(initial_results)
     sorted_rse_chunks = sorted(rse_chunks, key=lambda x: int(x['metadata']['chunk_id'].split('_')[1]))
-    print(f"🧠 RSE Chunks: {sorted_rse_chunks}")
-    print(f"initial results: {initial_results}")
-    print(f"🧠 RSE Enhancement: {len(initial_results)} initial chunks → {len(rse_chunks)} optimized segments")
+    logger.debug(f"🧠 RSE Chunks: {sorted_rse_chunks}")
+    logger.debug(f"initial results: {initial_results}")
+    logger.debug(f"🧠 RSE Enhancement: {len(initial_results)} initial chunks → {len(rse_chunks)} optimized segments")
     if scores:
-        print(f"📊 RSE Segment scores: {[f'{score:.3f}' for score in scores[:3]]}")
+        logger.debug(f"📊 RSE Segment scores: {[f'{score:.3f}' for score in scores[:3]]}")
     
     return rse_chunks, scores 

@@ -1,4 +1,4 @@
-import logging
+from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
 from typing import List, Dict, Tuple
 import re
@@ -6,13 +6,15 @@ import base64
 from typing import Optional
 import os
 
+logger = get_logger("QUERY_UTILS")
+
 try:
     import jpype
     from jpype import JClass, getDefaultJVMPath, startJVM
 
     if not jpype.isJVMStarted():
         jvmPath = getDefaultJVMPath()
-        print(f"JVM Path: {jvmPath}")
+        logger.debug(f"JVM Path: {jvmPath}")
         startJVM(jvmPath, "-ea", f"-Djava.class.path={ZEMBEREK_JAR_PATH_STR}")
 
     TurkishMorphology = JClass("zemberek.morphology.TurkishMorphology")
@@ -26,7 +28,7 @@ try:
 except ImportError as e:
     turkish_spell_checker = None
     ZEMBEREK_AVAILABLE = False
-    logging.error(f"Zemberek library not found: {e}")
+    logger.error(f"Zemberek library not found: {e}")
 
 
 
@@ -71,7 +73,7 @@ def detect_language(query: str) -> str:
         return response.primary_language.name
 
     except Exception as err:
-        print("Encountered exception. {}".format(err))
+        logger.error("Encountered exception. {}".format(err))
 
 
 def normalize_repeated_chars(word: str) -> str:
@@ -177,13 +179,13 @@ def extract_image_references_from_context(local_context: str) -> Tuple[str, List
     image_pattern = r'\(\(Image\):([^)]+)\)'
     image_paths = []
 
-    print(f"🔍 Analyzing local context for image references...")
+    logger.debug(f"🔍 Analyzing local context for image references...")
 
     # Find all image references in the context
     matches = re.findall(image_pattern, local_context)
 
     if matches:
-        print(f"   - Found {len(matches)} image references in context")
+        logger.debug(f"   - Found {len(matches)} image references in context")
         for match in matches:
             image_path = match.strip()
             if image_path not in image_paths:
@@ -205,7 +207,7 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
     if not image_paths:
         return images_data
 
-    print(f"📁 Loading {len(image_paths)} images from filesystem...")
+    logger.debug(f"📁 Loading {len(image_paths)} images from filesystem...")
 
     for path in image_paths:
         # Construct the full image path - try both .jpg and .png
@@ -224,7 +226,7 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
                         })
                     break
                 except Exception as e:
-                    print(f"   ❌ Error loading image {path}{ext}: {e}")
+                    logger.error(f"   ❌ Error loading image {path}{ext}: {e}")
 
     return images_data
 
@@ -247,7 +249,7 @@ def filter_docs_by_selected_files(
         if file_name in selected_files:
             filtered_docs.append(doc)
 
-    print(
+    logger.debug(
         f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
     )
     return filtered_docs
