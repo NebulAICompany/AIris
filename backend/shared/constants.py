@@ -52,7 +52,7 @@ CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
 # Vectorstore paths
-VECTORSTORE_PATH = BASE_DIR / "vectorstore"
+VECTORSTORE_PATH = DATABASE_DIR / "vectorstore"
 FAISS_INDEX_PATH = VECTORSTORE_PATH / "index.faiss"
 FAISS_PKL_PATH = VECTORSTORE_PATH / "index.pkl"
 PII_CHUNK_MAPS_PATH = VECTORSTORE_PATH / "pii_chunk_maps.json"
