@@ -169,7 +169,6 @@ async def test_orchestrator_integration():
         response = await run_orchestration(
             query=test_query,
             web_search_enabled=False,
-            wolfram_enabled=False,
             session_id=None,
             selected_files=None,
         )
@@ -186,7 +185,6 @@ async def test_orchestrator_integration():
         response = await run_orchestration(
             query=test_query,
             web_search_enabled=False,
-            wolfram_enabled=False,
             session_id=None,
             selected_files=None,
         )

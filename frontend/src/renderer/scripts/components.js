@@ -13,9 +13,6 @@ class UIComponents {
     // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
 
-    // Add wolframEnabled flag, initialize from storage or default to false
-    this.wolframEnabled = Utils.isWolframEnabled();
-
 
 
     // Finance news properties
@@ -50,11 +47,6 @@ class UIComponents {
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
       webSearchToggle.checked = this.webSearchEnabled;
-    }
-
-    const wolframToggle = document.getElementById("wolfram-toggle");
-    if (wolframToggle) {
-      wolframToggle.checked = this.wolframEnabled;
     }
 
 
@@ -187,21 +179,6 @@ class UIComponents {
       });
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
-
-    // Wolfram Alpha toggle event
-    const wolframToggle = document.getElementById("wolfram-toggle");
-    if (wolframToggle) {
-      wolframToggle.addEventListener("change", (e) => {
-        this.wolframEnabled = e.target.checked;
-        Utils.setWolframEnabled(this.wolframEnabled);
-        console.log("Wolfram Alpha enabled:", this.wolframEnabled);
-        // Optionally, notify backend here if needed
-        // Example: window.airisAPI.setWolframEnabled?.(this.wolframEnabled);
-      });
-      console.log("wolframEnabled: ", this.wolframEnabled);
-    }
-
-
 
     // Finance News refresh button
     const refreshNewsButton = document.getElementById("refresh-news");
@@ -436,7 +413,6 @@ class UIComponents {
       const response = await this.sendQueryWithRetry(
         message,
         this.webSearchEnabled,
-        this.wolframEnabled,
         this.currentSessionId,
         2, // maxRetries
         this.selectedFiles.length > 0 ? this.selectedFiles : null // selectedFiles
@@ -516,7 +492,6 @@ class UIComponents {
   async sendQueryWithRetry(
     message,
     webSearchEnabled,
-    wolframEnabled,
     sessionId,
     maxRetries = 2,
     selectedFiles = null
@@ -530,7 +505,6 @@ class UIComponents {
         const response = await window.apiService.sendQuery(
           message,
           webSearchEnabled,
-          wolframEnabled,
           sessionId,
           selectedFiles
         );
@@ -576,12 +550,8 @@ class UIComponents {
 
     // Determine what features are enabled for status message
     let statusMessage = "AI düşünüyor...";
-    if (this.webSearchEnabled && this.wolframEnabled) {
-      statusMessage = "Web araması ve Wolfram Alpha ile analiz ediliyor...";
-    } else if (this.webSearchEnabled) {
+    if (this.webSearchEnabled) {
       statusMessage = "Web araması yapılıyor...";
-    } else if (this.wolframEnabled) {
-      statusMessage = "Wolfram Alpha ile analiz ediliyor...";
     }
 
     typingDiv.innerHTML = `
@@ -2518,11 +2488,6 @@ class UIComponents {
     return this.webSearchEnabled;
   }
 
-  // Example method to get the flag for backend communication
-  isWolframEnabled() {
-    return this.wolframEnabled;
-  }
-
   // Finance News functionality
   async loadFinanceNews(forceRefresh = false) {
     const newsGrid = document.getElementById("news-grid");
@@ -2862,15 +2827,6 @@ class UIComponents {
       downloadReportBtn.addEventListener("click", this.downloadVerificationReport.bind(this));
     }
 
-    // Initialize Wolfram Alpha toggle for verification
-    const verificationWolframToggle = document.getElementById("verification-wolfram-toggle");
-    if (verificationWolframToggle) {
-      verificationWolframToggle.checked = Utils.isWolframEnabled();
-      verificationWolframToggle.addEventListener("change", (e) => {
-        Utils.setWolframEnabled(e.target.checked);
-        console.log("Verification Wolfram Alpha enabled:", e.target.checked);
-      });
-    }
   }
 
   async loadVerificationTypes() {
@@ -3002,7 +2958,6 @@ class UIComponents {
     }
 
     const verificationType = document.getElementById("verification-type")?.value || "auto";
-    const wolframEnabled = document.getElementById("verification-wolfram-toggle")?.checked || false;
     const verifyBtn = document.getElementById("verify-document-btn");
     const resultsContainer = document.getElementById("verification-results");
 
@@ -3016,11 +2971,10 @@ class UIComponents {
       // Show progress indicator
       this.showVerificationProgress("Starting verification...");
 
-      // Call verification API with Wolfram Alpha if enabled
+      // Call verification API
       const result = await window.apiService.verifyDocument(
         this.selectedVerificationFile,
         verificationType,
-        wolframEnabled,
         (progress, status) => {
           this.updateVerificationProgress(progress, status);
         }

@@ -28,3 +28,7 @@ alpha_vantage_mcp_server = MCPServerStdio(
 mcp_servers = [
     alpha_vantage_mcp_server,
 ]
+
+if __name__ == "__main__":
+    alpha_vantage_mcp_server.connect()
+    print("✅ Vectorstore loaded successfully.")

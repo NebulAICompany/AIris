@@ -25,18 +25,18 @@ def preprocess_query(query: str):
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
-    wolfram_enabled: bool = False,
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
+
     logger.info(f"🔍 Query Orchestrator started:")
     logger.info(f"   - Query: {query}")
     logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-    logger.info(f"   - Wolfram Enabled: {wolfram_enabled}")
     logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
+
 
     # Handle chat history and session management
     if session_id:
@@ -190,7 +190,6 @@ async def run_orchestration(
         local_context=cleaned_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
-        wolfram_enabled=wolfram_enabled,
         conversation_history=conversation_context,
     )
     # Generate initial answer
