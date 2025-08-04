@@ -15,7 +15,7 @@ from backend.retrieval.rag_fusion import (
     retrieve_with_fusion,
 )
 from backend.retrieval.retriever import load_vectorstore
-from backend.orchestrator.query import run_orchestration
+from backend.pipeline.query import run_orchestration
 
 
 async def test_query_generation():
@@ -158,7 +158,7 @@ async def test_full_rag_fusion():
 
 
 async def test_orchestrator_integration():
-    """Test RAG Fusion integration with query orchestrator"""
+    """Test RAG Fusion integration with query pipeline"""
     print("\n🎯 Testing Orchestrator Integration...")
 
     # Test with RAG Fusion enabled
@@ -177,7 +177,7 @@ async def test_orchestrator_integration():
         print(f"✅ Orchestrator response (first 200 chars): {response[:200]}...")
 
     except Exception as e:
-        print(f"❌ Error in orchestrator integration: {e}")
+        print(f"❌ Error in pipeline integration: {e}")
 
     # Test with RAG Fusion disabled (standard retrieval)
     print(f"\n📝 Testing query without RAG Fusion: {test_query}")
