@@ -5,11 +5,9 @@ import os
 from docx import Document
 from openpyxl import Workbook
 from backend.shared.logger import get_logger
+from backend.shared.constants import CREATED_DOCUMENTS_PATH
 
-import json
-with open("paths.json", "r") as f:
-    paths = json.load(f)
-FILES_PATH = Path(paths["CREATED_DOCUMENTS_PATH"])
+FILES_PATH = Path(CREATED_DOCUMENTS_PATH)
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 
