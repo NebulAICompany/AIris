@@ -112,17 +112,11 @@ Now analyze the query and prepare the most appropriate response! """
     agent = Agent(
         name="RAG_Assistant",
         instructions=agent_instructions,
-        model="gpt-4.1",
+        model="gpt-4o-mini",
         tools=tools,
     )
 
     return agent
-
-
-async def main():
-    await alpha_vantage_mcp_server.connect()
-    #   result = await Runner.run(alpha_vantage_agent, "What is Tesla stock price?")
-    #   print(result)
 
 
 # TODO: This main function is only for connection reminder
