@@ -29,6 +29,7 @@ class LanguageService {
         chat: 'Chat',
         uploadFiles: 'Upload Files',
         myFiles: 'My Files',
+        createdDocuments: 'Created Documents',
         financeNews: 'Finance News',
         analytics: 'Analytics',
         settings: 'Settings',
@@ -64,6 +65,13 @@ class LanguageService {
         manageDocuments: 'Manage your uploaded financial documents',
         noDocuments: 'No documents yet',
         uploadToGetStarted: 'Upload some documents to get started',
+        
+        // Created Documents Section
+        createdDocumentsLibrary: 'Created Documents Library',
+        manageCreatedDocuments: 'View and manage AI-generated financial documents',
+        noCreatedDocuments: 'No created documents yet',
+        askAiToCreateDocuments: 'Ask the AI to create financial reports and documents',
+        startChatBtn: 'Start Chat',
         uploadFilesBtn: 'Upload Files',
         deleteFile: 'Delete file',
 
@@ -294,6 +302,7 @@ class LanguageService {
         chat: 'Sohbet',
         uploadFiles: 'Dosya Yükle',
         myFiles: 'Dosyalarım',
+        createdDocuments: 'Oluşturulan Belgeler',
         financeNews: 'Finans Haberleri',
         analytics: 'Analitik',
         settings: 'Ayarlar',
@@ -329,6 +338,13 @@ class LanguageService {
         manageDocuments: 'Yüklediğiniz finansal belgeleri yönetin',
         noDocuments: 'Henüz belge yok',
         uploadToGetStarted: 'Başlamak için bazı belgeler yükleyin',
+        
+        // Created Documents Section  
+        createdDocumentsLibrary: 'Oluşturulan Belgeler Kütüphanesi',
+        manageCreatedDocuments: 'AI tarafından oluşturulan finansal belgeleri görüntüleyin ve yönetin',
+        noCreatedDocuments: 'Henüz oluşturulan belge yok',
+        askAiToCreateDocuments: 'AI\'dan finansal raporlar ve belgeler oluşturmasını isteyin',
+        startChatBtn: 'Sohbeti Başlat',
         uploadFilesBtn: 'Dosya Yükle',
         deleteFile: 'Dosyayı sil',
 
