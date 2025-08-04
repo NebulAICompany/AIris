@@ -5,8 +5,7 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Any
 import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
-from docx import Document as DocxDocument
+from PIL import Image
 from docx2pdf import convert
 import fitz
 
@@ -15,7 +14,6 @@ class PreviewGenerator:
     """
     Generates previews for various file types including PDF, images, Excel, DOCX, and text files.
     """
-    
     def __init__(self, file_path: str):
         self.file_path = Path(file_path)
         self.file_extension = self.file_path.suffix.lower()
@@ -25,9 +23,6 @@ class PreviewGenerator:
         Generate a preview based on the file type.
         Returns a dictionary with preview type and data.
         """
-        if not self.file_path.exists():
-            raise FileNotFoundError(f"File not found: {self.file_path}")
-        
         try:
             if self.file_extension == '.pdf':
                 return self._generate_pdf_preview()
@@ -40,24 +35,21 @@ class PreviewGenerator:
             elif self.file_extension == '.txt':
                 return self._generate_text_preview()
             else:
-                return self._generate_default_preview()
+                raise ValueError(f"Unsupported file type: {self.file_extension}")
         except Exception as e:
             return {
                 "type": "error",
                 "data": f"Error generating preview: {str(e)}"
             }
     
-    def _generate_pdf_preview(self) -> Dict[str, Any]:
+    def _generate_pdf_preview(self, temp_pdf_path: str = None) -> Dict[str, Any]:
         """Generate preview for PDF files - converts first page to image."""
+        # Use temp_pdf_path if provided, otherwise use the original file path
+        pdf_path = temp_pdf_path if temp_pdf_path else str(self.file_path)
+
         pdf_document = None
         try:
-            pdf_document = fitz.open(str(self.file_path))
-            
-            if len(pdf_document) == 0:
-                return {
-                    "type": "error",
-                    "data": "PDF file is empty"
-                }
+            pdf_document = fitz.open(pdf_path)
             
             # Store page count before closing
             page_count = len(pdf_document)
@@ -171,28 +163,9 @@ class PreviewGenerator:
                 "type": "error",
                 "data": f"Error generating Excel preview: {str(e)}"
             }
-    
-    def _generate_docx_preview(self) -> Dict[str, Any]:
-        """Generate preview for DOCX files - converts first page to image when possible."""
-        # Try to convert to PDF first, then to image
-        try:
-            print(f"Attempting PDF conversion for: {self.file_path.name}")
-            result = self._generate_docx_image_preview()
-            print(f"PDF conversion successful for: {self.file_path.name}")
-            return result
-        except Exception as e:
-            print(f"DOCX to image conversion failed for {self.file_path.name}: {e}, falling back to visual preview")
-            try:
-                return self._generate_docx_visual_preview()
-            except Exception as e:
-                print(f"DOCX visual preview failed: {e}, falling back to simple text preview")
-                return self._generate_docx_text_preview()
 
-    def _generate_docx_image_preview(self) -> Dict[str, Any]:
-        """Try to convert DOCX to PDF, then to image with retry logic."""
-        return self._convert_docx_with_retry(max_retries=2)
-    
-    def _convert_docx_with_retry(self, max_retries: int = 2) -> Dict[str, Any]:
+
+    def _generate_docx_preview(self, max_retries: int = 2) -> Dict[str, Any]:
         """Convert DOCX with retry logic for COM errors."""
         for attempt in range(max_retries + 1):
             temp_pdf = None
@@ -230,9 +203,23 @@ class PreviewGenerator:
                 
                 print(f"PDF conversion successful for {self.file_path.name} on attempt {attempt + 1}")
                 
-                # Use our PDF preview logic
-                return self._convert_pdf_to_image(temp_pdf)
-                
+                # Use our PDF preview logic with the temporary PDF
+                result = self._generate_pdf_preview(temp_pdf)
+
+                # Clean up the temporary PDF file after successful preview generation
+                try:
+                    if os.path.exists(temp_pdf):
+                        os.unlink(temp_pdf)
+                except:
+                    pass
+
+                # Update metadata to indicate this was from DOCX conversion
+                if result.get("type") == "image" and "metadata" in result:
+                    result["metadata"]["title"] = "DOCX Preview - First Page"
+                    result["metadata"]["method"] = "pdf_conversion"
+
+                return result
+
             except Exception as e:
                 print(f"Conversion attempt {attempt + 1} failed for {self.file_path.name}: {e}")
                 
@@ -262,185 +249,6 @@ class PreviewGenerator:
         
         # This should never be reached, but just in case
         raise Exception("Unexpected error in conversion retry logic")
-    
-    def _convert_pdf_to_image(self, pdf_path: str) -> Dict[str, Any]:
-        """Convert PDF to image preview."""
-        pdf_document = None
-        try:
-            pdf_document = fitz.open(pdf_path)
-            
-            if len(pdf_document) == 0:
-                raise Exception("Generated PDF is empty")
-            
-            # Get the first page
-            first_page = pdf_document[0]
-            
-            # Convert page to image
-            mat = fitz.Matrix(2.0, 2.0)
-            pix = first_page.get_pixmap(matrix=mat)
-            
-            # Convert to PIL Image
-            img_data = pix.tobytes("png")
-            img = Image.open(io.BytesIO(img_data))
-            
-            # Resize for preview
-            img = self._resize_image_for_preview(img, max_width=400)
-            
-            # Convert to base64
-            buffer = io.BytesIO()
-            img.save(buffer, format='PNG')
-            img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            
-            return {
-                "type": "image",
-                "data": f"data:image/png;base64,{img_base64}",
-                "metadata": {
-                    "title": "DOCX Preview - First Page",
-                    "method": "pdf_conversion"
-                }
-            }
-            
-        finally:
-            # Close PDF document
-            if pdf_document is not None:
-                try:
-                    pdf_document.close()
-                except:
-                    pass
-            
-            # Clean up the temporary PDF file
-            try:
-                if os.path.exists(pdf_path):
-                    os.unlink(pdf_path)
-            except:
-                pass
-    
-    def _generate_docx_visual_preview(self) -> Dict[str, Any]:
-        """Create a visual representation of DOCX content using PIL."""
-        try:
-            doc = DocxDocument(self.file_path)
-            
-            # Extract text content
-            content_lines = []
-            for paragraph in doc.paragraphs:
-                text = paragraph.text.strip()
-                if text:
-                    # Wrap long lines
-                    if len(text) > 60:
-                        words = text.split()
-                        current_line = ""
-                        for word in words:
-                            if len(current_line + " " + word) <= 60:
-                                current_line += (" " if current_line else "") + word
-                            else:
-                                if current_line:
-                                    content_lines.append(current_line)
-                                current_line = word
-                        if current_line:
-                            content_lines.append(current_line)
-                    else:
-                        content_lines.append(text)
-                    
-                    # Limit to reasonable number of lines
-                    if len(content_lines) >= 15:
-                        break
-            
-            if not content_lines:
-                content_lines = ["Document appears to be empty or has no readable text."]
-            
-            # Create image
-            img_width = 400
-            line_height = 20
-            padding = 20
-            img_height = max(250, len(content_lines) * line_height + padding * 2)
-            
-            # Create a white background image
-            img = Image.new('RGB', (img_width, img_height), color='white')
-            
-            # Try to get a font, fall back to default if not available
-            draw = ImageDraw.Draw(img)
-            
-            # Try to use a system font
-            try:
-                font = ImageFont.truetype("arial.ttf", 12)
-            except:
-                try:
-                    font = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", 12)  # macOS
-                except:
-                    try:
-                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)  # Linux
-                    except:
-                        font = ImageFont.load_default()
-            
-            # Draw text lines
-            y_position = padding
-            for line in content_lines:
-                if y_position + line_height <= img_height - padding:
-                    draw.text((padding, y_position), line, fill='black', font=font)
-                    y_position += line_height
-                else:
-                    # Add truncation indicator
-                    draw.text((padding, y_position), "...", fill='black', font=font)
-                    break
-            
-            # Convert to base64
-            buffer = io.BytesIO()
-            img.save(buffer, format='PNG')
-            img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            
-            return {
-                "type": "image",
-                "data": f"data:image/png;base64,{img_base64}",
-                "metadata": {
-                    "title": "DOCX Content Preview",
-                    "method": "visual_text",
-                    "lines_shown": len(content_lines)
-                }
-            }
-            
-        except Exception as e:
-            raise Exception(f"Visual preview generation failed: {str(e)}")
-    
-    def _generate_docx_text_preview(self) -> Dict[str, Any]:
-        """Generate a simple text preview as fallback."""
-        try:
-            doc = DocxDocument(self.file_path)
-            
-            # Extract first few paragraphs
-            paragraphs = []
-            for i, paragraph in enumerate(doc.paragraphs):
-                if i >= 5:  # Limit to first 5 paragraphs
-                    break
-                text = paragraph.text.strip()
-                if text:  # Only add non-empty paragraphs
-                    paragraphs.append(text)
-            
-            if not paragraphs:
-                return {
-                    "type": "text",
-                    "data": "DOCX file appears to be empty or has no readable text."
-                }
-            
-            preview_text = '\n\n'.join(paragraphs)
-            
-            # Limit total length
-            if len(preview_text) > 500:
-                preview_text = preview_text[:500] + "..."
-            
-            return {
-                "type": "text",
-                "data": preview_text,
-                "metadata": {
-                    "total_paragraphs": len(doc.paragraphs),
-                    "paragraphs_shown": len(paragraphs),
-                    "method": "text_only"
-                }
-            }
-        except Exception as e:
-            return {
-                "type": "error",
-                "data": f"Error generating DOCX preview: {str(e)}"
-            }
     
     def _generate_text_preview(self) -> Dict[str, Any]:
         """Generate preview for text files - show first few lines."""
@@ -488,22 +296,7 @@ class PreviewGenerator:
                 "type": "error",
                 "data": f"Error generating text preview: {str(e)}"
             }
-    
-    def _generate_default_preview(self) -> Dict[str, Any]:
-        """Generate default preview for unsupported file types."""
-        try:
-            file_size = self.file_path.stat().st_size
-            file_size_mb = file_size / (1024 * 1024)
-            
-            return {
-                "type": "info",
-                "data": f"Preview not available for {self.file_extension} files.\n\nFile size: {file_size_mb:.2f} MB\nFile type: {self.file_extension.upper()}"
-            }
-        except Exception as e:
-            return {
-                "type": "error",
-                "data": f"Error getting file info: {str(e)}"
-            }
+
     
     def _resize_image_for_preview(self, img: Image.Image, max_width: int = 400) -> Image.Image:
         """Resize image for preview while maintaining aspect ratio."""

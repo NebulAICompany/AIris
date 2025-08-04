@@ -5,38 +5,11 @@ from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query_utils import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language
+from backend.utils.query_utils import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
 import os
 
-
 VECTORSTORE_PATH = "backend/vectorstore"
-
-
-def filter_docs_by_selected_files(
-    docs: List, selected_files: Optional[List[str]]
-) -> List:
-    """
-    Filter retrieved documents to only include those from selected files.
-    If selected_files is None or empty, return all documents.
-    """
-    if not selected_files or len(selected_files) == 0:
-        return docs
-
-    filtered_docs = []
-    for doc in docs:
-        metadata = doc.get("metadata", {})
-        file_name = metadata.get("file_name", "")
-
-        # Check if this document's file is in the selected files list
-        if file_name in selected_files:
-            filtered_docs.append(doc)
-
-    print(
-        f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
-    )
-    return filtered_docs
-
 
 def preprocess_query(query: str):
     lang = detect_language(query)
@@ -231,17 +204,10 @@ async def run_orchestration(
     # Use the retrieved documents to ensure metadata is properly formatted
     docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
 
-
-    # 6. Çıktı kontrolü (OpenAI moderation)
-    output_moderation = check_openai_moderation(final_answer)
-    if output_moderation["flagged"]:
-        # OpenAI moderation flagged content - return a safe response
-        final_answer = "Üzgünüm, bu yanıt uygun değil. Lütfen farklı bir soru sorun."
-
-    # 7. Maske çöz
+    # 6. Maske çöz
     final_answer = unmask_text(final_answer)
 
-    # 8. Add assistant response to chat history
+    # 7. Add assistant response to chat history
     if session_id:
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer
