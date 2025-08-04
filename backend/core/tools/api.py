@@ -7,10 +7,8 @@ from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
 def wolfram_alpha_query(query: str) -> str:
     """
     Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
-
     Args:
         query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
-
     Returns:
         The result from Wolfram Alpha as a string
     """
