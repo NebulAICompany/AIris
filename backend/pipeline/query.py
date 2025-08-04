@@ -22,7 +22,6 @@ def preprocess_query(query: str):
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
-    wolfram_enabled: bool = False,
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
@@ -30,7 +29,6 @@ async def run_orchestration(
     print(f"🔍 Query Orchestrator started:")
     print(f"   - Query: {query}")
     print(f"   - Web Search Enabled: {web_search_enabled}")
-    print(f"   - Wolfram Enabled: {wolfram_enabled}")
     print(f"   - Pre-embedding Process: {pre_embedding_process}")
     print(f"   - Session ID: {session_id}")
     print(f"   - Selected Files: {selected_files}")
@@ -187,7 +185,6 @@ async def run_orchestration(
         local_context=cleaned_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
-        wolfram_enabled=wolfram_enabled,
         conversation_history=conversation_context,
     )
     # Generate initial answer
