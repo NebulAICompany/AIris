@@ -5,6 +5,7 @@ from backend.orchestrator.query_orchestrator import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
+from backend.shared.constants import UPLOADS_PATH, CREATED_DOCUMENTS_PATH, IMAGES_PATH, VECTORSTORE_PATH
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -266,10 +267,7 @@ def handle_upload(file: UploadFile = File(...)):
         
 
         # Ensure uploads directory exists (use absolute path)
-        import json 
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         uploads_dir.mkdir(parents=True, exist_ok=True)
 
         # Save uploaded file
@@ -399,10 +397,7 @@ def list_files():
     Returns a list of files in the uploads directory with metadata.
     """
     try:
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
@@ -436,10 +431,7 @@ def get_metrics():
     """
     try:
         # Get file count
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         file_count = (
             len([f for f in uploads_dir.iterdir() if f.is_file()])
             if uploads_dir.exists()
@@ -447,10 +439,7 @@ def get_metrics():
         )
 
         # Get vector store info
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        vectorstore_dir = Path(paths["VECTORSTORE_PATH"])
+        vectorstore_dir = Path(VECTORSTORE_PATH)
         vectorstore_exists = (
             vectorstore_dir.exists() and (vectorstore_dir / "index.faiss").exists()
         )
@@ -509,10 +498,7 @@ def delete_file(filename: str):
         request_counter += 1
 
         # Check if file exists in uploads directory
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         file_path = uploads_dir / filename
 
         logger.debug(f"Checking file existence: {file_path}")
@@ -523,10 +509,7 @@ def delete_file(filename: str):
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
         # Load vector store and PII mappings
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        vectorstore_dir = Path(paths["VECTORSTORE_PATH"])
+        vectorstore_dir = Path(VECTORSTORE_PATH)
 
         logger.debug(f"Vector store directory: {vectorstore_dir}")
         logger.debug(f"Vector store exists: {vectorstore_dir.exists()}")
@@ -669,10 +652,7 @@ def download_file(filename: str):
     Download a file from uploads directory.
     """
     try:
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         file_path = uploads_dir / filename
 
         if not file_path.exists():
@@ -696,10 +676,7 @@ def get_file_preview(filename: str):
     Returns different preview types based on file extension.
     """
     try:
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         file_path = uploads_dir / filename
 
         if not file_path.exists():

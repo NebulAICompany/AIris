@@ -6,6 +6,7 @@ from tavily import TavilyClient
 import cohere
 from openai import OpenAI
 from azure.ai.formrecognizer import DocumentAnalysisClient
+import json
 
 load_dotenv()
 
@@ -35,4 +36,12 @@ text_analytics_client = TextAnalyticsClient(
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
 
 # Constants for file paths
-# TODO:
+# Load paths from paths.json
+_paths_file = os.path.join(os.path.dirname(__file__), "..", "..", "paths.json")
+with open(_paths_file, "r") as f:
+    _paths = json.load(f)
+
+VECTORSTORE_PATH = _paths["VECTORSTORE_PATH"]
+UPLOADS_PATH = _paths["UPLOADS_PATH"]
+CREATED_DOCUMENTS_PATH = _paths["CREATED_DOCUMENTS_PATH"]
+IMAGES_PATH = _paths["IMAGES_PATH"]
