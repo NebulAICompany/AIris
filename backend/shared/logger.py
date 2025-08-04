@@ -1,5 +1,4 @@
 import sys
-from pathlib import Path
 from loguru import logger
 from backend.shared.constants import LOGS_DIR, BACKEND_LOG_PATH_STR, BACKEND_ERROR_LOG_PATH_STR
 
