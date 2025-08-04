@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from backend.orchestrator.query import run_orchestration
+from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
@@ -9,12 +9,8 @@ from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATIO
 import shutil
 from pathlib import Path
 from datetime import datetime
-import feedparser
-import re
-import html
 from typing import List, Optional
-from backend.utils.news_utils import clean_turkish_text, extract_image_info, NewsResponse, NewsArticle, fetch_and_parse_news
-import feedparser
+from backend.utils.news import fetch_and_parse_news
 
 logger = get_logger("ROUTER")
 
@@ -41,7 +37,7 @@ class UploadRequest(BaseModel):
 async def handle_query(request: QueryRequest):
     """
     Kullanıcının gönderdiği sorguyu alır,
-    orchestrator üzerinden işler ve LLM yanıtını döner.
+    pipeline üzerinden işler ve LLM yanıtını döner.
     """
     global request_counter
     try:  # Increment simple counter
@@ -109,7 +105,7 @@ def handle_upload(file: UploadFile = File(...)):
         logger.info(f"File saved to: {file_path}")
 
         # Process the uploaded file with pre-embedding process parameter
-        from backend.orchestrator.upload import process_file
+        from backend.pipeline.upload import process_file
 
         logger.info("Processing uploaded file...")
         pre_embedding_process = "hype"
@@ -513,7 +509,7 @@ def get_file_preview(filename: str):
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
-        from backend.pipelines.preview_generator import PreviewGenerator
+        from backend.utils.preview import PreviewGenerator
 
         preview_generator = PreviewGenerator(str(file_path))
         preview_data = preview_generator.generate_preview()
@@ -598,7 +594,7 @@ async def verify_document(
         logger.info(f"File saved for verification: {temp_file_path}")
 
         # Import and run verification pipeline
-        from backend.pipelines.document_verification import verification_pipeline
+        from backend.utils.verification import verification_pipeline
 
         # Run verification with Wolfram Alpha if enabled
         verification_result = verification_pipeline.verify_document(
@@ -644,7 +640,7 @@ def get_verification_types():
     Get available document verification types
     """
     try:
-        from backend.pipelines.document_verification import verification_pipeline
+        from backend.utils.verification import verification_pipeline
 
         verification_types = verification_pipeline.verification_types
 
