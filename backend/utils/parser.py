@@ -3,14 +3,78 @@ from docx2pdf import convert
 from pathlib import Path
 from PIL import Image
 import io
-import json
+import base64
+from nltk.tokenize import sent_tokenize
 import openpyxl
-import fitz, nltk
-from backend.pipelines.parsers.tools import describe_image, describe_table, specify_sentence
-from dotenv import load_dotenv
-from backend.shared.constants import document_analysis_client, IMAGES_PATH, UPLOADS_PATH
+import fitz
+import nltk
+from backend.shared.constants import document_analysis_client, IMAGES_PATH, openai_client
 
-load_dotenv()
+
+# NOTE: Helper functions for specifications of information (Describe image and add configurations to sentences with relevant information)
+
+def specify_sentence(text, word):
+    """
+    Adds a specified word to the end of each sentence using NLTK for sentence splitting.
+    Args:
+        text (str): Input text.
+        word (str): Word to append at the end of each sentence.
+    Returns:
+        str: Modified text with the word added to each sentence.
+    """
+    sentences = sent_tokenize(text)
+    modified_sentences = []
+    
+    for sentence in sentences:
+        if sentence.strip():  # Skip empty sentences
+            # Check if sentence ends with punctuation
+            if sentence[-1] in {'.', '!', '?'}:
+                modified_sentence = sentence[:-1] + f" {word}" + sentence[-1]
+            else:
+                modified_sentence = sentence + f" {word}"
+            modified_sentences.append(modified_sentence)
+    
+    return ' '.join(modified_sentences)
+
+
+def describe_image(image_bytes):
+        try:
+            base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla.",
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla.",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                },
+                            },
+                        ],
+                    },
+                ],
+                max_tokens=700,
+            )
+            description = response.choices[0].message.content
+            return description
+
+        except Exception as e:
+            print(f"Error in GPT image description: {e}")
+            return "Açıklama alınamadı."
+        
+
+# NOTE: Parser after this line
 
 
 def PdfParser(file_path: str):
@@ -131,7 +195,6 @@ def PdfParser(file_path: str):
                         continue
                                 
                     content_parts.append(f"\n[Table {table_counter + 1}]\n")
-                    table_content = []
                     max_col = max(cell.column_index for cell in table.cells)
                     max_row = max(cell.row_index for cell in table.cells)
 
@@ -141,10 +204,7 @@ def PdfParser(file_path: str):
                             content = cell.content if cell else ""
                             if content:
                                 content_parts.append(f"[{row_index},{col_index}]: {content}\n")
-                                table_content.append(content)
 
-                    table_description = describe_table(table_content)
-                    content_parts.append(f"[Description] = {table_description}\n")
                     occupied_boxes.extend(table_regions)
 
                 if page_tables:
