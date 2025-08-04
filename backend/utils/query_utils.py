@@ -1,11 +1,8 @@
 import logging
-from dotenv import load_dotenv
-from azure.ai.textanalytics import TextAnalyticsClient
-from azure.core.credentials import AzureKeyCredential
-
-load_dotenv()
-
-
+from backend.shared.constants import openai_client
+from typing import List, Dict, Tuple
+import re
+import base64
 
 try:
     import jpype
@@ -102,3 +99,133 @@ def normalize_repeated_chars(word: str) -> str:
         i = j
 
     return "".join(result)
+
+
+def reflect_and_retry(
+        prompt: str, initial_answer: str, max_retries: int = 2
+) -> str:
+    current_answer = initial_answer
+    retry_count = 0
+
+    while retry_count < max_retries:
+        reflection_prompt = f"""
+        Evaluate the following question and answer pair:
+
+        Question: {prompt}
+
+        Answer: {current_answer}
+
+        Please evaluate the answer based on these criteria:
+        1. Completeness: Does it fully address all aspects of the question?
+        2. Accuracy: Is the information correct and well-supported by sources?
+        3. Clarity: Is the reasoning process clear and well-structured?
+        4. Source Attribution: Are all sources properly cited?
+
+        Provide your evaluation in this format:
+        Completeness: [Score 1-5]
+        Accuracy: [Score 1-5]
+        Clarity: [Score 1-5]
+        Source Attribution: [Score 1-5]
+        Overall Assessment: [Pass/Fail]
+        Improvement Suggestions: [List specific areas for improvement]
+        """
+
+        # Use the agent for reflection
+        reflection_result = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "you are a helpful assistant that evaluates answers."},
+                {"role": "user", "content": reflection_prompt },
+            ],
+            max_tokens=800,
+            temperature=0.0,
+        )
+        reflection = reflection_result.final_output
+
+        # Check if the answer needs improvement
+        if "Overall Assessment: Fail" in reflection:
+            retry_count += 1
+            if retry_count < max_retries:
+                # Create an enhanced prompt with the reflection feedback
+                enhanced_prompt = f"""
+                Previous Answer: {current_answer}
+
+                Evaluation Feedback: {reflection}
+
+                Please provide an improved answer addressing the feedback above.
+                """
+                # Get improved answer using the agent
+                result = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant that gets improved answer."},
+                        {"role": "user", "content": enhanced_prompt },
+                    ],
+                    max_tokens=800,
+                    temperature=0.0,
+                )
+                current_answer = result.final_output
+        else:
+            return current_answer
+
+    return current_answer
+
+
+def extract_image_references_from_context(local_context: str) -> Tuple[str, List[str]]:
+    """
+    Analyze local context for image references and extract image paths.
+    Returns (cleaned_context, image_paths_list)
+    """
+    image_pattern = r'\(\(Image\):([^)]+)\)'
+    image_paths = []
+
+    print(f"🔍 Analyzing local context for image references...")
+
+    # Find all image references in the context
+    matches = re.findall(image_pattern, local_context)
+
+    if matches:
+        print(f"   - Found {len(matches)} image references in context")
+        for match in matches:
+            image_path = match.strip()
+            if image_path not in image_paths:
+                image_paths.append(image_path)
+
+        # Clean the context from image references
+    cleaned_context = re.sub(image_pattern, '', local_context)
+
+    return cleaned_context, image_paths
+
+
+def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
+    """
+    Load actual image files based on the extracted paths and convert to base64.
+    Returns list of image data dictionaries.
+    """
+    images_data = []
+
+    if not image_paths:
+        return images_data
+
+    print(f"📁 Loading {len(image_paths)} images from filesystem...")
+
+    for path in image_paths:
+        # Construct the full image path - try both .jpg and .png
+        for ext in ['.jpg', '.png']:
+            image_file_path = f"backend/images/{path}{ext}"
+
+            if os.path.exists(image_file_path):
+                try:
+                    with open(image_file_path, "rb") as img_file:
+                        img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                        images_data.append({
+                            "filename": f"{path}{ext}",
+                            "data": img_data,
+                            "reference": path,
+                            "type": f"image/{ext[1:]}"
+                        })
+                    break
+                except Exception as e:
+                    print(f"   ❌ Error loading image {path}{ext}: {e}")
+
+    return images_data
