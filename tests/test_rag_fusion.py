@@ -15,7 +15,7 @@ from backend.retrieval.rag_fusion import (
     retrieve_with_fusion,
 )
 from backend.retrieval.retriever import load_vectorstore
-from backend.orchestrator.query_orchestrator import run_orchestration
+from backend.orchestrator.query import run_orchestration
 
 
 async def test_query_generation():
