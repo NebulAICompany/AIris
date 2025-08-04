@@ -13,10 +13,7 @@ from backend.shared.logger import setup_logger, get_logger
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
-
-# Proje ana dizinini belirle
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VECTORSTORE_PATH = os.path.join(BASE_DIR, "vectorstore")
+from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR
 
 # Initialize logging first
 setup_logger()
@@ -38,16 +35,16 @@ async def startup_event():
     Uygulama başlangıcında vektör deposunu yükle.
     """
     try:
-        if not os.path.exists(VECTORSTORE_PATH):
-            os.makedirs(VECTORSTORE_PATH)
-            print(f"Vectorstore directory created at: {VECTORSTORE_PATH}")
+        if not os.path.exists(VECTORSTORE_PATH_STR):
+            os.makedirs(VECTORSTORE_PATH_STR)
+            print(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
 
         # Check if the vectorstore files exist, if not, we can't load it.
         # The user should upload files first.
-        faiss_path = os.path.join(VECTORSTORE_PATH, "index.faiss")
+        faiss_path = os.path.join(VECTORSTORE_PATH_STR, "index.faiss")
         if os.path.exists(faiss_path):
             print("Loading vectorstore...")
-            load_vectorstore(VECTORSTORE_PATH)
+            load_vectorstore(VECTORSTORE_PATH_STR)
             print("Vectorstore loaded successfully.")
         else:
             print("Vectorstore not found. Please upload files to create it.")
@@ -60,14 +57,13 @@ async def startup_event():
 
 
 # UI statik dosyalarını sun
-ui_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 app.mount(
     "/static",
-    StaticFiles(directory=os.path.join(ui_path, "src", "renderer")),
+    StaticFiles(directory=str(FRONTEND_RENDERER_DIR)),
     name="static",
 )
 app.mount(
-    "/assets", StaticFiles(directory=os.path.join(ui_path, "assets")), name="assets"
+    "/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets"
 )
 
 # expose_metrics()

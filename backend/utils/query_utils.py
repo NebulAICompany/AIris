@@ -138,7 +138,7 @@ def reflect_and_retry(
             max_tokens=800,
             temperature=0.0,
         )
-        reflection = reflection_result.final_output
+        reflection = reflection_result.choices[0].message.content.strip()
 
         # Check if the answer needs improvement
         if "Overall Assessment: Fail" in reflection:
@@ -162,7 +162,7 @@ def reflect_and_retry(
                     max_tokens=800,
                     temperature=0.0,
                 )
-                current_answer = result.final_output
+                current_answer = result.choices[0].message.content.strip()
         else:
             return current_answer
 
@@ -228,7 +228,7 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
 
     return images_data
 
-def filter_docs_by_selecteda_files(
+def filter_docs_by_selected_files(
     docs: List, selected_files: Optional[List[str]]
 ) -> List:
     """
