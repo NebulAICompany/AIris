@@ -3,8 +3,9 @@ from .tools.mcp import alpha_vantage_mcp_server
 from .prompts import wolfram_instructions
 from typing import List
 from .tools.api import wolfram_alpha_query, web_search_tool
-from .tools.base_tools import rag_agent_as_tools
+from .tools.agent_as_tools import alpha_vantage_agent, office_agent
 
+rag_agent_as_tools = [alpha_vantage_agent, office_agent]
 
 def create_rag_agent(
     local_context: str,
