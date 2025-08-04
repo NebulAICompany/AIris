@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import backend.orchestrator.vector as vectorpipe
+import backend.pipeline.vector as vectorpipe
 from backend.shared.constants import VECTORSTORE_PATH
 
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
@@ -35,7 +35,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
         # Step 2: Create or update vector store directly with the extracted text
-        from backend.orchestrator.vector import PreEmbeddingProcess
+        from backend.pipeline.vector import PreEmbeddingProcess
 
         # Convert string to enum
         if pre_embedding_process.lower() == "hype":
