@@ -13,9 +13,7 @@ from typing import List, Optional
 from backend.utils.news import fetch_and_parse_news
 
 logger = get_logger("ROUTER")
-
 router = APIRouter()
-
 # Simple request counter
 request_counter = 0
 
@@ -27,11 +25,9 @@ class QueryRequest(BaseModel):
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
-
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
-
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
@@ -275,11 +271,6 @@ def get_metrics():
         global request_counter
         total_requests = request_counter
 
-        # Mock some metrics for demo
-        import time
-
-        current_time = time.time()
-
         return {
             "totalQueries": int(total_requests),
             "totalDocuments": file_count,
@@ -340,14 +331,10 @@ def delete_file(filename: str):
 
         logger.debug(f"Vector store directory: {vectorstore_dir}")
         logger.debug(f"Vector store exists: {vectorstore_dir.exists()}")
-        logger.debug(
-            f"FAISS index exists: {(FAISS_INDEX_PATH).exists()}"
-        )
+        logger.debug(f"FAISS index exists: {(FAISS_INDEX_PATH).exists()}")
 
-        if (
-            not vectorstore_dir.exists()
-            or not (FAISS_INDEX_PATH).exists()
-        ):
+        if (not vectorstore_dir.exists()
+            or not (FAISS_INDEX_PATH).exists()):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
@@ -373,28 +360,18 @@ def delete_file(filename: str):
         # Find all chunk IDs that belong to this file
         chunks_to_delete = []
 
-        # Account for file processing transformations:
-        # - PDF files are processed as "filename_txt.txt"
-        # - DOCX files are converted to PDF then processed as "filename_txt.txt"
-        # - Excel files might be processed differently
+        # Stem file name
         base_filename = Path(filename).stem
-        possible_processed_names = [
-            filename,  # Original filename
-            f"{base_filename}_txt.txt",  # PDF/DOCX processed format
-            f"{base_filename}.txt",  # Alternative format
-        ]
 
         # Get all documents and find ones with matching file_name
         # We need to iterate through the docstore to find matching documents
         for doc_id, document in vectorstore.docstore._dict.items():
             if hasattr(document, "metadata"):
                 doc_filename = document.metadata.get("file_name")
-                if doc_filename in possible_processed_names:
+                if doc_filename == base_filename:
                     chunks_to_delete.append(doc_id)
 
-        print(
-            f"🔍 Found {len(chunks_to_delete)} chunks to delete for file '{filename}' (checking: {possible_processed_names})"
-        )
+        print(f"🔍 Found {len(chunks_to_delete)} chunks to delete for file '{filename}'")
 
         # Find chunk IDs to remove from PII maps BEFORE deleting from vector store
         chunks_to_remove_from_pii = []
@@ -413,7 +390,7 @@ def delete_file(filename: str):
             for doc_id, document in vectorstore.docstore._dict.items():
                 if hasattr(document, "metadata"):
                     doc_filename = document.metadata.get("file_name")
-                    if doc_filename in possible_processed_names:
+                    if doc_filename == base_filename:
                         chunk_id = document.metadata.get("chunk_id")
                         if chunk_id and chunk_id in pii_maps:
                             chunks_to_remove_from_pii.append(chunk_id)
@@ -433,9 +410,7 @@ def delete_file(filename: str):
 
         # Update PII mappings - remove entries for deleted chunks
         if chunks_to_remove_from_pii and pii_map_path.exists():
-            print(
-                f"📋 Removing {len(chunks_to_remove_from_pii)} entries from PII mappings..."
-            )
+            print(f"📋 Removing {len(chunks_to_remove_from_pii)} entries from PII mappings...")
             # Remove from PII maps
             for chunk_id in chunks_to_remove_from_pii:
                 pii_maps.pop(chunk_id, None)
@@ -468,7 +443,6 @@ def delete_file(filename: str):
     except Exception as e:
         print(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
         import traceback
-
         print(f"❌ Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
@@ -479,8 +453,7 @@ def download_file(filename: str):
     Download a file from uploads directory.
     """
     try:
-        uploads_dir = Path(UPLOADS_PATH)
-        file_path = uploads_dir / filename
+        file_path = Path(UPLOADS_PATH) / filename
 
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
@@ -503,8 +476,7 @@ def get_file_preview(filename: str):
     Returns different preview types based on file extension.
     """
     try:
-        uploads_dir = Path(UPLOADS_PATH)
-        file_path = uploads_dir / filename
+        file_path = Path(UPLOADS_PATH) / filename
 
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
@@ -568,9 +540,7 @@ async def verify_document(
         # Increment request counter
         request_counter += 1
 
-        logger.info(
-            f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})"
-        )
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})")
 
         # Check file type
         allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
@@ -614,8 +584,6 @@ async def verify_document(
 
         return verification_result
 
-    except HTTPException:
-        raise
     except Exception as e:
         error_message = str(e)
         logger.error(
@@ -628,7 +596,6 @@ async def verify_document(
                 temp_file_path.unlink()
         except:
             pass
-
         raise HTTPException(
             status_code=500, detail=f"Document verification failed: {error_message}"
         )
@@ -641,7 +608,6 @@ def get_verification_types():
     """
     try:
         from backend.utils.verification import verification_pipeline
-
         verification_types = verification_pipeline.verification_types
 
         return {
@@ -656,10 +622,3 @@ def get_verification_types():
         raise HTTPException(
             status_code=500, detail=f"Error getting verification types: {error_message}"
         )
-
-
-if __name__ == "__main__":
-    file_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/Esra/pdf_file.pdf"  # Change this to your file path
-    with open(file_path, "rb") as file:
-        file = UploadFile(file)
-        handle_upload(file)
