@@ -9,6 +9,10 @@ from PIL import Image
 from docx2pdf import convert
 import fitz
 
+from backend.shared.logger import get_logger
+
+logger = get_logger("PREVIEW")
+
 
 class PreviewGenerator:
     """
@@ -182,9 +186,9 @@ class PreviewGenerator:
                             pass
                         # Fresh initialization
                         pythoncom.CoInitialize()
-                        print(f"COM initialized successfully for attempt {attempt + 1}")
+                        logger.info(f"COM initialized successfully for attempt {attempt + 1}")
                     except Exception as com_error:
-                        print(f"COM initialization failed on attempt {attempt + 1}: {com_error}")
+                        logger.error(f"COM initialization failed on attempt {attempt + 1}: {com_error}")
                         if attempt == max_retries:
                             raise Exception(f"COM initialization failed after {max_retries + 1} attempts")
                 
@@ -192,7 +196,7 @@ class PreviewGenerator:
                 with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as temp_file:
                     temp_pdf = temp_file.name
                 
-                print(f"Converting {self.file_path.name} to PDF (attempt {attempt + 1})")
+                logger.info(f"Converting {self.file_path.name} to PDF (attempt {attempt + 1})")
                 
                 # Convert DOCX to PDF
                 convert(str(self.file_path), temp_pdf)
@@ -201,7 +205,7 @@ class PreviewGenerator:
                 if not os.path.exists(temp_pdf) or os.path.getsize(temp_pdf) == 0:
                     raise Exception("Generated PDF is empty or doesn't exist")
                 
-                print(f"PDF conversion successful for {self.file_path.name} on attempt {attempt + 1}")
+                logger.info(f"PDF conversion successful for {self.file_path.name} on attempt {attempt + 1}")
                 
                 # Use our PDF preview logic with the temporary PDF
                 result = self._generate_pdf_preview(temp_pdf)
@@ -221,7 +225,7 @@ class PreviewGenerator:
                 return result
 
             except Exception as e:
-                print(f"Conversion attempt {attempt + 1} failed for {self.file_path.name}: {e}")
+                logger.error(f"Conversion attempt {attempt + 1} failed for {self.file_path.name}: {e}")
                 
                 # Clean up COM for this attempt
                 import sys
