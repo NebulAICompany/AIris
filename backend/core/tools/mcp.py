@@ -21,3 +21,7 @@ alpha_vantage_mcp_server = MCPServerStdio(
         "env": os.environ.copy(),
     }
 )
+
+mcp_servers = [
+    alpha_vantage_mcp_server,
+]

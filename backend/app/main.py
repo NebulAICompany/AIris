@@ -14,6 +14,7 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
 from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR, FAISS_INDEX_PATH
+from backend.core.tools.mcp import mcp_servers
 
 # Initialize logging first
 setup_logger()
@@ -32,12 +33,19 @@ logger.info("Starting AIris Backend API...")
 @app.on_event("startup")
 async def startup_event():
     """
-    Uygulama başlangıcında vektör deposunu yükle.
+    Uygulama başlangıcında vektör deposunu yükle ve MCP sunucularına bağlan.
     """
     try:
+        for mcp_server in mcp_servers:
+            try:
+                await mcp_server.connect()
+            except Exception as e:
+                print(f"Error connecting to MCP server: {e}")
+
         if not os.path.exists(VECTORSTORE_PATH_STR):
             os.makedirs(VECTORSTORE_PATH_STR)
             print(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
+
 
         # Check if the vectorstore files exist, if not, we can't load it.
         # The user should upload files first.
