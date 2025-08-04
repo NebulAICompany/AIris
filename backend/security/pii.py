@@ -2,6 +2,9 @@ import uuid
 import json
 from pathlib import Path
 from backend.shared.constants import text_analytics_client, MASKED_MAP_JSON_PATH
+from backend.shared.logger import get_logger
+
+logger = get_logger("PII")
 
 
 def mask_text(text):
@@ -28,13 +31,13 @@ def mask_text(text):
             masked_text = masked_text[:offset] + mask + masked_text[offset + length:]
     else:
         masked_text = text
-        print(f"Error: {result[0].error}")
+        logger.error(f"Error: {result[0].error}")
 
     try:
         with open(MASKED_MAP_JSON_PATH, "r", encoding="utf-8") as f:
             existing_map = json.load(f)
     except:
-        print("No existing map found, creating a new one.")
+        logger.info("No existing map found, creating a new one.")
         existing_map = {}
 
     existing_map.update(masked_map)
@@ -51,7 +54,7 @@ def unmask_text(text):
         with open(MASKED_MAP_JSON_PATH, "r", encoding="utf-8") as f:
             masked_map = json.load(f)
     except:
-        print("No existing map found, returning text as is.")
+        logger.warning("No existing map found, returning text as is.")
         return text
 
     for mask, original in masked_map.items():

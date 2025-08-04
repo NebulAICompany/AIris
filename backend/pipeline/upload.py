@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
 from backend.shared.constants import VECTORSTORE_PATH
-
+from backend.shared.logger import get_logger
+logger = get_logger("UPLOAD")
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
     Process an uploaded file synchronously.
@@ -60,5 +61,5 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
             "vector_store_path": VECTORSTORE_PATH,
         }
     except Exception as e:
-        print(f"Error processing file: {str(e)}")
+        logger.error(f"Error processing file: {str(e)}")
         raise e
