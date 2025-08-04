@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from backend.orchestrator.query_orchestrator import run_orchestration
+from backend.orchestrator.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
@@ -109,7 +109,7 @@ def handle_upload(file: UploadFile = File(...)):
         logger.info(f"File saved to: {file_path}")
 
         # Process the uploaded file with pre-embedding process parameter
-        from backend.orchestrator.upload_orchestrator import process_file
+        from backend.orchestrator.upload import process_file
 
         logger.info("Processing uploaded file...")
         pre_embedding_process = "hype"
