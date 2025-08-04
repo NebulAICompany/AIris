@@ -115,11 +115,12 @@ async def test_full_rag_fusion():
     print("\n🚀 Testing Full RAG Fusion Pipeline...")
 
     # Load vectorstore first
-    vectorstore_path = "backend/vectorstore"
-    if os.path.exists(f"{vectorstore_path}/index.faiss"):
+    from backend.shared.constants import VECTORSTORE_PATH
+
+    if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
         print("📦 Loading vectorstore...")
         try:
-            load_vectorstore(vectorstore_path)
+            load_vectorstore(VECTORSTORE_PATH)
             print("✅ Vectorstore loaded successfully")
         except Exception as e:
             print(f"❌ Error loading vectorstore: {e}")
