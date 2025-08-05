@@ -4,23 +4,20 @@ import os
 from datetime import datetime
 
 if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    # Use ProactorEventLoop for Windows subprocess support
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
-from backend.shared.logger import setup_logger, get_logger
+from backend.shared.logger import get_logger
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
+from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR, FAISS_INDEX_PATH
+from backend.core.tools.mcp import mcp_servers
 
-# Proje ana dizinini belirle
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VECTORSTORE_PATH = os.path.join(BASE_DIR, "vectorstore")
-
-# Initialize logging first
-setup_logger()
-logger = get_logger(__name__)
+logger = get_logger("MAIN")
 
 # Fast API app start
 app = FastAPI(
@@ -35,39 +32,60 @@ logger.info("Starting AIris Backend API...")
 @app.on_event("startup")
 async def startup_event():
     """
-    Uygulama başlangıcında vektör deposunu yükle.
+    Uygulama başlangıcında vektör deposunu yükle ve MCP sunucularına bağlan.
     """
     try:
-        if not os.path.exists(VECTORSTORE_PATH):
-            os.makedirs(VECTORSTORE_PATH)
-            print(f"Vectorstore directory created at: {VECTORSTORE_PATH}")
+        if not os.path.exists(VECTORSTORE_PATH_STR):
+            os.makedirs(VECTORSTORE_PATH_STR)
+            logger.info(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
+
 
         # Check if the vectorstore files exist, if not, we can't load it.
         # The user should upload files first.
-        faiss_path = os.path.join(VECTORSTORE_PATH, "index.faiss")
-        if os.path.exists(faiss_path):
-            print("Loading vectorstore...")
-            load_vectorstore(VECTORSTORE_PATH)
-            print("Vectorstore loaded successfully.")
+        if os.path.exists(FAISS_INDEX_PATH):
+            logger.info("Loading vectorstore...")
+            load_vectorstore(VECTORSTORE_PATH_STR)
+            logger.info("Vectorstore loaded successfully.")
         else:
-            print("Vectorstore not found. Please upload files to create it.")
+            logger.warning("Vectorstore not found. Please upload files to create it.")
+
+        # Connect MCP servers using best practices
+        logger.info("Connecting MCP servers...")
+        from backend.core.tools.mcp import connect_mcp_servers
+        await connect_mcp_servers()
+        logger.info("MCP servers connected successfully.")
 
     except Exception as e:
-        print(f"Error during startup: {e}")
+        import traceback
+        logger.error(f"Error during startup: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         # Depending on the desired behavior, you might want to raise the exception
         # to prevent the app from starting with a misconfigured state.
         # raise e
 
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Uygulama kapanırken MCP sunucularından bağlantıyı kes.
+    """
+    try:
+        logger.info("Disconnecting MCP servers...")
+        from backend.core.tools.mcp import disconnect_mcp_servers
+        await disconnect_mcp_servers()
+        logger.info("MCP servers disconnected successfully.")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
+
+
 # UI statik dosyalarını sun
-ui_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
 app.mount(
     "/static",
-    StaticFiles(directory=os.path.join(ui_path, "src", "renderer")),
+    StaticFiles(directory=str(FRONTEND_RENDERER_DIR)),
     name="static",
 )
 app.mount(
-    "/assets", StaticFiles(directory=os.path.join(ui_path, "assets")), name="assets"
+    "/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets"
 )
 
 # expose_metrics()

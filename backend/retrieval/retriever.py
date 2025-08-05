@@ -3,6 +3,9 @@ import os
 from langchain_community.vectorstores import FAISS
 from langchain_core.embeddings import Embeddings
 from backend.shared.constants import OPENAI_API_KEY, HUGGINGFACE_API_KEY
+from backend.shared.logger import get_logger
+
+logger = get_logger("RETRIEVER")
 
 _vectorstore = None
 
@@ -43,8 +46,8 @@ def load_vectorstore(path: str) -> FAISS:
             embeddings=embeddings,
             allow_dangerous_deserialization=True,
         )
-        print(f"✅ Vectorstore loaded from {path}")
-        print(
+        logger.info(f"✅ Vectorstore loaded from {path}")
+        logger.info(
             f"📦 Contains {_vectorstore.index.ntotal} document chunks (including HyPE prompt expansions)"
         )
         return _vectorstore
@@ -59,12 +62,12 @@ def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
         raise ValueError("Vectorstore not loaded. Please load the vectorstore first.")
 
     try:
-        print(f"🔍 Retrieving top {k} documents for query: {query}")
-        print(
+        logger.info(f"🔍 Retrieving top {k} documents for query: {query}")
+        logger.info(
             f"📊 Searching through {_vectorstore.index.ntotal} document chunks (original + HyPE prompt expansions)"
         )
         docs_with_scores = _vectorstore.similarity_search_with_score(query, k=k)
-        print(
+        logger.info(
             f"✅ Retrieved {len(docs_with_scores)} documents from HyPE-enhanced vectorstore"
         )
 
@@ -107,7 +110,7 @@ def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
                         "metadata": {**doc.metadata, "match_type": "content_match", "contains_image": contains_image},
                     }
                 )
-        print("CHUNKS WITH IMAGES IS: ", chunks_with_images)
+        logger.debug("CHUNKS WITH IMAGES IS: ", chunks_with_images)
         # Show breakdown of results
         original_count = sum(
             1 for r in results if r["metadata"].get("content_type") == "original"
@@ -115,12 +118,12 @@ def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
         prompt_match_count = sum(
             1 for r in results if r["metadata"].get("match_type") == "prompt_match"
         )
-        print(
+        logger.info(
             f"📈 Results breakdown: {original_count} direct content matches + {prompt_match_count} prompt-based matches"
         )
 
         return results
 
     except Exception as e:
-        print(f"❌ Error during retrieval: {e}")
+        logger.error(f"❌ Error during retrieval: {e}")
         return []

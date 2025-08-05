@@ -1,9 +1,10 @@
 import uuid
 import json
 from pathlib import Path
-from backend.shared.constants import text_analytics_client
+from backend.shared.constants import text_analytics_client, MASKED_MAP_JSON_PATH
+from backend.shared.logger import get_logger
 
-map_base_location = Path(__file__).parent.parent / "database" / "masked_map.json"
+logger = get_logger("PII")
 
 
 def mask_text(text):
@@ -30,18 +31,18 @@ def mask_text(text):
             masked_text = masked_text[:offset] + mask + masked_text[offset + length:]
     else:
         masked_text = text
-        print(f"Error: {result[0].error}")
+        logger.error(f"Error: {result[0].error}")
 
     try:
-        with open(map_base_location, "r", encoding="utf-8") as f:
+        with open(MASKED_MAP_JSON_PATH, "r", encoding="utf-8") as f:
             existing_map = json.load(f)
     except:
-        print("No existing map found, creating a new one.")
+        logger.info("No existing map found, creating a new one.")
         existing_map = {}
 
     existing_map.update(masked_map)
 
-    with open(map_base_location, "w", encoding="utf-8") as f:
+    with open(MASKED_MAP_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(existing_map, f, ensure_ascii=False, indent=4)
 
     return masked_text
@@ -49,8 +50,13 @@ def mask_text(text):
 
 def unmask_text(text):
     """Unmask PII entities in the given text using a predefined mapping."""
-    with open(map_base_location, "r", encoding="utf-8") as f:
-        masked_map = json.load(f)
+    try:
+        with open(MASKED_MAP_JSON_PATH, "r", encoding="utf-8") as f:
+            masked_map = json.load(f)
+    except:
+        logger.warning("No existing map found, returning text as is.")
+        return text
+
     for mask, original in masked_map.items():
         text = text.replace(mask, original)
     return text

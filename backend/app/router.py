@@ -1,215 +1,38 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from backend.orchestrator.query_orchestrator import run_orchestration
+from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
+from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, FAISS_INDEX_PATH, CREATED_DOCUMENTS_PATH
 import shutil
 from pathlib import Path
 from datetime import datetime
-import feedparser
-import re
-import html
 from typing import List, Optional
+from backend.utils.news import fetch_and_parse_news
 
 logger = get_logger("ROUTER")
-
 router = APIRouter()
-
 # Simple request counter
 request_counter = 0
-
-
-def clean_turkish_text(text):
-    """
-    Clean Turkish text from HTML entities, CDATA, and encoding issues.
-    """
-    if not text:
-        return ""
-
-    # Debug: log original text if it contains HTML entities
-    if "&#" in text:
-        logger.debug(f"Processing text with HTML entities: {text[:100]}...")
-
-    # Remove CDATA wrapper if present
-    cdata_pattern = r"<!\[CDATA\[(.*?)\]\]>"
-    cdata_match = re.search(cdata_pattern, text, re.DOTALL)
-    if cdata_match:
-        text = cdata_match.group(1).strip()
-
-    # First pass: decode HTML entities (handles &#39;, &amp;, &quot;, etc.)
-    text = html.unescape(text)
-
-    # Second pass: handle any remaining numeric HTML entities manually
-    # This catches cases where html.unescape might miss some
-    numeric_entities = {
-        "&#39;": "'",  # Apostrophe
-        "&#x27;": "'",  # Apostrophe (hex)
-        "&#34;": '"',  # Double quote
-        "&#x22;": '"',  # Double quote (hex)
-        "&#38;": "&",  # Ampersand
-        "&#x26;": "&",  # Ampersand (hex)
-        "&#60;": "<",  # Less than
-        "&#x3C;": "<",  # Less than (hex)
-        "&#62;": ">",  # Greater than
-        "&#x3E;": ">",  # Greater than (hex)
-        "&#160;": " ",  # Non-breaking space
-        "&#xA0;": " ",  # Non-breaking space (hex)
-        "&#8217;": "'",  # Right single quotation mark
-        "&#8220;": '"',  # Left double quotation mark
-        "&#8221;": '"',  # Right double quotation mark
-        "&#8211;": "–",  # En dash
-        "&#8212;": "—",  # Em dash
-    }
-
-    for entity, replacement in numeric_entities.items():
-        text = text.replace(entity, replacement)
-
-    # Third pass: use regex to catch any remaining numeric entities
-    def replace_numeric_entity(match):
-        try:
-            num = int(match.group(1))
-            return chr(num)
-        except (ValueError, OverflowError):
-            return match.group(0)  # Return original if conversion fails
-
-    # Handle decimal numeric entities like &#123;
-    text = re.sub(r"&#(\d+);", replace_numeric_entity, text)
-
-    # Handle hexadecimal numeric entities like &#x7B;
-    def replace_hex_entity(match):
-        try:
-            num = int(match.group(1), 16)
-            return chr(num)
-        except (ValueError, OverflowError):
-            return match.group(0)  # Return original if conversion fails
-
-    text = re.sub(r"&#x([0-9a-fA-F]+);", replace_hex_entity, text)
-
-    # Remove HTML tags
-    text = re.sub(r"<[^>]+>", "", text)
-
-    # Normalize whitespace
-    text = " ".join(text.split())
-
-    # Handle common encoding issues specific to Turkish
-    replacements = {
-        "â€™": "'",  # Common encoding issue
-        "â€œ": '"',  # Opening quote
-        "â€": '"',  # Closing quote
-        'â€"': "—",  # Em dash
-        'â€"': "–",  # En dash
-        "Ä±": "ı",  # Turkish lowercase i
-        "Ä°": "İ",  # Turkish uppercase I
-        "Åž": "Ş",  # Turkish S
-        "ÅŸ": "ş",  # Turkish s
-        "Ä°": "İ",  # Turkish I
-        "Ã§": "ç",  # Turkish c
-        "Ã¼": "ü",  # Turkish u
-        "Ã¶": "ö",  # Turkish o
-        "Ä±": "ı",  # Turkish i
-        "ÄŸ": "ğ",  # Turkish g
-    }
-
-    for old, new in replacements.items():
-        text = text.replace(old, new)
-
-    # Debug: log final text if we started with HTML entities
-    if "&#" in text:
-        logger.debug(f"Still contains HTML entities after cleaning: {text[:100]}...")
-
-    return text.strip()
-
-
-def extract_image_info(entry):
-    """
-    Extract image information from RSS entry.
-    Looks for enclosure tags and img tags in description.
-    """
-    image_url = ""
-    image_width = 0
-    image_height = 0
-
-    # Method 1: Check for enclosure tag (main image)
-    if hasattr(entry, "enclosures") and entry.enclosures:
-        for enclosure in entry.enclosures:
-            if enclosure.get("type", "").startswith("image/"):
-                image_url = enclosure.get("href", "") or enclosure.get("url", "")
-                break
-
-    # Method 2: Extract from img tag in description if no enclosure found
-    if not image_url:
-        description = entry.get("description", "") or entry.get("summary", "")
-        if description:
-            # Look for img tag with src attribute
-            img_pattern = r'<img[^>]*src=["\']([^"\']+)["\'][^>]*>'
-            img_match = re.search(img_pattern, description, re.IGNORECASE)
-            if img_match:
-                image_url = img_match.group(1)
-
-                # Try to extract width and height from img tag
-                width_pattern = r'width=["\']?(\d+)["\']?'
-                height_pattern = r'height=["\']?(\d+)["\']?'
-
-                width_match = re.search(
-                    width_pattern, img_match.group(0), re.IGNORECASE
-                )
-                height_match = re.search(
-                    height_pattern, img_match.group(0), re.IGNORECASE
-                )
-
-                if width_match:
-                    try:
-                        image_width = int(width_match.group(1))
-                    except ValueError:
-                        pass
-
-                if height_match:
-                    try:
-                        image_height = int(height_match.group(1))
-                    except ValueError:
-                        pass
-
-    return image_url, image_width, image_height
-
-
-class NewsArticle(BaseModel):
-    title: str
-    link: str
-    published: str
-    summary: str = ""
-    source: str = "Dunya Ekonomi"
-    image_url: str = ""
-    image_width: int = 0
-    image_height: int = 0
-
-
-class NewsResponse(BaseModel):
-    articles: List[NewsArticle]
-    total_count: int
-    last_updated: str
-
 
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
-    wolframEnabled: bool = False
     preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
-
 
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
 
-
 @router.post("/query")
 async def handle_query(request: QueryRequest):
     """
     Kullanıcının gönderdiği sorguyu alır,
-    orchestrator üzerinden işler ve LLM yanıtını döner.
+    pipeline üzerinden işler ve LLM yanıtını döner.
     """
     global request_counter
     try:  # Increment simple counter
@@ -217,23 +40,22 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
-        wolfram_enabled = request.wolframEnabled
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
-        print(f"📝 API Router received:")
-        print(f"   - Query: {query}")
-        print(f"   - Web Search Enabled: {web_search_enabled}")
-        print(f"   - Wolfram Enabled: {wolfram_enabled}")
-        print(f"   - Pre-embedding Process: {pre_embedding_process}")
-        print(f"   - Session ID: {session_id}")
-        print(f"   - Selected Files: {selected_files}")
+
+        logger.info(f"📝 API Router received:")
+        logger.info(f"   - Query: {query}")
+        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
+        logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+        logger.info(f"   - Session ID: {session_id}")
+        logger.info(f"   - Selected Files: {selected_files}")
+
 
         answer = await run_orchestration(
             query,
             web_search_enabled,
-            wolfram_enabled,
             pre_embedding_process,
             session_id,
             selected_files,
@@ -266,10 +88,7 @@ def handle_upload(file: UploadFile = File(...)):
         
 
         # Ensure uploads directory exists (use absolute path)
-        import json 
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         uploads_dir.mkdir(parents=True, exist_ok=True)
 
         # Save uploaded file
@@ -280,7 +99,7 @@ def handle_upload(file: UploadFile = File(...)):
         logger.info(f"File saved to: {file_path}")
 
         # Process the uploaded file with pre-embedding process parameter
-        from backend.orchestrator.upload_orchestrator import process_file
+        from backend.pipeline.upload import process_file
 
         logger.info("Processing uploaded file...")
         pre_embedding_process = "hype"
@@ -399,10 +218,7 @@ def list_files():
     Returns a list of files in the uploads directory with metadata.
     """
     try:
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
@@ -429,6 +245,39 @@ def list_files():
         )
 
 
+@router.get("/created-documents")
+def list_created_documents():
+    """
+    Returns a list of files in the created_documents directory with metadata.
+    """
+    try:
+        created_documents_dir = Path(CREATED_DOCUMENTS_PATH)
+        if not created_documents_dir.exists():
+            return {"files": []}  # Return an empty list if the directory doesn't exist
+
+        files = []
+        for file in created_documents_dir.iterdir():
+            if file.is_file():
+                files.append(
+                    {
+                        "name": file.name,
+                        "size": file.stat().st_size,  # File size in bytes
+                        "created_at": datetime.fromtimestamp(
+                            file.stat().st_ctime
+                        ).isoformat(),  # Creation time in ISO 8601
+                        "modified_at": datetime.fromtimestamp(
+                            file.stat().st_mtime
+                        ).isoformat(),  # Last modification time in ISO 8601
+                    }
+                )
+        return {"files": files}
+    except Exception as e:
+        error_message = str(e)
+        raise HTTPException(
+            status_code=500, detail=f"Error listing created documents: {error_message}"
+        )
+
+
 @router.get("/metrics")
 def get_metrics():
     """
@@ -436,10 +285,7 @@ def get_metrics():
     """
     try:
         # Get file count
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         file_count = (
             len([f for f in uploads_dir.iterdir() if f.is_file()])
             if uploads_dir.exists()
@@ -447,22 +293,14 @@ def get_metrics():
         )
 
         # Get vector store info
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        vectorstore_dir = Path(paths["VECTORSTORE_PATH"])
+        vectorstore_dir = Path(VECTORSTORE_PATH)
         vectorstore_exists = (
-            vectorstore_dir.exists() and (vectorstore_dir / "index.faiss").exists()
+            vectorstore_dir.exists() and (FAISS_INDEX_PATH).exists()
         )
 
         # Simple request counter - use module variable
         global request_counter
         total_requests = request_counter
-
-        # Mock some metrics for demo
-        import time
-
-        current_time = time.time()
 
         return {
             "totalQueries": int(total_requests),
@@ -509,10 +347,7 @@ def delete_file(filename: str):
         request_counter += 1
 
         # Check if file exists in uploads directory
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
+        uploads_dir = Path(UPLOADS_PATH)
         file_path = uploads_dir / filename
 
         logger.debug(f"Checking file existence: {file_path}")
@@ -523,21 +358,14 @@ def delete_file(filename: str):
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
         # Load vector store and PII mappings
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        vectorstore_dir = Path(paths["VECTORSTORE_PATH"])
+        vectorstore_dir = Path(VECTORSTORE_PATH)
 
         logger.debug(f"Vector store directory: {vectorstore_dir}")
         logger.debug(f"Vector store exists: {vectorstore_dir.exists()}")
-        logger.debug(
-            f"FAISS index exists: {(vectorstore_dir / 'index.faiss').exists()}"
-        )
+        logger.debug(f"FAISS index exists: {(FAISS_INDEX_PATH).exists()}")
 
-        if (
-            not vectorstore_dir.exists()
-            or not (vectorstore_dir / "index.faiss").exists()
-        ):
+        if (not vectorstore_dir.exists()
+            or not (FAISS_INDEX_PATH).exists()):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
@@ -563,67 +391,60 @@ def delete_file(filename: str):
         # Find all chunk IDs that belong to this file
         chunks_to_delete = []
 
-        # Account for file processing transformations:
-        # - PDF files are processed as "filename_txt.txt"
-        # - DOCX files are converted to PDF then processed as "filename_txt.txt"
-        # - Excel files might be processed differently
+        # Stem file name
         base_filename = Path(filename).stem
-        possible_processed_names = [
-            filename,  # Original filename
-            f"{base_filename}_txt.txt",  # PDF/DOCX processed format
-            f"{base_filename}.txt",  # Alternative format
-        ]
 
         # Get all documents and find ones with matching file_name
         # We need to iterate through the docstore to find matching documents
         for doc_id, document in vectorstore.docstore._dict.items():
             if hasattr(document, "metadata"):
                 doc_filename = document.metadata.get("file_name")
-                if doc_filename in possible_processed_names:
+                if doc_filename == base_filename:
                     chunks_to_delete.append(doc_id)
 
-        print(
+        logger.info(
             f"🔍 Found {len(chunks_to_delete)} chunks to delete for file '{filename}' (checking: {possible_processed_names})"
         )
 
         # Find chunk IDs to remove from PII maps BEFORE deleting from vector store
         chunks_to_remove_from_pii = []
-        pii_map_path = vectorstore_dir / "pii_chunk_maps.json"
-        print(f"📋 PII map path: {pii_map_path}")
-        print(f"📋 PII map exists: {pii_map_path.exists()}")
+        pii_map_path = MASKED_MAP_JSON_PATH
+        logger.info(f"📋 PII map path: {pii_map_path}")
+        logger.info(f"📋 PII map exists: {pii_map_path.exists()}")
 
         if pii_map_path.exists():
             with open(pii_map_path, "r", encoding="utf-8") as f:
                 pii_maps = json.load(f)
 
-            print(f"📋 Loaded PII maps with {len(pii_maps)} entries")
+            logger.info(f"📋 Loaded PII maps with {len(pii_maps)} entries")
 
             # Find chunk IDs to remove from PII maps
             # We need to find chunks by their chunk_id metadata BEFORE deletion
             for doc_id, document in vectorstore.docstore._dict.items():
                 if hasattr(document, "metadata"):
                     doc_filename = document.metadata.get("file_name")
-                    if doc_filename in possible_processed_names:
+                    if doc_filename == base_filename:
                         chunk_id = document.metadata.get("chunk_id")
                         if chunk_id and chunk_id in pii_maps:
                             chunks_to_remove_from_pii.append(chunk_id)
-                            print(f"📋 Found PII entry to remove: {chunk_id}")
+                            logger.info(f"📋 Found PII entry to remove: {chunk_id}")
 
         # Delete chunks from vector store if any found
         if chunks_to_delete:
-            print(f"🗑️ Deleting {len(chunks_to_delete)} chunks from vector store...")
+            logger.info(f"🗑️ Deleting {len(chunks_to_delete)} chunks from vector store...")
             vectorstore.delete(ids=chunks_to_delete)
 
             # Save updated vector store
-            print(f"💾 Saving updated vector store...")
+            logger.info(f"💾 Saving updated vector store...")
             vectorstore.save_local(str(vectorstore_dir))
-            print(f"✅ Deleted {len(chunks_to_delete)} chunks from vector store")
+            logger.info(f"✅ Deleted {len(chunks_to_delete)} chunks from vector store")
         else:
-            print(f"⚠️ No chunks found to delete for file '{filename}'")
+            logger.warning(f"⚠️ No chunks found to delete for file '{filename}'")
 
         # Update PII mappings - remove entries for deleted chunks
         if chunks_to_remove_from_pii and pii_map_path.exists():
-            print(
+
+            logger.info(
                 f"📋 Removing {len(chunks_to_remove_from_pii)} entries from PII mappings..."
             )
             # Remove from PII maps
@@ -634,14 +455,14 @@ def delete_file(filename: str):
             with open(pii_map_path, "w", encoding="utf-8") as f:
                 json.dump(pii_maps, f, ensure_ascii=False, indent=2)
 
-            print(
+            logger.info(
                 f"✅ Removed {len(chunks_to_remove_from_pii)} entries from PII mappings"
             )
 
         # Delete the actual file
-        print(f"🗑️ Deleting physical file: {file_path}")
+        logger.info(f"🗑️ Deleting physical file: {file_path}")
         file_path.unlink()
-        print(f"✅ Physical file deleted successfully: {filename}")
+        logger.info(f"✅ Physical file deleted successfully: {filename}")
 
         result = {
             "message": f"File '{filename}' deleted successfully",
@@ -649,17 +470,17 @@ def delete_file(filename: str):
             "pii_entries_removed": len(chunks_to_remove_from_pii),
             "file_path": str(file_path),
         }
-        print(f"🎉 Deletion completed successfully: {result}")
+        logger.info(f"🎉 Deletion completed successfully: {result}")
         return result
 
     except HTTPException:
-        print(f"❌ HTTP Exception during deletion: {filename}")
+        logger.error(f"❌ HTTP Exception during deletion: {filename}")
         raise
     except Exception as e:
-        print(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
+        logger.error(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
         import traceback
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
 
-        print(f"❌ Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
 
@@ -669,11 +490,7 @@ def download_file(filename: str):
     Download a file from uploads directory.
     """
     try:
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
-        file_path = uploads_dir / filename
+        file_path = Path(UPLOADS_PATH) / filename
 
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
@@ -696,16 +513,12 @@ def get_file_preview(filename: str):
     Returns different preview types based on file extension.
     """
     try:
-        import json
-        with open("paths.json", "r") as f:
-            paths = json.load(f)
-        uploads_dir = Path(paths["UPLOADS_PATH"])
-        file_path = uploads_dir / filename
+        file_path = Path(UPLOADS_PATH) / filename
 
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
-        from backend.pipelines.preview_generator import PreviewGenerator
+        from backend.utils.preview import PreviewGenerator
 
         preview_generator = PreviewGenerator(str(file_path))
         preview_data = preview_generator.generate_preview()
@@ -724,70 +537,65 @@ def get_file_preview(filename: str):
         )
 
 
+@router.get("/created-documents/{filename}/download")
+def download_created_document(filename: str):
+    """
+    Download a file from created_documents directory.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        return FileResponse(
+            path=file_path, filename=filename, media_type="application/octet-stream"
+        )
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error downloading created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error downloading created document: {error_message}"
+        )
+
+
+@router.get("/created-documents/{filename}/preview")
+def get_created_document_preview(filename: str):
+    """
+    Generate a preview for the specified created document.
+    Returns different preview types based on file extension.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        from backend.utils.preview import PreviewGenerator
+
+        preview_generator = PreviewGenerator(str(file_path))
+        preview_data = preview_generator.generate_preview()
+
+        return {
+            "filename": filename,
+            "preview_type": preview_data["type"],
+            "preview_data": preview_data["data"],
+            "success": True,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error generating preview for created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating preview: {error_message}"
+        )
+
+
 @router.get("/finance-news")
 async def get_finance_news():
     """
     Fetch latest finance news from nance RSS feed."""
     try:
-        logger.info("Fetching finance news from Dünya Gazetesi RSS")
-
-        # Dünya Gazetesi RSS feed URL
-        rss_url = "https://www.dunya.com/rss/ekonomi.xml"
-
-        # Parse the RSS feed with proper encoding handling
-        feed = feedparser.parse(rss_url)
-
-        # Ensure proper UTF-8 encoding for Turkish content
-        if hasattr(feed, "encoding") and feed.encoding:
-            logger.info(f"RSS feed encoding: {feed.encoding}")
-        else:
-            logger.info("RSS feed encoding not specified, assuming UTF-8")
-
-        # Check if feed was parsed successfully
-        if feed.bozo:
-            logger.warning(f"RSS feed parse error: {feed.bozo_exception}")
-
-        # Extract news articles and sort by publication date
-        news_articles = []
-        for entry in feed.entries:
-            # Clean the title using comprehensive Turkish text cleaning
-            title = clean_turkish_text(entry.get("title", "No title"))
-
-            # Clean the summary/description using comprehensive Turkish text cleaning
-            summary = clean_turkish_text(
-                entry.get("summary", "") or entry.get("description", "")
-            )
-
-            # Extract image information
-            image_url, image_width, image_height = extract_image_info(entry)
-
-            article = {
-                "title": title,
-                "link": entry.get("link", ""),
-                "published": entry.get("published", ""),
-                "summary": summary,
-                "source": "Dünya Gazetesi",
-                "image_url": image_url,
-                "image_width": image_width,
-                "image_height": image_height,
-            }
-            news_articles.append(article)
-
-        # Sort articles by publication date (newest first)
-        from dateutil import parser as date_parser
-
-        try:
-            news_articles.sort(
-                key=lambda x: (
-                    date_parser.parse(x["published"])
-                    if x["published"]
-                    else datetime.min
-                ),
-                reverse=True,
-            )
-        except Exception as sort_error:
-            logger.warning(f"Could not sort articles by date: {sort_error}")
-
+        news_articles = fetch_and_parse_news()
         # Limit to 20 most recent articles
         news_articles = news_articles[:20]
 
@@ -812,19 +620,16 @@ async def get_finance_news():
 async def verify_document(
     file: UploadFile = File(...),
     verification_type: str = "auto",
-    wolfram_enabled: bool = False,
 ):
     """
-    Verify a document using the LLM-based verification pipeline with optional Wolfram Alpha mathematical verification
+    Verify a document using the LLM-based verification pipeline with Wolfram Alpha mathematical verification (always enabled)
     """
     global request_counter
     try:
         # Increment request counter
         request_counter += 1
 
-        logger.info(
-            f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})"
-        )
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type})")
 
         # Check file type
         allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
@@ -837,7 +642,7 @@ async def verify_document(
             )
 
         # Create verification_uploads directory if it doesn't exist
-        verification_dir = Path(__file__).parent.parent / "verification_uploads"
+        verification_dir = Path(VERIFICATION_UPLOADS_PATH)
         verification_dir.mkdir(parents=True, exist_ok=True)
 
         # Save uploaded file temporarily
@@ -848,11 +653,11 @@ async def verify_document(
         logger.info(f"File saved for verification: {temp_file_path}")
 
         # Import and run verification pipeline
-        from backend.pipelines.document_verification import verification_pipeline
+        from backend.utils.verification import verification_pipeline
 
-        # Run verification with Wolfram Alpha if enabled
+        # Run verification with Wolfram Alpha (always enabled)
         verification_result = verification_pipeline.verify_document(
-            str(temp_file_path), verification_type, wolfram_enabled
+            str(temp_file_path), verification_type 
         )
 
         # Clean up temporary file
@@ -868,8 +673,6 @@ async def verify_document(
 
         return verification_result
 
-    except HTTPException:
-        raise
     except Exception as e:
         error_message = str(e)
         logger.error(
@@ -882,7 +685,6 @@ async def verify_document(
                 temp_file_path.unlink()
         except:
             pass
-
         raise HTTPException(
             status_code=500, detail=f"Document verification failed: {error_message}"
         )
@@ -894,8 +696,7 @@ def get_verification_types():
     Get available document verification types
     """
     try:
-        from backend.pipelines.document_verification import verification_pipeline
-
+        from backend.utils.verification import verification_pipeline
         verification_types = verification_pipeline.verification_types
 
         return {
@@ -910,10 +711,3 @@ def get_verification_types():
         raise HTTPException(
             status_code=500, detail=f"Error getting verification types: {error_message}"
         )
-
-
-if __name__ == "__main__":
-    file_path = "C:/Users/ASUS/Desktop/Coding/Python/vectorrag/Esra/pdf_file.pdf"  # Change this to your file path
-    with open(file_path, "rb") as file:
-        file = UploadFile(file)
-        handle_upload(file)
