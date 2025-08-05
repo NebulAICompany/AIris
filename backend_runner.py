@@ -4,7 +4,7 @@ import uvicorn
 
 if __name__ == "__main__":
     if sys.platform == "win32":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
     try:
         # Create new event loop
@@ -16,7 +16,7 @@ if __name__ == "__main__":
             uvicorn.run(
                 "backend.app.main:app",
                 host="127.0.0.1",
-                port=8000,
+                port=8001,  # Changed from 8000 to avoid port conflict
                 loop="none",  # Important: Let uvicorn use our loop
             )
         )
