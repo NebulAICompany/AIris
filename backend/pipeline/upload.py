@@ -1,14 +1,9 @@
 import os
-import sys
 from pathlib import Path
-import backend.pipelines.vectorpipe as vectorpipe
-import json
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
-
-with open("paths.json", "r") as f:
-    paths = json.load(f)
-VECTOR_STORE_PATH = paths["VECTORSTORE_PATH"]
-
+import backend.pipeline.vector as vectorpipe
+from backend.shared.constants import VECTORSTORE_PATH
+from backend.shared.logger import get_logger
+logger = get_logger("UPLOAD")
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
     Process an uploaded file synchronously.
@@ -22,7 +17,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
 
     try:
         # Step 1: Call parser and get extracted text
-        from backend.pipelines.parsers.parser_set import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
+        from backend.utils.parser import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
   
         file_extension = Path(file_path).suffix.lower()
 
@@ -41,7 +36,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
         # Step 2: Create or update vector store directly with the extracted text
-        from backend.pipelines.vectorpipe import PreEmbeddingProcess
+        from backend.pipeline.vector import PreEmbeddingProcess
 
         # Convert string to enum
         if pre_embedding_process.lower() == "hype":
@@ -57,14 +52,14 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            save_path=VECTOR_STORE_PATH,
+            save_path=VECTORSTORE_PATH,
         )
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTOR_STORE_PATH,
+            "vector_store_path": VECTORSTORE_PATH,
         }
     except Exception as e:
-        print(f"Error processing file: {str(e)}")
+        logger.error(f"Error processing file: {str(e)}")
         raise e

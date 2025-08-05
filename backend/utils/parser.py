@@ -3,18 +3,87 @@ from docx2pdf import convert
 from pathlib import Path
 from PIL import Image
 import io
-import json
+import base64
+from nltk.tokenize import sent_tokenize
 import openpyxl
-import fitz, nltk
-from backend.pipelines.parsers.tools import describe_image, describe_table, specify_sentence
-from dotenv import load_dotenv
-from backend.shared.constants import document_analysis_client
+import fitz
+import nltk
+from backend.shared.constants import document_analysis_client, IMAGES_PATH, openai_client
+import os
+import re
+from pathlib import Path
+from typing import List, Optional, Tuple
 
-load_dotenv()
+from backend.shared.logger import get_logger
 
-with open("paths.json", "r") as f:
-    paths = json.load(f)
-IMAGES_PATH = paths["IMAGES_PATH"]
+logger = get_logger("PARSER")
+
+
+# NOTE: Helper functions for specifications of information (Describe image and add configurations to sentences with relevant information)
+
+def specify_sentence(text, word):
+    """
+    Adds a specified word to the end of each sentence using NLTK for sentence splitting.
+    Args:
+        text (str): Input text.
+        word (str): Word to append at the end of each sentence.
+    Returns:
+        str: Modified text with the word added to each sentence.
+    """
+    sentences = sent_tokenize(text)
+    modified_sentences = []
+    
+    for sentence in sentences:
+        if sentence.strip():  # Skip empty sentences
+            # Check if sentence ends with punctuation
+            if sentence[-1] in {'.', '!', '?'}:
+                modified_sentence = sentence[:-1] + f" {word}" + sentence[-1]
+            else:
+                modified_sentence = sentence + f" {word}"
+            modified_sentences.append(modified_sentence)
+    
+    return ' '.join(modified_sentences)
+
+
+def describe_image(image_bytes):
+        try:
+            base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla.",
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla.",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                },
+                            },
+                        ],
+                    },
+                ],
+                max_tokens=700,
+            )
+            description = response.choices[0].message.content
+            return description
+
+        except Exception as e:
+            logger.error(f"Error in GPT image description: {e}")
+            return "Açıklama alınamadı."
+        
+
+# NOTE: Parser after this line
+
 
 def PdfParser(file_path: str):
     pages_per_part = 2
@@ -134,7 +203,6 @@ def PdfParser(file_path: str):
                         continue
                                 
                     content_parts.append(f"\n[Table {table_counter + 1}]\n")
-                    table_content = []
                     max_col = max(cell.column_index for cell in table.cells)
                     max_row = max(cell.row_index for cell in table.cells)
 
@@ -144,10 +212,7 @@ def PdfParser(file_path: str):
                             content = cell.content if cell else ""
                             if content:
                                 content_parts.append(f"[{row_index},{col_index}]: {content}\n")
-                                table_content.append(content)
 
-                    table_description = describe_table(table_content)
-                    content_parts.append(f"[Description] = {table_description}\n")
                     occupied_boxes.extend(table_regions)
 
                 if page_tables:
@@ -167,13 +232,13 @@ def PdfParser(file_path: str):
                         content_parts.append(sentence + " ")
                     content_parts.append("\n")
 
-            print(f"{start_page+1}-{end_page}. sayfalar bellekte işlendi.")
+            logger.info(f"{start_page+1}-{end_page}. sayfalar bellekte işlendi.")
 
     pdf.close()
     
     # Tüm content_parts'ı birleştir ve return et
     extracted_text = "".join(content_parts)
-    print(f"PDF text extraction completed. Total length: {len(extracted_text)} characters")
+    logger.info(f"PDF text extraction completed. Total length: {len(extracted_text)} characters")
     
     return extracted_text
 
@@ -253,13 +318,13 @@ def ExcelParser(file_path: str):
 
         # Tüm content_parts'ı birleştir ve return et
         extracted_text = "".join(content_parts)
-        print(f"Excel text extraction completed. Total length: {len(extracted_text)} characters")
+        logger.info(f"Excel text extraction completed. Total length: {len(extracted_text)} characters")
         return extracted_text
 
 def ImageParser(file_path: str):
     image_path = Path(file_path)
     if not image_path.exists():
-        print(f"Görsel dosyası bulunamadı: {file_path}")
+        logger.warning(f"Görsel dosyası bulunamadı: {file_path}")
         return None
 
     with open(file_path, "rb") as f:
@@ -286,7 +351,7 @@ def ImageParser(file_path: str):
     # Text content'i hazırla
     content = f"Açıklama:\n{updated_description}\n"
     
-    print(f"Image text extraction completed. Total length: {len(content)} characters")
+    logger.info(f"Image text extraction completed. Total length: {len(content)} characters")
     return content
 
 
@@ -298,7 +363,7 @@ def TxtParser(file_path: str):
                     content_parts.append(line)
 
         extracted_text = "".join(content_parts)
-        print(f"TXT text extraction completed. Total length: {len(extracted_text)} characters")
+        logger.info(f"TXT text extraction completed. Total length: {len(extracted_text)} characters")
         return extracted_text
 
 
@@ -306,27 +371,225 @@ def DocxParser(file_path: str):
         # Initialize COM at the beginning
         pythoncom.CoInitialize()
 
-        output_dir = "backend/database/uploads"
+        from backend.shared.constants import UPLOADS_PATH
+        output_dir = Path(UPLOADS_PATH)
         output_dir.mkdir(parents=True, exist_ok=True)
         output_pdf = output_dir / (Path(file_path).stem + ".pdf")
         convert(file_path, str(output_pdf))
 
         file_path = str(output_pdf)
         if not Path(file_path).exists():
-            print(f"PDF dosyası bulunamadı: {file_path}")
+            logger.warning(f"PDF dosyası bulunamadı: {file_path}")
             return None
         else:
             # PDF'i parse et ve text'i al
-            from backend.pipelines.parsers.pdf_parser import PdfParser
-            pdf_parser = PdfParser(file_path)
-            extracted_text = pdf_parser.run()
-            
-            print("DOCX to PDF ve text extraction işlemi tamamlandı.")
+            extracted_text = PdfParser(file_path)
+
+            logger.info("DOCX to PDF ve text extraction işlemi tamamlandı.")
             
             # Geçici PDF dosyasını sil
             try:
                 Path(file_path).unlink()
             except Exception as e:
-                print(f"{file_path} silinemedi: {e}")
+                logger.error(f"{file_path} silinemedi: {e}")
             
             return extracted_text
+
+def parse_document(file_path: str) -> Tuple[str, str]:
+    """
+    Parse a document and extract its text content and metadata.
+    
+    Args:
+        file_path: Path to the document file
+        
+    Returns:
+        Tuple of (text_content, document_name)
+    """
+    try:
+        file_path = Path(file_path)
+        document_name = file_path.name
+        
+        logger.info(f"Parsing document: {document_name}")
+        
+        # Get file extension
+        file_extension = file_path.suffix.lower()
+        
+        if file_extension == '.txt':
+            return parse_txt_file(file_path), document_name
+        elif file_extension == '.pdf':
+            return parse_pdf_file(file_path), document_name
+        elif file_extension in ['.docx', '.doc']:
+            return parse_docx_file(file_path), document_name
+        elif file_extension in ['.xlsx', '.xls']:
+            return parse_excel_file(file_path), document_name
+        elif file_extension in ['.pptx', '.ppt']:
+            return parse_powerpoint_file(file_path), document_name
+        else:
+            logger.warning(f"Unsupported file type: {file_extension}")
+            return "", document_name
+            
+    except Exception as e:
+        logger.error(f"Error parsing document {file_path}: {e}")
+        return "", str(file_path)
+
+def parse_txt_file(file_path: Path) -> str:
+    """Parse a text file."""
+    try:
+        logger.debug(f"Parsing text file: {file_path}")
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        logger.debug(f"Successfully parsed text file: {len(content)} characters")
+        return content
+    except Exception as e:
+        logger.error(f"Error parsing text file {file_path}: {e}")
+        return ""
+
+def parse_pdf_file(file_path: Path) -> str:
+    """Parse a PDF file."""
+    try:
+        logger.debug(f"Parsing PDF file: {file_path}")
+        import fitz  # PyMuPDF
+        
+        doc = fitz.open(file_path)
+        text_content = ""
+        
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
+            text_content += page.get_text()
+            
+        doc.close()
+        
+        logger.debug(f"Successfully parsed PDF file: {len(text_content)} characters")
+        return text_content
+        
+    except Exception as e:
+        logger.error(f"Error parsing PDF file {file_path}: {e}")
+        return ""
+
+def parse_docx_file(file_path: Path) -> str:
+    """Parse a DOCX file."""
+    try:
+        logger.debug(f"Parsing DOCX file: {file_path}")
+        from docx import Document
+        
+        doc = Document(file_path)
+        text_content = ""
+        
+        for paragraph in doc.paragraphs:
+            text_content += paragraph.text + "\n"
+            
+        logger.debug(f"Successfully parsed DOCX file: {len(text_content)} characters")
+        return text_content
+        
+    except Exception as e:
+        logger.error(f"Error parsing DOCX file {file_path}: {e}")
+        return ""
+
+def parse_excel_file(file_path: Path) -> str:
+    """Parse an Excel file."""
+    try:
+        logger.debug(f"Parsing Excel file: {file_path}")
+        import openpyxl
+        
+        workbook = openpyxl.load_workbook(file_path, data_only=True)
+        text_content = ""
+        
+        for sheet_name in workbook.sheetnames:
+            sheet = workbook[sheet_name]
+            text_content += f"\n--- Sheet: {sheet_name} ---\n"
+            
+            for row in sheet.iter_rows(values_only=True):
+                row_text = " | ".join(str(cell) if cell is not None else "" for cell in row)
+                if row_text.strip():
+                    text_content += row_text + "\n"
+                    
+        workbook.close()
+        
+        logger.debug(f"Successfully parsed Excel file: {len(text_content)} characters")
+        return text_content
+        
+    except Exception as e:
+        logger.error(f"Error parsing Excel file {file_path}: {e}")
+        return ""
+
+def parse_powerpoint_file(file_path: Path) -> str:
+    """Parse a PowerPoint file."""
+    try:
+        logger.debug(f"Parsing PowerPoint file: {file_path}")
+        from pptx import Presentation
+        
+        prs = Presentation(file_path)
+        text_content = ""
+        
+        for slide_num, slide in enumerate(prs.slides, 1):
+            text_content += f"\n--- Slide {slide_num} ---\n"
+            
+            for shape in slide.shapes:
+                if hasattr(shape, "text"):
+                    text_content += shape.text + "\n"
+                    
+        logger.debug(f"Successfully parsed PowerPoint file: {len(text_content)} characters")
+        return text_content
+        
+    except Exception as e:
+        logger.error(f"Error parsing PowerPoint file {file_path}: {e}")
+        return ""
+
+def clean_text(text: str) -> str:
+    """
+    Clean and normalize text content.
+    
+    Args:
+        text: Raw text content
+        
+    Returns:
+        Cleaned text content
+    """
+    try:
+        logger.debug("Cleaning text content...")
+        
+        # Remove extra whitespace
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Remove special characters but keep basic punctuation
+        text = re.sub(r'[^\w\s\.\,\!\?\;\:\-\(\)\[\]\{\}]', '', text)
+        
+        # Normalize line breaks
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
+        
+        logger.debug(f"Text cleaned: {len(text)} characters")
+        return text.strip()
+        
+    except Exception as e:
+        logger.error(f"Error cleaning text: {e}")
+        return text
+
+def extract_metadata(file_path: Path) -> dict:
+    """
+    Extract metadata from a file.
+    
+    Args:
+        file_path: Path to the file
+        
+    Returns:
+        Dictionary containing file metadata
+    """
+    try:
+        logger.debug(f"Extracting metadata from: {file_path}")
+        
+        stat = file_path.stat()
+        metadata = {
+            'file_name': file_path.name,
+            'file_size': stat.st_size,
+            'created_time': stat.st_ctime,
+            'modified_time': stat.st_mtime,
+            'file_extension': file_path.suffix.lower(),
+            'file_path': str(file_path)
+        }
+        
+        logger.debug(f"Metadata extracted: {metadata}")
+        return metadata
+        
+    except Exception as e:
+        logger.error(f"Error extracting metadata from {file_path}: {e}")
+        return {}

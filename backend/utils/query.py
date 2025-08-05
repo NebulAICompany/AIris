@@ -1,21 +1,21 @@
-import logging
-from backend.shared.constants import openai_client
+from backend.shared.logger import get_logger
+from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
 from typing import List, Dict, Tuple
 import re
 import base64
+from typing import Optional
+import os
+
+logger = get_logger("QUERY_UTILS")
 
 try:
     import jpype
-    import os
     from jpype import JClass, getDefaultJVMPath, startJVM
 
     if not jpype.isJVMStarted():
         jvmPath = getDefaultJVMPath()
-        print(f"JVM Path: {jvmPath}")
-        zemberek_path = os.path.join(
-            os.path.dirname(__file__), "..", "shared", "zemberek-full.jar"
-        )
-        startJVM(jvmPath, "-ea", f"-Djava.class.path={zemberek_path}")
+        logger.debug(f"JVM Path: {jvmPath}")
+        startJVM(jvmPath, "-ea", f"-Djava.class.path={ZEMBEREK_JAR_PATH_STR}")
 
     TurkishMorphology = JClass("zemberek.morphology.TurkishMorphology")
     turkish_morphology = TurkishMorphology.createWithDefaults()
@@ -28,7 +28,7 @@ try:
 except ImportError as e:
     turkish_spell_checker = None
     ZEMBEREK_AVAILABLE = False
-    logging.error(f"Zemberek library not found: {e}")
+    logger.error(f"Zemberek library not found: {e}")
 
 
 
@@ -73,7 +73,7 @@ def detect_language(query: str) -> str:
         return response.primary_language.name
 
     except Exception as err:
-        print("Encountered exception. {}".format(err))
+        logger.error("Encountered exception. {}".format(err))
 
 
 def normalize_repeated_chars(word: str) -> str:
@@ -140,7 +140,7 @@ def reflect_and_retry(
             max_tokens=800,
             temperature=0.0,
         )
-        reflection = reflection_result.final_output
+        reflection = reflection_result.choices[0].message.content.strip()
 
         # Check if the answer needs improvement
         if "Overall Assessment: Fail" in reflection:
@@ -164,7 +164,7 @@ def reflect_and_retry(
                     max_tokens=800,
                     temperature=0.0,
                 )
-                current_answer = result.final_output
+                current_answer = result.choices[0].message.content.strip()
         else:
             return current_answer
 
@@ -179,13 +179,13 @@ def extract_image_references_from_context(local_context: str) -> Tuple[str, List
     image_pattern = r'\(\(Image\):([^)]+)\)'
     image_paths = []
 
-    print(f"🔍 Analyzing local context for image references...")
+    logger.debug(f"🔍 Analyzing local context for image references...")
 
     # Find all image references in the context
     matches = re.findall(image_pattern, local_context)
 
     if matches:
-        print(f"   - Found {len(matches)} image references in context")
+        logger.debug(f"   - Found {len(matches)} image references in context")
         for match in matches:
             image_path = match.strip()
             if image_path not in image_paths:
@@ -207,7 +207,7 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
     if not image_paths:
         return images_data
 
-    print(f"📁 Loading {len(image_paths)} images from filesystem...")
+    logger.debug(f"📁 Loading {len(image_paths)} images from filesystem...")
 
     for path in image_paths:
         # Construct the full image path - try both .jpg and .png
@@ -226,6 +226,30 @@ def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
                         })
                     break
                 except Exception as e:
-                    print(f"   ❌ Error loading image {path}{ext}: {e}")
+                    logger.error(f"   ❌ Error loading image {path}{ext}: {e}")
 
     return images_data
+
+def filter_docs_by_selected_files(
+    docs: List, selected_files: Optional[List[str]]
+) -> List:
+    """
+    Filter retrieved documents to only include those from selected files.
+    If selected_files is None or empty, return all documents.
+    """
+    if not selected_files or len(selected_files) == 0:
+        return docs
+
+    filtered_docs = []
+    for doc in docs:
+        metadata = doc.get("metadata", {})
+        file_name = metadata.get("file_name", "")
+
+        # Check if this document's file is in the selected files list
+        if file_name in selected_files:
+            filtered_docs.append(doc)
+
+    logger.debug(
+        f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
+    )
+    return filtered_docs

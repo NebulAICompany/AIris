@@ -1,6 +1,9 @@
 import openai
-from typing import Dict, List, Optional
+from typing import Dict
 from backend.monitoring.metrics import guard_violations_total
+from backend.shared.logger import get_logger
+
+logger = get_logger("SECURITY_FILTERS")
 
 
 def check_openai_moderation(text: str) -> Dict:
@@ -37,7 +40,7 @@ def check_openai_moderation(text: str) -> Dict:
         }
 
     except Exception as e:
-        print(f"OpenAI moderation error: {e}")
+        logger.error(f"OpenAI moderation error: {e}")
         return {
             "flagged": False,
             "categories": {},

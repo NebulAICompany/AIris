@@ -8,6 +8,8 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
+from backend.shared.constants import CHAT_HISTORY_DB_PATH_STR, DATABASE_DIR
+from backend.shared.logger import get_logger
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session as DbSession
@@ -18,6 +20,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
+
+logger = get_logger("CHAT_MANAGER")
 
 
 class DbChatSession(Base):
@@ -139,13 +143,11 @@ class ChatHistoryManager:
     """Manages chat sessions and history"""
 
     def __init__(self):
-        # Create database directory if it doesn't exist
-        db_dir = Path("backend/database")
-        db_dir.mkdir(exist_ok=True)
-        
+        # Ensure database directory exists
+        DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+
         # Initialize database connection
-        db_path = os.path.join(db_dir, "chat_history.db")
-        self.engine = create_engine(f"sqlite:///{db_path}", 
+        self.engine = create_engine(f"sqlite:///{CHAT_HISTORY_DB_PATH_STR}",
                                    connect_args={"check_same_thread": False},
                                    poolclass=StaticPool)
         
@@ -356,7 +358,7 @@ class ChatHistoryManager:
                 
             return True
         except Exception as e:
-            print(f"Error deleting session {session_id}: {e}")
+            logger.error(f"Error deleting session {session_id}: {e}")
             return False
 
     def clear_old_sessions(self, days_old: int = 30):
@@ -388,9 +390,9 @@ class ChatHistoryManager:
                         del self.active_sessions[session_id]
 
         except Exception as e:
-            print(f"Error clearing old sessions from database: {e}")
+            logger.error(f"Error clearing old sessions from database: {e}")
 
-        print(f"Cleared {deleted_count} old chat sessions")
+        logger.info(f"Cleared {deleted_count} old chat sessions")
         return deleted_count
 
 

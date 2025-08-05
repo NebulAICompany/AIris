@@ -5,42 +5,17 @@ from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query_utils import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language
+from backend.utils.query import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
+from backend.shared.constants import VECTORSTORE_PATH
+from backend.shared.logger import get_logger
 import os
 
-
-VECTORSTORE_PATH = "backend/vectorstore"
-
-
-def filter_docs_by_selected_files(
-    docs: List, selected_files: Optional[List[str]]
-) -> List:
-    """
-    Filter retrieved documents to only include those from selected files.
-    If selected_files is None or empty, return all documents.
-    """
-    if not selected_files or len(selected_files) == 0:
-        return docs
-
-    filtered_docs = []
-    for doc in docs:
-        metadata = doc.get("metadata", {})
-        file_name = metadata.get("file_name", "")
-
-        # Check if this document's file is in the selected files list
-        if file_name in selected_files:
-            filtered_docs.append(doc)
-
-    print(
-        f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
-    )
-    return filtered_docs
-
+logger = get_logger("QUERY_PIPELINE")
 
 def preprocess_query(query: str):
     lang = detect_language(query)
-    print(f"Detected Language: {lang}")
+    logger.debug(f"Detected Language: {lang}")
     if lang=="Turkish":
         corrected = spell_check(query)
         return corrected, lang
@@ -50,18 +25,18 @@ def preprocess_query(query: str):
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
-    wolfram_enabled: bool = False,
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
-    print(f"🔍 Query Orchestrator started:")
-    print(f"   - Query: {query}")
-    print(f"   - Web Search Enabled: {web_search_enabled}")
-    print(f"   - Wolfram Enabled: {wolfram_enabled}")
-    print(f"   - Pre-embedding Process: {pre_embedding_process}")
-    print(f"   - Session ID: {session_id}")
-    print(f"   - Selected Files: {selected_files}")
+
+    logger.info(f"🔍 Query Orchestrator started:")
+    logger.info(f"   - Query: {query}")
+    logger.info(f"   - Web Search Enabled: {web_search_enabled}")
+    logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+    logger.info(f"   - Session ID: {session_id}")
+    logger.info(f"   - Selected Files: {selected_files}")
+
 
     # Handle chat history and session management
     if session_id:
@@ -72,29 +47,29 @@ async def run_orchestration(
         conversation_context = chat_history_manager.get_conversation_context(
             session_id, max_messages=10
         )
-        print(f"   - Conversation context: {len(conversation_context)} messages")
+        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
 
         # Reduce history if too long
         session = chat_history_manager.get_session(session_id)
         if session and len(session.messages) > 30:
-            print(f"   - Reducing chat history from {len(session.messages)} messages")
+            logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
             chat_history_manager.reduce_history(session, target_messages=20)
     else:
         conversation_context = []
-        print(f"   - No session ID provided, processing as standalone query")
+        logger.debug(f"   - No session ID provided, processing as standalone query")
 
     if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
-        print(f"Loading vectorstore from {VECTORSTORE_PATH}")
+        logger.info(f"Loading vectorstore from {VECTORSTORE_PATH}")
         if pre_embedding_process == "cch":
-            print(
+            logger.info(
                 "   - Contextual Chunk Headers (CCH) enhanced chunks will be used for retrieval"
             )
         elif pre_embedding_process == "hype":
-            print(
+            logger.info(
                 "   - HyPE (Hypothetical Prompt Embeddings) enhanced chunks will be used for retrieval"
             )
         else:
-            print("   - Standard chunks will be used for retrieval")
+            logger.info("   - Standard chunks will be used for retrieval")
         load_vectorstore(VECTORSTORE_PATH)
 
     # 1. Temizlik + analiz
@@ -107,7 +82,7 @@ async def run_orchestration(
 
     # 3. Hassas bilgileri maskele
     masked_query = mask_text(preprocessed_query)
-    print(f"Masked Query: {masked_query}")
+    logger.debug(f"Masked Query: {masked_query}")
 
     ENABLED_RAG_TECHNIQUES = ["rse"]
 
@@ -122,7 +97,7 @@ async def run_orchestration(
         if not fusion_docs:
             return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
-        print(f"🔀 RAG Fusion Results: {fusion_metadata}")
+        logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
 
         # Filter fusion docs by selected files
         filtered_fusion_docs = filter_docs_by_selected_files(
@@ -147,14 +122,14 @@ async def run_orchestration(
 
         if not rse_chunks:
             return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
-        # print(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
+        # logger.debug(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
 
         # Filter RSE chunks by selected files
         filtered_rse_chunks = filter_docs_by_selected_files(rse_chunks, selected_files)
 
         if not filtered_rse_chunks:
             if selected_files:
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
             else:
                 return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
 
@@ -167,7 +142,7 @@ async def run_orchestration(
         )  # Get more docs for better reranking
 
         if not retrieved_docs:
-            return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadım."
+            return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı."
 
         # Filter retrieved docs by selected files
         filtered_retrieved_docs = filter_docs_by_selected_files(
@@ -176,9 +151,9 @@ async def run_orchestration(
 
         if not filtered_retrieved_docs:
             if selected_files:
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
             else:
-                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadı."
 
         # Extract only the content from the filtered retrieved docs before reranking
         doc_contents = [
@@ -203,8 +178,8 @@ async def run_orchestration(
         )
 
     local_context = "\n\n---\n\n".join(context_entries)
-    print(f"   - Local Context: {local_context}")
-    print("using web search ?= ", web_search_enabled)
+    logger.debug(f"   - Local Context: {local_context}")
+    logger.debug("using web search ?= ", web_search_enabled)
 
     cleaned_context, image_paths = extract_image_references_from_context(local_context)
 
@@ -215,33 +190,25 @@ async def run_orchestration(
         local_context=cleaned_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
-        wolfram_enabled=wolfram_enabled,
         conversation_history=conversation_context,
     )
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
-    print(f"🧠 Answer: {answer}")
+    logger.debug(f"🧠 Answer: {answer}")
     # Apply reflection and potential retries
     final_answer = reflect_and_retry(
         prompt=masked_query, initial_answer=answer, max_retries=2
     )
-    print(f"🧠 Final Answer: {final_answer}")
+    logger.debug(f"🧠 Final Answer: {final_answer}")
 
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted
     docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
 
-
-    # 6. Çıktı kontrolü (OpenAI moderation)
-    output_moderation = check_openai_moderation(final_answer)
-    if output_moderation["flagged"]:
-        # OpenAI moderation flagged content - return a safe response
-        final_answer = "Üzgünüm, bu yanıt uygun değil. Lütfen farklı bir soru sorun."
-
-    # 7. Maske çöz
+    # 6. Maske çöz
     final_answer = unmask_text(final_answer)
 
-    # 8. Add assistant response to chat history
+    # 7. Add assistant response to chat history
     if session_id:
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer

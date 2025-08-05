@@ -13,11 +13,6 @@ class UIComponents {
     // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
 
-    // Add wolframEnabled flag, initialize from storage or default to false
-    this.wolframEnabled = Utils.isWolframEnabled();
-
-
-
     // Finance news properties
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
@@ -32,7 +27,7 @@ class UIComponents {
     this.fileSelectionModal = null;
 
     this.init();
-    
+
     // Subscribe to language changes
     if (window.languageService) {
       window.languageService.subscribe(() => {
@@ -51,13 +46,6 @@ class UIComponents {
     if (webSearchToggle) {
       webSearchToggle.checked = this.webSearchEnabled;
     }
-
-    const wolframToggle = document.getElementById("wolfram-toggle");
-    if (wolframToggle) {
-      wolframToggle.checked = this.wolframEnabled;
-    }
-
-
 
     // Set language setting on load
     if (window.languageService) {
@@ -188,21 +176,6 @@ class UIComponents {
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
-    // Wolfram Alpha toggle event
-    const wolframToggle = document.getElementById("wolfram-toggle");
-    if (wolframToggle) {
-      wolframToggle.addEventListener("change", (e) => {
-        this.wolframEnabled = e.target.checked;
-        Utils.setWolframEnabled(this.wolframEnabled);
-        console.log("Wolfram Alpha enabled:", this.wolframEnabled);
-        // Optionally, notify backend here if needed
-        // Example: window.airisAPI.setWolframEnabled?.(this.wolframEnabled);
-      });
-      console.log("wolframEnabled: ", this.wolframEnabled);
-    }
-
-
-
     // Finance News refresh button
     const refreshNewsButton = document.getElementById("refresh-news");
     if (refreshNewsButton) {
@@ -214,13 +187,17 @@ class UIComponents {
     // File selection button
     const fileSelectionBtn = document.getElementById("file-selection-btn");
     if (fileSelectionBtn) {
-      fileSelectionBtn.addEventListener("click", () => this.showFileSelectionModal());
+      fileSelectionBtn.addEventListener("click", () =>
+        this.showFileSelectionModal()
+      );
     }
 
     // File selection modal close
     const closeFileSelection = document.getElementById("close-file-selection");
     if (closeFileSelection) {
-      closeFileSelection.addEventListener("click", () => this.hideFileSelectionModal());
+      closeFileSelection.addEventListener("click", () =>
+        this.hideFileSelectionModal()
+      );
     }
 
     // File selection controls
@@ -242,18 +219,49 @@ class UIComponents {
 
     const promptAnalyze = document.getElementById("prompt-analyze");
     if (promptAnalyze) {
-      promptAnalyze.addEventListener("click", () => this.insertPrompt("analyze"));
+      promptAnalyze.addEventListener("click", () =>
+        this.insertPrompt("analyze")
+      );
     }
 
     const promptSummarize = document.getElementById("prompt-summarize");
     if (promptSummarize) {
-      promptSummarize.addEventListener("click", () => this.insertPrompt("summarize"));
+      promptSummarize.addEventListener("click", () =>
+        this.insertPrompt("summarize")
+      );
     }
 
     // Event delegation for dynamic buttons
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
         this.switchTab(e.target.dataset.tab);
+      }
+
+      // Handle markdown download links in chat messages
+      if (
+        e.target.tagName === "A" &&
+        e.target.href &&
+        e.target.href.includes("/api/created-documents/")
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        const url = e.target.href;
+
+        // Extract filename for notification
+        const urlParts = url.split("/");
+        const filename = decodeURIComponent(
+          urlParts[urlParts.indexOf("created-documents") + 1]
+        );
+
+        // Open the download URL in a new tab/window
+        window.open(url, "_blank");
+        this.showNotification(`${t("downloadingFile")} ${filename}...`, "info");
+
+        return;
       }
 
       // Handle delete button clicks
@@ -264,6 +272,17 @@ class UIComponents {
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
           this.deleteFile(fileName);
+        }
+      }
+
+      // Handle download button clicks for created documents
+      if (e.target.closest(".download-btn")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const downloadBtn = e.target.closest(".download-btn");
+        const fileName = downloadBtn.dataset.filename;
+        if (fileName) {
+          this.openCreatedDocument(fileName);
         }
       }
 
@@ -334,6 +353,9 @@ class UIComponents {
     switch (tabId) {
       case "files":
         await this.loadFileLibrary();
+        break;
+      case "created-documents":
+        await this.loadCreatedDocumentsLibrary();
         break;
       case "analytics":
         await this.loadAnalytics();
@@ -436,7 +458,6 @@ class UIComponents {
       const response = await this.sendQueryWithRetry(
         message,
         this.webSearchEnabled,
-        this.wolframEnabled,
         this.currentSessionId,
         2, // maxRetries
         this.selectedFiles.length > 0 ? this.selectedFiles : null // selectedFiles
@@ -447,25 +468,24 @@ class UIComponents {
 
       // Check if response is valid
       if (!response || !response.success) {
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
         const errorMsg = response?.error || "Failed to get response from AI";
-        this.addMessageToChat(
-          "error",
-          `${t('sorryError')} ${errorMsg}`
-        );
+        this.addMessageToChat("error", `${t("sorryError")} ${errorMsg}`);
         return;
       }
 
       // Ensure we have actual response content
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
       const assistantResponse =
-        response.response ||
-        response.data?.response ||
-        t('apologizeResponse');
+        response.response || response.data?.response || t("apologizeResponse");
 
       // Extract images from response
       const images = response.images || [];
-      
+
       console.log(`Received response with ${images.length} images`);
 
       // Update session ID if it was created server-side
@@ -479,27 +499,27 @@ class UIComponents {
       this.addMessageToChat("assistant", assistantResponse, images);
 
       // Update chat history
-      this.chatHistory.push({ 
-        user: message, 
+      this.chatHistory.push({
+        user: message,
         assistant: assistantResponse,
-        images: images 
+        images: images,
       });
     } catch (error) {
       this.hideTypingIndicator();
 
-
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      let errorMessage = t('sorryEncounteredError');
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      let errorMessage = t("sorryEncounteredError");
       if (error.message) {
         if (error.message.includes("timeout")) {
-          errorMessage = t('requestTookTooLong');
-
+          errorMessage = t("requestTookTooLong");
         } else if (
           error.message.includes("fetch") ||
           error.message.includes("network") ||
           error.message.includes("bağlan")
         ) {
-          errorMessage = t('connectionErrorCheck');
+          errorMessage = t("connectionErrorCheck");
         }
       }
 
@@ -516,7 +536,6 @@ class UIComponents {
   async sendQueryWithRetry(
     message,
     webSearchEnabled,
-    wolframEnabled,
     sessionId,
     maxRetries = 2,
     selectedFiles = null
@@ -530,7 +549,6 @@ class UIComponents {
         const response = await window.apiService.sendQuery(
           message,
           webSearchEnabled,
-          wolframEnabled,
           sessionId,
           selectedFiles
         );
@@ -576,12 +594,8 @@ class UIComponents {
 
     // Determine what features are enabled for status message
     let statusMessage = "AI düşünüyor...";
-    if (this.webSearchEnabled && this.wolframEnabled) {
-      statusMessage = "Web araması ve Wolfram Alpha ile analiz ediliyor...";
-    } else if (this.webSearchEnabled) {
+    if (this.webSearchEnabled) {
       statusMessage = "Web araması yapılıyor...";
-    } else if (this.wolframEnabled) {
-      statusMessage = "Wolfram Alpha ile analiz ediliyor...";
     }
 
     typingDiv.innerHTML = `
@@ -688,7 +702,7 @@ class UIComponents {
     // Add images if any (yeni özellik)
     if (images && images.length > 0) {
       console.log(`Adding ${images.length} images to message`);
-      
+
       const imagesContainer = document.createElement("div");
       imagesContainer.className = "message-images";
       imagesContainer.style.cssText = `
@@ -701,7 +715,7 @@ class UIComponents {
         border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.1);
       `;
-      
+
       images.forEach((image, index) => {
         const imageWrapper = document.createElement("div");
         imageWrapper.className = "message-image-wrapper";
@@ -711,9 +725,9 @@ class UIComponents {
           align-items: flex-start;
           gap: 6px;
         `;
-        
+
         const img = document.createElement("img");
-        img.src = `data:${image.type || 'image/jpeg'};base64,${image.data}`;
+        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
         img.alt = `Attached Image: ${image.filename}`;
         img.className = "message-image";
         img.style.cssText = `
@@ -727,25 +741,25 @@ class UIComponents {
           background: white;
           border: 2px solid transparent;
         `;
-        
+
         // Hover effects
-        img.addEventListener('mouseenter', () => {
-          img.style.transform = 'scale(1.02)';
-          img.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
-          img.style.borderColor = 'var(--accent-primary, #007bff)';
+        img.addEventListener("mouseenter", () => {
+          img.style.transform = "scale(1.02)";
+          img.style.boxShadow = "0 6px 20px rgba(0,0,0,0.25)";
+          img.style.borderColor = "var(--accent-primary, #007bff)";
         });
-        
-        img.addEventListener('mouseleave', () => {
-          img.style.transform = 'scale(1)';
-          img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-          img.style.borderColor = 'transparent';
+
+        img.addEventListener("mouseleave", () => {
+          img.style.transform = "scale(1)";
+          img.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+          img.style.borderColor = "transparent";
         });
-        
+
         // Click to expand functionality
-        img.addEventListener('click', () => {
+        img.addEventListener("click", () => {
           this.showImageModal(image);
         });
-        
+
         const caption = document.createElement("div");
         caption.className = "image-caption";
         caption.textContent = `📎 ${image.filename}`;
@@ -761,12 +775,12 @@ class UIComponents {
           word-break: break-all;
           font-weight: 500;
         `;
-        
+
         imageWrapper.appendChild(img);
         imageWrapper.appendChild(caption);
         imagesContainer.appendChild(imageWrapper);
       });
-      
+
       // Images container'ını message content'in içine ekle
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
@@ -820,7 +834,7 @@ class UIComponents {
   // Image modal for full-size viewing
   showImageModal(image) {
     // Remove existing modal if any
-    const existingModal = document.querySelector('.image-modal');
+    const existingModal = document.querySelector(".image-modal");
     if (existingModal) {
       document.body.removeChild(existingModal);
     }
@@ -842,9 +856,9 @@ class UIComponents {
       cursor: pointer;
       animation: fadeIn 0.3s ease;
     `;
-    
+
     const img = document.createElement("img");
-    img.src = `data:${image.type || 'image/jpeg'};base64,${image.data}`;
+    img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
     img.style.cssText = `
       max-width: 95%;
       max-height: 85%;
@@ -852,7 +866,7 @@ class UIComponents {
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       object-fit: contain;
     `;
-    
+
     const caption = document.createElement("div");
     caption.textContent = image.filename;
     caption.style.cssText = `
@@ -865,9 +879,9 @@ class UIComponents {
       border-radius: 20px;
       font-family: 'Segoe UI', system-ui, sans-serif;
     `;
-    
+
     const closeButton = document.createElement("div");
-    closeButton.innerHTML = '✕';
+    closeButton.innerHTML = "✕";
     closeButton.style.cssText = `
       position: absolute;
       top: 20px;
@@ -884,39 +898,39 @@ class UIComponents {
       justify-content: center;
       transition: background 0.3s ease;
     `;
-    
-    closeButton.addEventListener('mouseenter', () => {
-      closeButton.style.background = 'rgba(255, 0, 0, 0.7)';
+
+    closeButton.addEventListener("mouseenter", () => {
+      closeButton.style.background = "rgba(255, 0, 0, 0.7)";
     });
-    
-    closeButton.addEventListener('mouseleave', () => {
-      closeButton.style.background = 'rgba(0, 0, 0, 0.5)';
+
+    closeButton.addEventListener("mouseleave", () => {
+      closeButton.style.background = "rgba(0, 0, 0, 0.5)";
     });
-    
+
     modal.appendChild(img);
     modal.appendChild(caption);
     modal.appendChild(closeButton);
     document.body.appendChild(modal);
-    
+
     // Close modal events
-    modal.addEventListener('click', (e) => {
+    modal.addEventListener("click", (e) => {
       if (e.target === modal) {
         document.body.removeChild(modal);
       }
     });
-    
-    closeButton.addEventListener('click', () => {
+
+    closeButton.addEventListener("click", () => {
       document.body.removeChild(modal);
     });
-    
+
     // ESC key to close
     const handleEscape = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         document.body.removeChild(modal);
-        document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener("keydown", handleEscape);
       }
     };
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
   }
 
   clearChat() {
@@ -929,11 +943,10 @@ class UIComponents {
       this.currentSessionId = null;
 
       // Add welcome message
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-    this.addMessageToChat(
-      "assistant",
-      t('welcomeAssistantMessage')
-    );
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.addMessageToChat("assistant", t("welcomeAssistantMessage"));
     }
   }
 
@@ -977,7 +990,7 @@ class UIComponents {
         session.messages.forEach((msg) => {
           // Images are stored in message metadata or content
           const images = msg.images || [];
-          
+
           this.addMessageToChat(msg.role, msg.content, images);
 
           // Update local chat history
@@ -988,7 +1001,8 @@ class UIComponents {
               this.chatHistory.length > 0 &&
               !this.chatHistory[this.chatHistory.length - 1].assistant
             ) {
-              this.chatHistory[this.chatHistory.length - 1].assistant = msg.content;
+              this.chatHistory[this.chatHistory.length - 1].assistant =
+                msg.content;
               this.chatHistory[this.chatHistory.length - 1].images = images;
             }
           }
@@ -1246,6 +1260,9 @@ class UIComponents {
       return content;
     }
 
+    // First, convert download URLs to clickable links
+    content = this.convertUrlsToLinks(content);
+
     // More flexible patterns to catch metadata sections with various formatting
     const metadataPatterns = [
       /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:/gi,
@@ -1318,6 +1335,33 @@ class UIComponents {
     result += formattedMetadata;
 
     return result;
+  }
+
+  convertUrlsToLinks(content) {
+    if (!content || typeof content !== "string") {
+      return content;
+    }
+
+    // Pattern to match download URLs and convert them to clickable links
+    const urlPattern =
+      /(http:\/\/localhost:8001\/api\/created-documents\/[^\/\s]+\/download)/g;
+
+    // Replace URLs with clickable download buttons
+    content = content.replace(urlPattern, (match, url) => {
+      // Extract filename from URL
+      const filename = decodeURIComponent(url.split("/").slice(-2, -1)[0]);
+      return `[📥 Download ${filename}](${url})`;
+    });
+
+    // Also handle direct file path mentions and convert them to download links
+    const filePathPattern =
+      /Download:\s*(http:\/\/localhost:8001\/api\/created-documents\/[^\/\s]+\/download)/g;
+    content = content.replace(filePathPattern, (match, url) => {
+      const filename = decodeURIComponent(url.split("/").slice(-2, -1)[0]);
+      return `**Download:** [📥 ${filename}](${url})`;
+    });
+
+    return content;
   }
 
   fixExistingMetadataFormatting() {
@@ -1687,7 +1731,7 @@ class UIComponents {
 
     // Show progress container
     progressElement.style.display = "block";
-    
+
     // Track timing for speed calculation
     const startTime = Date.now();
     let lastTime = startTime;
@@ -1695,13 +1739,25 @@ class UIComponents {
 
     try {
       // Stage 1: Preparing file
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-cog fa-spin", t('preparingFile'));
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.updateProgressStage(
+        progressIcon,
+        progressStage,
+        "fas fa-cog fa-spin",
+        t("preparingFile")
+      );
       await this.animateProgress(progressFill, progressPercentage, 0, 10, 500);
 
       // Stage 2: Reading file
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-file-alt", t('readingFile'));
-      
+      this.updateProgressStage(
+        progressIcon,
+        progressStage,
+        "fas fa-file-alt",
+        t("readingFile")
+      );
+
       // Read file with progress simulation
       let fileBuffer;
       await this.simulateAsyncOperation(
@@ -1709,74 +1765,119 @@ class UIComponents {
           fileBuffer = await file.arrayBuffer();
         },
         (progress) => {
-          const currentProgress = 10 + (progress * 0.15); // 10% to 25%
-          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+          const currentProgress = 10 + progress * 0.15; // 10% to 25%
+          this.animateProgress(
+            progressFill,
+            progressPercentage,
+            null,
+            currentProgress,
+            100
+          );
         },
         Math.max(500, Math.min(2000, file.size / 1000)) // Dynamic duration based on file size
       );
 
       // Stage 3: Uploading
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-cloud-upload-alt", t('uploading'));
-      
+      this.updateProgressStage(
+        progressIcon,
+        progressStage,
+        "fas fa-cloud-upload-alt",
+        t("uploading")
+      );
+
       let uploadResponse;
       await this.simulateAsyncOperation(
         async () => {
           uploadResponse = await window.apiService.uploadFile(file);
         },
         (progress) => {
-          const currentProgress = 25 + (progress * 0.45); // 25% to 70%
+          const currentProgress = 25 + progress * 0.45; // 25% to 70%
           const currentTime = Date.now();
           const deltaTime = currentTime - lastTime;
           const deltaLoaded = (progress - lastLoaded) * file.size;
-          
-          if (deltaTime > 100) { // Update speed every 100ms
-            const speed = deltaLoaded / deltaTime * 1000; // bytes per second
+
+          if (deltaTime > 100) {
+            // Update speed every 100ms
+            const speed = (deltaLoaded / deltaTime) * 1000; // bytes per second
             const remaining = file.size * (1 - progress);
             const eta = remaining / speed;
-            
+
             uploadSpeed.textContent = this.formatSpeed(speed);
             timeRemaining.textContent = this.formatTime(eta);
-            
+
             lastTime = currentTime;
             lastLoaded = progress;
           }
-          
-          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+
+          this.animateProgress(
+            progressFill,
+            progressPercentage,
+            null,
+            currentProgress,
+            100
+          );
         },
         Math.max(1000, Math.min(5000, file.size / 500)) // Dynamic duration based on file size
       );
 
       // Stage 4: Processing
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-brain fa-pulse", t('processingWithAI'));
+      this.updateProgressStage(
+        progressIcon,
+        progressStage,
+        "fas fa-brain fa-pulse",
+        t("processingWithAI")
+      );
       uploadSpeed.textContent = "";
       timeRemaining.textContent = "";
-      
+
       // Processing stage (AI processing happens in background)
       await this.simulateAsyncOperation(
         async () => {
           // Wait a bit more to show processing stage
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         },
         (progress) => {
-          const currentProgress = 70 + (progress * 0.25); // 70% to 95%
-          this.animateProgress(progressFill, progressPercentage, null, currentProgress, 100);
+          const currentProgress = 70 + progress * 0.25; // 70% to 95%
+          this.animateProgress(
+            progressFill,
+            progressPercentage,
+            null,
+            currentProgress,
+            100
+          );
         },
         2000
       );
 
       // Stage 5: Complete
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-check", t('uploadComplete'));
-      await this.animateProgress(progressFill, progressPercentage, null, 100, 500);
+      this.updateProgressStage(
+        progressIcon,
+        progressStage,
+        "fas fa-check",
+        t("uploadComplete")
+      );
+      await this.animateProgress(
+        progressFill,
+        progressPercentage,
+        null,
+        100,
+        500
+      );
 
       // Success styling
       fileItem.classList.add("upload-success");
-      progressFill.style.background = "linear-gradient(90deg, #10b981, #34d399)";
-      
+      progressFill.style.background =
+        "linear-gradient(90deg, #10b981, #34d399)";
+
       // Calculate total time
       const totalTime = Date.now() - startTime;
       const avgSpeed = file.size / (totalTime / 1000);
-      uploadSpeed.textContent = `${t('avgSpeed')}: ${this.formatSpeed(avgSpeed)}`;
-      timeRemaining.textContent = `${t('completedIn')} ${this.formatTime(totalTime / 1000)}`;
+      uploadSpeed.textContent = `${t("avgSpeed")}: ${this.formatSpeed(
+        avgSpeed
+      )}`;
+      timeRemaining.textContent = `${t("completedIn")} ${this.formatTime(
+        totalTime / 1000
+      )}`;
 
       // Remove after delay
       setTimeout(() => {
@@ -1794,21 +1895,26 @@ class UIComponents {
         uploadDate: new Date(),
         id: uploadResponse.file_id || Utils.generateId(),
       });
-
     } catch (error) {
       // Error state
       fileItem.classList.add("upload-error");
-      this.updateProgressStage(progressIcon, progressStage, "fas fa-exclamation-triangle", t('uploadFailed'));
-      progressFill.style.background = "linear-gradient(90deg, #ef4444, #f87171)";
+      this.updateProgressStage(
+        progressIcon,
+        progressStage,
+        "fas fa-exclamation-triangle",
+        t("uploadFailed")
+      );
+      progressFill.style.background =
+        "linear-gradient(90deg, #ef4444, #f87171)";
       uploadSpeed.textContent = "";
-      timeRemaining.textContent = t('errorOccurred');
+      timeRemaining.textContent = t("errorOccurred");
       console.error("Upload error:", error);
-      
+
       // Show retry option
       setTimeout(() => {
         const retryButton = document.createElement("button");
         retryButton.className = "retry-upload-btn";
-        retryButton.innerHTML = `<i class="fas fa-redo"></i> ${t('retry')}`;
+        retryButton.innerHTML = `<i class="fas fa-redo"></i> ${t("retry")}`;
         retryButton.onclick = () => {
           fileItem.classList.remove("upload-error");
           this.uploadFile(file, fileItem);
@@ -1823,65 +1929,75 @@ class UIComponents {
     stageElement.textContent = stageText;
   }
 
-  async animateProgress(fillElement, percentageElement, fromWidth, toWidth, duration) {
-    return new Promise(resolve => {
-      const startWidth = fromWidth !== null ? fromWidth : parseFloat(fillElement.style.width) || 0;
+  async animateProgress(
+    fillElement,
+    percentageElement,
+    fromWidth,
+    toWidth,
+    duration
+  ) {
+    return new Promise((resolve) => {
+      const startWidth =
+        fromWidth !== null
+          ? fromWidth
+          : parseFloat(fillElement.style.width) || 0;
       const startTime = Date.now();
-      
+
       const animate = () => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // Easing function for smooth animation
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         const currentWidth = startWidth + (toWidth - startWidth) * easeProgress;
-        
+
         fillElement.style.width = `${currentWidth}%`;
         if (percentageElement) {
           percentageElement.textContent = `${Math.round(currentWidth)}%`;
         }
-        
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
           resolve();
         }
       };
-      
+
       requestAnimationFrame(animate);
     });
   }
 
   async simulateAsyncOperation(operation, progressCallback, duration) {
     const startTime = Date.now();
-    
+
     // Start the actual operation
     const operationPromise = operation();
-    
+
     // Simulate progress updates
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       progressCallback(progress);
-      
+
       if (progress >= 1) {
         clearInterval(progressInterval);
       }
     }, 50);
-    
+
     // Wait for either the operation to complete or the duration to pass
     await Promise.all([
       operationPromise,
-      new Promise(resolve => setTimeout(resolve, duration))
+      new Promise((resolve) => setTimeout(resolve, duration)),
     ]);
-    
+
     clearInterval(progressInterval);
     progressCallback(1); // Ensure we end at 100%
   }
 
   formatSpeed(bytesPerSecond) {
     if (bytesPerSecond < 1024) return `${bytesPerSecond.toFixed(0)} B/s`;
-    if (bytesPerSecond < 1024 * 1024) return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    if (bytesPerSecond < 1024 * 1024)
+      return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
     return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
   }
 
@@ -1896,7 +2012,7 @@ class UIComponents {
   async loadFileLibrary() {
     try {
       // Fetch the file list with metadata from the backend
-      const response = await fetch("http://localhost:8000/api/files");
+      const response = await fetch("http://localhost:8001/api/files");
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
       const files = data.files || [];
@@ -1906,12 +2022,16 @@ class UIComponents {
       fileLibrary.innerHTML = "";
 
       if (files.length === 0) {
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
           <i class="fas fa-folder-open"></i>
-          <h3>${t('noDocuments')}</h3>
-          <p>${t('uploadToGetStarted')}</p>
-          <button class="cta-button" data-tab="upload">${t('uploadFilesBtn')}</button>
+          <h3>${t("noDocuments")}</h3>
+          <p>${t("uploadToGetStarted")}</p>
+          <button class="cta-button" data-tab="upload">${t(
+            "uploadFilesBtn"
+          )}</button>
         </div>`;
         return;
       }
@@ -1943,7 +2063,9 @@ class UIComponents {
               </button>
             </div>
           </div>
-          <div class="file-card-preview" id="preview-${Utils.escapeHtml(file.name).replace(/[^a-zA-Z0-9]/g, '_')}">
+          <div class="file-card-preview" id="preview-${Utils.escapeHtml(
+            file.name
+          ).replace(/[^a-zA-Z0-9]/g, "_")}">
             <div class="preview-loading">
               <i class="fas fa-spinner fa-spin"></i>
               <span data-i18n="previewLoading">Loading preview...</span>
@@ -1954,47 +2076,158 @@ class UIComponents {
         // Add click handler to open file (but not on action buttons)
         fileItem.addEventListener("click", (e) => {
           // Don't open file if clicking on action buttons or preview area
-          if (!e.target.closest(".file-card-actions") && !e.target.closest(".file-card-preview")) {
+          if (
+            !e.target.closest(".file-card-actions") &&
+            !e.target.closest(".file-card-preview")
+          ) {
             this.openFile(file.name);
           }
         });
 
         fileLibrary.appendChild(fileItem);
-        
+
         // Load preview for this file
         this.loadFilePreview(file.name);
       });
     } catch (error) {
       const fileLibrary = document.getElementById("files-grid");
       if (fileLibrary) {
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>${t('error')}</h3>
-          <p>${t('networkError')}</p>
+          <h3>${t("error")}</h3>
+          <p>${t("networkError")}</p>
         </div>`;
       }
       console.error("Error loading file library:", error);
     }
   }
 
+  async loadCreatedDocumentsLibrary() {
+    try {
+      // Fetch the created documents list with metadata from the backend
+      const response = await fetch(
+        "http://localhost:8001/api/created-documents"
+      );
+      if (!response.ok)
+        throw new Error("Failed to fetch created documents list");
+      const data = await response.json();
+      const files = data.files || [];
+
+      // Get the created documents library container
+      const documentsLibrary = document.getElementById(
+        "created-documents-grid"
+      );
+      if (!documentsLibrary) return;
+      documentsLibrary.innerHTML = "";
+
+      if (files.length === 0) {
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        documentsLibrary.innerHTML = `<div class="empty-state">
+          <i class="fas fa-file-invoice"></i>
+          <h3>${t("noCreatedDocuments")}</h3>
+          <p>${t("askAiToCreateDocuments")}</p>
+          <button class="cta-button" data-tab="chat">${t(
+            "startChatBtn"
+          )}</button>
+        </div>`;
+        return;
+      }
+
+      // Render each created document with metadata
+      files.forEach((file) => {
+        const fileItem = document.createElement("div");
+        fileItem.className = "file-card";
+        fileItem.style.cursor = "pointer";
+        fileItem.dataset.fileName = file.name;
+        fileItem.innerHTML = `
+          <div class="file-card-header">
+            <div class="file-card-main">
+              <div class="file-card-icon">
+                <i class="${Utils.getFileIcon(file.name)}"></i>
+              </div>
+              <div class="file-card-info">
+                <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
+                <div class="file-card-details">${Utils.formatFileSize(
+                  file.size
+                )} • ${Utils.formatDate(file.created_at)}</div>
+              </div>
+            </div>
+            <div class="file-card-actions">
+              <button class="file-action-btn download-btn" data-filename="${Utils.escapeHtml(
+                file.name
+              )}" title="Download created document">
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
+          <div class="file-card-preview" id="created-preview-${Utils.escapeHtml(
+            file.name
+          ).replace(/[^a-zA-Z0-9]/g, "_")}">
+            <div class="preview-loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span data-i18n="previewLoading">Loading preview...</span>
+            </div>
+          </div>
+        `;
+
+        // Add click handler to open created document (but not on action buttons)
+        fileItem.addEventListener("click", (e) => {
+          // Don't open file if clicking on action buttons or preview area
+          if (
+            !e.target.closest(".file-card-actions") &&
+            !e.target.closest(".file-card-preview")
+          ) {
+            this.openCreatedDocument(file.name);
+          }
+        });
+
+        documentsLibrary.appendChild(fileItem);
+
+        // Load preview for this created document
+        this.loadCreatedDocumentPreview(file.name);
+      });
+    } catch (error) {
+      const documentsLibrary = document.getElementById(
+        "created-documents-grid"
+      );
+      if (documentsLibrary) {
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        documentsLibrary.innerHTML = `<div class="empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>${t("error")}</h3>
+          <p>${t("errorLoadingFiles")}</p>
+        </div>`;
+      }
+      console.error("Error loading created documents library:", error);
+    }
+  }
+
   async loadFilePreview(fileName) {
-    const previewId = `preview-${fileName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const previewId = `preview-${fileName.replace(/[^a-zA-Z0-9]/g, "_")}`;
     const previewElement = document.getElementById(previewId);
-    
+
     if (!previewElement) {
       return;
     }
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/files/${encodeURIComponent(fileName)}/preview`
+        `http://localhost:8001/api/files/${encodeURIComponent(
+          fileName
+        )}/preview`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to load preview: ${response.statusText}`);
       }
-      
+
       const previewData = await response.json();
       this.renderFilePreview(previewElement, previewData);
     } catch (error) {
@@ -2002,7 +2235,9 @@ class UIComponents {
       previewElement.innerHTML = `
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
-          <span>Preview unavailable: ${Utils.escapeHtml(error.message || 'Network error')}</span>
+          <span>Preview unavailable: ${Utils.escapeHtml(
+            error.message || "Network error"
+          )}</span>
         </div>
       `;
     }
@@ -2013,7 +2248,9 @@ class UIComponents {
       previewElement.innerHTML = `
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
-          <span>Preview error: ${Utils.escapeHtml(previewData.error || 'Unknown error')}</span>
+          <span>Preview error: ${Utils.escapeHtml(
+            previewData.error || "Unknown error"
+          )}</span>
         </div>
       `;
       return;
@@ -2022,23 +2259,23 @@ class UIComponents {
     const { preview_type, preview_data } = previewData;
 
     switch (preview_type) {
-      case 'image':
+      case "image":
         previewElement.innerHTML = `
           <div class="preview-image">
             <img src="${preview_data}" alt="Document preview" />
           </div>
         `;
         break;
-        
-      case 'text':
+
+      case "text":
         previewElement.innerHTML = `
           <div class="preview-text">
             <pre>${Utils.escapeHtml(preview_data)}</pre>
           </div>
         `;
         break;
-        
-      case 'excel':
+
+      case "excel":
         previewElement.innerHTML = `
           <div class="preview-excel">
             <div class="excel-summary">
@@ -2048,8 +2285,8 @@ class UIComponents {
           </div>
         `;
         break;
-        
-      case 'info':
+
+      case "info":
         previewElement.innerHTML = `
           <div class="preview-info">
             <i class="fas fa-info-circle"></i>
@@ -2057,8 +2294,8 @@ class UIComponents {
           </div>
         `;
         break;
-        
-      case 'error':
+
+      case "error":
         previewElement.innerHTML = `
           <div class="preview-error">
             <i class="fas fa-exclamation-triangle"></i>
@@ -2066,7 +2303,7 @@ class UIComponents {
           </div>
         `;
         break;
-        
+
       default:
         previewElement.innerHTML = `
           <div class="preview-info">
@@ -2077,15 +2314,57 @@ class UIComponents {
     }
   }
 
+  async loadCreatedDocumentPreview(fileName) {
+    const previewId = `created-preview-${fileName.replace(
+      /[^a-zA-Z0-9]/g,
+      "_"
+    )}`;
+    const previewElement = document.getElementById(previewId);
+
+    if (!previewElement) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8001/api/created-documents/${encodeURIComponent(
+          fileName
+        )}/preview`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to load preview: ${response.statusText}`);
+      }
+
+      const previewData = await response.json();
+      this.renderFilePreview(previewElement, previewData);
+    } catch (error) {
+      console.error(
+        `Error loading preview for created document ${fileName}:`,
+        error
+      );
+      previewElement.innerHTML = `
+        <div class="preview-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Preview unavailable: ${Utils.escapeHtml(
+            error.message || "Network error"
+          )}</span>
+        </div>
+      `;
+    }
+  }
+
   async openFile(fileName) {
     try {
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+
       // Try to open the file using Electron's API
       if (window.airisAPI && window.airisAPI.openFile) {
         try {
           await window.airisAPI.openFile(fileName);
-          this.showNotification(`${t('openedFile')} ${fileName}`, "success");
+          this.showNotification(`${t("openedFile")} ${fileName}`, "success");
           return;
         } catch (electronError) {
           console.warn(
@@ -2097,24 +2376,24 @@ class UIComponents {
 
       // Fallback: Try to download the file through the web API
       try {
-        const downloadUrl = `http://localhost:8000/api/files/${encodeURIComponent(
+        const downloadUrl = `http://localhost:8001/api/files/${encodeURIComponent(
           fileName
         )}/download`;
         window.open(downloadUrl, "_blank");
-        this.showNotification(`${t('downloadingFile')} ${fileName}...`, "info");
+        this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
 
         // Last resort: Try to get file info
         const response = await fetch(
-          `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`
+          `http://localhost:8001/api/files/${encodeURIComponent(fileName)}`
         );
         if (response.ok) {
           const fileInfo = await response.json();
           this.showNotification(
-            `${fileName} (${Utils.formatFileSize(
-              fileInfo.size || 0
-            )}) - ${t('unableToOpenDirectly')}`,
+            `${fileName} (${Utils.formatFileSize(fileInfo.size || 0)}) - ${t(
+              "unableToOpenDirectly"
+            )}`,
             "warning"
           );
         } else {
@@ -2124,7 +2403,36 @@ class UIComponents {
     } catch (error) {
       console.error("Error opening file:", error);
       this.showNotification(
-        `${t('failedToOpenFile')} ${fileName}. ${t('sorryEncounteredError')}`,
+        `${t("failedToOpenFile")} ${fileName}. ${t("sorryEncounteredError")}`,
+        "error"
+      );
+    }
+  }
+
+  async openCreatedDocument(fileName) {
+    try {
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+
+      // Try to download the created document through the web API
+      try {
+        const downloadUrl = `http://localhost:8001/api/created-documents/${encodeURIComponent(
+          fileName
+        )}/download`;
+        window.open(downloadUrl, "_blank");
+        this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
+      } catch (downloadError) {
+        console.error("Download failed:", downloadError);
+        this.showNotification(
+          `${t("failedToOpenFile")} ${fileName}. ${t("sorryEncounteredError")}`,
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("Error opening created document:", error);
+      this.showNotification(
+        `${t("failedToOpenFile")} ${fileName}. ${t("sorryEncounteredError")}`,
         "error"
       );
     }
@@ -2148,14 +2456,16 @@ class UIComponents {
       console.log("✅ Frontend: User confirmed deletion for:", fileName);
 
       // Show loading state
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      this.showNotification(t('deletingFile'), "info");
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showNotification(t("deletingFile"), "info");
 
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
 
       // Request the API service to delete the file
       const result = await fetch(
-        `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`,
+        `http://localhost:8001/api/files/${encodeURIComponent(fileName)}`,
         {
           method: "DELETE",
         }
@@ -2205,7 +2515,9 @@ class UIComponents {
     const fileIcon = Utils.getFileIcon(file.name);
     const fileSize = Utils.formatFileSize(file.size);
     const uploadDate = new Date(file.uploadDate).toLocaleDateString();
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
 
     fileElement.innerHTML = `
             <div class="file-icon">
@@ -2215,18 +2527,20 @@ class UIComponents {
                 <div class="file-name">${Utils.escapeHtml(file.name)}</div>
                 <div class="file-meta">
                     <span class="file-size">${fileSize}</span>
-                    <span class="file-date">${t('uploadedOn')} ${uploadDate}</span>
+                    <span class="file-date">${t(
+                      "uploadedOn"
+                    )} ${uploadDate}</span>
                 </div>
             </div>
             <div class="file-actions">
                 <button class="action-btn" onclick="window.uiComponents.downloadFile('${
                   file.id
-                }')" title="${t('downloadFile')}">
+                }')" title="${t("downloadFile")}">
                     <i class="fas fa-download"></i>
                 </button>
                 <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${
                   file.id
-                }')" title="${t('deleteFile')}">
+                }')" title="${t("deleteFile")}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -2245,8 +2559,10 @@ class UIComponents {
   }
 
   async deleteFile(fileId) {
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-    if (!confirm(t('areYouSureDelete'))) return;
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+    if (!confirm(t("areYouSureDelete"))) return;
 
     try {
       // Remove from local storage
@@ -2302,19 +2618,22 @@ class UIComponents {
     const documentCount = document.getElementById("document-count");
     const systemHealth = document.getElementById("system-health");
 
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-    
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
     if (apiRequests) {
       apiRequests.textContent = metrics.apiRequests || "0";
     }
     if (responseTime) {
-      responseTime.textContent = metrics.averageResponseTime || t('notAvailable');
+      responseTime.textContent =
+        metrics.averageResponseTime || t("notAvailable");
     }
     if (documentCount) {
       documentCount.textContent = metrics.documentsProcessed || "0";
     }
     if (systemHealth) {
-      systemHealth.textContent = metrics.systemHealth || t('unknown');
+      systemHealth.textContent = metrics.systemHealth || t("unknown");
       // Color code the health status
       systemHealth.style.color =
         metrics.systemHealth === "healthy"
@@ -2335,9 +2654,12 @@ class UIComponents {
     activityList.innerHTML = "";
 
     if (activities.length === 0) {
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      activityList.innerHTML =
-        `<div class="no-activity">${t('noActivity')}</div>`;
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      activityList.innerHTML = `<div class="no-activity">${t(
+        "noActivity"
+      )}</div>`;
       return;
     }
 
@@ -2429,7 +2751,7 @@ class UIComponents {
     const settings = {
       apiEndpoint:
         document.getElementById("api-endpoint")?.value ||
-        "http://localhost:8000",
+        "http://localhost:8001",
       maxFileSize: document.getElementById("max-file-size")?.value || "50",
       autoSave: document.getElementById("auto-save")?.checked || false,
       notifications: document.getElementById("notifications")?.checked || true,
@@ -2438,8 +2760,10 @@ class UIComponents {
     localStorage.setItem("airis-settings", JSON.stringify(settings));
 
     // Show success message
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-    this.showNotification(t('settingsSavedSuccessfully'), "success");
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+    this.showNotification(t("settingsSavedSuccessfully"), "success");
   }
 
   loadSettings() {
@@ -2450,7 +2774,7 @@ class UIComponents {
 
       if (document.getElementById("api-endpoint")) {
         document.getElementById("api-endpoint").value =
-          settings.apiEndpoint || "http://localhost:8000";
+          settings.apiEndpoint || "http://localhost:8001";
       }
       if (document.getElementById("max-file-size")) {
         document.getElementById("max-file-size").value =
@@ -2500,11 +2824,10 @@ class UIComponents {
     this.loadSettings();
 
     // Initialize with welcome message
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-    this.addMessageToChat(
-      "assistant",
-      t('welcomeAssistantMessage')
-    );
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+    this.addMessageToChat("assistant", t("welcomeAssistantMessage"));
 
     // Update upload button state
     this.updateUploadButton();
@@ -2518,11 +2841,6 @@ class UIComponents {
     return this.webSearchEnabled;
   }
 
-  // Example method to get the flag for backend communication
-  isWolframEnabled() {
-    return this.wolframEnabled;
-  }
-
   // Finance News functionality
   async loadFinanceNews(forceRefresh = false) {
     const newsGrid = document.getElementById("news-grid");
@@ -2533,18 +2851,21 @@ class UIComponents {
 
     // Show loading state if forcing refresh or no news loaded
     if (forceRefresh || !this.lastNewsUpdate) {
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
       newsGrid.innerHTML = `
         <div class="loading-state">
           <div class="loading-spinner"></div>
-          <p>${t('loadingLatestNews')}</p>
+          <p>${t("loadingLatestNews")}</p>
         </div>
       `;
 
       if (refreshButton) {
         refreshButton.disabled = true;
-        refreshButton.innerHTML =
-          `<i class="fas fa-sync-alt fa-spin"></i> ${t('loading')}`;
+        refreshButton.innerHTML = `<i class="fas fa-sync-alt fa-spin"></i> ${t(
+          "loading"
+        )}`;
       }
     }
 
@@ -2556,8 +2877,12 @@ class UIComponents {
         this.lastNewsUpdate = new Date().toISOString();
 
         if (newsLastUpdated) {
-          const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-          newsLastUpdated.textContent = `${t('lastUpdatedAt')} ${new Date().toLocaleTimeString()}`;
+          const t = window.languageService
+            ? window.languageService.t.bind(window.languageService)
+            : (key) => key;
+          newsLastUpdated.textContent = `${t(
+            "lastUpdatedAt"
+          )} ${new Date().toLocaleTimeString()}`;
         }
 
         // Set up auto-refresh interval (1 minute)
@@ -2567,28 +2892,32 @@ class UIComponents {
       }
     } catch (error) {
       console.error("Failed to load finance news:", error);
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
       newsGrid.innerHTML = `
         <div class="error-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <h3>${t('failedToLoadNews')}</h3>
-          <p>${
-            error.message || t('unableToFetchNews')
-          }</p>
+          <h3>${t("failedToLoadNews")}</h3>
+          <p>${error.message || t("unableToFetchNews")}</p>
           <button class="btn btn-primary" onclick="window.uiComponents.loadFinanceNews(true)">
-            <i class="fas fa-retry"></i> ${t('retryAction')}
+            <i class="fas fa-retry"></i> ${t("retryAction")}
           </button>
         </div>
       `;
 
       if (newsLastUpdated) {
-        newsLastUpdated.textContent = t('failedToUpdate');
+        newsLastUpdated.textContent = t("failedToUpdate");
       }
     } finally {
       if (refreshButton) {
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
         refreshButton.disabled = false;
-        refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t('refresh')}`;
+        refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t(
+          "refresh"
+        )}`;
       }
     }
   }
@@ -2666,14 +2995,16 @@ class UIComponents {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
 
     if (minutes < 60) {
-      return `${minutes}${t('minutesAgo')}`;
+      return `${minutes}${t("minutesAgo")}`;
     } else if (hours < 24) {
-      return `${hours}${t('hoursAgo')}`;
+      return `${hours}${t("hoursAgo")}`;
     } else {
-      return `${days}${t('daysAgo')}`;
+      return `${days}${t("daysAgo")}`;
     }
   }
 
@@ -2704,40 +3035,53 @@ class UIComponents {
     const t = window.languageService.t.bind(window.languageService);
 
     // Update suggestion chips
-    const chips = document.querySelectorAll('.suggestion-chip');
+    const chips = document.querySelectorAll(".suggestion-chip");
     chips.forEach((chip, index) => {
-      const chipKeys = ['suggestedQuestions.latestReport', 'suggestedQuestions.analyzeTrends', 'suggestedQuestions.expenseSummary'];
+      const chipKeys = [
+        "suggestedQuestions.latestReport",
+        "suggestedQuestions.analyzeTrends",
+        "suggestedQuestions.expenseSummary",
+      ];
       if (chipKeys[index]) {
         chip.textContent = t(chipKeys[index]);
       }
     });
 
     // Update upload progress stages
-    this.updateProgressStage = (iconElement, stageElement, iconClass, stageText) => {
+    this.updateProgressStage = (
+      iconElement,
+      stageElement,
+      iconClass,
+      stageText
+    ) => {
       iconElement.className = `${iconClass} progress-icon`;
-      
+
       // Use translation for stage text
       let translatedText = stageText;
-      if (stageText.includes('Preparing')) translatedText = t('preparing');
-      else if (stageText.includes('Reading')) translatedText = t('readingFile');
-      else if (stageText.includes('Uploading')) translatedText = t('uploading');
-      else if (stageText.includes('Processing with AI')) translatedText = t('processingWithAI');
-      else if (stageText.includes('complete')) translatedText = t('uploadComplete');
-      else if (stageText.includes('failed')) translatedText = t('uploadFailed');
-      
+      if (stageText.includes("Preparing")) translatedText = t("preparing");
+      else if (stageText.includes("Reading")) translatedText = t("readingFile");
+      else if (stageText.includes("Uploading")) translatedText = t("uploading");
+      else if (stageText.includes("Processing with AI"))
+        translatedText = t("processingWithAI");
+      else if (stageText.includes("complete"))
+        translatedText = t("uploadComplete");
+      else if (stageText.includes("failed")) translatedText = t("uploadFailed");
+
       stageElement.textContent = translatedText;
     };
 
     // Update file deletion confirmation dialog
     this.deleteFile = async (fileName) => {
       try {
-        const confirmed = confirm(t('deleteConfirmation', { filename: fileName }));
+        const confirmed = confirm(
+          t("deleteConfirmation", { filename: fileName })
+        );
         if (!confirmed) return;
 
-        this.showNotification(t('loading'), "info");
+        this.showNotification(t("loading"), "info");
 
         const result = await fetch(
-          `http://localhost:8000/api/files/${encodeURIComponent(fileName)}`,
+          `http://localhost:8001/api/files/${encodeURIComponent(fileName)}`,
           { method: "DELETE" }
         );
 
@@ -2747,23 +3091,26 @@ class UIComponents {
 
         const data = await result.json();
 
-        this.showNotification(t('fileDeletedSuccessfully', { filename: fileName }), "success");
+        this.showNotification(
+          t("fileDeletedSuccessfully", { filename: fileName }),
+          "success"
+        );
         this.loadFileLibrary();
       } catch (error) {
         console.error("Error deleting file:", error);
-        this.showNotification(t('failedToDeleteFile'), "error");
+        this.showNotification(t("failedToDeleteFile"), "error");
       }
     };
 
     // Update status texts
-    const statusTexts = document.querySelectorAll('.status-text');
-    statusTexts.forEach(status => {
-      if (status.textContent.includes('Loading')) {
-        status.textContent = t('loading');
-      } else if (status.textContent.includes('Connected')) {
-        status.textContent = t('connected');
-      } else if (status.textContent.includes('Connecting')) {
-        status.textContent = t('connecting');
+    const statusTexts = document.querySelectorAll(".status-text");
+    statusTexts.forEach((status) => {
+      if (status.textContent.includes("Loading")) {
+        status.textContent = t("loading");
+      } else if (status.textContent.includes("Connected")) {
+        status.textContent = t("connected");
+      } else if (status.textContent.includes("Connecting")) {
+        status.textContent = t("connecting");
       }
     });
 
@@ -2771,27 +3118,29 @@ class UIComponents {
     this.updateEmptyStates();
 
     // Update news refresh button text
-    const refreshButton = document.getElementById('refresh-news');
+    const refreshButton = document.getElementById("refresh-news");
     if (refreshButton && !refreshButton.disabled) {
-      refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t('refresh')}`;
+      refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t(
+        "refresh"
+      )}`;
     }
 
     // Update analytics metrics with translations
     const responseTime = document.getElementById("response-time");
     const systemHealth = document.getElementById("system-health");
-    if (responseTime && responseTime.textContent === 'N/A') {
-      responseTime.textContent = t('notAvailable');
+    if (responseTime && responseTime.textContent === "N/A") {
+      responseTime.textContent = t("notAvailable");
     }
-    if (systemHealth && systemHealth.textContent === 'Unknown') {
-      systemHealth.textContent = t('unknown');
+    if (systemHealth && systemHealth.textContent === "Unknown") {
+      systemHealth.textContent = t("unknown");
     }
 
     // Refresh current tab content with new language
-    if (this.currentTab === 'files') {
+    if (this.currentTab === "files") {
       this.loadFileLibrary();
-    } else if (this.currentTab === 'news') {
+    } else if (this.currentTab === "news") {
       this.loadFinanceNews();
-    } else if (this.currentTab === 'analytics') {
+    } else if (this.currentTab === "analytics") {
       this.loadAnalytics();
     }
   }
@@ -2802,41 +3151,60 @@ class UIComponents {
     const t = window.languageService.t.bind(window.languageService);
 
     // Update file empty state
-    const fileEmptyState = document.querySelector('#files-grid .empty-state');
+    const fileEmptyState = document.querySelector("#files-grid .empty-state");
     if (fileEmptyState) {
-      const heading = fileEmptyState.querySelector('h3');
-      const paragraph = fileEmptyState.querySelector('p');
-      const button = fileEmptyState.querySelector('button');
-      
-      if (heading) heading.textContent = t('noDocuments');
-      if (paragraph) paragraph.textContent = t('uploadToGetStarted');
-      if (button) button.textContent = t('uploadFilesBtn');
+      const heading = fileEmptyState.querySelector("h3");
+      const paragraph = fileEmptyState.querySelector("p");
+      const button = fileEmptyState.querySelector("button");
+
+      if (heading) heading.textContent = t("noDocuments");
+      if (paragraph) paragraph.textContent = t("uploadToGetStarted");
+      if (button) button.textContent = t("uploadFilesBtn");
     }
 
     // Update no activity state
-    const noActivity = document.querySelector('.no-activity');
-    if (noActivity && noActivity.textContent.includes('Loading')) {
-      noActivity.textContent = t('loadingActivity');
-    } else if (noActivity && noActivity.textContent.includes('No recent')) {
-      noActivity.textContent = t('noActivity');
+    const noActivity = document.querySelector(".no-activity");
+    if (noActivity && noActivity.textContent.includes("Loading")) {
+      noActivity.textContent = t("loadingActivity");
+    } else if (noActivity && noActivity.textContent.includes("No recent")) {
+      noActivity.textContent = t("noActivity");
     }
   }
 
   // Document Verification functionality
   setupVerificationEventListeners() {
-    const verificationUploadArea = document.getElementById("verification-upload-area");
-    const verificationFileInput = document.getElementById("verification-file-input");
-    const verificationBrowseBtn = document.getElementById("verification-browse-files");
+    const verificationUploadArea = document.getElementById(
+      "verification-upload-area"
+    );
+    const verificationFileInput = document.getElementById(
+      "verification-file-input"
+    );
+    const verificationBrowseBtn = document.getElementById(
+      "verification-browse-files"
+    );
     const verifyDocumentBtn = document.getElementById("verify-document-btn");
     const verifyAnotherBtn = document.getElementById("verify-another-document");
-    const downloadReportBtn = document.getElementById("download-verification-report");
+    const downloadReportBtn = document.getElementById(
+      "download-verification-report"
+    );
 
     if (verificationUploadArea) {
       // Drag and drop functionality
-      verificationUploadArea.addEventListener("dragover", this.handleVerificationDragOver.bind(this));
-      verificationUploadArea.addEventListener("dragleave", this.handleVerificationDragLeave.bind(this));
-      verificationUploadArea.addEventListener("drop", this.handleVerificationDrop.bind(this));
-      verificationUploadArea.addEventListener("click", () => verificationFileInput?.click());
+      verificationUploadArea.addEventListener(
+        "dragover",
+        this.handleVerificationDragOver.bind(this)
+      );
+      verificationUploadArea.addEventListener(
+        "dragleave",
+        this.handleVerificationDragLeave.bind(this)
+      );
+      verificationUploadArea.addEventListener(
+        "drop",
+        this.handleVerificationDrop.bind(this)
+      );
+      verificationUploadArea.addEventListener("click", () =>
+        verificationFileInput?.click()
+      );
     }
 
     if (verificationBrowseBtn) {
@@ -2847,36 +3215,38 @@ class UIComponents {
     }
 
     if (verificationFileInput) {
-      verificationFileInput.addEventListener("change", this.handleVerificationFileSelect.bind(this));
+      verificationFileInput.addEventListener(
+        "change",
+        this.handleVerificationFileSelect.bind(this)
+      );
     }
 
     if (verifyDocumentBtn) {
-      verifyDocumentBtn.addEventListener("click", this.startDocumentVerification.bind(this));
+      verifyDocumentBtn.addEventListener(
+        "click",
+        this.startDocumentVerification.bind(this)
+      );
     }
 
     if (verifyAnotherBtn) {
-      verifyAnotherBtn.addEventListener("click", this.resetVerificationInterface.bind(this));
+      verifyAnotherBtn.addEventListener(
+        "click",
+        this.resetVerificationInterface.bind(this)
+      );
     }
 
     if (downloadReportBtn) {
-      downloadReportBtn.addEventListener("click", this.downloadVerificationReport.bind(this));
-    }
-
-    // Initialize Wolfram Alpha toggle for verification
-    const verificationWolframToggle = document.getElementById("verification-wolfram-toggle");
-    if (verificationWolframToggle) {
-      verificationWolframToggle.checked = Utils.isWolframEnabled();
-      verificationWolframToggle.addEventListener("change", (e) => {
-        Utils.setWolframEnabled(e.target.checked);
-        console.log("Verification Wolfram Alpha enabled:", e.target.checked);
-      });
+      downloadReportBtn.addEventListener(
+        "click",
+        this.downloadVerificationReport.bind(this)
+      );
     }
   }
 
   async loadVerificationTypes() {
     try {
       const result = await window.apiService.getVerificationTypes();
-      
+
       if (result.success) {
         this.verificationTypes = result.verificationTypes;
         this.updateVerificationTypeSelect(result.verificationTypes);
@@ -2931,7 +3301,7 @@ class UIComponents {
   handleVerificationDrop(e) {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const uploadArea = document.getElementById("verification-upload-area");
     if (uploadArea) {
       uploadArea.classList.remove("drag-over");
@@ -2953,15 +3323,27 @@ class UIComponents {
 
     // Take only the first file for verification
     const file = files[0];
-    
+
     // Check file type
-    const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp'];
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    
+    const allowedTypes = [
+      ".pdf",
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".tiff",
+      ".tif",
+      ".bmp",
+    ];
+    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
+
     if (!allowedTypes.includes(fileExtension)) {
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
       this.showNotification(
-        `${t('unsupportedFileType')}: ${fileExtension}. ${t('verificationSupportedFormats')}`, 
+        `${t("unsupportedFileType")}: ${fileExtension}. ${t(
+          "verificationSupportedFormats"
+        )}`,
         "error"
       );
       return;
@@ -2975,14 +3357,14 @@ class UIComponents {
   updateVerificationUI(file) {
     const uploadArea = document.getElementById("verification-upload-area");
     const verifyBtn = document.getElementById("verify-document-btn");
-    
+
     if (uploadArea && file) {
       uploadArea.classList.add("file-hover");
       const uploadIcon = uploadArea.querySelector(".upload-icon i");
       if (uploadIcon) {
         uploadIcon.className = "fas fa-file-check";
       }
-      
+
       const uploadText = uploadArea.querySelector("h3");
       if (uploadText) {
         uploadText.textContent = `Selected: ${file.name}`;
@@ -2996,13 +3378,15 @@ class UIComponents {
 
   async startDocumentVerification() {
     if (!this.selectedVerificationFile) {
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      this.showNotification(t('pleaseSelectFile'), "warning");
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showNotification(t("pleaseSelectFile"), "warning");
       return;
     }
 
-    const verificationType = document.getElementById("verification-type")?.value || "auto";
-    const wolframEnabled = document.getElementById("verification-wolfram-toggle")?.checked || false;
+    const verificationType =
+      document.getElementById("verification-type")?.value || "auto";
     const verifyBtn = document.getElementById("verify-document-btn");
     const resultsContainer = document.getElementById("verification-results");
 
@@ -3010,17 +3394,17 @@ class UIComponents {
       // Disable button and show loading state
       if (verifyBtn) {
         verifyBtn.disabled = true;
-        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Verifying...</span>';
+        verifyBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> <span>Verifying...</span>';
       }
 
       // Show progress indicator
       this.showVerificationProgress("Starting verification...");
 
-      // Call verification API with Wolfram Alpha if enabled
+      // Call verification API
       const result = await window.apiService.verifyDocument(
         this.selectedVerificationFile,
         verificationType,
-        wolframEnabled,
         (progress, status) => {
           this.updateVerificationProgress(progress, status);
         }
@@ -3032,40 +3416,54 @@ class UIComponents {
       if (result.success) {
         // Show verification results
         this.displayVerificationResults(result.verificationResult);
-        
+
         if (resultsContainer) {
           resultsContainer.style.display = "block";
           resultsContainer.scrollIntoView({ behavior: "smooth" });
         }
 
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-        this.showNotification(t('verificationCompleted'), "success");
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        this.showNotification(t("verificationCompleted"), "success");
       } else {
         throw new Error(result.error);
       }
-
     } catch (error) {
       console.error("Verification failed:", error);
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      this.showNotification(`${t('verificationFailed')}: ${error.message}`, "error");
-      
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showNotification(
+        `${t("verificationFailed")}: ${error.message}`,
+        "error"
+      );
+
       this.hideVerificationProgress();
     } finally {
       // Re-enable button
       if (verifyBtn) {
         verifyBtn.disabled = false;
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-        verifyBtn.innerHTML = `<i class="fas fa-shield-alt"></i> <span>${t('verifyDocument')}</span>`;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        verifyBtn.innerHTML = `<i class="fas fa-shield-alt"></i> <span>${t(
+          "verifyDocument"
+        )}</span>`;
       }
     }
   }
 
   showVerificationProgress(message) {
-    const uploadSection = document.querySelector(".verification-upload-section");
+    const uploadSection = document.querySelector(
+      ".verification-upload-section"
+    );
     if (!uploadSection) return;
 
     // Remove existing progress indicator
-    const existingProgress = uploadSection.querySelector(".verification-progress");
+    const existingProgress = uploadSection.querySelector(
+      ".verification-progress"
+    );
     if (existingProgress) {
       existingProgress.remove();
     }
@@ -3121,7 +3519,7 @@ class UIComponents {
   updateConfidenceScore(score) {
     const scoreValue = document.getElementById("verification-score-value");
     const scoreCircle = document.getElementById("verification-score-circle");
-    
+
     if (scoreValue) {
       scoreValue.textContent = `${Math.round(score * 100)}%`;
     }
@@ -3129,8 +3527,9 @@ class UIComponents {
     if (scoreCircle) {
       // Update the conic gradient based on score
       const percentage = score * 360; // Convert to degrees
-      const color = score >= 0.8 ? '#22c55e' : score >= 0.6 ? '#f59e0b' : '#ef4444';
-      
+      const color =
+        score >= 0.8 ? "#22c55e" : score >= 0.6 ? "#f59e0b" : "#ef4444";
+
       scoreCircle.style.background = `conic-gradient(
         ${color} 0deg,
         ${color} ${percentage}deg,
@@ -3169,15 +3568,18 @@ class UIComponents {
 
     const stageNames = {
       quality_control: "Quality Control",
-      classification: "Document Classification", 
+      classification: "Document Classification",
       text_extraction: "Text Extraction",
       template_validation: "Template Validation",
       data_consistency: "Data Consistency",
-      fraud_analysis: "Fraud Analysis"
+      fraud_analysis: "Fraud Analysis",
     };
 
     Object.entries(stages).forEach(([stageName, stageData]) => {
-      const stageCard = this.createStageCard(stageNames[stageName] || stageName, stageData);
+      const stageCard = this.createStageCard(
+        stageNames[stageName] || stageName,
+        stageData
+      );
       stagesGrid.appendChild(stageCard);
     });
   }
@@ -3189,8 +3591,13 @@ class UIComponents {
     // Determine stage status
     let stageStatus = "warning";
     let statusIcon = "fas fa-exclamation-triangle";
-    
-    if (stageData.passed || stageData.valid || stageData.consistent || stageData.risk_level === "low") {
+
+    if (
+      stageData.passed ||
+      stageData.valid ||
+      stageData.consistent ||
+      stageData.risk_level === "low"
+    ) {
       stageStatus = "passed";
       statusIcon = "fas fa-check";
     } else if (stageData.failed || stageData.risk_level === "high") {
@@ -3199,13 +3606,15 @@ class UIComponents {
     }
 
     // Get stage score
-    const score = stageData.score || stageData.confidence || stageData.quality_score || 0;
+    const score =
+      stageData.score || stageData.confidence || stageData.quality_score || 0;
     const percentage = Math.round(score * 100);
 
     // Get stage details
     const issues = stageData.issues || stageData.indicators || [];
-    const details = Array.isArray(issues) ? issues.join(", ") : 
-                   stageData.assessment || stageData.reasoning || "No details available";
+    const details = Array.isArray(issues)
+      ? issues.join(", ")
+      : stageData.assessment || stageData.reasoning || "No details available";
 
     card.innerHTML = `
       <div class="stage-header">
@@ -3242,19 +3651,23 @@ class UIComponents {
     }
 
     if (issuesList) {
-      issuesList.innerHTML = allIssues.map(issue => `
+      issuesList.innerHTML = allIssues
+        .map(
+          (issue) => `
         <div class="issue-item">
           <i class="fas fa-exclamation-triangle"></i>
           <span class="issue-text">${Utils.escapeHtml(issue)}</span>
         </div>
-      `).join("");
+      `
+        )
+        .join("");
     }
   }
 
   resetVerificationInterface() {
     // Reset file selection
     this.selectedVerificationFile = null;
-    
+
     // Reset upload area
     const uploadArea = document.getElementById("verification-upload-area");
     const verifyBtn = document.getElementById("verify-document-btn");
@@ -3267,11 +3680,13 @@ class UIComponents {
       if (uploadIcon) {
         uploadIcon.className = "fas fa-shield-alt";
       }
-      
+
       const uploadText = uploadArea.querySelector("h3");
       if (uploadText) {
-        const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-        uploadText.textContent = t('verificationDragDrop');
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        uploadText.textContent = t("verificationDragDrop");
       }
     }
 
@@ -3291,7 +3706,9 @@ class UIComponents {
     this.hideVerificationProgress();
 
     // Scroll back to top
-    const verificationContainer = document.querySelector(".verification-container");
+    const verificationContainer = document.querySelector(
+      ".verification-container"
+    );
     if (verificationContainer) {
       verificationContainer.scrollIntoView({ behavior: "smooth" });
     }
@@ -3299,8 +3716,10 @@ class UIComponents {
 
   downloadVerificationReport() {
     if (!this.currentVerificationResult) {
-      const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-      this.showNotification(t('noVerificationDataToDownload'), "warning");
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showNotification(t("noVerificationDataToDownload"), "warning");
       return;
     }
 
@@ -3308,7 +3727,7 @@ class UIComponents {
     const report = {
       document_name: this.selectedVerificationFile?.name || "Unknown Document",
       verification_timestamp: new Date().toISOString(),
-      verification_result: this.currentVerificationResult
+      verification_result: this.currentVerificationResult,
     };
 
     // Convert to JSON and create download
@@ -3325,8 +3744,10 @@ class UIComponents {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
-    this.showNotification(t('reportDownloaded'), "success");
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+    this.showNotification(t("reportDownloaded"), "success");
   }
 
   // Initialize verification when tab loads
@@ -3379,13 +3800,13 @@ class UIComponents {
     try {
       // Fetch files from API
       const result = await window.apiService.getFiles();
-      
+
       if (result.success && result.files) {
         this.allFiles = result.files;
-        
+
         // Initialize selected files to all files if not already set
         if (this.selectedFiles.length === 0) {
-          this.selectedFiles = this.allFiles.map(file => file.name);
+          this.selectedFiles = this.allFiles.map((file) => file.name);
         }
 
         this.renderFileSelectionList();
@@ -3418,15 +3839,18 @@ class UIComponents {
       return;
     }
 
-    filesList.innerHTML = this.allFiles.map(file => {
-      const isSelected = this.selectedFiles.includes(file.name);
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-      const fileIcon = this.getFileIcon(fileExtension);
-      const fileSize = this.formatFileSize(file.size);
+    filesList.innerHTML = this.allFiles
+      .map((file) => {
+        const isSelected = this.selectedFiles.includes(file.name);
+        const fileExtension = file.name.split(".").pop().toLowerCase();
+        const fileIcon = this.getFileIcon(fileExtension);
+        const fileSize = this.formatFileSize(file.size);
 
-      return `
-        <div class="file-selection-item ${isSelected ? 'selected' : ''}" data-filename="${file.name}">
-          <div class="file-checkbox ${isSelected ? 'checked' : ''}">
+        return `
+        <div class="file-selection-item ${
+          isSelected ? "selected" : ""
+        }" data-filename="${file.name}">
+          <div class="file-checkbox ${isSelected ? "checked" : ""}">
             <i class="fas fa-check"></i>
           </div>
           <div class="file-item-icon ${fileExtension}">
@@ -3438,38 +3862,39 @@ class UIComponents {
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
   }
 
   getFileIcon(extension) {
     const iconMap = {
-      'pdf': 'fas fa-file-pdf',
-      'docx': 'fas fa-file-word',
-      'doc': 'fas fa-file-word',
-      'xlsx': 'fas fa-file-excel',
-      'xls': 'fas fa-file-excel',
-      'txt': 'fas fa-file-alt',
-      'jpg': 'fas fa-file-image',
-      'jpeg': 'fas fa-file-image',
-      'png': 'fas fa-file-image',
-      'gif': 'fas fa-file-image',
-      'bmp': 'fas fa-file-image',
-      'tiff': 'fas fa-file-image'
+      pdf: "fas fa-file-pdf",
+      docx: "fas fa-file-word",
+      doc: "fas fa-file-word",
+      xlsx: "fas fa-file-excel",
+      xls: "fas fa-file-excel",
+      txt: "fas fa-file-alt",
+      jpg: "fas fa-file-image",
+      jpeg: "fas fa-file-image",
+      png: "fas fa-file-image",
+      gif: "fas fa-file-image",
+      bmp: "fas fa-file-image",
+      tiff: "fas fa-file-image",
     };
-    return iconMap[extension] || 'fas fa-file';
+    return iconMap[extension] || "fas fa-file";
   }
 
   formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
   toggleFileSelection(fileName) {
     const index = this.selectedFiles.indexOf(fileName);
-    
+
     if (index > -1) {
       // File is selected, remove it
       this.selectedFiles.splice(index, 1);
@@ -3484,7 +3909,7 @@ class UIComponents {
   }
 
   selectAllFiles() {
-    this.selectedFiles = [...this.allFiles.map(file => file.name)];
+    this.selectedFiles = [...this.allFiles.map((file) => file.name)];
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
   }
@@ -3497,19 +3922,19 @@ class UIComponents {
 
   updateFileSelectionDisplay() {
     // Update checkboxes and selection state
-    const fileItems = document.querySelectorAll('.file-selection-item');
-    
-    fileItems.forEach(item => {
+    const fileItems = document.querySelectorAll(".file-selection-item");
+
+    fileItems.forEach((item) => {
       const fileName = item.dataset.filename;
       const isSelected = this.selectedFiles.includes(fileName);
-      const checkbox = item.querySelector('.file-checkbox');
-      
+      const checkbox = item.querySelector(".file-checkbox");
+
       if (isSelected) {
-        item.classList.add('selected');
-        checkbox.classList.add('checked');
+        item.classList.add("selected");
+        checkbox.classList.add("checked");
       } else {
-        item.classList.remove('selected');
-        checkbox.classList.remove('checked');
+        item.classList.remove("selected");
+        checkbox.classList.remove("checked");
       }
     });
   }
@@ -3522,16 +3947,16 @@ class UIComponents {
     const totalCount = this.allFiles.length;
 
     if (selectedCount === 0) {
-      button.classList.remove('has-selection');
-      button.removeAttribute('data-count');
+      button.classList.remove("has-selection");
+      button.removeAttribute("data-count");
       button.title = "Select files to include";
     } else if (selectedCount === totalCount) {
-      button.classList.add('has-selection');
-      button.setAttribute('data-count', 'All');
+      button.classList.add("has-selection");
+      button.setAttribute("data-count", "All");
       button.title = `All ${totalCount} files selected`;
     } else {
-      button.classList.add('has-selection');
-      button.setAttribute('data-count', selectedCount);
+      button.classList.add("has-selection");
+      button.setAttribute("data-count", selectedCount);
       button.title = `${selectedCount} of ${totalCount} files selected`;
     }
   }
@@ -3541,9 +3966,10 @@ class UIComponents {
     if (!chatInput) return;
 
     let prompt = "";
-    const selectedFilesList = this.selectedFiles.length > 0 
-      ? `Selected files: ${this.selectedFiles.join(', ')}\n\n` 
-      : "";
+    const selectedFilesList =
+      this.selectedFiles.length > 0
+        ? `Selected files: ${this.selectedFiles.join(", ")}\n\n`
+        : "";
 
     switch (type) {
       case "report":
@@ -3561,13 +3987,13 @@ class UIComponents {
 
     // Insert prompt into chat input
     chatInput.value = prompt;
-    
+
     // Hide modal
     this.hideFileSelectionModal();
-    
+
     // Focus chat input
     chatInput.focus();
-    
+
     // Enable send button
     this.toggleSendButton();
   }

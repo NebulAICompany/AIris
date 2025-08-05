@@ -51,7 +51,6 @@ class DocumentVerificationPipeline:
         self,
         file_path: str,
         verification_type: str = "auto",
-        wolfram_enabled: bool = False,
     ) -> Dict[str, Any]:
         """
         Main verification function that orchestrates the entire verification process
@@ -107,13 +106,12 @@ class DocumentVerificationPipeline:
             consistency_result = self._check_data_consistency(
                 ocr_result["extracted_fields"],
                 results["verification_type"],
-                wolfram_enabled,
             )
             results["stages"]["data_consistency"] = consistency_result
 
             # Stage 6: Advanced LLM-Based Fraud Analysis with Wolfram
             fraud_result = self._analyze_fraud_risk(
-                file_path, ocr_result, results["verification_type"], wolfram_enabled
+                file_path, ocr_result, results["verification_type"]
             )
             results["stages"]["fraud_analysis"] = fraud_result
 
@@ -617,7 +615,6 @@ class DocumentVerificationPipeline:
         self,
         extracted_fields: Dict[str, Any],
         doc_type: str,
-        wolfram_enabled: bool = False,
     ) -> Dict[str, Any]:
         """Check data consistency and cross-validate fields using LLM analysis"""
         try:
@@ -693,7 +690,7 @@ class DocumentVerificationPipeline:
                 # Add Wolfram Alpha mathematical verification if enabled
                 wolfram_checks = {}
                 wolfram_issues = []
-                if wolfram_enabled and extracted_fields:
+                if extracted_fields:
                     wolfram_analysis = self._perform_wolfram_mathematical_verification(
                         extracted_fields, text
                     )
@@ -721,7 +718,7 @@ class DocumentVerificationPipeline:
                     },
                     "issues": all_issues,
                     "assessment": result.get("overall_assessment", ""),
-                    "wolfram_analysis": wolfram_analysis if wolfram_enabled else None,
+                    "wolfram_analysis": wolfram_analysis,
                 }
 
             except json.JSONDecodeError:
@@ -767,7 +764,6 @@ class DocumentVerificationPipeline:
         file_path: str,
         ocr_result: Dict[str, Any],
         doc_type: str,
-        wolfram_enabled: bool = False,
     ) -> Dict[str, Any]:
         """Analyze document for fraud risk indicators using LLM-based intelligent analysis"""
         try:
@@ -861,21 +857,20 @@ class DocumentVerificationPipeline:
 
                 # Add Wolfram Alpha advanced mathematical fraud detection if enabled
                 wolfram_fraud_checks = {}
-                if wolfram_enabled:
-                    wolfram_fraud_analysis = self._perform_wolfram_fraud_detection(
-                        text, ocr_result.get("extracted_fields", {})
+                wolfram_fraud_analysis = self._perform_wolfram_fraud_detection(
+                    text, ocr_result.get("extracted_fields", {})
+                )
+                wolfram_fraud_checks = wolfram_fraud_analysis.get("checks", {})
+
+                # Add Wolfram-detected indicators
+                wolfram_indicators = wolfram_fraud_analysis.get("indicators", [])
+                all_indicators.extend(wolfram_indicators)
+
+                # Adjust risk score based on Wolfram mathematical fraud indicators
+                if wolfram_fraud_analysis.get("mathematical_fraud_score", 0) > 0.3:
+                    final_risk_score += (
+                        0.3  # Significant increase for mathematical fraud
                     )
-                    wolfram_fraud_checks = wolfram_fraud_analysis.get("checks", {})
-
-                    # Add Wolfram-detected indicators
-                    wolfram_indicators = wolfram_fraud_analysis.get("indicators", [])
-                    all_indicators.extend(wolfram_indicators)
-
-                    # Adjust risk score based on Wolfram mathematical fraud indicators
-                    if wolfram_fraud_analysis.get("mathematical_fraud_score", 0) > 0.3:
-                        final_risk_score += (
-                            0.3  # Significant increase for mathematical fraud
-                        )
 
                 final_risk_score = min(1.0, final_risk_score)
 
@@ -899,9 +894,7 @@ class DocumentVerificationPipeline:
                         **wolfram_fraud_checks,
                     },
                     "assessment": result.get("assessment", ""),
-                    "wolfram_fraud_analysis": (
-                        wolfram_fraud_analysis if wolfram_enabled else None
-                    ),
+                    "wolfram_fraud_analysis": (wolfram_fraud_analysis),
                 }
 
             except json.JSONDecodeError:

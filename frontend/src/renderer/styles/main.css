@@ -1034,8 +1034,7 @@ body.dark-theme {
     padding: 4px 8px;
   }
 
-  .header-toggle-websearch,
-  .header-toggle-wolfram {
+  .header-toggle-websearch {
     font-size: 11px;
     gap: 6px;
   }
@@ -1109,11 +1108,6 @@ body.dark-theme {
   }
 
   .header-toggle-websearch,
-  .header-toggle-wolfram {
-    font-size: 10px;
-    gap: 4px;
-  }
-
   .toggle-label {
     font-size: 10px;
   }

@@ -5,11 +5,9 @@ import os
 from docx import Document
 from openpyxl import Workbook
 from backend.shared.logger import get_logger
+from backend.shared.constants import CREATED_DOCUMENTS_PATH
 
-import json
-with open("paths.json", "r") as f:
-    paths = json.load(f)
-FILES_PATH = Path(paths["CREATED_DOCUMENTS_PATH"])
+FILES_PATH = Path(CREATED_DOCUMENTS_PATH)
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 
@@ -29,6 +27,9 @@ def create_excel_from_table(
         sheet_name: Name of the Excel sheet (default: "Sheet1")
     """
     try:
+        # Add .xlsx extension if not present
+        if not file_name.endswith('.xlsx'):
+            file_name = f"{file_name}.xlsx"
 
         # Ensure file_path is absolute and in the uploads directory
         file_path = FILES_PATH / file_name
@@ -51,11 +52,11 @@ def create_excel_from_table(
 
         return {
             "success": True,
-            "file_path": file_path,
+            "file_path": str(file_path),
             "sheet_name": sheet_name,
             "rows": len(data),
             "columns": len(data[0]) if data else 0,
-            "message": f"Excel file created successfully with {len(data)} rows",
+            "message": f"Excel file created successfully with {len(data)} rows at {file_path}",
         }
 
     except Exception as e:
@@ -70,9 +71,12 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
 
     Args:
         content: Text content to be added to the document
-        file_path: Name of the file to be created (without extension)
+        file_name: Name of the file to be created
     """
     try:
+        # Add .docx extension if not present
+        if not file_name.endswith('.docx'):
+            file_name = f"{file_name}.docx"
 
         # Ensure file_path is absolute and in the uploads directory
         file_path = FILES_PATH / file_name
@@ -102,7 +106,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
 
         return {
             "success": True,
-            "file_path": file_path,
+            "file_path": str(file_path),
             "paragraphs": len(paragraphs),
             "message": f"Word document created successfully at {file_path}",
         }
