@@ -3,7 +3,7 @@
 class APIService {
   constructor() {
     this.isElectron = typeof window.airisAPI !== "undefined";
-    this.baseURL = "http://localhost:8000";
+    this.baseURL = "http://localhost:8001";
     this.timeout = 45000; // Increased from 30s to 45s
 
     // Always set up axios for API calls, regardless of environment
@@ -598,7 +598,7 @@ class APIService {
         data: response.data,
         verificationTypes: response.data.verification_types || {},
         supportedFormats: response.data.supported_formats || [],
-        defaultType: response.data.default_type || "auto"
+        defaultType: response.data.default_type || "auto",
       };
     } catch (error) {
       return {
@@ -606,7 +606,7 @@ class APIService {
         error: error.message,
         verificationTypes: {},
         supportedFormats: [],
-        defaultType: "auto"
+        defaultType: "auto",
       };
     }
   }
@@ -641,7 +641,7 @@ class APIService {
         confidenceScore: response.data.confidence_score || 0,
         stages: response.data.stages || {},
         warnings: response.data.warnings || [],
-        errors: response.data.errors || []
+        errors: response.data.errors || [],
       };
     } catch (error) {
       console.error("Document verification API error:", error);
@@ -649,13 +649,17 @@ class APIService {
       let errorMessage = "Document verification failed";
 
       if (error.name === "AbortError" || error.message.includes("timeout")) {
-        errorMessage = "Verification took too long to complete. Please try with a smaller file or try again.";
+        errorMessage =
+          "Verification took too long to complete. Please try with a smaller file or try again.";
       } else if (error.message.includes("fetch")) {
-        errorMessage = "Unable to connect to the verification service. Please check your connection.";
+        errorMessage =
+          "Unable to connect to the verification service. Please check your connection.";
       } else if (error.message.includes("500")) {
-        errorMessage = "The verification service is temporarily unavailable. Please try again.";
+        errorMessage =
+          "The verification service is temporarily unavailable. Please try again.";
       } else if (error.message.includes("400")) {
-        errorMessage = "Invalid file format or request. Please check the file and try again.";
+        errorMessage =
+          "Invalid file format or request. Please check the file and try again.";
       } else {
         errorMessage = error.message;
       }
@@ -664,26 +668,34 @@ class APIService {
         success: false,
         error: errorMessage,
         verificationResult: null,
-        status: "error"
+        status: "error",
       };
     }
   }
 
   // Batch document verification
-  async batchVerifyDocuments(files, verificationType = "auto", progressCallback) {
+  async batchVerifyDocuments(
+    files,
+    verificationType = "auto",
+    progressCallback
+  ) {
     const results = [];
     let completed = 0;
 
     for (const file of files) {
       try {
-        const result = await this.verifyDocument(file, verificationType, (fileProgress, status) => {
-          if (progressCallback) {
-            const totalProgress = Math.round(
-              ((completed + fileProgress / 100) / files.length) * 100
-            );
-            progressCallback(totalProgress, file.name, status);
+        const result = await this.verifyDocument(
+          file,
+          verificationType,
+          (fileProgress, status) => {
+            if (progressCallback) {
+              const totalProgress = Math.round(
+                ((completed + fileProgress / 100) / files.length) * 100
+              );
+              progressCallback(totalProgress, file.name, status);
+            }
           }
-        });
+        );
 
         results.push({
           file: file.name,
@@ -704,7 +716,7 @@ class APIService {
           file: file.name,
           success: false,
           error: error.message,
-          status: "error"
+          status: "error",
         });
         completed++;
       }
@@ -715,9 +727,13 @@ class APIService {
       results,
       summary: {
         total: files.length,
-        verified: results.filter((r) => r.success && r.status === "verified").length,
-        rejected: results.filter((r) => r.success && r.status === "rejected").length,
-        reviewRequired: results.filter((r) => r.success && r.status === "review_required").length,
+        verified: results.filter((r) => r.success && r.status === "verified")
+          .length,
+        rejected: results.filter((r) => r.success && r.status === "rejected")
+          .length,
+        reviewRequired: results.filter(
+          (r) => r.success && r.status === "review_required"
+        ).length,
         failed: results.filter((r) => !r.success).length,
       },
     };

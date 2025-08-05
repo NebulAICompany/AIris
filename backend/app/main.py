@@ -4,7 +4,8 @@ import os
 from datetime import datetime
 
 if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    # Use ProactorEventLoop for Windows subprocess support
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,12 +35,6 @@ async def startup_event():
     Uygulama başlangıcında vektör deposunu yükle ve MCP sunucularına bağlan.
     """
     try:
-        for mcp_server in mcp_servers:
-            try:
-                await mcp_server.connect()
-            except Exception as e:
-                logger.error(f"Error connecting to MCP server: {e}")
-
         if not os.path.exists(VECTORSTORE_PATH_STR):
             os.makedirs(VECTORSTORE_PATH_STR)
             logger.info(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
@@ -54,11 +49,33 @@ async def startup_event():
         else:
             logger.warning("Vectorstore not found. Please upload files to create it.")
 
+        # Connect MCP servers using best practices
+        logger.info("Connecting MCP servers...")
+        from backend.core.tools.mcp import connect_mcp_servers
+        await connect_mcp_servers()
+        logger.info("MCP servers connected successfully.")
+
     except Exception as e:
+        import traceback
         logger.error(f"Error during startup: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         # Depending on the desired behavior, you might want to raise the exception
         # to prevent the app from starting with a misconfigured state.
         # raise e
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Uygulama kapanırken MCP sunucularından bağlantıyı kes.
+    """
+    try:
+        logger.info("Disconnecting MCP servers...")
+        from backend.core.tools.mcp import disconnect_mcp_servers
+        await disconnect_mcp_servers()
+        logger.info("MCP servers disconnected successfully.")
+    except Exception as e:
+        logger.error(f"Error during shutdown: {e}")
 
 
 # UI statik dosyalarını sun

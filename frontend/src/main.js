@@ -214,7 +214,7 @@ class AIrisApp {
     // Handle metrics requests
     ipcMain.handle("get-metrics", async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/metrics");
+        const response = await fetch("http://localhost:8001/api/metrics");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -240,7 +240,7 @@ class AIrisApp {
       logger.info(`Delete file request received: ${fileName}`, "IPC");
 
       try {
-        const url = `http://localhost:8000/api/files/${encodeURIComponent(
+        const url = `http://localhost:8001/api/files/${encodeURIComponent(
           fileName
         )}`;
         logger.debug(`Sending DELETE request to: ${url}`, "IPC");
@@ -301,13 +301,7 @@ class AIrisApp {
 
     ipcMain.handle(
       "send-query",
-      async (
-        event,
-        {
-          query,
-          webSearchEnabled = false,
-        }
-      ) => {
+      async (event, { query, webSearchEnabled = false }) => {
         try {
           logger.info(
             `Sending query: ${query.substring(0, 100)}...`,
@@ -317,7 +311,7 @@ class AIrisApp {
             "RAG Fusion enabled:",
             false
           );
-          const response = await fetch("http://localhost:8000/api/query", {
+          const response = await fetch("http://localhost:8001/api/query", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -364,7 +358,7 @@ class AIrisApp {
         formData.append("file", blob, fileName);
 
         logger.debug("Sending upload request to backend", "IPC");
-        const response = await fetch("http://localhost:8000/api/upload", {
+        const response = await fetch("http://localhost:8001/api/upload", {
           method: "POST",
           body: formData,
         });
@@ -391,7 +385,7 @@ class AIrisApp {
     // Handle health check requests
     ipcMain.handle("check-health", async () => {
       try {
-        const response = await fetch("http://localhost:8000/", {
+        const response = await fetch("http://localhost:8001/", {
           method: "GET",
         });
 
