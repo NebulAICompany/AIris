@@ -28,8 +28,7 @@ all_mcp_servers = [
     alpha_vantage_mcp_server,
     #Add other MCP servers here as needed
 ]
-
-
+mcp_servers = all_mcp_servers
 
 # ! MCP Server Connection Management
 _servers_connected = False
@@ -61,4 +60,3 @@ async def disconnect_mcp_servers():
             logger.info("All MCP servers disconnected")
         except Exception as e:
             logger.error(f"Failed to disconnect MCP servers: {e}")
-
