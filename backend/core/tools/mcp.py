@@ -28,7 +28,6 @@ all_mcp_servers = [
     alpha_vantage_mcp_server,
     #Add other MCP servers here as needed
 ]
-mcp_servers = all_mcp_servers
 
 # ! MCP Server Connection Management
 _servers_connected = False
