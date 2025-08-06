@@ -29,8 +29,6 @@ all_mcp_servers = [
     #Add other MCP servers here as needed
 ]
 
-
-
 # ! MCP Server Connection Management
 _servers_connected = False
 
@@ -61,4 +59,3 @@ async def disconnect_mcp_servers():
             logger.info("All MCP servers disconnected")
         except Exception as e:
             logger.error(f"Failed to disconnect MCP servers: {e}")
-
