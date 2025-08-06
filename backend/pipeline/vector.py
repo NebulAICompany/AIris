@@ -22,11 +22,7 @@ from typing import List, Dict
 import time
 import asyncio
 from enum import Enum
-from backend.monitoring.metrics import (
-    hype_hypothetical_content_generated,
-    hype_enhanced_documents_indexed,
-    vectorstore_total_chunks,
-)
+from backend.monitoring.metrics import vectorstore_total_chunks
 from backend.retrieval.autocontext import apply_autocontext
 
 
@@ -34,14 +30,13 @@ class PreEmbeddingProcess(Enum):
     """Enum for pre-embedding process options"""
 
     NONE = "none"
-    HYPE = "hype"
     CCH = "cch"  # Contextual Chunk Headers (AutoContext)
 
 
 class VectorStorePipeline:
     """
     Enhanced Vector Store Pipeline with configurable pre-embedding processing
-    Supports: None, HyPE (Hypothetical Prompt Embeddings), and CCH (Contextual Chunk Headers)
+    Supports: None and CCH (Contextual Chunk Headers)
     """
 
     def __init__(
@@ -55,93 +50,18 @@ class VectorStorePipeline:
         )
         self.pre_embedding_process = pre_embedding_process
 
-    def generate_hypothetical_prompts(
-        self, original_chunk: str, chunk_metadata: Dict
-    ) -> List[str]:
-        """
-        Generate hypothetical prompts/queries that users might ask to find this document chunk
-        """
-
-        system_prompt = """You are a text analyst and question generation expert.
-                    For the given document chunk, generate hypothetical questions that users might ask.
-                    The questions should focus on text content. You should generate questions in the same language as the document. Output only the questions separated by 2 new lines, no other text."""
-
-        user_prompt = f"""Document content:
-{original_chunk}
-
-Generate 3 different hypothetical questions/queries that users might ask about this document content:"""
-
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=800,
-            temperature=0.8,
-        )
-
-        generated_text = response.choices[0].message.content.strip()
-
-        hypothetical_prompts = [
-            prompt.strip()
-            for prompt in generated_text.split("\n\n")
-            if prompt.strip() and len(prompt.strip()) > 10
-        ]
-
-        # Limit to 3 hypothetical prompts per chunk
-        hypothetical_prompts = hypothetical_prompts[:3]
-
-        # Update metrics
-        hype_hypothetical_content_generated.inc(len(hypothetical_prompts))
-
-        logger.info(
-            f"❓ Generated {len(hypothetical_prompts)} hypothetical prompts for chunk"
-        )
-        for i, prompt in enumerate(hypothetical_prompts[:3]):  # Show first 3
-            logger.info(f"   {i+1}. {prompt}\n--------------------------------\n")
-
-        return hypothetical_prompts
-
+    
     def create_enhanced_documents(
         self, original_docs: List[Document], file_name: str
     ) -> List[Document]:
         """
-        Create enhanced document set with original content + hypothetical prompts as separate searchable documents
+        Create enhanced document set with original content as separate searchable documents
         """
         enhanced_docs = []
 
-        for i, doc in enumerate(original_docs):
+        for doc in enumerate(original_docs):
             # Add original document
             enhanced_docs.append(doc)
-            hype_enhanced_documents_indexed.labels(content_type="original").inc()
-
-            # Generate hypothetical prompts for this chunk
-            hypothetical_prompts = self.generate_hypothetical_prompts(
-                doc.page_content, {"file_name": file_name}
-            )
-
-            # Create separate documents for each hypothetical prompt
-            # These prompt documents will be searchable and point back to the original content
-            for j, hyp_prompt in enumerate(hypothetical_prompts):
-                # Create a document that contains the prompt but references the original content
-                prompt_doc = Document(
-                    page_content=f"{hyp_prompt}\n\n[Bu soru aşağıdaki içerikle ilgilidir:]\n{doc.page_content}",
-                    metadata={
-                        **doc.metadata,
-                        "content_type": "hypothetical_prompt",
-                        "original_chunk_id": doc.metadata.get("chunk_id"),
-                        "prompt_index": j,
-                        "hypothetical_prompt": hyp_prompt,
-                        "original_content": doc.page_content,
-                        "file_name": file_name,
-                    },
-                )
-                enhanced_docs.append(prompt_doc)
-                hype_enhanced_documents_indexed.labels(
-                    content_type="hypothetical_prompt"
-                ).inc()
-
             # Add small delay to avoid rate limiting
             time.sleep(0.1)
 
@@ -158,9 +78,7 @@ Generate 3 different hypothetical questions/queries that users might ask about t
             return docs
 
         elif self.pre_embedding_process == PreEmbeddingProcess.CCH:
-            logger.info(
-                f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}..."
-            )
+            logger.info(f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}...")
             try:
                 # Handle event loop properly for async AutoContext processing
                 def run_autocontext():
@@ -201,25 +119,6 @@ Generate 3 different hypothetical questions/queries that users might ask about t
                 logger.warning(f"⚠️ AutoContext processing failed for {file_name}: {e}")
                 logger.warning("   Continuing with original chunks...")
                 return docs
-
-        elif self.pre_embedding_process == PreEmbeddingProcess.HYPE:
-            logger.info(
-                f"❓ Applying HyPE (Hypothetical Prompt Embeddings) to {file_name}..."
-            )
-            try:
-                enhanced_docs = self.create_enhanced_documents(docs, file_name)
-                prompt_count = len(enhanced_docs) - len(docs)
-
-                logger.info(
-                    f"✅ HyPE applied: {prompt_count} times total"
-                )
-                return enhanced_docs
-
-            except Exception as e:
-                logger.warning(f"⚠️ HyPE processing failed for {file_name}: {e}")
-                logger.warning("   Continuing with original chunks...")
-                return docs
-
         else:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
@@ -293,11 +192,6 @@ Generate 3 different hypothetical questions/queries that users might ask about t
             for doc in processed_docs:
                 masked = mask_text(doc.page_content)
                 doc.page_content = masked
-
-                # Store PII mapping with unique identifier
-                doc_id = doc.metadata.get("chunk_id")
-                if doc.metadata.get("content_type") == "hypothetical_prompt":
-                    doc.metadata["chunk_id"] = f"{doc_id}_prompt_{doc.metadata.get('prompt_index')}"
 
             logger.info(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             if vectorstore is None:

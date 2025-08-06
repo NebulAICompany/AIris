@@ -20,13 +20,13 @@ request_counter = 0
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
-    preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
+    preEmbeddingProcess: str = "none"  # "none", "cch"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
 class UploadRequest(BaseModel):
     file: str
-    preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
+    preEmbeddingProcess: str = "none"  # "none", "cch"
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
@@ -85,7 +85,6 @@ def handle_upload(file: UploadFile = File(...)):
         request_counter += 1
 
         logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
-        
 
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(UPLOADS_PATH)
@@ -102,7 +101,7 @@ def handle_upload(file: UploadFile = File(...)):
         from backend.pipeline.upload import process_file
 
         logger.info("Processing uploaded file...")
-        pre_embedding_process = "hype"
+        pre_embedding_process = "none"
         result = process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
@@ -121,7 +120,7 @@ def handle_upload(file: UploadFile = File(...)):
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
         )
-
+    
 
 @router.get("/chat/sessions")
 def list_chat_sessions():
