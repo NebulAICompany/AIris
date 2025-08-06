@@ -39,9 +39,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         from backend.pipeline.vector import PreEmbeddingProcess
 
         # Convert string to enum
-        if pre_embedding_process.lower() == "hype":
-            process_enum = PreEmbeddingProcess.HYPE
-        elif pre_embedding_process.lower() == "cch":
+        if pre_embedding_process.lower() == "cch":
             process_enum = PreEmbeddingProcess.CCH
         else:
             process_enum = PreEmbeddingProcess.NONE

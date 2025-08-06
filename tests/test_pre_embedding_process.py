@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test script for Pre-embedding Process Selection System
-Tests the None, HyPE, and CCH (AutoContext) options
+Tests the None and CCH (AutoContext) options
 """
 
 import os
@@ -78,41 +78,6 @@ def test_none_process():
         print(f"❌ None process failed: {e}")
         return False
 
-
-def test_hype_process():
-    """Test the HyPE pre-embedding process."""
-    print("\n🧪 Testing HyPE Pre-embedding Process")
-    print("=" * 50)
-
-    # Create test content
-    content = create_test_document()
-
-    try:
-        # Create pipeline with HyPE process
-        pipeline = VectorStorePipeline(pre_embedding_process=PreEmbeddingProcess.HYPE)
-
-        # Create temporary vectorstore directory
-        vectorstore_dir = tempfile.mkdtemp()
-
-        # Run pipeline with text content
-        print(f"Processing text content directly")
-        pipeline.run(
-            text_content=content,
-            document_name="test_hype",
-            save_path=vectorstore_dir,
-        )
-
-        print("✅ HyPE process completed successfully")
-        return True
-
-    except Exception as e:
-        print(f"❌ HyPE process failed: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
 def test_cch_process():
     """Test the CCH (AutoContext) pre-embedding process."""
     print("\n🧪 Testing CCH (AutoContext) Pre-embedding Process")
@@ -155,18 +120,14 @@ def test_api_compatibility():
     # Test parameter conversion
     test_cases = [
         ("none", PreEmbeddingProcess.NONE),
-        ("hype", PreEmbeddingProcess.HYPE),
         ("cch", PreEmbeddingProcess.CCH),
         ("NONE", PreEmbeddingProcess.NONE),
-        ("HYPE", PreEmbeddingProcess.HYPE),
         ("CCH", PreEmbeddingProcess.CCH),
     ]
 
     for input_str, expected_enum in test_cases:
         # Convert string to enum (simulating API conversion)
-        if input_str.lower() == "hype":
-            result = PreEmbeddingProcess.HYPE
-        elif input_str.lower() == "cch":
+        if input_str.lower() == "cch":
             result = PreEmbeddingProcess.CCH
         else:
             result = PreEmbeddingProcess.NONE
@@ -188,7 +149,7 @@ def main():
 
     # Check if OpenAI API key is set
     if not os.getenv("OPENAI_API_KEY"):
-        print("⚠️ Warning: OPENAI_API_KEY not set. HyPE and CCH tests may fail.")
+        print("⚠️ Warning: OPENAI_API_KEY not set. CCH tests may fail.")
 
     results = []
 
@@ -196,13 +157,10 @@ def main():
         # Test 1: None process
         results.append(("None Process", test_none_process()))
 
-        # Test 2: HyPE process
-        results.append(("HyPE Process", test_hype_process()))
-
-        # Test 3: CCH process
+        # Test 2: CCH process
         results.append(("CCH Process", test_cch_process()))
 
-        # Test 4: API compatibility
+        # Test 3: API compatibility
         results.append(("API Compatibility", test_api_compatibility()))
 
         # Summary

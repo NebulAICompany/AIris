@@ -64,10 +64,6 @@ async def run_orchestration(
             logger.info(
                 "   - Contextual Chunk Headers (CCH) enhanced chunks will be used for retrieval"
             )
-        elif pre_embedding_process == "hype":
-            logger.info(
-                "   - HyPE (Hypothetical Prompt Embeddings) enhanced chunks will be used for retrieval"
-            )
         else:
             logger.info("   - Standard chunks will be used for retrieval")
         load_vectorstore(VECTORSTORE_PATH)
@@ -136,7 +132,7 @@ async def run_orchestration(
         # Use filtered RSE-enhanced chunks directly (they're already optimized)
         reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
-        # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
+        # 4. Enhanced Retrieval + Reranking 
         retrieved_docs = retrieve_top_k(
             preprocessed_query, k=15
         )  # Get more docs for better reranking

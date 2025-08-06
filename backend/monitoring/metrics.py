@@ -15,30 +15,11 @@ guard_violations_total = Counter(
     "guard_violations_total", "Total number of guard violations", ["violation_type"]
 )
 
-# HyPE indexing metrics
-hype_indexing_duration_seconds = Histogram(
-    "hype_indexing_duration_seconds",
-    "Duration of HyPE indexing process in seconds",
-    buckets=[1, 5, 10, 30, 60, 120, 300],
-)
-
-hype_hypothetical_content_generated = Counter(
-    "hype_hypothetical_prompts_generated_total",
-    "Total number of hypothetical prompts generated during indexing",
-)
-
-hype_enhanced_documents_indexed = Counter(
-    "hype_enhanced_documents_indexed_total",
-    "Total number of documents indexed with HyPE enhancements",
-    ["content_type"],  # original or hypothetical_prompt
-)
-
 vectorstore_total_chunks = Histogram(
     "vectorstore_total_chunks",
-    "Total number of chunks in vectorstore including HyPE prompt expansions",
+    "Total number of chunks in vectorstore",
     buckets=[10, 50, 100, 500, 1000, 5000, 10000],
 )
-
 
 def expose_metrics(port=9090):
     """
