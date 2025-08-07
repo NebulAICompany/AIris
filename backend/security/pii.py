@@ -6,6 +6,11 @@ from backend.shared.logger import get_logger
 
 logger = get_logger("PII")
 
+categories_to_filter=["Person", "PhoneNumber", "Address", "IPAddress", "Email", "USUKPassportNumber",
+          "USBankAccountNumber",
+          "USDriversLicenseNumber",
+          "USIndividualTaxpayerIdentification",
+          "USSocialSecurityNumber","TRNationalIdentificationNumber"]
 
 def mask_text(text):
     """Mask PII entities in the given text using Azure Text Analytics."""
@@ -14,6 +19,7 @@ def mask_text(text):
         string_index_type="UnicodeCodePoint",
         disable_service_logs=True,
         model_version="latest",
+        categories_filter=categories_to_filter,
     )
 
     masked_map = {}
