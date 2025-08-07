@@ -5,12 +5,13 @@ from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, FAISS_INDEX_PATH
+from backend.shared.constants import UPLOADS_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, VECTORSTORE_PATH_STR
 import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 from backend.utils.news import fetch_and_parse_news
+from qdrant_client import models
 
 logger = get_logger("ROUTER")
 router = APIRouter()
@@ -104,7 +105,7 @@ def handle_upload(file: UploadFile = File(...)):
         from backend.pipeline.upload import process_file
 
         logger.info("Processing uploaded file...")
-        pre_embedding_process = "hype"
+        pre_embedding_process = "none"
         result = process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
@@ -262,10 +263,7 @@ def get_metrics():
         )
 
         # Get vector store info
-        vectorstore_dir = Path(VECTORSTORE_PATH)
-        vectorstore_exists = (
-            vectorstore_dir.exists() and (FAISS_INDEX_PATH).exists()
-        )
+        vectorstore_exists = Path(VECTORSTORE_PATH_STR).exists()
 
         # Simple request counter - use module variable
         global request_counter
@@ -327,14 +325,7 @@ def delete_file(filename: str):
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
         # Load vector store and PII mappings
-        vectorstore_dir = Path(VECTORSTORE_PATH)
-
-        logger.debug(f"Vector store directory: {vectorstore_dir}")
-        logger.debug(f"Vector store exists: {vectorstore_dir.exists()}")
-        logger.debug(f"FAISS index exists: {(FAISS_INDEX_PATH).exists()}")
-
-        if (not vectorstore_dir.exists()
-            or not (FAISS_INDEX_PATH).exists()):
+        if not Path(VECTORSTORE_PATH_STR).exists():
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
@@ -344,89 +335,35 @@ def delete_file(filename: str):
             }
 
         # Load existing vector store
-        from langchain_community.vectorstores import FAISS
-        from langchain_openai.embeddings import OpenAIEmbeddings
         import json
+        from backend.retrieval.retriever import load_vectorstore
 
-        logger.info(f"Loading vector store from: {vectorstore_dir}")
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        vectorstore = FAISS.load_local(
-            str(vectorstore_dir),
-            embeddings,
-            allow_dangerous_deserialization=True,
-        )
+        client = load_vectorstore(VECTORSTORE_PATH_STR)
         logger.info(f"Vector store loaded successfully")
-
-        # Find all chunk IDs that belong to this file
-        chunks_to_delete = []
 
         # Stem file name
         base_filename = Path(filename).stem
 
-        # Get all documents and find ones with matching file_name
-        # We need to iterate through the docstore to find matching documents
-        for doc_id, document in vectorstore.docstore._dict.items():
-            if hasattr(document, "metadata"):
-                doc_filename = document.metadata.get("file_name")
-                if doc_filename == base_filename:
-                    chunks_to_delete.append(doc_id)
-
-        logger.info(
-            f"🔍 Found {len(chunks_to_delete)} chunks to delete for file '{filename}' (checking: {possible_processed_names})"
-        )
-
-        # Find chunk IDs to remove from PII maps BEFORE deleting from vector store
-        chunks_to_remove_from_pii = []
+        # Remove chunks from PII maps
         pii_map_path = MASKED_MAP_JSON_PATH
-        logger.info(f"📋 PII map path: {pii_map_path}")
-        logger.info(f"📋 PII map exists: {pii_map_path.exists()}")
-
         if pii_map_path.exists():
             with open(pii_map_path, "r", encoding="utf-8") as f:
                 pii_maps = json.load(f)
-
-            logger.info(f"📋 Loaded PII maps with {len(pii_maps)} entries")
-
-            # Find chunk IDs to remove from PII maps
-            # We need to find chunks by their chunk_id metadata BEFORE deletion
-            for doc_id, document in vectorstore.docstore._dict.items():
-                if hasattr(document, "metadata"):
-                    doc_filename = document.metadata.get("file_name")
-                    if doc_filename == base_filename:
-                        chunk_id = document.metadata.get("chunk_id")
-                        if chunk_id and chunk_id in pii_maps:
-                            chunks_to_remove_from_pii.append(chunk_id)
-                            logger.info(f"📋 Found PII entry to remove: {chunk_id}")
-
-        # Delete chunks from vector store if any found
-        if chunks_to_delete:
-            logger.info(f"🗑️ Deleting {len(chunks_to_delete)} chunks from vector store...")
-            vectorstore.delete(ids=chunks_to_delete)
-
-            # Save updated vector store
-            logger.info(f"💾 Saving updated vector store...")
-            vectorstore.save_local(str(vectorstore_dir))
-            logger.info(f"✅ Deleted {len(chunks_to_delete)} chunks from vector store")
-        else:
-            logger.warning(f"⚠️ No chunks found to delete for file '{filename}'")
-
-        # Update PII mappings - remove entries for deleted chunks
-        if chunks_to_remove_from_pii and pii_map_path.exists():
-
-            logger.info(
-                f"📋 Removing {len(chunks_to_remove_from_pii)} entries from PII mappings..."
-            )
-            # Remove from PII maps
-            for chunk_id in chunks_to_remove_from_pii:
+            pii_delete_count = 0
+            chunk_ids_to_delete = [(chunk_id,chunk_map) for chunk_id,chunk_map in pii_maps.items() if base_filename in chunk_id]
+            for chunk_id, chunk_map in chunk_ids_to_delete:
                 pii_maps.pop(chunk_id, None)
-
-            # Save updated PII maps
+                pii_delete_count += len(chunk_map)
             with open(pii_map_path, "w", encoding="utf-8") as f:
                 json.dump(pii_maps, f, ensure_ascii=False, indent=2)
 
-            logger.info(
-                f"✅ Removed {len(chunks_to_remove_from_pii)} entries from PII mappings"
+
+        client.delete(
+            collection_name="test_collection",
+            points_selector=models.Filter(
+                must=[models.FieldCondition(key="metadata.file_name", match=models.MatchValue(value=base_filename))]
             )
+        )
 
         # Delete the actual file
         logger.info(f"🗑️ Deleting physical file: {file_path}")
@@ -435,8 +372,8 @@ def delete_file(filename: str):
 
         result = {
             "message": f"File '{filename}' deleted successfully",
-            "chunks_deleted": len(chunks_to_delete),
-            "pii_entries_removed": len(chunks_to_remove_from_pii),
+            "chunks_deleted": len(chunk_ids_to_delete),
+            "pii_entries_removed": pii_delete_count,
             "file_path": str(file_path),
         }
         logger.info(f"🎉 Deletion completed successfully: {result}")

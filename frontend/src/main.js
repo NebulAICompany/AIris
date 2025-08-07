@@ -243,7 +243,7 @@ class AIrisApp {
         const url = `http://localhost:8000/api/files/${encodeURIComponent(
           fileName
         )}`;
-        logger.debug(`Sending DELETE request to: ${url}`, "IPC");
+        logger.info(`Sending DELETE request to: ${url}`, "IPC");
 
         const response = await fetch(url, {
           method: "DELETE",
