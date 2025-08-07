@@ -7,7 +7,7 @@ from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
-from backend.shared.constants import VECTORSTORE_PATH
+from backend.shared.constants import VECTORSTORE_PATH, openai_client
 from backend.shared.logger import get_logger
 import os
 
@@ -21,6 +21,27 @@ def preprocess_query(query: str):
         return corrected, lang
     return query, lang
 
+def refine_query(user_query, lang: str = "Turkish") -> str:
+    system_prompt = f"""Sen kullanıcı sorgularını daha açık ve net hale getiren bir uzmansın.
+
+GÖREVIN:
+- Finansal terimleri doğru şekilde ifade et
+- Anahtar kelimelerde değişiklik yapmadan sorguyu netleştir
+- Fonların, hisselerin isimlerinde oynama yapma
+- Sorguyu daha anlaşılır hale getir
+- Önemli noktaları ve spesifik terimleri vurgula
+
+Sadece düzenlenmiş sorguyu ver, açıklama yapma. Cevabını {lang} dilinde ver."""
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_query}
+        ],
+        temperature=0.3
+    )
+    return response.choices[0].message.content
 
 async def run_orchestration(
     query: str,
@@ -70,6 +91,10 @@ async def run_orchestration(
 
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
+    logger.info(f"   - Preprocessed Query before refinement: {preprocessed_query}")
+
+    preprocessed_query = refine_query(preprocessed_query, lang)
+    logger.info(f"   - Query after refinement: {preprocessed_query}")
 
     # 2. Girdi kontrolü (OpenAI moderation)
     input_moderation = check_openai_moderation(preprocessed_query)
