@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
-from backend.shared.constants import VECTORSTORE_PATH
 from backend.shared.logger import get_logger
+from backend.shared.constants import VECTORSTORE_PATH_STR
 logger = get_logger("UPLOAD")
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
@@ -52,13 +52,12 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            save_path=VECTORSTORE_PATH,
         )
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTORSTORE_PATH,
+            "vector_store_path": VECTORSTORE_PATH_STR,
         }
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}")

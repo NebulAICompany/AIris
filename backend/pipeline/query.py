@@ -7,7 +7,7 @@ from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
-from backend.shared.constants import VECTORSTORE_PATH
+from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 import os
 
@@ -58,19 +58,7 @@ async def run_orchestration(
         conversation_context = []
         logger.debug(f"   - No session ID provided, processing as standalone query")
 
-    if os.path.exists(f"{VECTORSTORE_PATH}/index.faiss"):
-        logger.info(f"Loading vectorstore from {VECTORSTORE_PATH}")
-        if pre_embedding_process == "cch":
-            logger.info(
-                "   - Contextual Chunk Headers (CCH) enhanced chunks will be used for retrieval"
-            )
-        elif pre_embedding_process == "hype":
-            logger.info(
-                "   - HyPE (Hypothetical Prompt Embeddings) enhanced chunks will be used for retrieval"
-            )
-        else:
-            logger.info("   - Standard chunks will be used for retrieval")
-        load_vectorstore(VECTORSTORE_PATH)
+    client = load_vectorstore(VECTORSTORE_PATH_STR)
 
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
@@ -81,17 +69,23 @@ async def run_orchestration(
         return f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
 
     # 3. Hassas bilgileri maskele
-    masked_query = mask_text(preprocessed_query)
+    masked_query = mask_text(preprocessed_query, "query")
     logger.debug(f"Masked Query: {masked_query}")
 
-    ENABLED_RAG_TECHNIQUES = ["rse"]
+    ENABLED_RAG_TECHNIQUES = []
 
     if "rag_fusion" in ENABLED_RAG_TECHNIQUES:
         # 4. Enhanced Retrieval with RAG Fusion (Multiple Query Generation + RRF)
         from backend.retrieval.rag_fusion import retrieve_with_fusion
 
         fusion_docs, fusion_metadata = await retrieve_with_fusion(
-            preprocessed_query, k=15, num_queries=4, top_n=5, final_rerank=True, excessive_k=60
+            client=client,
+            query=preprocessed_query,
+            k=15,
+            num_queries=4,
+            top_n=5,
+            final_rerank=True,
+            excessive_k=60
         )
 
         if not fusion_docs:
@@ -117,7 +111,9 @@ async def run_orchestration(
         from backend.retrieval.rse import retrieve_with_rse
 
         rse_chunks, rse_scores = retrieve_with_rse(
-            preprocessed_query, k=15
+            client=client,
+            query=preprocessed_query,
+            k=15
         )
 
         if not rse_chunks:
@@ -138,7 +134,7 @@ async def run_orchestration(
     else:
         # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
         retrieved_docs = retrieve_top_k(
-            preprocessed_query, k=15
+            client=client, query=preprocessed_query, k=15
         )  # Get more docs for better reranking
 
         if not retrieved_docs:

@@ -41,6 +41,7 @@ deneme.txt
 backend/database/
 backend/vectorstore/
 backend/images/
+qdrant_storage/
 
 # Platform
 Thumbs.db

@@ -53,8 +53,6 @@ IMAGES_PATH = UPLOADS_PATH / "images"
 
 # Vectorstore paths
 VECTORSTORE_PATH = DATABASE_DIR / "vectorstore"
-FAISS_INDEX_PATH = VECTORSTORE_PATH / "index.faiss"
-FAISS_PKL_PATH = VECTORSTORE_PATH / "index.pkl"
 PII_CHUNK_MAPS_PATH = VECTORSTORE_PATH / "pii_chunk_maps.json"
 
 # Frontend paths
