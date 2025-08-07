@@ -1,7 +1,6 @@
 from PIL import Image
 import io
 import base64
-from nltk.tokenize import sent_tokenize
 import uuid
 import os
 from azure.ai.documentintelligence.models import AnalyzeResult, DocumentContentFormat, AnalyzeOutputOption
@@ -11,29 +10,6 @@ from pathlib import Path
 from backend.shared.logger import get_logger
 
 logger = get_logger("PARSER")
-
-
-def specify_sentence(text, word):
-    """
-    Adds a specified word to the end of each sentence using NLTK for sentence splitting.
-    Args:
-        text (str): Input text.
-        word (str): Word to append at the end of each sentence.
-    Returns:
-        str: Modified text with the word added to each sentence.
-    """
-    sentences = sent_tokenize(text)
-    modified_sentences = []
-    
-    for sentence in sentences:
-        if sentence.strip():
-            if sentence[-1] in {'.', '!', '?'}:
-                modified_sentence = sentence[:-1] + f" {word}" + sentence[-1]
-            else:
-                modified_sentence = sentence + f" {word}"
-            modified_sentences.append(modified_sentence)
-    
-    return ' '.join(modified_sentences)
 
 
 def describe_image(image_bytes):
@@ -110,7 +86,6 @@ def AzureParser(file_path: str):
                 with open(image_path, "wb") as writer:
                     writer.write(img_data)
 
-                # Görseli açıklat
                 description = describe_image(img_data)
 
                 figure_images[figure_id] = {
@@ -136,11 +111,6 @@ def AzureParser(file_path: str):
             content = content[:figure_tag_start] + figure_markdown + content[
                 figure_tag_end:]
 
-    output_path = "C:/Users/ASUS/Desktop/Coding/CanProjects/AIris/backend/database/uploads/tcmb.md"
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(content)
-
     return content
 
 
@@ -153,38 +123,30 @@ def ImageParser(file_path: str):
     with open(file_path, "rb") as f:
         image_bytes = f.read()
 
-    # Görseli aç (PIL kullanarak)
     image = Image.open(io.BytesIO(image_bytes))
 
-    # images/ klasörü oluşturulmamışsa oluştur
-    images_dir = Path(__file__).parent.parent / "images"
-    images_dir.mkdir(exist_ok=True)
+    os.makedirs(IMAGES_PATH_STR, exist_ok=True)
 
-    # Image reference için sadece dosya adını kullan (uzantısız)
-    image_reference = Path(file_path).stem
-    
-    # Görseli kaydet
-    saved_image_path = images_dir / f"{image_reference}.png"
+    image_id = f"img_{uuid.uuid4().hex[:8]}"
+
+    image_filename = f"{image_id}.png"
+    saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
     image.save(saved_image_path, format='PNG')
 
-    # Açıklamayı al
     description = describe_image(image_bytes)
-    updated_description = specify_sentence(description, f"((Image):{image_reference})")
 
-    # Text content'i hazırla
-    content = f"Açıklama:\n{updated_description}\n"
-    
+    content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
+
     logger.info(f"Image text extraction completed. Total length: {len(content)} characters")
     return content
 
 
 def TxtParser(file_path: str):
-        content_parts = []
-        with open(file_path, "r", encoding="utf-8") as infile:
-            for line in infile:
-                if line.strip():  # satır boş değilse
-                    content_parts.append(line)
+    content_parts = []
+    with open(file_path, "r", encoding="utf-8") as infile:
+        for line in infile:
+            if line.strip():
+                content_parts.append(line)
 
-        extracted_text = "".join(content_parts)
-        logger.info(f"TXT text extraction completed. Total length: {len(extracted_text)} characters")
-        return extracted_text
+    extracted_text = "".join(content_parts)
+    return extracted_text
