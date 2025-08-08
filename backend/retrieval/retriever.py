@@ -27,13 +27,13 @@ def _get_embeddings() -> Embeddings:
                 "No suitable embeddings found. Please install either langchain_openai or langchain_community."
             ) from e
 
-
 def load_vectorstore(path: str) -> QdrantClient:
     try:
         client = QdrantClient(path=path)
         logger.info(f"✅ Vectorstore loaded from {path}")
         logger.info(
             f"📦 Contains {client.count(collection_name='test_collection')} document chunks (including HyPE prompt expansions)"
+
         )
         return client
     except Exception as e:
@@ -68,46 +68,16 @@ def retrieve_top_k(client: QdrantClient, query: str, k: int = 10) -> List[Dict[s
             if contains_image:
                 chunks_with_images += 1
 
-            # If this is a hypothetical prompt match, we want to return the original content
-            # but note that it was found via a prompt match
-            if content_type == "hypothetical_prompt":
-                # Extract the original content and show the matching prompt
-                original_content = doc["metadata"].get(
-                    "original_content", doc["page_content"]
-                )
-                hypothetical_prompt = doc["metadata"].get("hypothetical_prompt", "")
 
-                results.append(
-                    {
-                        "content": original_content,
-                        "score": score,
-                        "metadata": {
-                            **doc["metadata"],
-                            "match_type": "prompt_match",
-                            "matching_prompt": hypothetical_prompt,
-                            "contains_image": contains_image,
-                        },
-                    }
-                )
-            else:
-                results.append(
-                    {
-                        "content": doc["page_content"],
-                        "score": score,
-                        "metadata": {**doc["metadata"], "match_type": "content_match", "contains_image": contains_image},
-                    }
-                )
-        logger.debug(f"CHUNKS WITH IMAGES IS: {chunks_with_images}")
-        # Show breakdown of results
-        original_count = sum(
-            1 for r in results if r["metadata"].get("content_type") == "original"
-        )
-        prompt_match_count = sum(
-            1 for r in results if r["metadata"].get("match_type") == "prompt_match"
-        )
-        logger.info(
-            f"📈 Results breakdown: {original_count} direct content matches + {prompt_match_count} prompt-based matches"
-        )
+            results.append(
+                {
+                    "content": doc.page_content,
+                    "score": score,
+                    "metadata": {**doc.metadata, "match_type": "content_match", "contains_image": contains_image},
+                }
+            )
+        logger.debug("CHUNKS WITH IMAGES IS: ", chunks_with_images)
+        logger.info(f"📈 Retrieved {len(results)} document chunks")
 
         return results
 

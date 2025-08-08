@@ -311,16 +311,6 @@ class Utils {
     return this.storage.get("webSearchEnabled", false);
   }
 
-  // Wolfram Alpha toggle flag helpers
-  static setWolframEnabled(enabled) {
-    this.storage.set("wolframEnabled", !!enabled);
-  }
-
-  static isWolframEnabled() {
-    return this.storage.get("wolframEnabled", false);
-  }
-
-
 }
 
 // Export for use in other modules

@@ -3,11 +3,10 @@ const { contextBridge, ipcRenderer } = require("electron");
 // Expose AIris-specific API to the renderer process
 contextBridge.exposeInMainWorld("airisAPI", {
   // Query operations
-  sendQuery: (query, webSearchEnabled, wolframEnabled) =>
+  sendQuery: (query, webSearchEnabled) =>
     ipcRenderer.invoke("send-query", {
       query,
       webSearchEnabled,
-      wolframEnabled,
     }),
 
   // File operations
