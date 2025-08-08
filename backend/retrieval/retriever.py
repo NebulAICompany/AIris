@@ -68,12 +68,11 @@ def retrieve_top_k(client: QdrantClient, query: str, k: int = 10) -> List[Dict[s
             if contains_image:
                 chunks_with_images += 1
 
-
             results.append(
                 {
-                    "content": doc.page_content,
+                    "content": doc["page_content"],
                     "score": score,
-                    "metadata": {**doc.metadata, "match_type": "content_match", "contains_image": contains_image},
+                    "metadata": {**doc["metadata"], "match_type": "content_match", "contains_image": contains_image},
                 }
             )
         logger.debug("CHUNKS WITH IMAGES IS: ", chunks_with_images)

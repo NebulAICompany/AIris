@@ -5,7 +5,7 @@ from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH
+from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH_STR, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH
 import shutil
 from pathlib import Path
 from datetime import datetime

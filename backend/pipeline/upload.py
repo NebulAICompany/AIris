@@ -3,7 +3,7 @@ from pathlib import Path
 import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
 from backend.shared.constants import VECTORSTORE_PATH_STR
-from backend.utils.parser import AzureParser
+from backend.utils.parser import AzureParser, TxtParser, ImageParser
 
 logger = get_logger("UPLOAD")
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
@@ -18,9 +18,6 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     try:
-        # Step 1: Call parser and get extracted text
-        from backend.utils.parser import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
-  
         file_extension = Path(file_path).suffix.lower()
 
         extracted_text = ""
