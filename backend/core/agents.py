@@ -32,7 +32,8 @@ def create_rag_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = rag_agent_as_tools
+    # Start with a fresh list to avoid mutating the module-level list
+    tools = [*rag_agent_as_tools]
     if web_search_enabled:
         tools.append(web_search_tool)
 

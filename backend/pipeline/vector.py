@@ -3,18 +3,19 @@ import pickle
 from pathlib import Path
 from typing import List, Optional
 
+from qdrant_client import QdrantClient, models
+
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from backend.shared.constants import VECTORSTORE_PATH_STR, VECTORSTORE_PATH
+from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 
 logger = get_logger("VECTOR_PIPELINE")
 
 from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from backend.security.pii import mask_text
 from backend.shared.constants import openai_client
@@ -31,7 +32,7 @@ class PreEmbeddingProcess(Enum):
 
     NONE = "none"
     CCH = "cch"  # Contextual Chunk Headers (AutoContext)
-
+    PDR = "pdr"  # Parent Document Retrieval (PDR)
 
 class VectorStorePipeline:
     """
@@ -47,6 +48,7 @@ class VectorStorePipeline:
             self.embeddings,
             breakpoint_threshold_type="percentile",
             breakpoint_threshold_amount=80,
+
         )
         self.pre_embedding_process = pre_embedding_process
 
@@ -66,6 +68,28 @@ class VectorStorePipeline:
             time.sleep(0.1)
 
         return enhanced_docs
+
+    def create_parent_child_documents(
+        self, original_docs: List[Document], file_name: str
+    ) -> List[Document]:
+        """
+        Create parent-child documents 
+        """
+        parent_child_docs = []
+        recursive_text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
+        for doc in original_docs:
+            parent_child_docs.append(doc)
+            chunks = recursive_text_splitter.split_text(doc.page_content)
+            for chunk in chunks:
+                parent_child_docs.append(Document(page_content=chunk, metadata={
+                    **doc.metadata,
+                    "content_type": "child",
+                    "parent_chunk_id": doc.metadata.get("chunk_id"),
+                    "parent_content": doc.page_content,
+                    "file_name": file_name,
+                }))
+
+        return parent_child_docs
 
     def apply_pre_embedding_process(
         self, docs: List[Document], file_name: str
@@ -119,18 +143,23 @@ class VectorStorePipeline:
                 logger.warning(f"⚠️ AutoContext processing failed for {file_name}: {e}")
                 logger.warning("   Continuing with original chunks...")
                 return docs
+        elif self.pre_embedding_process == PreEmbeddingProcess.PDR:
+            logger.info(
+                f"❓ Applying PDR (Personalized Document Retrieval) to {file_name}..."
+            )
+            parent_child_docs = self.create_parent_child_documents(docs, file_name)
+            return parent_child_docs
         else:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
-    def run(self, text_content: str, document_name: str, save_path: str):
+    def run(self, text_content: str, document_name: str):
         """
         Process text content directly without reading from files
         
         Args:
             text_content: The extracted text content from parser
             document_name: Name of the document (for metadata)
-            save_path: Path to save the vector store
         """
         start_time = time.time()
 
@@ -140,23 +169,6 @@ class VectorStorePipeline:
                 return
 
             chunk_idx = 0
-
-            # Ensure save_path exists
-            os.makedirs(save_path, exist_ok=True)
-            vectorstore_path = save_path
-
-            # Load or create vectorstore
-            if os.path.exists(os.path.join(vectorstore_path, "index.faiss")):
-                logger.info("Loading existing vector store...")
-                vectorstore = FAISS.load_local(
-                    vectorstore_path,
-                    self.embeddings,
-                    allow_dangerous_deserialization=True,
-                )
-                logger.info(f"Loaded {vectorstore.index.ntotal} existing chunks")
-            else:
-                logger.info("Creating new vector store...")
-                vectorstore = None
 
             logger.info(f"🚀 Processing text content with pre-embedding process: {self.pre_embedding_process.value}")
             logger.info(f"📖 Processing {len(text_content)} characters from {document_name}")
@@ -184,29 +196,45 @@ class VectorStorePipeline:
                 
                 chunk_idx += 1
 
+
+            logger.info(f"🔍 {len(docs)} documents before pre-embedding process")
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
+            logger.info(f"✅ {len(processed_docs)} documents processed")
 
             # PII Masking for all documents
             logger.info(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
             for doc in processed_docs:
-                masked = mask_text(doc.page_content)
+                masked = mask_text(doc.page_content, f"{doc.metadata.get('file_name')}||{doc.metadata.get('chunk_id')}")
                 doc.page_content = masked
 
             logger.info(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
-            if vectorstore is None:
-                vectorstore = FAISS.from_documents(processed_docs, self.embeddings)
+            client = QdrantClient(path=VECTORSTORE_PATH_STR)
+            if not client.collection_exists(collection_name="test_collection"):
+                client.create_collection(
+                    collection_name="test_collection",
+                    vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
+                )
+                logger.info("Collection created")
             else:
-                vectorstore.add_documents(processed_docs)
+                logger.info("Collection already exists")
+            client.upload_points(
+                collection_name="test_collection",
+                points=[
+                    models.PointStruct(
+                        id=idx,
+                        vector=self.embeddings.embed_query(doc.page_content),
+                        payload={
+                            "page_content": doc.page_content,
+                            "metadata": doc.metadata,
+                        },
+                    )
+                    for idx, doc in enumerate(processed_docs)
+                ],
+            )
+            client.close()
 
             logger.info(f"📈 Total text processed: {len(text_content)} characters")
-            logger.info(f"📦 Total chunks in vectorstore: {vectorstore.index.ntotal}")
-
-            # Update metrics
-            vectorstore_total_chunks.observe(vectorstore.index.ntotal)
-            # Save the vectorstore
-            vectorstore.save_local(vectorstore_path)
-            logger.info(f"💾 Vector store saved to: {vectorstore_path}")
 
             # Log processing time
             processing_time = time.time() - start_time
