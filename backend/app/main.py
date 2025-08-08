@@ -14,8 +14,8 @@ from backend.shared.logger import get_logger
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
-from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR, FAISS_INDEX_PATH
-from backend.core.tools.mcp import mcp_servers
+from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR
+
 
 logger = get_logger("MAIN")
 
@@ -39,10 +39,9 @@ async def startup_event():
             os.makedirs(VECTORSTORE_PATH_STR)
             logger.info(f"Vectorstore directory created at: {VECTORSTORE_PATH_STR}")
 
-
         # Check if the vectorstore files exist, if not, we can't load it.
         # The user should upload files first.
-        if os.path.exists(FAISS_INDEX_PATH):
+        if os.path.exists(VECTORSTORE_PATH_STR):
             logger.info("Loading vectorstore...")
             load_vectorstore(VECTORSTORE_PATH_STR)
             logger.info("Vectorstore loaded successfully.")

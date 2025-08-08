@@ -1,8 +1,10 @@
 import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
-from backend.shared.constants import VECTORSTORE_PATH
 from backend.shared.logger import get_logger
+from backend.shared.constants import VECTORSTORE_PATH_STR
+from backend.utils.parser import AzureParser, TxtParser, ImageParser
+
 logger = get_logger("UPLOAD")
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
@@ -16,18 +18,11 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     try:
-        # Step 1: Call parser and get extracted text
-        from backend.utils.parser import TxtParser, ImageParser, ExcelParser, DocxParser, PdfParser
-  
         file_extension = Path(file_path).suffix.lower()
 
         extracted_text = ""
-        if file_extension == '.pdf':
-            extracted_text = PdfParser(file_path)
-        elif file_extension == '.docx':
-            extracted_text = DocxParser(file_path)
-        elif file_extension in ('.xlsx', '.xls'):
-            extracted_text = ExcelParser(file_path)
+        if file_extension in ('.pdf', '.docx', '.xlsx'):
+            extracted_text = AzureParser(file_path)
         elif file_extension == '.txt':
             extracted_text = TxtParser(file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
@@ -39,26 +34,25 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         from backend.pipeline.vector import PreEmbeddingProcess
 
         # Convert string to enum
-        if pre_embedding_process.lower() == "hype":
-            process_enum = PreEmbeddingProcess.HYPE
-        elif pre_embedding_process.lower() == "cch":
+        if pre_embedding_process.lower() == "cch":
             process_enum = PreEmbeddingProcess.CCH
+        elif pre_embedding_process.lower() == "pdr":
+            process_enum = PreEmbeddingProcess.PDR
         else:
             process_enum = PreEmbeddingProcess.NONE
-
+        logger.info(f"Pre-embedding process: {process_enum}")
         # Get original filename for reference
         original_stem = Path(file_path).stem
 
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            save_path=VECTORSTORE_PATH,
         )
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTORSTORE_PATH,
+            "vector_store_path": VECTORSTORE_PATH_STR,
         }
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}")

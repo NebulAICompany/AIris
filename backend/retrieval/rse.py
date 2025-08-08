@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List, Dict, Any, Tuple
 from backend.shared.logger import get_logger
+from qdrant_client import QdrantClient
 
 logger = get_logger("RSE")
 
@@ -158,7 +159,6 @@ def get_relevance_values(all_ranked_results: list[list], meta_document_length: i
             
             # Handle similarity score (prioritize score field from retriever)
             absolute_relevance_value = result.get("score", result.get("similarity", 0.0))
-            # Convert similarity to positive relevance (FAISS returns negative distances)
             if absolute_relevance_value < 0:
                 absolute_relevance_value = -absolute_relevance_value
             
@@ -300,7 +300,7 @@ def apply_rse_single_query(ranked_results: List[Dict[str, Any]]) -> Tuple[List[D
     
     return apply_rse(all_ranked_results)
 
-def retrieve_with_rse(query: str, k: int = 15) -> Tuple[List[Dict[str, Any]], List[float]]:
+def retrieve_with_rse(client: QdrantClient, query: str, k: int = 15) -> Tuple[List[Dict[str, Any]], List[float]]:
     """
     Retrieve documents using RSE enhancement.
     
@@ -312,9 +312,8 @@ def retrieve_with_rse(query: str, k: int = 15) -> Tuple[List[Dict[str, Any]], Li
         Tuple of (rse_enhanced_chunks, segment_scores)
     """
     from .retriever import retrieve_top_k
-    
     # Get initial retrieval results
-    initial_results = retrieve_top_k(query, k=k*3)
+    initial_results = retrieve_top_k(client, query, k=k*3)
     unique_chunks = []
     duplicate_cleared_initial_results = []
     for r in initial_results:

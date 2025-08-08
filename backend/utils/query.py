@@ -237,6 +237,8 @@ def filter_docs_by_selected_files(
     Filter retrieved documents to only include those from selected files.
     If selected_files is None or empty, return all documents.
     """
+    logger.info(f"DOCSSSSS {docs}")
+    logger.info(f"SELECTEEEDDD {selected_files}")
     if not selected_files or len(selected_files) == 0:
         return docs
 
