@@ -14,6 +14,7 @@ from backend.shared.logger import get_logger
 logger = get_logger("VECTOR_PIPELINE")
 
 from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_core.documents import Document
 from backend.security.pii import mask_text
@@ -35,7 +36,7 @@ class PreEmbeddingProcess(Enum):
     NONE = "none"
     HYPE = "hype"
     CCH = "cch"  # Contextual Chunk Headers (AutoContext)
-
+    PDR = "pdr"  # Parent Document Retrieval (PDR)
 
 class VectorStorePipeline:
     """
@@ -51,6 +52,7 @@ class VectorStorePipeline:
             self.embeddings,
             breakpoint_threshold_type="percentile",
             breakpoint_threshold_amount=80,
+
         )
         self.pre_embedding_process = pre_embedding_process
 
@@ -146,6 +148,28 @@ Generate 3 different hypothetical questions/queries that users might ask about t
 
         return enhanced_docs
 
+    def create_parent_child_documents(
+        self, original_docs: List[Document], file_name: str
+    ) -> List[Document]:
+        """
+        Create parent-child documents 
+        """
+        parent_child_docs = []
+        recursive_text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
+        for doc in original_docs:
+            parent_child_docs.append(doc)
+            chunks = recursive_text_splitter.split_text(doc.page_content)
+            for chunk in chunks:
+                parent_child_docs.append(Document(page_content=chunk, metadata={
+                    **doc.metadata,
+                    "content_type": "child",
+                    "parent_chunk_id": doc.metadata.get("chunk_id"),
+                    "parent_content": doc.page_content,
+                    "file_name": file_name,
+                }))
+
+        return parent_child_docs
+
     def apply_pre_embedding_process(
         self, docs: List[Document], file_name: str
     ) -> List[Document]:
@@ -218,7 +242,12 @@ Generate 3 different hypothetical questions/queries that users might ask about t
                 logger.warning(f"⚠️ HyPE processing failed for {file_name}: {e}")
                 logger.warning("   Continuing with original chunks...")
                 return docs
-
+        elif self.pre_embedding_process == PreEmbeddingProcess.PDR:
+            logger.info(
+                f"❓ Applying PDR (Personalized Document Retrieval) to {file_name}..."
+            )
+            parent_child_docs = self.create_parent_child_documents(docs, file_name)
+            return parent_child_docs
         else:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
@@ -266,8 +295,11 @@ Generate 3 different hypothetical questions/queries that users might ask about t
                 
                 chunk_idx += 1
 
+
+            logger.info(f"🔍 {len(docs)} documents before pre-embedding process")
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
+            logger.info(f"✅ {len(processed_docs)} documents processed")
 
             # PII Masking for all documents
             logger.info(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")

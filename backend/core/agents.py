@@ -3,9 +3,10 @@ from .tools.mcp import alpha_vantage_mcp_server
 from .prompts import wolfram_instructions
 from typing import List
 from .tools.api import wolfram_alpha_query, web_search_tool
-from .tools.agent_as_tools import alpha_vantage_agent, office_agent
+from .tools.agent_as_tools import alpha_vantage_tool, office_agent_tool
 
-rag_agent_as_tools = [alpha_vantage_agent, office_agent]
+# Predefined tool objects (not Agent instances)
+rag_agent_as_tools = [alpha_vantage_tool, office_agent_tool]
 
 def create_rag_agent(
     local_context: str,
@@ -34,7 +35,8 @@ def create_rag_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = rag_agent_as_tools
+    # Start with a fresh list to avoid mutating the module-level list
+    tools = [*rag_agent_as_tools]
     if web_search_enabled:
         tools.append(web_search_tool)
 

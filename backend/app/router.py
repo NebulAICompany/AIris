@@ -22,13 +22,13 @@ class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
     wolframEnabled: bool = False
-    preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
+    preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
 class UploadRequest(BaseModel):
     file: str
-    preEmbeddingProcess: str = "none"  # "none", "hype", "cch"
+    preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
@@ -105,7 +105,7 @@ def handle_upload(file: UploadFile = File(...)):
         from backend.pipeline.upload import process_file
 
         logger.info("Processing uploaded file...")
-        pre_embedding_process = "none"
+        pre_embedding_process = "pdr"
         result = process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
