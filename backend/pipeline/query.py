@@ -162,20 +162,33 @@ async def run_orchestration(
 
     context_entries = []
 
+    included_parent_chunk_ids = []
     for doc in reranked_docs:
-        content = doc["content"]
+        if pre_embedding_process == "pdr" and doc["metadata"].get("content_type") == "child":
+            if doc["metadata"].get("parent_chunk_id") in included_parent_chunk_ids:
+                continue
+            else:
+                content = doc["metadata"].get("parent_content")
+                included_parent_chunk_ids.append(doc["metadata"].get("parent_chunk_id"))
+
+        else:
+            included_parent_chunk_ids.append(doc["metadata"].get("chunk_id"))
+            content = doc["content"]
+
         metadata = doc["metadata"]
 
         metadata_str = ""
         metadata_str += f"Source: {metadata.get('file_name')}\n"
-
+        if pre_embedding_process == "pdr" and doc["metadata"].get("content_type") == "child":
+            metadata_str += f"Parent Chunk ID: {metadata.get('parent_chunk_id')}\n"
         context_entries.append(
             f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
         )
 
     local_context = "\n\n---\n\n".join(context_entries)
+    logger.info(f"In Query, Pre-embedding process: {pre_embedding_process}")
     logger.debug(f"   - Local Context: {local_context}")
-    logger.debug("using web search ?= ", web_search_enabled)
+    logger.info(f"using web search ?= {web_search_enabled}")
 
     cleaned_context, image_paths = extract_image_references_from_context(local_context)
 
