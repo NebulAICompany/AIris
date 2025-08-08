@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
-from backend.shared.constants import VECTORSTORE_PATH
 from backend.shared.logger import get_logger
+from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.utils.parser import AzureParser
 
 logger = get_logger("UPLOAD")
@@ -39,22 +39,23 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         # Convert string to enum
         if pre_embedding_process.lower() == "cch":
             process_enum = PreEmbeddingProcess.CCH
+        elif pre_embedding_process.lower() == "pdr":
+            process_enum = PreEmbeddingProcess.PDR
         else:
             process_enum = PreEmbeddingProcess.NONE
-
+        logger.info(f"Pre-embedding process: {process_enum}")
         # Get original filename for reference
         original_stem = Path(file_path).stem
 
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
-            save_path=VECTORSTORE_PATH,
         )
 
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTORSTORE_PATH,
+            "vector_store_path": VECTORSTORE_PATH_STR,
         }
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}")

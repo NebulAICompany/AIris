@@ -1,12 +1,10 @@
 from typing import List, Dict, Any
-import os
-from langchain_community.vectorstores import FAISS
+from qdrant_client import QdrantClient
 from langchain_core.embeddings import Embeddings
 from backend.shared.constants import OPENAI_API_KEY, HUGGINGFACE_API_KEY
 from backend.shared.logger import get_logger
 
 logger = get_logger("RETRIEVER")
-_vectorstore = None
 
 def _get_embeddings() -> Embeddings:
     try:
@@ -29,52 +27,47 @@ def _get_embeddings() -> Embeddings:
                 "No suitable embeddings found. Please install either langchain_openai or langchain_community."
             ) from e
 
-def load_vectorstore(path: str) -> FAISS:
-    global _vectorstore
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Vectorstore file not found: {path}")
-
-    embeddings = _get_embeddings()
-
+def load_vectorstore(path: str) -> QdrantClient:
     try:
-        _vectorstore = FAISS.load_local(
-            folder_path=path,
-            embeddings=embeddings,
-            allow_dangerous_deserialization=True,
-        )
+        client = QdrantClient(path=path)
         logger.info(f"✅ Vectorstore loaded from {path}")
         logger.info(
-            f"📦 Contains {_vectorstore.index.ntotal} document chunks"
+            f"📦 Contains {client.count(collection_name='test_collection')} document chunks (including HyPE prompt expansions)"
+
         )
-        return _vectorstore
+        return client
     except Exception as e:
         raise RuntimeError(f"Failed to load vectorstore from {path}: {e}") from e
 
 
-def retrieve_top_k(query: str, k: int = 10) -> List[Dict[str, Any]]:
-    global _vectorstore
-
-    if _vectorstore is None:
-        raise ValueError("Vectorstore not loaded. Please load the vectorstore first.")
-
+def retrieve_top_k(client: QdrantClient, query: str, k: int = 10) -> List[Dict[str, Any]]:
     try:
         logger.info(f"🔍 Retrieving top {k} documents for query: {query}")
         logger.info(
-            f"📊 Searching through {_vectorstore.index.ntotal} document chunks "
+            f"📊 Searching through {client.count(collection_name='test_collection')} document chunks (original + HyPE prompt expansions)"
         )
-        docs_with_scores = _vectorstore.similarity_search_with_score(query, k=k)
+        docs_with_scores = client.query_points(
+            collection_name="test_collection",
+            query=_get_embeddings().embed_query(query),
+            limit=k,
+        ).points
         logger.info(
             f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore"
         )
 
         results = []
         chunks_with_images = 0
-        for doc, score in docs_with_scores:
-            contains_image = doc.metadata.get("contains_image", False)
+        for d in docs_with_scores:
+            doc = d.payload
+            score = d.score
+
+            content_type = doc["metadata"].get("content_type", "original")
+
+            contains_image = doc["metadata"].get("contains_image", False)
             
             if contains_image:
                 chunks_with_images += 1
+
 
             results.append(
                 {
