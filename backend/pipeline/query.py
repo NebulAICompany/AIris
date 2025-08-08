@@ -9,7 +9,6 @@ from backend.utils.query import reflect_and_retry, extract_image_references_from
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR, openai_client
 from backend.shared.logger import get_logger
-import os
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -42,14 +41,14 @@ Sadece düzenlenmiş sorguyu ver, açıklama yapma. Cevabını {lang} dilinde ve
         temperature=0.3
     )
     return response.choices[0].message.content
-
+from typing import Dict, Any
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
-) -> str:
+) -> dict[str, Any]:
 
     logger.info(f"🔍 Query Orchestrator started:")
     logger.info(f"   - Query: {query}")
@@ -91,6 +90,7 @@ async def run_orchestration(
     # 2. Girdi kontrolü (OpenAI moderation)
     input_moderation = check_openai_moderation(preprocessed_query)
     if input_moderation["flagged"]:
+        logger.warning("moderation error")
         return f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
 
     # 3. Hassas bilgileri maskele
@@ -163,6 +163,7 @@ async def run_orchestration(
         )  # Get more docs for better reranking
 
         if not retrieved_docs:
+            logger.warning("No retrieved docs")
             return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı."
 
         # Filter retrieved docs by selected files
@@ -172,8 +173,10 @@ async def run_orchestration(
 
         if not filtered_retrieved_docs:
             if selected_files:
+                logger.warning("No filtered retrieved docs if selected files provided")
                 return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
             else:
+                logger.warning("No filtered retrieved docs")
                 return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadı."
 
         # Extract only the content from the filtered retrieved docs before reranking

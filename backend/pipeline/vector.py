@@ -1,30 +1,18 @@
-import os
-import pickle
-from pathlib import Path
-from typing import List, Optional
-
 from qdrant_client import QdrantClient, models
-
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from backend.security.pii import mask_text
+from typing import List
+import time
+import asyncio
+from enum import Enum
+from backend.retrieval.autocontext import apply_autocontext
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 
 logger = get_logger("VECTOR_PIPELINE")
-
-from langchain_experimental.text_splitter import SemanticChunker
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_core.documents import Document
-from backend.security.pii import mask_text
-from backend.shared.constants import openai_client
-from typing import List, Dict
-import time
-import asyncio
-from enum import Enum
-from backend.monitoring.metrics import vectorstore_total_chunks
-from backend.retrieval.autocontext import apply_autocontext
 
 
 class PreEmbeddingProcess(Enum):
