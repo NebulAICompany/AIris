@@ -6,14 +6,20 @@ from backend.shared.logger import get_logger
 
 logger = get_logger("PII")
 
+categories_to_filter=["Person", "PhoneNumber", "Address", "IPAddress", "Email", "USUKPassportNumber",
+          "USBankAccountNumber",
+          "USDriversLicenseNumber",
+          "USIndividualTaxpayerIdentification",
+          "USSocialSecurityNumber","TRNationalIdentificationNumber"]
 
-def mask_text(text):
+def mask_text(text: str, id: str) -> str:
     """Mask PII entities in the given text using Azure Text Analytics."""
     result = text_analytics_client.recognize_pii_entities(
         documents=[text],
         string_index_type="UnicodeCodePoint",
         disable_service_logs=True,
         model_version="latest",
+        categories_filter=categories_to_filter,
     )
 
     masked_map = {}
@@ -40,7 +46,7 @@ def mask_text(text):
         logger.info("No existing map found, creating a new one.")
         existing_map = {}
 
-    existing_map.update(masked_map)
+    existing_map[id] = masked_map
 
     with open(MASKED_MAP_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(existing_map, f, ensure_ascii=False, indent=4)
@@ -57,6 +63,7 @@ def unmask_text(text):
         logger.warning("No existing map found, returning text as is.")
         return text
 
-    for mask, original in masked_map.items():
-        text = text.replace(mask, original)
+    for id_map in masked_map.values():
+        for mask, original in id_map.items():
+            text = text.replace(mask, original) # Replace all mask tokens in text with their originals from all ids
     return text

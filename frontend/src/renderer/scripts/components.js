@@ -2558,22 +2558,6 @@ class UIComponents {
     }
   }
 
-  async deleteFile(fileId) {
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-    if (!confirm(t("areYouSureDelete"))) return;
-
-    try {
-      // Remove from local storage
-      this.uploadedFiles = this.uploadedFiles.filter((f) => f.id !== fileId);
-
-      // Refresh the file library
-      await this.loadFileLibrary();
-    } catch (error) {
-      console.error("Delete error:", error);
-    }
-  }
 
   async loadAnalytics() {
     try {
@@ -3070,37 +3054,6 @@ class UIComponents {
       stageElement.textContent = translatedText;
     };
 
-    // Update file deletion confirmation dialog
-    this.deleteFile = async (fileName) => {
-      try {
-        const confirmed = confirm(
-          t("deleteConfirmation", { filename: fileName })
-        );
-        if (!confirmed) return;
-
-        this.showNotification(t("loading"), "info");
-
-        const result = await fetch(
-          `http://localhost:8001/api/files/${encodeURIComponent(fileName)}`,
-          { method: "DELETE" }
-        );
-
-        if (!result.ok) {
-          throw new Error(`Failed to delete file: ${result.statusText}`);
-        }
-
-        const data = await result.json();
-
-        this.showNotification(
-          t("fileDeletedSuccessfully", { filename: fileName }),
-          "success"
-        );
-        this.loadFileLibrary();
-      } catch (error) {
-        console.error("Error deleting file:", error);
-        this.showNotification(t("failedToDeleteFile"), "error");
-      }
-    };
 
     // Update status texts
     const statusTexts = document.querySelectorAll(".status-text");
