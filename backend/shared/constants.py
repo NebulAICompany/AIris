@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
+from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient
 import cohere
 from openai import OpenAI
@@ -24,6 +25,9 @@ WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
 
 
 # Constants for API clients
+document_intelligence_client = DocumentIntelligenceClient(
+        endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT, credential=AzureKeyCredential(str(AZURE_DOCUMENT_INTELLIGENCE_KEY))
+    )
 document_analysis_client = DocumentAnalysisClient(
         endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT,
         credential=AzureKeyCredential(AZURE_DOCUMENT_INTELLIGENCE_KEY))

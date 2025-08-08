@@ -7,7 +7,7 @@ from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
 from backend.core.chat import chat_history_manager, MessageRole
-from backend.shared.constants import VECTORSTORE_PATH_STR
+from backend.shared.constants import VECTORSTORE_PATH_STR, openai_client
 from backend.shared.logger import get_logger
 import os
 
@@ -21,22 +21,43 @@ def preprocess_query(query: str):
         return corrected, lang
     return query, lang
 
+def refine_query(user_query, lang: str = "Turkish") -> str:
+    system_prompt = f"""Sen kullanıcı sorgularını daha açık ve net hale getiren bir uzmansın.
+
+GÖREVIN:
+- Finansal terimleri doğru şekilde ifade et
+- Anahtar kelimelerde değişiklik yapmadan sorguyu netleştir
+- Fonların, hisselerin isimlerinde oynama yapma
+- Sorguyu daha anlaşılır hale getir
+- Önemli noktaları ve spesifik terimleri vurgula
+
+Sadece düzenlenmiş sorguyu ver, açıklama yapma. Cevabını {lang} dilinde ver."""
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_query}
+        ],
+        temperature=0.3
+    )
+    return response.choices[0].message.content
 
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
-    wolfram_enabled: bool = False,
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> str:
+
     logger.info(f"🔍 Query Orchestrator started:")
     logger.info(f"   - Query: {query}")
     logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-    logger.info(f"   - Wolfram Enabled: {wolfram_enabled}")
     logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
+
 
     # Handle chat history and session management
     if session_id:
@@ -62,6 +83,10 @@ async def run_orchestration(
 
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
+    logger.info(f"   - Preprocessed Query before refinement: {preprocessed_query}")
+
+    preprocessed_query = refine_query(preprocessed_query, lang)
+    logger.info(f"   - Query after refinement: {preprocessed_query}")
 
     # 2. Girdi kontrolü (OpenAI moderation)
     input_moderation = check_openai_moderation(preprocessed_query)
@@ -132,7 +157,7 @@ async def run_orchestration(
         # Use filtered RSE-enhanced chunks directly (they're already optimized)
         reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
-        # 4. Enhanced Retrieval + Reranking (HyPE benefits are built into the vectorstore)
+        # 4. Enhanced Retrieval + Reranking 
         retrieved_docs = retrieve_top_k(
             client=client, query=preprocessed_query, k=15
         )  # Get more docs for better reranking
@@ -199,7 +224,6 @@ async def run_orchestration(
         local_context=cleaned_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
-        wolfram_enabled=wolfram_enabled,
         conversation_history=conversation_context,
     )
     # Generate initial answer

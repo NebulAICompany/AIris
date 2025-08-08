@@ -5,7 +5,7 @@ from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import UPLOADS_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, VECTORSTORE_PATH_STR
+from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -21,14 +21,14 @@ request_counter = 0
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
-    wolframEnabled: bool = False
-    preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
+    preEmbeddingProcess: str = "pdr"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
+
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
@@ -42,23 +42,22 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
-        wolfram_enabled = request.wolframEnabled
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
+
         logger.info(f"📝 API Router received:")
         logger.info(f"   - Query: {query}")
         logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-        logger.info(f"   - Wolfram Enabled: {wolfram_enabled}")
         logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
         logger.info(f"   - Session ID: {session_id}")
         logger.info(f"   - Selected Files: {selected_files}")
 
+
         answer = await run_orchestration(
             query,
             web_search_enabled,
-            wolfram_enabled,
             pre_embedding_process,
             session_id,
             selected_files,
@@ -88,7 +87,6 @@ def handle_upload(file: UploadFile = File(...)):
         request_counter += 1
 
         logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
-        
 
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(UPLOADS_PATH)
@@ -104,8 +102,8 @@ def handle_upload(file: UploadFile = File(...)):
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
 
-        logger.info("Processing uploaded file...")
         pre_embedding_process = "pdr"
+
         result = process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
@@ -124,7 +122,7 @@ def handle_upload(file: UploadFile = File(...)):
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
         )
-
+    
 
 @router.get("/chat/sessions")
 def list_chat_sessions():
@@ -245,6 +243,39 @@ def list_files():
         error_message = str(e)
         raise HTTPException(
             status_code=500, detail=f"Error listing files: {error_message}"
+        )
+
+
+@router.get("/created-documents")
+def list_created_documents():
+    """
+    Returns a list of files in the created_documents directory with metadata.
+    """
+    try:
+        created_documents_dir = Path(CREATED_DOCUMENTS_PATH)
+        if not created_documents_dir.exists():
+            return {"files": []}  # Return an empty list if the directory doesn't exist
+
+        files = []
+        for file in created_documents_dir.iterdir():
+            if file.is_file():
+                files.append(
+                    {
+                        "name": file.name,
+                        "size": file.stat().st_size,  # File size in bytes
+                        "created_at": datetime.fromtimestamp(
+                            file.stat().st_ctime
+                        ).isoformat(),  # Creation time in ISO 8601
+                        "modified_at": datetime.fromtimestamp(
+                            file.stat().st_mtime
+                        ).isoformat(),  # Last modification time in ISO 8601
+                    }
+                )
+        return {"files": files}
+    except Exception as e:
+        error_message = str(e)
+        raise HTTPException(
+            status_code=500, detail=f"Error listing created documents: {error_message}"
         )
 
 
@@ -443,6 +474,59 @@ def get_file_preview(filename: str):
         )
 
 
+@router.get("/created-documents/{filename}/download")
+def download_created_document(filename: str):
+    """
+    Download a file from created_documents directory.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        return FileResponse(
+            path=file_path, filename=filename, media_type="application/octet-stream"
+        )
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error downloading created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error downloading created document: {error_message}"
+        )
+
+
+@router.get("/created-documents/{filename}/preview")
+def get_created_document_preview(filename: str):
+    """
+    Generate a preview for the specified created document.
+    Returns different preview types based on file extension.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        from backend.utils.preview import PreviewGenerator
+
+        preview_generator = PreviewGenerator(str(file_path))
+        preview_data = preview_generator.generate_preview()
+
+        return {
+            "filename": filename,
+            "preview_type": preview_data["type"],
+            "preview_data": preview_data["data"],
+            "success": True,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error generating preview for created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating preview: {error_message}"
+        )
+
+
 @router.get("/finance-news")
 async def get_finance_news():
     """
@@ -473,17 +557,16 @@ async def get_finance_news():
 async def verify_document(
     file: UploadFile = File(...),
     verification_type: str = "auto",
-    wolfram_enabled: bool = False,
 ):
     """
-    Verify a document using the LLM-based verification pipeline with optional Wolfram Alpha mathematical verification
+    Verify a document using the LLM-based verification pipeline with Wolfram Alpha mathematical verification (always enabled)
     """
     global request_counter
     try:
         # Increment request counter
         request_counter += 1
 
-        logger.info(f"Starting document verification: {file.filename} (type: {verification_type}, wolfram_enabled: {wolfram_enabled})")
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type})")
 
         # Check file type
         allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
@@ -509,9 +592,9 @@ async def verify_document(
         # Import and run verification pipeline
         from backend.utils.verification import verification_pipeline
 
-        # Run verification with Wolfram Alpha if enabled
+        # Run verification with Wolfram Alpha (always enabled)
         verification_result = verification_pipeline.verify_document(
-            str(temp_file_path), verification_type, wolfram_enabled
+            str(temp_file_path), verification_type 
         )
 
         # Clean up temporary file

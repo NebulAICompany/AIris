@@ -3,6 +3,8 @@ from pathlib import Path
 import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
 from backend.shared.constants import VECTORSTORE_PATH_STR
+from backend.utils.parser import AzureParser
+
 logger = get_logger("UPLOAD")
 def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
@@ -22,12 +24,8 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         file_extension = Path(file_path).suffix.lower()
 
         extracted_text = ""
-        if file_extension == '.pdf':
-            extracted_text = PdfParser(file_path)
-        elif file_extension == '.docx':
-            extracted_text = DocxParser(file_path)
-        elif file_extension in ('.xlsx', '.xls'):
-            extracted_text = ExcelParser(file_path)
+        if file_extension in ('.pdf', '.docx', '.xlsx'):
+            extracted_text = AzureParser(file_path)
         elif file_extension == '.txt':
             extracted_text = TxtParser(file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
@@ -39,9 +37,7 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         from backend.pipeline.vector import PreEmbeddingProcess
 
         # Convert string to enum
-        if pre_embedding_process.lower() == "hype":
-            process_enum = PreEmbeddingProcess.HYPE
-        elif pre_embedding_process.lower() == "cch":
+        if pre_embedding_process.lower() == "cch":
             process_enum = PreEmbeddingProcess.CCH
         elif pre_embedding_process.lower() == "pdr":
             process_enum = PreEmbeddingProcess.PDR

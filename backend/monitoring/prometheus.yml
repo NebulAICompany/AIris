@@ -10,5 +10,5 @@ scrape_configs:
   - job_name: "aiiris-backend"
     scrape_interval: 5s
     static_configs:
-      - targets: ["aiiris-backend:8000"]
+      - targets: ["aiiris-backend:8001"]
     metrics_path: /
