@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
@@ -41,14 +41,14 @@ Sadece düzenlenmiş sorguyu ver, açıklama yapma. Cevabını {lang} dilinde ve
         temperature=0.3
     )
     return response.choices[0].message.content
-from typing import Dict, Any
+
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
 
     logger.info(f"🔍 Query Orchestrator started:")
     logger.info(f"   - Query: {query}")
@@ -91,7 +91,10 @@ async def run_orchestration(
     input_moderation = check_openai_moderation(preprocessed_query)
     if input_moderation["flagged"]:
         logger.warning("moderation error")
-        return f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
+        return {
+            "response": f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}",
+            "images": []
+        }
 
     # 3. Hassas bilgileri maskele
     masked_query = mask_text(preprocessed_query, "query")
@@ -114,7 +117,10 @@ async def run_orchestration(
         )
 
         if not fusion_docs:
-            return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+            return {
+                "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
+                "images": []
+            }
 
         logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
 
@@ -125,9 +131,15 @@ async def run_orchestration(
 
         if not filtered_fusion_docs:
             if selected_files:
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+                return {
+                    "response": f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım.",
+                    "images": []
+                }
             else:
-                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+                return {
+                    "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
+                    "images": []
+                }
 
         # Use filtered fusion docs directly (they're already optimized and reranked)
         reranked_docs = filtered_fusion_docs
@@ -142,7 +154,10 @@ async def run_orchestration(
         )
 
         if not rse_chunks:
-            return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+            return {
+                "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
+                "images": []
+            }
         # logger.debug(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
 
         # Filter RSE chunks by selected files
@@ -150,39 +165,35 @@ async def run_orchestration(
 
         if not filtered_rse_chunks:
             if selected_files:
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
+                return {
+                    "response": f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı.",
+                    "images": []
+                }
             else:
-                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+                return {
+                    "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
+                    "images": []
+                }
 
         # Use filtered RSE-enhanced chunks directly (they're already optimized)
         reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
         # 4. Enhanced Retrieval + Reranking 
         retrieved_docs = retrieve_top_k(
-            client=client, query=preprocessed_query, k=15
+            client=client, query=preprocessed_query, k=15, selected_files=selected_files
         )  # Get more docs for better reranking
 
         if not retrieved_docs:
             logger.warning("No retrieved docs")
-            return "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı."
+            return {
+                "response": "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı.",
+                "images": []
+            }
 
-        # Filter retrieved docs by selected files
-        filtered_retrieved_docs = filter_docs_by_selected_files(
-            retrieved_docs, selected_files
-        )
-
-        if not filtered_retrieved_docs:
-            if selected_files:
-                logger.warning("No filtered retrieved docs if selected files provided")
-                return f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı."
-            else:
-                logger.warning("No filtered retrieved docs")
-                return "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadı."
-
-        # Extract only the content from the filtered retrieved docs before reranking
+        # Extract only the content from the retrieved docs before reranking
         doc_contents = [
             {"content": doc["content"], "metadata": doc["metadata"]}
-            for doc in filtered_retrieved_docs
+            for doc in retrieved_docs
         ]
         reranked_docs = rerank(
             preprocessed_query, doc_contents, with_score=False, top_n=5
