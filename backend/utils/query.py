@@ -255,3 +255,19 @@ def filter_docs_by_selected_files(
         f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
     )
     return filtered_docs
+
+
+
+
+def refine_query(user_query, lang: str = "Turkish") -> str:
+    from backend.core.prompts import refinement_prompt
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": f"{refinement_prompt} Give your answer in {lang} language."},
+            {"role": "user", "content": user_query}
+        ],
+        temperature=0.3
+    )
+    return response.choices[0].message.content
