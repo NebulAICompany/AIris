@@ -5,13 +5,11 @@ from .document import create_excel_from_table, create_word_document
 
 document_tools = [create_excel_from_table, create_word_document]
 
-
 alpha_vantage_agent = Agent(
     name="Alpha Vantage Finance Agent",
     instructions=alpha_vantage_prompt,
     mcp_servers=[alpha_vantage_mcp_server],
 )
-
 
 office_agent = Agent(
     name="office_agent",
