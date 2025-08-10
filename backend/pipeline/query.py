@@ -5,9 +5,10 @@ from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query import reflect_and_retry, extract_image_references_from_context, load_images_from_paths, spell_check, detect_language, filter_docs_by_selected_files
+from backend.utils.query import reflect_and_retry, spell_check, detect_language, filter_docs_by_selected_files, refine_query
 from backend.core.chat import chat_history_manager, MessageRole
-from backend.shared.constants import VECTORSTORE_PATH_STR, openai_client
+from backend.shared.constants import VECTORSTORE_PATH_STR
+from backend.core.tools.visual import get_image_datas
 from backend.shared.logger import get_logger
 
 logger = get_logger("QUERY_PIPELINE")
@@ -20,27 +21,6 @@ def preprocess_query(query: str):
         return corrected, lang
     return query, lang
 
-def refine_query(user_query, lang: str = "Turkish") -> str:
-    system_prompt = f"""Sen kullanıcı sorgularını daha açık ve net hale getiren bir uzmansın.
-
-GÖREVIN:
-- Finansal terimleri doğru şekilde ifade et
-- Anahtar kelimelerde değişiklik yapmadan sorguyu netleştir
-- Fonların, hisselerin isimlerinde oynama yapma
-- Sorguyu daha anlaşılır hale getir
-- Önemli noktaları ve spesifik terimleri vurgula
-
-Sadece düzenlenmiş sorguyu ver, açıklama yapma. Cevabını {lang} dilinde ver."""
-
-    response = openai_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_query}
-        ],
-        temperature=0.3
-    )
-    return response.choices[0].message.content
 
 async def run_orchestration(
     query: str,
@@ -229,13 +209,8 @@ async def run_orchestration(
     logger.debug(f"   - Local Context: {local_context}")
     logger.info(f"using web search ?= {web_search_enabled}")
 
-    cleaned_context, image_paths = extract_image_references_from_context(local_context)
-
-    image_datas = load_images_from_paths(image_paths)
-
-    # Create the agent with web context and conversation history if available
     agent = create_rag_agent(
-        local_context=cleaned_context,
+        local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
         conversation_history=conversation_context,
@@ -265,5 +240,5 @@ async def run_orchestration(
     
     return {
         "response":final_answer,
-        "images": image_datas
+        "images": get_image_datas()
     }

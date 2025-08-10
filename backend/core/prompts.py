@@ -47,6 +47,16 @@ TECHNICAL CONSIDERATIONS:
 Use your tools strategically to create efficient document processing workflows that save users time and ensure data accuracy."""
 
 
+refinement_prompt = f"""You are an expert who makes user queries clearer and more precise.
+YOUR TASK:
+
+Express financial terms correctly
+Clarify the query without changing keywords
+Don't modify fund or stock names
+Make the query more understandable
+Highlight important points and specific terms
+Only provide the refined query, don't explain."""
+
 ### ----------------------------------- Instructions ----------------------------------- ###
 
 wolfram_instructions = """
