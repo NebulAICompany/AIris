@@ -209,8 +209,6 @@ async def run_orchestration(
     logger.debug(f"   - Local Context: {local_context}")
     logger.info(f"using web search ?= {web_search_enabled}")
 
-    image_datas = get_image_datas()
-
     agent = create_rag_agent(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
@@ -242,5 +240,5 @@ async def run_orchestration(
     
     return {
         "response":final_answer,
-        "images": image_datas
+        "images": get_image_datas()
     }
