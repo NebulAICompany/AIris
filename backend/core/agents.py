@@ -3,8 +3,9 @@ from .prompts import wolfram_instructions
 from typing import List
 from .tools.api import web_search_tool, wolfram_alpha_query
 from .tools.agent_as_tools import alpha_vantage_tool, office_agent_tool
+from .tools.visual import image_visualizer
 
-rag_agent_as_tools = [alpha_vantage_tool, office_agent_tool, wolfram_alpha_query]
+rag_agent_as_tools = [alpha_vantage_tool, office_agent_tool, wolfram_alpha_query, image_visualizer]
 
 def create_rag_agent(
     local_context: str,
@@ -77,6 +78,13 @@ Use the financial_data_analysis tool in any of the following cases:
 - Options chain data
 - Technical analysis and market trends
 - Any financial data query or analysis
+
+**For Visual Content Display:**
+Use the image_visualizer tool with img_uniqueid or fig_uniqueid when:
+- User's query relates to visual content that has been processed and described in the context
+- The image descriptions in the context are relevant to answering the user's question
+- Displaying the actual images would enhance user understanding of the response
+
 
 **Quality Standards:**
 - Provide accurate and current information
