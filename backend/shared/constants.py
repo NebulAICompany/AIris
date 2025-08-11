@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from azure.ai.textanalytics import TextAnalyticsClient
+from azure.ai.textanalytics.aio import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient

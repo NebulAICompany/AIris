@@ -3,6 +3,8 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+from sqlalchemy.util import await_only
+
 from backend.security.pii import mask_text
 from typing import List
 import time
@@ -172,12 +174,6 @@ class VectorStorePipeline:
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
             logger.info(f"✅ {len(processed_docs)} documents processed")
-
-            # PII Masking for all documents
-            logger.info(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
-            for doc in processed_docs:
-                masked = mask_text(doc.page_content, f"{doc.metadata.get('file_name')}||{doc.metadata.get('chunk_id')}")
-                doc.page_content = masked
 
             logger.info(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             client = QdrantClient(path=VECTORSTORE_PATH_STR)
