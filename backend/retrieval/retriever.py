@@ -80,8 +80,6 @@ def retrieve_top_k(client: QdrantClient, query: str, k: int = 10, selected_files
             doc = d.payload
             score = d.score
             logger.info(f"file name: {doc['metadata'].get('file_name')}")
-            content_type = doc["metadata"].get("content_type", "original")
-
             contains_image = doc["metadata"].get("contains_image", False)
             
             if contains_image:
