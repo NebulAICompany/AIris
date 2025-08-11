@@ -126,7 +126,7 @@ class VectorStorePipeline:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
-    def run(self, text_content: str, document_name: str):
+    async def run(self, text_content: str, document_name: str):
         """
         Process text content directly without reading from files
         
@@ -169,11 +169,13 @@ class VectorStorePipeline:
                 
                 chunk_idx += 1
 
-
             logger.info(f"🔍 {len(docs)} documents before pre-embedding process")
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
             logger.info(f"✅ {len(processed_docs)} documents processed")
+
+            # Apply PII masking to processed documents in batches
+            await self._apply_pii_masking(processed_docs, document_name)
 
             logger.info(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             client = QdrantClient(path=VECTORSTORE_PATH_STR)
@@ -210,3 +212,27 @@ class VectorStorePipeline:
         except Exception as e:
             logger.error(f"❌ Error in vector store processing: {str(e)}")
             raise e
+
+    async def _apply_pii_masking(self, processed_docs: List[Document], document_name: str):
+        """
+        Apply PII masking to processed documents in batches
+        """
+        logger.info(f"🔒 Applying PII masking to {len(processed_docs)} documents...")
+
+        doc_contents = [doc.page_content for doc in processed_docs]
+
+        batch_size = 5
+        masked_contents = []
+
+        for i in range(0, len(doc_contents), batch_size):
+            batch_group = doc_contents[i:i + batch_size]
+            logger.info(f"🔒 Processing PII batch group {i//batch_size + 1}/{(len(doc_contents) + batch_size - 1)//batch_size} ({len(batch_group)} documents)")
+
+            masked_group = await mask_text(batch_group, f"{document_name}_batch_{i//batch_size + 1}")
+            masked_contents.extend(masked_group)
+
+        logger.info(f"✅ PII masking completed for all {len(processed_docs)} documents in {(len(doc_contents) + batch_size - 1)//batch_size} groups")
+
+        # Update documents with masked content
+        for i, doc in enumerate(processed_docs):
+            doc.page_content = masked_contents[i]
