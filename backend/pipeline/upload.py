@@ -4,9 +4,10 @@ import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.utils.parser import AzureParser, TxtParser, ImageParser
+from backend.pipeline.vector import PreEmbeddingProcess
 
 logger = get_logger("UPLOAD")
-def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
+async def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
     Process an uploaded file synchronously.
     Args:
@@ -22,16 +23,15 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
 
         extracted_text = ""
         if file_extension in ('.pdf', '.docx', '.xlsx'):
-            extracted_text = AzureParser(file_path)
+            extracted_text = await AzureParser(file_path)
         elif file_extension == '.txt':
-            extracted_text = TxtParser(file_path)
+            extracted_text = await TxtParser(file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
-            extracted_text = ImageParser(file_path)
+            extracted_text = await ImageParser(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
         # Step 2: Create or update vector store directly with the extracted text
-        from backend.pipeline.vector import PreEmbeddingProcess
 
         # Convert string to enum
         if pre_embedding_process.lower() == "cch":
@@ -41,7 +41,6 @@ def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
         else:
             process_enum = PreEmbeddingProcess.NONE
         logger.info(f"Pre-embedding process: {process_enum}")
-        # Get original filename for reference
         original_stem = Path(file_path).stem
 
         vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
