@@ -1,10 +1,7 @@
 from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
-from typing import List, Dict, Tuple
-import re
-import base64
+from typing import List
 from typing import Optional
-import os
 
 logger = get_logger("QUERY_UTILS")
 

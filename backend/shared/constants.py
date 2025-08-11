@@ -6,8 +6,8 @@ from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient
 import cohere
 from openai import OpenAI, AsyncOpenAI
-from azure.ai.formrecognizer import DocumentAnalysisClient
 from pathlib import Path
+from concurrent_openai import ConcurrentOpenAI
 
 load_dotenv()
 
@@ -25,13 +25,19 @@ WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
 
 
 # Constants for API clients
+
 document_intelligence_client = DocumentIntelligenceClient(
         endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT, credential=AzureKeyCredential(str(AZURE_DOCUMENT_INTELLIGENCE_KEY))
     )
-document_analysis_client = DocumentAnalysisClient(
-        endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT, credential=AzureKeyCredential(AZURE_DOCUMENT_INTELLIGENCE_KEY))
+
 async_openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
+concurrent_client = ConcurrentOpenAI(
+    client=async_openai_client,
+    max_concurrent_requests=5,
+    requests_per_minute=450,         # hesabınızdaki RPM’e göre ayarlayın
+    tokens_per_minute=27000
+)
 tavily_client = TavilyClient(TAVILY_API_KEY)
 ta_credential = AzureKeyCredential(AZURE_LANGUAGE_KEY)
 text_analytics_client = TextAnalyticsClient(
