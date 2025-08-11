@@ -40,23 +40,6 @@ class VectorStorePipeline:
         )
         self.pre_embedding_process = pre_embedding_process
 
-    
-    def create_enhanced_documents(
-        self, original_docs: List[Document], file_name: str
-    ) -> List[Document]:
-        """
-        Create enhanced document set with original content as separate searchable documents
-        """
-        enhanced_docs = []
-
-        for doc in enumerate(original_docs):
-            # Add original document
-            enhanced_docs.append(doc)
-            # Add small delay to avoid rate limiting
-            time.sleep(0.1)
-
-        return enhanced_docs
-
     def create_parent_child_documents(
         self, original_docs: List[Document], file_name: str
     ) -> List[Document]:

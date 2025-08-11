@@ -4,7 +4,7 @@ import base64
 import uuid
 import os
 from azure.ai.documentintelligence.models import AnalyzeResult, DocumentContentFormat, AnalyzeOutputOption
-from backend.shared.constants import document_intelligence_client, IMAGES_PATH_STR, openai_client
+from backend.shared.constants import document_intelligence_client, IMAGES_PATH_STR, async_openai_client
 from pathlib import Path
 
 from backend.shared.logger import get_logger
@@ -12,11 +12,11 @@ from backend.shared.logger import get_logger
 logger = get_logger("PARSER")
 
 
-def describe_image(image_bytes):
+async def describe_image(image_bytes):
         try:
             base64_image = base64.b64encode(image_bytes).decode("utf-8")
 
-            response = openai_client.chat.completions.create(
+            response = await async_openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
                     {
@@ -49,7 +49,7 @@ def describe_image(image_bytes):
             return "Açıklama alınamadı."
         
 
-def AzureParser(file_path: str):
+async def AzureParser(file_path: str):
     with open(file_path, "rb") as f:
         poller = document_intelligence_client.begin_analyze_document(
             "prebuilt-layout",
@@ -86,7 +86,7 @@ def AzureParser(file_path: str):
                 with open(image_path, "wb") as writer:
                     writer.write(img_data)
 
-                description = describe_image(img_data)
+                description = await describe_image(img_data)
 
                 figure_images[figure_id] = {
                     'base64': img_base64,
@@ -114,7 +114,7 @@ def AzureParser(file_path: str):
     return content
 
 
-def ImageParser(file_path: str):
+async def ImageParser(file_path: str):
     image_path = Path(file_path)
     if not image_path.exists():
         logger.warning(f"Görsel dosyası bulunamadı: {file_path}")
@@ -133,7 +133,7 @@ def ImageParser(file_path: str):
     saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
     image.save(saved_image_path, format='PNG')
 
-    description = describe_image(image_bytes)
+    description = await describe_image(image_bytes)
 
     content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
 

@@ -80,7 +80,7 @@ async def handle_query(request: QueryRequest):
 
 
 @router.post("/upload")
-def handle_upload(file: UploadFile = File(...)):
+async def handle_upload(file: UploadFile = File(...)):
     global request_counter
     try:
         # Increment simple counter
@@ -104,7 +104,7 @@ def handle_upload(file: UploadFile = File(...)):
 
         pre_embedding_process = "pdr"
 
-        result = process_file(str(file_path), pre_embedding_process=pre_embedding_process)
+        result = await process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
 

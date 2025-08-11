@@ -5,7 +5,7 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient
 import cohere
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from pathlib import Path
 
@@ -29,8 +29,8 @@ document_intelligence_client = DocumentIntelligenceClient(
         endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT, credential=AzureKeyCredential(str(AZURE_DOCUMENT_INTELLIGENCE_KEY))
     )
 document_analysis_client = DocumentAnalysisClient(
-        endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT,
-        credential=AzureKeyCredential(AZURE_DOCUMENT_INTELLIGENCE_KEY))
+        endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT, credential=AzureKeyCredential(AZURE_DOCUMENT_INTELLIGENCE_KEY))
+async_openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 tavily_client = TavilyClient(TAVILY_API_KEY)
 ta_credential = AzureKeyCredential(AZURE_LANGUAGE_KEY)
