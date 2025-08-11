@@ -77,7 +77,8 @@ async def run_orchestration(
         }
 
     # 3. Hassas bilgileri maskele
-    masked_query = mask_text(preprocessed_query, "query")
+    masked_query_list = await mask_text([preprocessed_query], "query")
+    masked_query = masked_query_list[0]
     logger.debug(f"Masked Query: {masked_query}")
 
     ENABLED_RAG_TECHNIQUES = []
