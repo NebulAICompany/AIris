@@ -26,13 +26,11 @@ async def build_messages_for_image(image_bytes: bytes):
     ]
 
 async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
-    # Her görsel için messages üret
     messages_list = []
     for img in image_bytes_list:
         messages = await build_messages_for_image(img)
         messages_list.append(messages)
 
-    # create_many: tümünü paralel ve limitli yürütür
     responses = await concurrent_client.create_many(
         messages_list=messages_list,
         model="gpt-4o",
@@ -40,7 +38,6 @@ async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
         temperature=0.2,
     )
 
-    # responses sırası, input sırasıyla hizalıdır
     descriptions = []
     for resp in responses:
         if isinstance(resp, Exception):
@@ -108,7 +105,6 @@ async def AzureParser(file_path: str):
     else:
         logger.info("No figures found.")
 
-    # İçeriği güncelle
     content = result.content
     for figure_id, data in figure_images.items():
         start = content.find("<figure>")
@@ -118,6 +114,7 @@ async def AzureParser(file_path: str):
             desc = data.get("description", "Açıklama alınamadı.")
             figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
             content = content[:start] + figure_md + content[end:]
+
     return content
 
 
