@@ -8,6 +8,7 @@ class UIComponents {
     this.currentTab = "chat";
     this.chatHistory = [];
     this.uploadedFiles = [];
+    this.chatUploadedFiles = []; // Add this property for chat uploads
     this.isProcessing = false;
     this.isDarkMode = false;
     // Add webSearchEnabled flag, initialize from storage or default to false
@@ -84,34 +85,6 @@ class UIComponents {
     }
     // Suggestion chips
     this.setupSuggestionChips();
-
-    // File upload
-    const uploadArea = document.getElementById("upload-area");
-    const fileInput = document.getElementById("file-input");
-    const uploadButton = document.getElementById("upload-button");
-    const browseButton = document.getElementById("browse-files");
-
-    if (uploadArea) {
-      uploadArea.addEventListener("dragover", (e) => this.handleDragOver(e));
-      uploadArea.addEventListener("dragleave", (e) => this.handleDragLeave(e));
-      uploadArea.addEventListener("drop", (e) => this.handleFileDrop(e));
-      uploadArea.addEventListener("click", () => fileInput?.click());
-    }
-
-    if (browseButton) {
-      browseButton.addEventListener("click", (e) => {
-        e.stopPropagation();
-        fileInput?.click();
-      });
-    }
-
-    if (fileInput) {
-      fileInput.addEventListener("change", (e) => this.handleFileSelect(e));
-    }
-
-    if (uploadButton) {
-      uploadButton.addEventListener("click", () => this.processFiles());
-    }
 
     // Theme toggle
     const themeToggle = document.getElementById("theme-toggle");
@@ -190,6 +163,30 @@ class UIComponents {
       fileSelectionBtn.addEventListener("click", () =>
         this.showFileSelectionModal()
       );
+    }
+
+    // Chat file upload listeners - UPDATED FOR CHAT INPUT DRAG & DROP
+    const chatInputElement = document.getElementById("chat-input");
+    const chatFileInput = document.getElementById("chat-file-input");
+    
+    // File input change
+    if (chatFileInput) {
+      chatFileInput.addEventListener("change", (e) => this.handleNewFileSelect(e));
+    }
+    
+    // Drag and drop for chat input
+    if (chatInputElement) {
+      chatInputElement.addEventListener("dragover", (e) => this.handleChatInputDragOver(e));
+      chatInputElement.addEventListener("dragleave", (e) => this.handleChatInputDragLeave(e));
+      chatInputElement.addEventListener("drop", (e) => this.handleChatInputDrop(e));
+    }
+
+    // File attachment button (paperclip)
+    const fileAttachmentBtn = document.getElementById("file-attachment-btn");
+    if (fileAttachmentBtn) {
+      fileAttachmentBtn.addEventListener("click", () => {
+        chatFileInput?.click();
+      });
     }
 
     // File selection modal close
@@ -425,7 +422,8 @@ class UIComponents {
 
     if (chatInput && sendButton) {
       const hasText = chatInput.value.trim().length > 0;
-      sendButton.disabled = !hasText || this.isProcessing;
+      const hasFiles = this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
+      sendButton.disabled = !(hasText || hasFiles) || this.isProcessing;
     }
   }
 
@@ -433,10 +431,17 @@ class UIComponents {
     const chatInput = document.getElementById("chat-input");
     const message = chatInput.value.trim();
 
-    if (!message || this.isProcessing) return;
+    // Allow sending if there's either a message or files attached
+    if ((!message && (!this.chatUploadedFiles || this.chatUploadedFiles.length === 0)) || this.isProcessing) return;
 
     this.isProcessing = true;
     chatInput.value = "";
+    
+    // Clear chat files preview immediately when send button is pressed
+    const filesToUpload = [...this.chatUploadedFiles]; // Copy the files array
+    this.chatUploadedFiles = []; // Clear the files array
+    this.updateChatFilesPreview(); // Hide the preview immediately
+    
     this.toggleSendButton();
 
     // Create new session if none exists
@@ -447,89 +452,73 @@ class UIComponents {
       }
     }
 
-    // Add user message to chat
-    this.addMessageToChat("user", message);
+    // Add user message if there's text
+    if (message) {
+      this.addMessageToChat("user", message);
+    }
 
-    // Show enhanced typing indicator with progress info
-    this.showEnhancedTypingIndicator(message);
-
-    try {
-      // Send to backend with enhanced error handling
-      const response = await this.sendQueryWithRetry(
-        message,
-        this.webSearchEnabled,
-        this.currentSessionId,
-        2, // maxRetries
-        this.selectedFiles.length > 0 ? this.selectedFiles : null // selectedFiles
-      );
-
-      // Remove typing indicator
-      this.hideTypingIndicator();
-
-      // Check if response is valid
-      if (!response || !response.success) {
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        const errorMsg = response?.error || "Failed to get response from AI";
-        this.addMessageToChat("error", `${t("sorryError")} ${errorMsg}`);
-        return;
+    // Handle file uploads with status messages
+    let uploadedFiles = [];
+    if (filesToUpload.length > 0) {
+      // Show uploading status for each file
+      for (const file of filesToUpload) {
+        this.addFileStatusMessage(file.name, 'uploading');
       }
 
-      // Ensure we have actual response content
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      const assistantResponse =
-        response.response || response.data?.response || t("apologizeResponse");
-
-      // Extract images from response
-      const images = response.images || [];
-
-      console.log(`Received response with ${images.length} images`);
-
-      // Update session ID if it was created server-side
-      if (response.sessionId && response.sessionId !== this.currentSessionId) {
-        this.currentSessionId = response.sessionId;
-        // Refresh sessions list to show the new session
-        await this.loadChatSessions();
-      }
-
-      // Add AI response to chat with images
-      this.addMessageToChat("assistant", assistantResponse, images);
-
-      // Update chat history
-      this.chatHistory.push({
-        user: message,
-        assistant: assistantResponse,
-        images: images,
-      });
-    } catch (error) {
-      this.hideTypingIndicator();
-
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      let errorMessage = t("sorryEncounteredError");
-      if (error.message) {
-        if (error.message.includes("timeout")) {
-          errorMessage = t("requestTookTooLong");
-        } else if (
-          error.message.includes("fetch") ||
-          error.message.includes("network") ||
-          error.message.includes("bağlan")
-        ) {
-          errorMessage = t("connectionErrorCheck");
+      // Upload files one by one
+      for (let i = 0; i < filesToUpload.length; i++) {
+        const file = filesToUpload[i];
+        try {
+          const response = await window.apiService.uploadFile(file);
+          if (response.success) {
+            uploadedFiles.push({
+              name: file.name,
+              size: file.size,
+              id: response.data.file_id || response.data.filename
+            });
+            
+            // Update status to success
+            this.updateFileStatusMessage(file.name, 'success');
+          } else {
+            // Update status to error
+            this.updateFileStatusMessage(file.name, 'error', 'Upload failed');
+          }
+        } catch (error) {
+          console.error("Failed to upload file:", file.name, error);
+          this.updateFileStatusMessage(file.name, 'error', 'Upload failed');
         }
       }
-
-      this.addMessageToChat("error", errorMessage);
-      console.error("Chat error:", error);
-    } finally {
-      this.isProcessing = false;
-      this.toggleSendButton();
-      chatInput.focus();
     }
+
+    // Only send to AI if there's a text message
+    if (message) {
+      // Show enhanced typing indicator
+      this.showEnhancedTypingIndicator(message);
+
+      try {
+        // Send to backend
+        const response = await this.sendQueryWithRetry(
+          message,
+          this.webSearchEnabled,
+          this.currentSessionId,
+          2,
+          uploadedFiles.length > 0 ? uploadedFiles : null
+        );
+
+        if (response) {
+          this.addMessageToChat("assistant", response.content, response.images || []);
+        }
+      } catch (error) {
+        console.error("Chat error:", error);
+        this.addMessageToChat("error", "Sorry, there was an error processing your request. Please try again.");
+      } finally {
+        this.hideTypingIndicator();
+      }
+    }
+
+    this.isProcessing = false;
+    this.toggleSendButton();
+    chatInput.focus();
   }
 
   // Enhanced query sending with retry logic
@@ -1590,338 +1579,209 @@ class UIComponents {
     });
   }
 
-  // File handling
-  handleDragOver(e) {
+  // Chat file upload methods
+  handleChatDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.add("drag-over");
-  }
-
-  handleDragLeave(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.currentTarget.classList.remove("drag-over");
-  }
-
-  handleFileDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.currentTarget.classList.remove("drag-over");
-
-    const files = Array.from(e.dataTransfer.files);
-    this.addFilesToQueue(files);
-  }
-
-  handleFileSelect(e) {
-    const files = Array.from(e.target.files);
-    this.addFilesToQueue(files);
-  }
-
-  addFilesToQueue(files) {
-    const validFiles = files.filter((file) => Utils.validateFile(file));
-    const fileQueue = document.getElementById("file-queue");
-
-    if (!fileQueue) return;
-
-    validFiles.forEach((file) => {
-      const fileItem = this.createFileQueueItem(file);
-      fileQueue.appendChild(fileItem);
-    });
-
-    // Update upload button state
-    this.updateUploadButton();
-  }
-
-  createFileQueueItem(file) {
-    const fileItem = document.createElement("div");
-    fileItem.className = "file-queue-item";
-    fileItem.dataset.fileName = file.name;
-
-    const fileIcon = Utils.getFileIcon(file.name);
-    const fileSize = Utils.formatFileSize(file.size);
-
-    fileItem.innerHTML = `
-            <div class="file-info">
-                <i class="${fileIcon}"></i>
-                <div class="file-details">
-                    <div class="file-name">${Utils.escapeHtml(file.name)}</div>
-                    <div class="file-size">${fileSize}</div>
-                </div>
-            </div>
-            <div class="file-actions">
-                <button class="remove-file" onclick="this.closest('.file-queue-item').remove(); window.uiComponents.updateUploadButton();">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="upload-progress" style="display: none;">
-                <div class="progress-header">
-                    <div class="progress-status">
-                        <i class="fas fa-clock progress-icon"></i>
-                        <span class="progress-stage">Preparing...</span>
-                    </div>
-                    <div class="progress-percentage">0%</div>
-                </div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%">
-                            <div class="progress-shine"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress-details">
-                    <span class="upload-speed"></span>
-                    <span class="time-remaining"></span>
-                </div>
-            </div>
-        `;
-
-    return fileItem;
-  }
-
-  updateUploadButton() {
-    const uploadButton = document.getElementById("upload-button");
-    const fileQueue = document.getElementById("file-queue");
-
-    if (uploadButton && fileQueue) {
-      const hasFiles = fileQueue.children.length > 0;
-      uploadButton.disabled = !hasFiles || this.isProcessing;
+    const uploadArea = document.getElementById("chat-file-upload");
+    if (uploadArea) {
+      uploadArea.style.display = "block";
+      uploadArea.classList.add("drag-over");
     }
   }
 
-  async processFiles() {
-    const fileQueue = document.getElementById("file-queue");
-    const fileInput = document.getElementById("file-input");
-
-    if (!fileQueue || fileQueue.children.length === 0) return;
-
-    this.isProcessing = true;
-    this.updateUploadButton();
-
-    const fileItems = Array.from(fileQueue.children);
-
-    for (const fileItem of fileItems) {
-      const fileName = fileItem.dataset.fileName;
-      const file = Array.from(fileInput.files).find((f) => f.name === fileName);
-
-      if (file) {
-        await this.uploadFile(file, fileItem);
+  handleChatDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only hide if leaving the wrapper entirely
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      const uploadArea = document.getElementById("chat-file-upload");
+      if (uploadArea && this.chatUploadedFiles.length === 0) {
+        uploadArea.style.display = "none";
       }
-    }
-
-    this.isProcessing = false;
-    this.updateUploadButton();
-
-    // Clear file input
-    fileInput.value = "";
-
-    // Refresh file library
-    if (this.currentTab === "files") {
-      await this.loadFileLibrary();
+      uploadArea?.classList.remove("drag-over");
     }
   }
 
-  async uploadFile(file, fileItem) {
-    const progressElement = fileItem.querySelector(".upload-progress");
-    const progressFill = fileItem.querySelector(".progress-fill");
-    const progressPercentage = fileItem.querySelector(".progress-percentage");
-    const progressStage = fileItem.querySelector(".progress-stage");
-    const progressIcon = fileItem.querySelector(".progress-icon");
-    const uploadSpeed = fileItem.querySelector(".upload-speed");
-    const timeRemaining = fileItem.querySelector(".time-remaining");
+  handleChatFileDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const uploadArea = document.getElementById("chat-file-upload");
+    uploadArea?.classList.remove("drag-over");
+    
+    const files = Array.from(e.dataTransfer.files);
+    this.addFilesToChat(files);
+  }
 
-    // Show progress container
-    progressElement.style.display = "block";
+  handleChatFileSelect(e) {
+    const files = Array.from(e.target.files);
+    this.addFilesToChat(files);
+    e.target.value = ""; // Clear input
+  }
 
-    // Track timing for speed calculation
-    const startTime = Date.now();
-    let lastTime = startTime;
-    let lastLoaded = 0;
-
-    try {
-      // Stage 1: Preparing file
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      this.updateProgressStage(
-        progressIcon,
-        progressStage,
-        "fas fa-cog fa-spin",
-        t("preparingFile")
-      );
-      await this.animateProgress(progressFill, progressPercentage, 0, 10, 500);
-
-      // Stage 2: Reading file
-      this.updateProgressStage(
-        progressIcon,
-        progressStage,
-        "fas fa-file-alt",
-        t("readingFile")
-      );
-
-      // Read file with progress simulation
-      let fileBuffer;
-      await this.simulateAsyncOperation(
-        async () => {
-          fileBuffer = await file.arrayBuffer();
-        },
-        (progress) => {
-          const currentProgress = 10 + progress * 0.15; // 10% to 25%
-          this.animateProgress(
-            progressFill,
-            progressPercentage,
-            null,
-            currentProgress,
-            100
-          );
-        },
-        Math.max(500, Math.min(2000, file.size / 1000)) // Dynamic duration based on file size
-      );
-
-      // Stage 3: Uploading
-      this.updateProgressStage(
-        progressIcon,
-        progressStage,
-        "fas fa-cloud-upload-alt",
-        t("uploading")
-      );
-
-      let uploadResponse;
-      await this.simulateAsyncOperation(
-        async () => {
-          uploadResponse = await window.apiService.uploadFile(file);
-        },
-        (progress) => {
-          const currentProgress = 25 + progress * 0.45; // 25% to 70%
-          const currentTime = Date.now();
-          const deltaTime = currentTime - lastTime;
-          const deltaLoaded = (progress - lastLoaded) * file.size;
-
-          if (deltaTime > 100) {
-            // Update speed every 100ms
-            const speed = (deltaLoaded / deltaTime) * 1000; // bytes per second
-            const remaining = file.size * (1 - progress);
-            const eta = remaining / speed;
-
-            uploadSpeed.textContent = this.formatSpeed(speed);
-            timeRemaining.textContent = this.formatTime(eta);
-
-            lastTime = currentTime;
-            lastLoaded = progress;
-          }
-
-          this.animateProgress(
-            progressFill,
-            progressPercentage,
-            null,
-            currentProgress,
-            100
-          );
-        },
-        Math.max(1000, Math.min(5000, file.size / 500)) // Dynamic duration based on file size
-      );
-
-      // Stage 4: Processing
-      this.updateProgressStage(
-        progressIcon,
-        progressStage,
-        "fas fa-brain fa-pulse",
-        t("processingWithAI")
-      );
-      uploadSpeed.textContent = "";
-      timeRemaining.textContent = "";
-
-      // Processing stage (AI processing happens in background)
-      await this.simulateAsyncOperation(
-        async () => {
-          // Wait a bit more to show processing stage
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        },
-        (progress) => {
-          const currentProgress = 70 + progress * 0.25; // 70% to 95%
-          this.animateProgress(
-            progressFill,
-            progressPercentage,
-            null,
-            currentProgress,
-            100
-          );
-        },
-        2000
-      );
-
-      // Stage 5: Complete
-      this.updateProgressStage(
-        progressIcon,
-        progressStage,
-        "fas fa-check",
-        t("uploadComplete")
-      );
-      await this.animateProgress(
-        progressFill,
-        progressPercentage,
-        null,
-        100,
-        500
-      );
-
-      // Success styling
-      fileItem.classList.add("upload-success");
-      progressFill.style.background =
-        "linear-gradient(90deg, #10b981, #34d399)";
-
-      // Calculate total time
-      const totalTime = Date.now() - startTime;
-      const avgSpeed = file.size / (totalTime / 1000);
-      uploadSpeed.textContent = `${t("avgSpeed")}: ${this.formatSpeed(
-        avgSpeed
-      )}`;
-      timeRemaining.textContent = `${t("completedIn")} ${this.formatTime(
-        totalTime / 1000
-      )}`;
-
-      // Remove after delay
-      setTimeout(() => {
-        fileItem.style.opacity = "0";
-        fileItem.style.transform = "translateX(100%)";
-        setTimeout(() => {
-          fileItem.remove();
-          this.updateUploadButton();
-        }, 300);
-      }, 3000);
-
-      this.uploadedFiles.push({
-        name: file.name,
-        size: file.size,
-        uploadDate: new Date(),
-        id: uploadResponse.file_id || Utils.generateId(),
-      });
-    } catch (error) {
-      // Error state
-      fileItem.classList.add("upload-error");
-      this.updateProgressStage(
-        progressIcon,
-        progressStage,
-        "fas fa-exclamation-triangle",
-        t("uploadFailed")
-      );
-      progressFill.style.background =
-        "linear-gradient(90deg, #ef4444, #f87171)";
-      uploadSpeed.textContent = "";
-      timeRemaining.textContent = t("errorOccurred");
-      console.error("Upload error:", error);
-
-      // Show retry option
-      setTimeout(() => {
-        const retryButton = document.createElement("button");
-        retryButton.className = "retry-upload-btn";
-        retryButton.innerHTML = `<i class="fas fa-redo"></i> ${t("retry")}`;
-        retryButton.onclick = () => {
-          fileItem.classList.remove("upload-error");
-          this.uploadFile(file, fileItem);
-        };
-        fileItem.querySelector(".progress-details").appendChild(retryButton);
-      }, 1000);
+  addFilesToChat(files) {
+    const validFiles = files.filter((file) => Utils.validateFile(file));
+    
+    validFiles.forEach(file => {
+      // Check if file already exists
+      if (!this.chatUploadedFiles.find(f => f.name === file.name)) {
+        this.chatUploadedFiles.push(file);
+      }
+    });
+    
+    this.updateChatFilesPreview();
+    
+    if (validFiles.length > 0) {
+      this.showNotification(`${validFiles.length} file(s) attached to chat`, "success");
     }
+  }
+
+  updateChatFilesPreview() {
+    const uploadArea = document.getElementById("chat-file-upload");
+    const filesPreview = document.getElementById("chat-uploaded-files");
+    
+    if (!uploadArea || !filesPreview) return;
+    
+    if (this.chatUploadedFiles.length > 0) {
+      uploadArea.style.display = "block";
+      
+      filesPreview.innerHTML = this.chatUploadedFiles.map((file, index) => `
+        <div class="chat-file-item">
+          <i class="${Utils.getFileIcon(file.name)}"></i>
+          <span class="file-name">${Utils.escapeHtml(file.name)}</span>
+          <button class="remove-file" onclick="window.uiComponents.removeChatFile(${index})">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+    } else {
+      uploadArea.style.display = "none";
+      filesPreview.innerHTML = "";
+    }
+    
+    // Update send button state when files change
+    this.toggleSendButton();
+  }
+
+  removeChatFile(index) {
+    this.chatUploadedFiles.splice(index, 1);
+    this.updateChatFilesPreview();
+  }
+
+  // Updated file upload handlers for chat input drag & drop
+  handleNewFileSelect(event) {
+    const files = Array.from(event.target.files);
+    this.addFilesToChat(files);
+  }
+
+  handleChatInputDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const chatInput = document.getElementById("chat-input");
+    chatInput.classList.add("drag-over");
+  }
+
+  handleChatInputDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const chatInput = document.getElementById("chat-input");
+    if (!chatInput.contains(event.relatedTarget)) {
+      chatInput.classList.remove("drag-over");
+    }
+  }
+
+  handleChatInputDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const chatInput = document.getElementById("chat-input");
+    chatInput.classList.remove("drag-over");
+    
+    const files = Array.from(event.dataTransfer.files);
+    this.addFilesToChat(files);
+  }
+
+  addFilesToChat(files) {
+    if (!this.chatUploadedFiles) {
+      this.chatUploadedFiles = [];
+    }
+    
+    // Add files to the upload queue
+    files.forEach(file => {
+      this.chatUploadedFiles.push(file);
+    });
+    
+    // Update the preview
+    this.updateChatFilesPreview();
+  }
+
+  // File status message methods
+  addFileStatusMessage(fileName, status, errorMessage = '') {
+    const chatMessages = document.getElementById("chat-messages");
+    if (!chatMessages) return;
+
+    let statusIcon, statusText, statusClass;
+    
+    switch (status) {
+      case 'uploading':
+        statusIcon = '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
+        statusText = '';
+        statusClass = 'uploading';
+        break;
+      case 'success':
+        statusIcon = '✅';
+        statusText = `Uploaded successfully`;
+        statusClass = 'success';
+        break;
+      case 'error':
+        statusIcon = '❌';
+        statusText = errorMessage || 'Upload failed';
+        statusClass = 'error';
+        break;
+    }
+
+    const messageElement = document.createElement("div");
+    messageElement.className = `file-status-message ${statusClass}`;
+    messageElement.innerHTML = `
+      <div class="status-icon">${statusIcon}</div>
+      <div class="status-text">
+        <span class="file-name">${Utils.escapeHtml(fileName)}</span>: ${statusText}
+      </div>
+    `;
+
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Store reference for updates
+    messageElement.dataset.fileName = fileName;
+  }
+
+  updateFileStatusMessage(fileName, status, errorMessage = '') {
+    const statusMessage = document.querySelector(`[data-file-name="${fileName}"]`);
+    if (!statusMessage) return;
+
+    let statusIcon, statusText, statusClass;
+    
+    switch (status) {
+      case 'success':
+        statusIcon = '✅';
+        statusText = `Uploaded successfully`;
+        statusClass = 'success';
+        break;
+      case 'error':
+        statusIcon = '❌';
+        statusText = errorMessage || 'Upload failed';
+        statusClass = 'error';
+        break;
+    }
+
+    // Update the message
+    statusMessage.className = `file-status-message ${statusClass}`;
+    statusMessage.innerHTML = `
+      <div class="status-icon">${statusIcon}</div>
+      <div class="status-text">
+        <span class="file-name">${Utils.escapeHtml(fileName)}</span>: ${statusText}
+      </div>
+    `;
   }
 
   updateProgressStage(iconElement, stageElement, iconClass, stageText) {
@@ -2812,9 +2672,6 @@ class UIComponents {
       ? window.languageService.t.bind(window.languageService)
       : (key) => key;
     this.addMessageToChat("assistant", t("welcomeAssistantMessage"));
-
-    // Update upload button state
-    this.updateUploadButton();
 
     // Load initial tab data
     this.loadTabData(this.currentTab);
@@ -3949,6 +3806,97 @@ class UIComponents {
 
     // Enable send button
     this.toggleSendButton();
+  }
+
+  // Upload file with progress tracking
+  async uploadFileWithProgress(file, fileIndex) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Update progress bar during upload
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          this.updateFileUploadProgress(fileIndex, percentComplete);
+        }
+      });
+
+      // Handle successful upload
+      xhr.addEventListener('load', () => {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          this.updateFileUploadProgress(fileIndex, 100);
+          resolve(response);
+        } catch (error) {
+          reject(new Error('Invalid response format'));
+        }
+      });
+
+      // Handle upload error
+      xhr.addEventListener('error', () => {
+        reject(new Error('Upload failed'));
+      });
+
+      // Handle upload abort
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Upload aborted'));
+      });
+
+      // Start upload
+      xhr.open('POST', 'http://localhost:8000/upload');
+      xhr.send(formData);
+    });
+  }
+
+  // Update file upload progress
+  updateFileUploadProgress(fileIndex, percentage) {
+    const filePreview = document.querySelector(`[data-file-index="${fileIndex}"]`);
+    if (filePreview) {
+      const progressFill = filePreview.querySelector('.upload-progress-fill');
+      const progressText = filePreview.querySelector('.upload-progress-text');
+      
+      if (progressFill) {
+        progressFill.style.width = `${percentage}%`;
+      }
+      
+      if (progressText) {
+        progressText.textContent = `${percentage}%`;
+      }
+    }
+  }
+
+  // Update file upload status (success/failure)
+  updateFileUploadStatus(fileIndex, success, errorMessage = '') {
+    const filePreview = document.querySelector(`[data-file-index="${fileIndex}"]`);
+    if (filePreview) {
+      const uploadStatus = filePreview.querySelector('.upload-status');
+      const progressContainer = filePreview.querySelector('.upload-progress-container');
+      
+      if (success) {
+        uploadStatus.textContent = '✓ Uploaded';
+        uploadStatus.className = 'upload-status';
+        uploadStatus.style.color = 'var(--accent-success, #10b981)';
+      } else {
+        uploadStatus.textContent = `❌ ${errorMessage || 'Failed'}`;
+        uploadStatus.className = 'upload-status';
+        uploadStatus.style.color = 'var(--error-color, #ef4444)';
+      }
+      
+      // Hide progress bar after completion
+      if (progressContainer) {
+        progressContainer.style.display = 'none';
+      }
+    }
+  }
+
+  // Update files header after all uploads complete
+  updateFilesHeader(uploadedCount) {
+    const latestMessage = document.querySelector('.chat-message:last-child .uploaded-files-header');
+    if (latestMessage) {
+      latestMessage.textContent = `📎 Uploaded Files (${uploadedCount})`;
+    }
   }
 }
 

@@ -1,10 +1,7 @@
 from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
-from typing import List, Dict, Tuple
-import re
-import base64
+from typing import List
 from typing import Optional
-import os
 
 logger = get_logger("QUERY_UTILS")
 
@@ -171,65 +168,6 @@ def reflect_and_retry(
     return current_answer
 
 
-def extract_image_references_from_context(local_context: str) -> Tuple[str, List[str]]:
-    """
-    Analyze local context for image references and extract image paths.
-    Returns (cleaned_context, image_paths_list)
-    """
-    image_pattern = r'\(\(Image\):([^)]+)\)'
-    image_paths = []
-
-    logger.debug(f"🔍 Analyzing local context for image references...")
-
-    # Find all image references in the context
-    matches = re.findall(image_pattern, local_context)
-
-    if matches:
-        logger.debug(f"   - Found {len(matches)} image references in context")
-        for match in matches:
-            image_path = match.strip()
-            if image_path not in image_paths:
-                image_paths.append(image_path)
-
-        # Clean the context from image references
-    cleaned_context = re.sub(image_pattern, '', local_context)
-
-    return cleaned_context, image_paths
-
-
-def load_images_from_paths(image_paths: List[str]) -> List[Dict]:
-    """
-    Load actual image files based on the extracted paths and convert to base64.
-    Returns list of image data dictionaries.
-    """
-    images_data = []
-
-    if not image_paths:
-        return images_data
-
-    logger.debug(f"📁 Loading {len(image_paths)} images from filesystem...")
-
-    for path in image_paths:
-        # Construct the full image path - try both .jpg and .png
-        for ext in ['.jpg', '.png']:
-            image_file_path = f"backend/images/{path}{ext}"
-
-            if os.path.exists(image_file_path):
-                try:
-                    with open(image_file_path, "rb") as img_file:
-                        img_data = base64.b64encode(img_file.read()).decode('utf-8')
-                        images_data.append({
-                            "filename": f"{path}{ext}",
-                            "data": img_data,
-                            "reference": path,
-                            "type": f"image/{ext[1:]}"
-                        })
-                    break
-                except Exception as e:
-                    logger.error(f"   ❌ Error loading image {path}{ext}: {e}")
-
-    return images_data
-
 def filter_docs_by_selected_files(
     docs: List, selected_files: Optional[List[str]]
 ) -> List:
@@ -237,8 +175,7 @@ def filter_docs_by_selected_files(
     Filter retrieved documents to only include those from selected files.
     If selected_files is None or empty, return all documents.
     """
-    logger.info(f"DOCSSSSS {docs}")
-    logger.info(f"SELECTEEEDDD {selected_files}")
+
     if not selected_files or len(selected_files) == 0:
         return docs
 
@@ -255,3 +192,19 @@ def filter_docs_by_selected_files(
         f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
     )
     return filtered_docs
+
+
+
+
+def refine_query(user_query, lang: str = "Turkish") -> str:
+    from backend.core.prompts import refinement_prompt
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": f"{refinement_prompt} Give your answer in {lang} language."},
+            {"role": "user", "content": user_query}
+        ],
+        temperature=0.3
+    )
+    return response.choices[0].message.content

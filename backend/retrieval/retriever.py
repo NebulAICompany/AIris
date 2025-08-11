@@ -1,5 +1,5 @@
-from typing import List, Dict, Any
-from qdrant_client import QdrantClient
+from typing import List, Dict, Any, Optional
+from qdrant_client import QdrantClient, models
 from langchain_core.embeddings import Embeddings
 from backend.shared.constants import OPENAI_API_KEY, HUGGINGFACE_API_KEY
 from backend.shared.logger import get_logger
@@ -31,38 +31,55 @@ def load_vectorstore(path: str) -> QdrantClient:
     try:
         client = QdrantClient(path=path)
         logger.info(f"✅ Vectorstore loaded from {path}")
-        logger.info(
-            f"📦 Contains {client.count(collection_name='test_collection')} document chunks (including HyPE prompt expansions)"
-
-        )
+        if client.collection_exists(collection_name="test_collection"):
+            logger.info(f"📦 Contains {client.count(collection_name='test_collection')} document chunks")
+        else:
+            logger.info("No collection found")
         return client
     except Exception as e:
         raise RuntimeError(f"Failed to load vectorstore from {path}: {e}") from e
 
 
-def retrieve_top_k(client: QdrantClient, query: str, k: int = 10) -> List[Dict[str, Any]]:
+def retrieve_top_k(client: QdrantClient, query: str, k: int = 10, selected_files: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     try:
         logger.info(f"🔍 Retrieving top {k} documents for query: {query}")
+        if not client.collection_exists(collection_name="test_collection"):
+            logger.info("No collection found")
+            return None
+        
         logger.info(
             f"📊 Searching through {client.count(collection_name='test_collection')} document chunks (original + HyPE prompt expansions)"
         )
-        docs_with_scores = client.query_points(
-            collection_name="test_collection",
-            query=_get_embeddings().embed_query(query),
-            limit=k,
-        ).points
-        logger.info(
-            f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore"
-        )
+        if selected_files:
+            selected_files = [file.split(".")[0] for file in selected_files]
+            logger.info(f"🔍 Searching through {selected_files} document chunks")
+            docs_with_scores = client.query_points(
+                collection_name="test_collection",
+                query=_get_embeddings().embed_query(query),
+                query_filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="metadata.file_name",
+                            match=models.MatchAny(any=selected_files),
+                        )
+                    ]
+                ),
+                limit=k,
+            ).points
+        else:
+            docs_with_scores = client.query_points(
+                collection_name="test_collection",
+                query=_get_embeddings().embed_query(query),
+                limit=k,
+            ).points
+        logger.info(f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore")
 
         results = []
         chunks_with_images = 0
         for d in docs_with_scores:
             doc = d.payload
             score = d.score
-
-            content_type = doc["metadata"].get("content_type", "original")
-
+            logger.info(f"file name: {doc['metadata'].get('file_name')}")
             contains_image = doc["metadata"].get("contains_image", False)
             
             if contains_image:
