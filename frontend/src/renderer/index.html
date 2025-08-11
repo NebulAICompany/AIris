@@ -101,10 +101,6 @@
               <i class="fas fa-comments"></i>
               <span data-i18n="chat">Chat</span>
             </button>
-            <button class="nav-item" data-tab="upload">
-              <i class="fas fa-upload"></i>
-              <span data-i18n="uploadFiles">Upload Files</span>
-            </button>
             <button class="nav-item" data-tab="files">
               <i class="fas fa-file-alt"></i>
               <span data-i18n="myFiles">My Files</span>
@@ -226,24 +222,47 @@
 
               <div class="chat-input-container">
                 <div class="chat-input-wrapper">
-                  <button
-                    id="file-selection-btn"
-                    class="file-selection-button"
-                    title="Select files to include"
-                  >
-                    <i class="fas fa-file"></i>
-                  </button>
-                  <textarea
-                    id="chat-input"
-                    class="chat-input"
-                    data-i18n="chatPlaceholder"
-                    placeholder="Ask a question about your financial documents..."
-                    rows="1"
-                  ></textarea>
-                  <button id="send-button" class="send-button" disabled>
-                    <i class="fas fa-paper-plane"></i>
-                  </button>
+                  <!-- Chat file upload area (for showing selected files) -->
+                  <div class="chat-file-upload-area" id="chat-file-upload" style="display: none;">
+                    <div class="uploaded-files-preview" id="chat-uploaded-files"></div>
+                  </div>
+                  
+                  <div class="chat-input-controls">
+                    <button
+                      id="file-attachment-btn"
+                      class="file-attachment-button"
+                      title="Attach files"
+                    >
+                      <i class="fas fa-paperclip"></i>
+                    </button>
+                    <button
+                      id="file-selection-btn"
+                      class="file-selection-button"
+                      title="Select files to include"
+                    >
+                      <i class="fas fa-file"></i>
+                    </button>
+                    <textarea
+                      id="chat-input"
+                      class="chat-input"
+                      data-i18n="chatPlaceholder"
+                      placeholder="Drag files here or ask a question about your financial documents..."
+                      rows="1"
+                    ></textarea>
+                    <button id="send-button" class="send-button" disabled>
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
                 </div>
+                
+                <!-- Hidden file input for chat uploads -->
+                <input
+                  type="file"
+                  id="chat-file-input"
+                  multiple
+                  accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
+                  style="display: none"
+                />
               </div>
 
               <!-- File Selection Modal -->
@@ -303,63 +322,6 @@
             </div>
           </div>
 
-          <!-- Upload Tab -->
-          <div id="upload-tab" class="tab-content">
-            <div class="upload-container">
-              <div class="upload-header">
-                <h2 data-i18n="uploadDocuments">Upload Documents</h2>
-                <p data-i18n="uploadForAnalysis">
-                  Upload financial documents for AI analysis
-                </p>
-              </div>
-
-              <div class="upload-area" id="upload-area">
-                <div class="upload-content">
-                  <div class="upload-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                  </div>
-                  <h3 data-i18n="dragDropFiles">Drag & Drop Files Here</h3>
-                  <p>
-                    <span data-i18n="or">or</span>
-                    <button
-                      class="upload-browse-btn"
-                      id="browse-files"
-                      data-i18n="browseFiles"
-                    >
-                      browse files
-                    </button>
-                  </p>
-                  <div class="supported-formats">
-                    <span data-i18n="supportedFormats"
-                      >Supported: PDF, DOCX, XLSX, Images</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Hidden file input -->
-              <input
-                type="file"
-                id="file-input"
-                multiple
-                accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
-                style="display: none"
-              />
-
-              <div class="upload-queue" id="file-queue"></div>
-
-              <div
-                class="upload-actions"
-                style="text-align: center; margin-top: 1rem"
-              >
-                <button id="upload-button" class="btn btn-primary" disabled>
-                  <i class="fas fa-upload"></i>
-                  <span data-i18n="uploadFilesAction">Upload Files</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           <!-- Files Tab -->
           <div id="files-tab" class="tab-content">
             <div class="files-container">
@@ -375,14 +337,14 @@
                   <i class="fas fa-folder-open"></i>
                   <h3 data-i18n="noDocuments">No documents yet</h3>
                   <p data-i18n="uploadToGetStarted">
-                    Upload some documents to get started
+                    Upload some documents to get started using the chat area
                   </p>
                   <button
                     class="cta-button"
-                    data-tab="upload"
-                    data-i18n="uploadFilesBtn"
+                    data-tab="chat"
+                    data-i18n="goToChat"
                   >
-                    Upload Files
+                    Go to Chat
                   </button>
                 </div>
               </div>
