@@ -1,7 +1,7 @@
 import uuid
 import json
 from typing import List
-from backend.shared.constants import text_analytics_client, MASKED_MAP_JSON_PATH
+from backend.shared.constants import async_text_analytics_client, MASKED_MAP_JSON_PATH
 from backend.shared.logger import get_logger
 
 logger = get_logger("PII")
@@ -14,7 +14,7 @@ categories_to_filter=["Person", "PhoneNumber", "Address", "IPAddress", "Email", 
 
 async def mask_text(docs: List[str], id: str) -> List[str]:
     """Mask PII entities in the given text using Azure Text Analytics."""
-    result = await text_analytics_client.recognize_pii_entities(
+    result = await async_text_analytics_client.recognize_pii_entities(
         documents=docs,
         string_index_type="UnicodeCodePoint",
         disable_service_logs=True,

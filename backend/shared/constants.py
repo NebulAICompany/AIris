@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from azure.ai.textanalytics.aio import TextAnalyticsClient
+from azure.ai.textanalytics.aio import TextAnalyticsClient as AsyncTextAnalyticsClient
+from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient
@@ -41,6 +42,10 @@ concurrent_client = ConcurrentOpenAI(
 tavily_client = TavilyClient(TAVILY_API_KEY)
 ta_credential = AzureKeyCredential(AZURE_LANGUAGE_KEY)
 text_analytics_client = TextAnalyticsClient(
+        endpoint=AZURE_LANGUAGE_ENDPOINT,
+        credential=ta_credential)
+
+async_text_analytics_client = AsyncTextAnalyticsClient(
         endpoint=AZURE_LANGUAGE_ENDPOINT,
         credential=ta_credential)
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
