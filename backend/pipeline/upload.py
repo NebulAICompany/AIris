@@ -25,7 +25,7 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
         if file_extension in ('.pdf', '.docx', '.xlsx'):
             extracted_text = await AzureParser(file_path)
         elif file_extension == '.txt':
-            extracted_text = TxtParser(file_path)
+            extracted_text = await TxtParser(file_path)
         elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
             extracted_text = await ImageParser(file_path)
         else:

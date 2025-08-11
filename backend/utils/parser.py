@@ -4,7 +4,7 @@ import base64
 import uuid
 import os
 from azure.ai.documentintelligence.models import AnalyzeResult, DocumentContentFormat, AnalyzeOutputOption
-from backend.shared.constants import document_intelligence_client, IMAGES_PATH_STR, async_openai_client
+from backend.shared.constants import document_intelligence_client, IMAGES_PATH_STR, concurrent_client
 from pathlib import Path
 
 from backend.shared.logger import get_logger
@@ -12,41 +12,46 @@ from backend.shared.logger import get_logger
 logger = get_logger("PARSER")
 
 
-async def describe_image(image_bytes):
-        try:
-            base64_image = base64.b64encode(image_bytes).decode("utf-8")
+async def build_messages_for_image(image_bytes: bytes):
+    base64_image = base64.b64encode(image_bytes).decode("utf-8")
+    return [
+        {"role": "system", "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla."},
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla."},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}},
+            ],
+        },
+    ]
 
-            response = await async_openai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla.",
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla.",
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                },
-                            },
-                        ],
-                    },
-                ],
-                max_tokens=700,
-            )
-            description = response.choices[0].message.content
-            return description
+async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
+    # Her görsel için messages üret
+    messages_list = []
+    for img in image_bytes_list:
+        messages = await build_messages_for_image(img)
+        messages_list.append(messages)
 
-        except Exception as e:
-            logger.error(f"Error in GPT image description: {e}")
-            return "Açıklama alınamadı."
+    # create_many: tümünü paralel ve limitli yürütür
+    responses = await concurrent_client.create_many(
+        messages_list=messages_list,
+        model="gpt-4o",
+        max_tokens=700,
+        temperature=0.2,
+    )
+
+    # responses sırası, input sırasıyla hizalıdır
+    descriptions = []
+    for resp in responses:
+        if isinstance(resp, Exception):
+            descriptions.append("Açıklama alınamadı.")
+        else:
+            content = getattr(resp, "content", None)
+            if not content:
+                content = resp.choices[0].message.content
+            descriptions.append(content)
+    return descriptions
+
         
 
 async def AzureParser(file_path: str):
@@ -55,62 +60,64 @@ async def AzureParser(file_path: str):
             "prebuilt-layout",
             body=f,
             output_content_format=DocumentContentFormat.MARKDOWN,
-            output=[AnalyzeOutputOption.FIGURES]
+            output=[AnalyzeOutputOption.FIGURES],
         )
-
-    result: AnalyzeResult = poller.result()
+    result = poller.result()
     operation_id = poller.details["operation_id"]
 
     figure_images = {}
+    image_bytes_batch = []
+    figure_order = []
+
     os.makedirs(IMAGES_PATH_STR, exist_ok=True)
 
     if result.figures:
-        for figure_idx, figure in enumerate(result.figures):
+        for figure in result.figures:
             figure_id = f"fig_{uuid.uuid4().hex[:8]}"
-            figure_caption = figure.caption.content if figure.caption else ""
+            caption = figure.caption.content if figure.caption else ""
+            if not figure.id:
+                continue
 
-            if figure.id:
-                response = document_intelligence_client.get_analyze_result_figure(
-                    model_id=result.model_id,
-                    result_id=operation_id,
-                    figure_id=figure.id
-                )
+            response = document_intelligence_client.get_analyze_result_figure(
+                model_id=result.model_id,
+                result_id=operation_id,
+                figure_id=figure.id,
+            )
+            img_data = b"".join(response)
+            img_base64 = base64.b64encode(img_data).decode()
 
-                img_data = b"".join(response)
+            image_filename = f"{figure_id}.png"
+            image_path = os.path.join(IMAGES_PATH_STR, image_filename)
+            with open(image_path, "wb") as w:
+                w.write(img_data)
 
-                img_base64 = base64.b64encode(img_data).decode()
-                
-                image_filename = f"{figure_id}.png"
-                image_path = os.path.join(IMAGES_PATH_STR, image_filename)
+            figure_images[figure_id] = {
+                "base64": img_base64,
+                "caption": caption,
+                "image_path": image_path,
+                "description": None,
+            }
+            image_bytes_batch.append(img_data)
+            figure_order.append(figure_id)
 
-                with open(image_path, "wb") as writer:
-                    writer.write(img_data)
-
-                description = await describe_image(img_data)
-
-                figure_images[figure_id] = {
-                    'base64': img_base64,
-                    'caption': figure_caption,
-                    'image_path': image_path,
-                    'description': description,
-                }
+        # Paralel ve rate-limit güvenli açıklama
+        if image_bytes_batch:
+            descriptions = await describe_images(image_bytes_batch)
+            for fid, desc in zip(figure_order, descriptions):
+                figure_images[fid]["description"] = desc
     else:
-        print("No figures found.")
+        logger.info("No figures found.")
 
+    # İçeriği güncelle
     content = result.content
-
-    for figure_id, figure_data in figure_images.items():
-        figure_tag_start = content.find('<figure>')
-        if figure_tag_start != -1:
-            figure_tag_end = content.find('</figure>', figure_tag_start) + 9
-            caption = figure_data["caption"] if figure_data["caption"] else "no caption figure"
-            description = figure_data.get("description", "Açıklama alınamadı.")
-
-            figure_markdown = f"\n\n**[{caption} ID:{figure_id}]**\n\n{description}\n"
-
-            content = content[:figure_tag_start] + figure_markdown + content[
-                figure_tag_end:]
-
+    for figure_id, data in figure_images.items():
+        start = content.find("<figure>")
+        if start != -1:
+            end = content.find("</figure>", start) + 9
+            caption = data["caption"] if data["caption"] else "no caption figure"
+            desc = data.get("description", "Açıklama alınamadı.")
+            figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
+            content = content[:start] + figure_md + content[end:]
     return content
 
 
@@ -133,7 +140,7 @@ async def ImageParser(file_path: str):
     saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
     image.save(saved_image_path, format='PNG')
 
-    description = await describe_image(image_bytes)
+    description = await describe_images([image_bytes])
 
     content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
 
@@ -141,7 +148,7 @@ async def ImageParser(file_path: str):
     return content
 
 
-def TxtParser(file_path: str):
+async def TxtParser(file_path: str):
     content_parts = []
     with open(file_path, "r", encoding="utf-8") as infile:
         for line in infile:
