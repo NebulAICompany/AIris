@@ -3,7 +3,6 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from sqlalchemy.util import await_only
 
 from backend.security.pii import mask_text
 from typing import List
@@ -187,20 +186,10 @@ class VectorStorePipeline:
                 logger.info("Collection created")
             else:
                 logger.info("Collection already exists")
-            client.upload_points(
-                collection_name="test_collection",
-                points=[
-                    models.PointStruct(
-                        id=idx,
-                        vector=self.embeddings.embed_query(doc.page_content),
-                        payload={
-                            "page_content": doc.page_content,
-                            "metadata": doc.metadata,
-                        },
-                    )
-                    for idx, doc in enumerate(processed_docs)
-                ],
-            )
+
+            # Create embeddings in batches for better performance
+            await self._create_and_upload_embeddings(client, processed_docs)
+
             client.close()
 
             logger.info(f"📈 Total text processed: {len(text_content)} characters")
@@ -212,6 +201,74 @@ class VectorStorePipeline:
         except Exception as e:
             logger.error(f"❌ Error in vector store processing: {str(e)}")
             raise e
+
+    async def _create_and_upload_embeddings(self, client: QdrantClient, processed_docs: List[Document]):
+        """
+        Create embeddings in batches and upload to Qdrant for better performance
+        """
+        batch_size = 10
+        logger.info(f"🔄 Creating embeddings for {len(processed_docs)} documents in batches of {batch_size}...")
+
+        all_points = []
+
+        for i in range(0, len(processed_docs), batch_size):
+            batch_docs = processed_docs[i:i + batch_size]
+            logger.info(f"⚡ Processing embedding batch {i//batch_size + 1}/{(len(processed_docs) + batch_size - 1)//batch_size} ({len(batch_docs)} documents)")
+
+            # Extract text content for batch embedding
+            batch_texts = [doc.page_content for doc in batch_docs]
+
+            # Create embeddings for the batch
+            try:
+                # Use embed_documents for batch processing instead of embed_query for single documents
+                batch_embeddings = await asyncio.to_thread(
+                    self.embeddings.embed_documents, batch_texts
+                )
+
+                # Create points for this batch
+                for idx, (doc, embedding) in enumerate(zip(batch_docs, batch_embeddings)):
+                    point = models.PointStruct(
+                        id=i + idx,
+                        vector=embedding,
+                        payload={
+                            "page_content": doc.page_content,
+                            "metadata": doc.metadata,
+                        },
+                    )
+                    all_points.append(point)
+
+            except Exception as e:
+                logger.error(f"❌ Error creating embeddings for batch {i//batch_size + 1}: {str(e)}")
+                # Fallback to individual embedding creation for this batch
+                logger.info("🔄 Falling back to individual embedding creation...")
+                for idx, doc in enumerate(batch_docs):
+                    try:
+                        embedding = await asyncio.to_thread(
+                            self.embeddings.embed_query, doc.page_content
+                        )
+                        point = models.PointStruct(
+                            id=i + idx,
+                            vector=embedding,
+                            payload={
+                                "page_content": doc.page_content,
+                                "metadata": doc.metadata,
+                            },
+                        )
+                        all_points.append(point)
+                    except Exception as individual_error:
+                        logger.error(f"❌ Error creating embedding for document {i + idx}: {str(individual_error)}")
+                        continue
+
+        # Upload all points to Qdrant
+        if all_points:
+            logger.info(f"📤 Uploading {len(all_points)} points to vectorstore...")
+            client.upload_points(
+                collection_name="test_collection",
+                points=all_points,
+            )
+            logger.info(f"✅ Successfully uploaded {len(all_points)} points to vectorstore")
+        else:
+            logger.warning("⚠️ No points to upload to vectorstore")
 
     async def _apply_pii_masking(self, processed_docs: List[Document], document_name: str):
         """
