@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
-from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
+from backend.retrieval.retriever import retrieve_top_k, retrieve_with_keyword_search, retrieve_hybrid, load_vectorstore, retrieve_with_keyword_helping
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import reflect_and_retry, spell_check, detect_language, filter_docs_by_selected_files, refine_query
@@ -28,12 +28,14 @@ async def run_orchestration(
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
+    search_method: str = "vector",  # "vector", "keyword", or "hybrid"
 ) -> Dict[str, Any]:
 
     logger.info(f"🔍 Query Orchestrator started:")
     logger.info(f"   - Query: {query}")
     logger.info(f"   - Web Search Enabled: {web_search_enabled}")
     logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+    logger.info(f"   - Search Method: {search_method}")
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
 
@@ -159,9 +161,26 @@ async def run_orchestration(
         reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
         # 4. Enhanced Retrieval + Reranking 
-        retrieved_docs = retrieve_top_k(
-            client=client, query=preprocessed_query, k=15, selected_files=selected_files
-        )  # Get more docs for better reranking
+        if search_method == "keyword":
+            logger.info("🔍 Using keyword search (BM25)")
+            retrieved_docs = retrieve_with_keyword_search(
+                query=preprocessed_query, k=15, selected_files=selected_files
+            )
+        elif search_method == "hybrid":
+            logger.info("🔍 Using hybrid search (vector + keyword)")
+            retrieved_docs = retrieve_hybrid(
+                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+            )
+        elif search_method == "vector_keyword_helping":
+            logger.info("🔍 Using vector + keyword search helping")
+            retrieved_docs = retrieve_with_keyword_helping(
+                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+            )
+        else:  # Default to vector search
+            logger.info("🔍 Using vector search")
+            retrieved_docs = retrieve_top_k(
+                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+            )  # Get more docs for better reranking
 
         if not retrieved_docs:
             logger.warning("No retrieved docs")
