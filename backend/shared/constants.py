@@ -91,6 +91,9 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"}
 # Document extensions
 DOCUMENT_EXTENSIONS = {".pdf", ".txt", ".docx", ".xlsx", ".xls", ".doc"}
 
+# Search configuration
+DEFAULT_SEARCH_METHOD = "vector_keyword_helping"  # "vector", "keyword", "vector_keyword_helping", or "hybrid"
+
 # Convert Path objects to strings for backward compatibility
 UPLOADS_PATH_STR = str(UPLOADS_PATH)
 CREATED_DOCUMENTS_PATH_STR = str(CREATED_DOCUMENTS_PATH)

@@ -5,7 +5,7 @@ from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH_STR, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH
+from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH_STR, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH, DEFAULT_SEARCH_METHOD
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -45,12 +45,15 @@ async def handle_query(request: QueryRequest):
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
+        # Use system-level default search method
+        search_method = DEFAULT_SEARCH_METHOD
 
 
         logger.info(f"📝 API Router received:")
         logger.info(f"   - Query: {query}")
         logger.info(f"   - Web Search Enabled: {web_search_enabled}")
         logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+        logger.info(f"   - Search Method (from config): {search_method}")
         logger.info(f"   - Session ID: {session_id}")
         logger.info(f"   - Selected Files: {selected_files}")
 
@@ -61,6 +64,7 @@ async def handle_query(request: QueryRequest):
             pre_embedding_process,
             session_id,
             selected_files,
+            search_method,
         )
         logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()
@@ -398,6 +402,18 @@ def delete_file(filename: str):
             client.close()
         except Exception as e:
             logger.error(f"Error deleting chunks from vector store: {e}")
+
+        # Also remove documents from keyword search index
+        try:
+            from backend.retrieval.keyword_search import get_keyword_search
+            
+            logger.info(f"🔍 Removing documents from keyword search index for file: {base_filename}")
+            keyword_search = get_keyword_search()
+            keyword_search.remove_documents_by_file(base_filename)
+            keyword_search.save_index()
+            logger.info(f"✅ Documents removed from keyword search index")
+        except Exception as e:
+            logger.error(f"Error deleting documents from keyword search index: {e}")
 
 
         # Delete the actual file
