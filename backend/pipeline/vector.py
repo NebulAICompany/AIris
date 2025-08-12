@@ -9,6 +9,7 @@ import time
 import asyncio
 from enum import Enum
 from backend.retrieval.autocontext import apply_autocontext
+from backend.retrieval.keyword_search import get_keyword_search
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 
@@ -51,14 +52,16 @@ class VectorStorePipeline:
         for doc in original_docs:
             parent_child_docs.append(doc)
             chunks = recursive_text_splitter.split_text(doc.page_content)
-            for chunk in chunks:
-                parent_child_docs.append(Document(page_content=chunk, metadata={
+            for i,chunk in enumerate(chunks):
+                child_metadata = {
                     **doc.metadata,
                     "content_type": "child",
                     "parent_chunk_id": doc.metadata.get("chunk_id"),
                     "parent_content": doc.page_content,
                     "file_name": file_name,
-                }))
+                }
+                child_metadata["chunk_id"] = f"{doc.metadata.get('chunk_id')}__child_{i}"
+                parent_child_docs.append(Document(page_content=chunk, metadata=child_metadata))
 
         return parent_child_docs
 
@@ -204,6 +207,21 @@ class VectorStorePipeline:
                 ],
             )
             client.close()
+
+            # Also add documents to keyword search index
+            logger.info(f"🔍 Adding {len(processed_docs)} documents to keyword search index...")
+            keyword_search = get_keyword_search()
+            
+            # Remove any existing documents from the same file first
+            keyword_search.remove_documents_by_file(document_name)
+            
+            for idx, doc in enumerate(processed_docs):
+                doc_id = f"{document_name}_{doc.metadata.get('chunk_id', idx)}"
+                keyword_search.add_document(doc_id, doc.page_content, doc.metadata)
+            
+            # Save keyword search index
+            keyword_search.save_index()
+            logger.info("✅ Documents added to keyword search index")
 
             logger.info(f"📈 Total text processed: {len(text_content)} characters")
 
