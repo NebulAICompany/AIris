@@ -137,7 +137,8 @@ async def ImageParser(file_path: str):
     saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
     image.save(saved_image_path, format='PNG')
 
-    description = await describe_images([image_bytes])
+    descriptions = await describe_images([image_bytes])
+    description = descriptions[0] if descriptions else "Açıklama alınamadı."
 
     content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
 
@@ -146,11 +147,7 @@ async def ImageParser(file_path: str):
 
 
 async def TxtParser(file_path: str):
-    content_parts = []
     with open(file_path, "r", encoding="utf-8") as infile:
-        for line in infile:
-            if line.strip():
-                content_parts.append(line)
+        content = infile.read()
 
-    extracted_text = "".join(content_parts)
-    return extracted_text
+    return content
