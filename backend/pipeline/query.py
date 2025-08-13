@@ -238,18 +238,12 @@ async def run_orchestration(
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
     logger.debug(f"🧠 Answer: {answer}")
-    # Apply reflection and potential retries
-    final_answer = reflect_and_retry(
-        prompt=masked_query, initial_answer=answer, max_retries=2
-    )
-    logger.debug(f"🧠 Final Answer: {final_answer}")
-
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted
     docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
 
     # 6. Maske çöz
-    final_answer = unmask_text(final_answer)
+    final_answer = unmask_text(answer)
 
     # 7. Add assistant response to chat history
     if session_id:

@@ -506,7 +506,16 @@ class UIComponents {
         );
 
         if (response) {
-          this.addMessageToChat("assistant", response.content, response.images || []);
+          // Extract response content properly from API response
+          const responseContent = response.response || response.content || response.data?.response;
+          const responseImages = response.images || response.data?.images || [];
+          
+          if (responseContent) {
+            this.addMessageToChat("assistant", responseContent, responseImages);
+          } else {
+            console.warn("Empty response received:", response);
+            this.addMessageToChat("assistant", "Response received but content was empty. Please try again.");
+          }
         }
       } catch (error) {
         console.error("Chat error:", error);
@@ -636,11 +645,8 @@ class UIComponents {
                 </div>
             `;
     } else if (type === "assistant") {
-      // Detect and format metadata content automatically
+      // Simple content processing without metadata handling
       let processedContent = content || "No response received";
-
-      // Auto-detect and format metadata sections
-      processedContent = this.formatMetadataContent(processedContent);
 
       // Safely parse markdown content, fallback to escaped HTML if marked fails
       let parsedContent;
@@ -663,15 +669,6 @@ class UIComponents {
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
-
-      // Apply metadata formatting immediately after adding the message
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        const messageTextElement = messageDiv.querySelector(".message-text");
-        if (messageTextElement) {
-          this.applyMetadataFormatting(messageTextElement);
-        }
-      });
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -977,10 +974,13 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Images are stored in message metadata or content
-          const images = msg.images || [];
+          // Extract images properly - they should be fresh for each message
+          const images = msg.images || msg.metadata?.images || [];
+          
+          // Ensure images are not accumulated from previous sessions
+          const cleanImages = Array.isArray(images) ? images.slice() : [];
 
-          this.addMessageToChat(msg.role, msg.content, images);
+          this.addMessageToChat(msg.role, msg.content, cleanImages);
 
           // Update local chat history
           if (msg.role === "user") {
@@ -992,24 +992,13 @@ class UIComponents {
             ) {
               this.chatHistory[this.chatHistory.length - 1].assistant =
                 msg.content;
-              this.chatHistory[this.chatHistory.length - 1].images = images;
+              this.chatHistory[this.chatHistory.length - 1].images = cleanImages;
             }
           }
         });
 
         // Update UI to show active session
         this.updateChatSessionsUI();
-
-        // Apply metadata formatting more reliably
-        // Use requestAnimationFrame to ensure DOM is ready
-        requestAnimationFrame(() => {
-          this.fixExistingMetadataFormatting();
-
-          // Apply additional formatting passes to catch any delayed renders
-          setTimeout(() => this.fixExistingMetadataFormatting(), 100);
-          setTimeout(() => this.fixExistingMetadataFormatting(), 300);
-          setTimeout(() => this.fixExistingMetadataFormatting(), 600);
-        });
 
         console.log("Loaded chat session:", sessionId);
         this.showNotification("Chat session loaded", "success");
@@ -2571,21 +2560,9 @@ class UIComponents {
     messages.forEach((messageDiv, index) => {
       const messageText = messageDiv.querySelector(".message-text");
       if (messageText) {
-        // Remove any existing metadata labels to prevent duplicates
-        const existingLabels = messageText.querySelectorAll(".metadata-label");
-        existingLabels.forEach((label) => label.remove());
-
-        // Reapply formatting with current theme
-        this.applyMetadataFormatting(messageText);
-        console.log(`Refreshed formatting for message ${index + 1}`);
+        console.log(`Processed message ${index + 1} (metadata formatting disabled)`);
       }
     });
-
-    // Also fix existing metadata formatting to ensure consistency
-    // Small delay to ensure theme classes are applied
-    setTimeout(() => {
-      this.fixExistingMetadataFormatting();
-    }, 100);
 
     console.log("Metadata formatting refresh completed");
   }
