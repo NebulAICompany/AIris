@@ -31,8 +31,6 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
-        # Step 2: Create or update vector store directly with the extracted text
-
         # Convert string to enum
         if pre_embedding_process.lower() == "cch":
             process_enum = PreEmbeddingProcess.CCH
@@ -43,7 +41,7 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
         logger.info(f"Pre-embedding process: {process_enum}")
         original_stem = Path(file_path).stem
 
-        vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
+        await vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
         )

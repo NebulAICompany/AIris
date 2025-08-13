@@ -3,6 +3,7 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+
 from backend.security.pii import mask_text
 from typing import List
 import time
@@ -127,7 +128,7 @@ class VectorStorePipeline:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
-    def run(self, text_content: str, document_name: str):
+    async def run(self, text_content: str, document_name: str):
         """
         Process text content directly without reading from files
         
@@ -170,17 +171,13 @@ class VectorStorePipeline:
                 
                 chunk_idx += 1
 
-
             logger.info(f"🔍 {len(docs)} documents before pre-embedding process")
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
             logger.info(f"✅ {len(processed_docs)} documents processed")
 
-            # PII Masking for all documents
-            logger.info(f"🔒 Applying PII masking to all {len(processed_docs)} documents...")
-            for doc in processed_docs:
-                masked = mask_text(doc.page_content, f"{doc.metadata.get('file_name')}||{doc.metadata.get('chunk_id')}")
-                doc.page_content = masked
+            # Apply PII masking to processed documents in batches
+            await self._apply_pii_masking(processed_docs, document_name)
 
             logger.info(f"🗄️ Adding {len(processed_docs)} documents to vectorstore...")
             client = QdrantClient(path=VECTORSTORE_PATH_STR)
@@ -192,20 +189,10 @@ class VectorStorePipeline:
                 logger.info("Collection created")
             else:
                 logger.info("Collection already exists")
-            client.upload_points(
-                collection_name="test_collection",
-                points=[
-                    models.PointStruct(
-                        id=idx,
-                        vector=self.embeddings.embed_query(doc.page_content),
-                        payload={
-                            "page_content": doc.page_content,
-                            "metadata": doc.metadata,
-                        },
-                    )
-                    for idx, doc in enumerate(processed_docs)
-                ],
-            )
+
+            # Create embeddings in batches for better performance
+            await self._create_and_upload_embeddings(client, processed_docs)
+
             client.close()
 
             # Also add documents to keyword search index
@@ -232,3 +219,95 @@ class VectorStorePipeline:
         except Exception as e:
             logger.error(f"❌ Error in vector store processing: {str(e)}")
             raise e
+
+    async def _create_and_upload_embeddings(self, client: QdrantClient, processed_docs: List[Document]):
+        """
+        Create embeddings in batches and upload to Qdrant for better performance
+        """
+        batch_size = 10
+        logger.info(f"🔄 Creating embeddings for {len(processed_docs)} documents in batches of {batch_size}...")
+
+        all_points = []
+
+        for i in range(0, len(processed_docs), batch_size):
+            batch_docs = processed_docs[i:i + batch_size]
+            logger.info(f"⚡ Processing embedding batch {i//batch_size + 1}/{(len(processed_docs) + batch_size - 1)//batch_size} ({len(batch_docs)} documents)")
+
+            # Extract text content for batch embedding
+            batch_texts = [doc.page_content for doc in batch_docs]
+
+            # Create embeddings for the batch
+            try:
+                # Use embed_documents for batch processing instead of embed_query for single documents
+                batch_embeddings = await asyncio.to_thread(
+                    self.embeddings.embed_documents, batch_texts
+                )
+
+                # Create points for this batch
+                for idx, (doc, embedding) in enumerate(zip(batch_docs, batch_embeddings)):
+                    point = models.PointStruct(
+                        id=i + idx,
+                        vector=embedding,
+                        payload={
+                            "page_content": doc.page_content,
+                            "metadata": doc.metadata,
+                        },
+                    )
+                    all_points.append(point)
+
+            except Exception as e:
+                logger.error(f"❌ Error creating embeddings for batch {i//batch_size + 1}: {str(e)}")
+                # Fallback to individual embedding creation for this batch
+                logger.info("🔄 Falling back to individual embedding creation...")
+                for idx, doc in enumerate(batch_docs):
+                    try:
+                        embedding = await asyncio.to_thread(
+                            self.embeddings.embed_query, doc.page_content
+                        )
+                        point = models.PointStruct(
+                            id=i + idx,
+                            vector=embedding,
+                            payload={
+                                "page_content": doc.page_content,
+                                "metadata": doc.metadata,
+                            },
+                        )
+                        all_points.append(point)
+                    except Exception as individual_error:
+                        logger.error(f"❌ Error creating embedding for document {i + idx}: {str(individual_error)}")
+                        continue
+
+        # Upload all points to Qdrant
+        if all_points:
+            logger.info(f"📤 Uploading {len(all_points)} points to vectorstore...")
+            client.upload_points(
+                collection_name="test_collection",
+                points=all_points,
+            )
+            logger.info(f"✅ Successfully uploaded {len(all_points)} points to vectorstore")
+        else:
+            logger.warning("⚠️ No points to upload to vectorstore")
+
+    async def _apply_pii_masking(self, processed_docs: List[Document], document_name: str):
+        """
+        Apply PII masking to processed documents in batches
+        """
+        logger.info(f"🔒 Applying PII masking to {len(processed_docs)} documents...")
+
+        doc_contents = [doc.page_content for doc in processed_docs]
+
+        batch_size = 5
+        masked_contents = []
+
+        for i in range(0, len(doc_contents), batch_size):
+            batch_group = doc_contents[i:i + batch_size]
+            logger.info(f"🔒 Processing PII batch group {i//batch_size + 1}/{(len(doc_contents) + batch_size - 1)//batch_size} ({len(batch_group)} documents)")
+
+            masked_group = await mask_text(batch_group, f"{document_name}_batch_{i//batch_size + 1}")
+            masked_contents.extend(masked_group)
+
+        logger.info(f"✅ PII masking completed for all {len(processed_docs)} documents in {(len(doc_contents) + batch_size - 1)//batch_size} groups")
+
+        # Update documents with masked content
+        for i, doc in enumerate(processed_docs):
+            doc.page_content = masked_contents[i]
