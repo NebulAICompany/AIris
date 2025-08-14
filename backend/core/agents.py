@@ -84,6 +84,7 @@ Use the image_visualizer tool with img_uniqueid or fig_uniqueid when:
 - User's query relates to visual content that has been processed and described in the context
 - The image descriptions in the context are relevant to answering the user's question
 - Displaying the actual images would enhance user understanding of the response
+- Do not add images to the answer because it is already in attachments after the tool is called.
 
 **For Image Content Analysis:**
 Use the redescribe_image_content tool when:
