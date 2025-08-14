@@ -712,55 +712,52 @@ class UIComponents {
 
       const imagesContainer = document.createElement("div");
       imagesContainer.className = "message-images";
-      imagesContainer.style.cssText = `
-        margin-top: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 8px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+
+      // Add a header for the images section
+      const imagesHeader = document.createElement("div");
+      imagesHeader.className = "images-header";
+      imagesHeader.innerHTML = `
+        <i class="fas fa-paperclip"></i>
+        <span>Attachments</span>
       `;
+      imagesHeader.style.cssText = `
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--text-primary);
+        opacity: 0.8;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      `;
+
+      imagesContainer.appendChild(imagesHeader);
 
       images.forEach((image, index) => {
         const imageWrapper = document.createElement("div");
         imageWrapper.className = "message-image-wrapper";
-        imageWrapper.style.cssText = `
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 6px;
-        `;
 
         const img = document.createElement("img");
         img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
         img.alt = `Attached Image: ${image.filename}`;
         img.className = "message-image";
         img.style.cssText = `
-          max-width: 400px;
+          max-width: 100%;
           max-height: 300px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          cursor: pointer;
-          transition: all 0.3s ease;
           object-fit: contain;
-          background: white;
-          border: 2px solid transparent;
+          cursor: pointer;
         `;
 
-        // Hover effects
-        img.addEventListener("mouseenter", () => {
-          img.style.transform = "scale(1.02)";
-          img.style.boxShadow = "0 6px 20px rgba(0,0,0,0.25)";
-          img.style.borderColor = "var(--accent-primary, #007bff)";
+        // Add loading placeholder effect
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
         });
 
-        img.addEventListener("mouseleave", () => {
-          img.style.transform = "scale(1)";
-          img.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-          img.style.borderColor = "transparent";
-        });
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.3s ease";
 
         // Click to expand functionality
         img.addEventListener("click", () => {
@@ -769,19 +766,7 @@ class UIComponents {
 
         const caption = document.createElement("div");
         caption.className = "image-caption";
-        caption.textContent = `📎 ${image.filename}`;
-        caption.style.cssText = `
-          font-size: 0.75em;
-          color: #666;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          background: rgba(255, 255, 255, 0.9);
-          padding: 4px 8px;
-          border-radius: 4px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          max-width: 400px;
-          word-break: break-all;
-          font-weight: 500;
-        `;
+        caption.innerHTML = `${image.filename}`;
 
         imageWrapper.appendChild(img);
         imageWrapper.appendChild(caption);
@@ -864,51 +849,66 @@ class UIComponents {
     const img = document.createElement("img");
     img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
     img.style.cssText = `
-      max-width: 95%;
-      max-height: 85%;
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      max-width: 90%;
+      max-height: 80%;
+      border-radius: 12px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.6);
       object-fit: contain;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
     `;
 
     const caption = document.createElement("div");
-    caption.textContent = image.filename;
+    caption.innerHTML = `
+      <i class="fas fa-image"></i>
+      <span>${image.filename}</span>
+    `;
     caption.style.cssText = `
       color: white;
       font-size: 1.1em;
-      margin-top: 16px;
+      margin-top: 20px;
       text-align: center;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 8px 16px;
-      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 12px 20px;
+      border-radius: 25px;
       font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
     `;
 
     const closeButton = document.createElement("div");
-    closeButton.innerHTML = "✕";
+    closeButton.innerHTML = '<i class="fas fa-times"></i>';
     closeButton.style.cssText = `
       position: absolute;
-      top: 20px;
-      right: 30px;
+      top: 25px;
+      right: 35px;
       color: white;
-      font-size: 2em;
+      font-size: 1.5em;
       cursor: pointer;
-      background: rgba(0, 0, 0, 0.5);
-      width: 40px;
-      height: 40px;
+      background: rgba(0, 0, 0, 0.6);
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.3s ease;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
     `;
 
     closeButton.addEventListener("mouseenter", () => {
-      closeButton.style.background = "rgba(255, 0, 0, 0.7)";
+      closeButton.style.background = "rgba(239, 68, 68, 0.8)";
+      closeButton.style.transform = "scale(1.05)";
     });
 
     closeButton.addEventListener("mouseleave", () => {
-      closeButton.style.background = "rgba(0, 0, 0, 0.5)";
+      closeButton.style.background = "rgba(0, 0, 0, 0.6)";
+      closeButton.style.transform = "scale(1)";
     });
 
     modal.appendChild(img);
