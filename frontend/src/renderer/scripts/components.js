@@ -45,7 +45,9 @@ class UIComponents {
     // Set toggle state on load
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
-      webSearchToggle.checked = this.webSearchEnabled;
+      if (this.webSearchEnabled) {
+        webSearchToggle.classList.add("active");
+      }
     }
 
     // Set language setting on load
@@ -139,13 +141,28 @@ class UIComponents {
     } // Web Search toggle event
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
-      webSearchToggle.addEventListener("change", (e) => {
-        this.webSearchEnabled = e.target.checked;
+      webSearchToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.webSearchEnabled = !this.webSearchEnabled;
         Utils.setWebSearchEnabled(this.webSearchEnabled);
+
+        // Update button state
+        if (this.webSearchEnabled) {
+          webSearchToggle.classList.add("active");
+        } else {
+          webSearchToggle.classList.remove("active");
+        }
+
         console.log("Web search enabled:", this.webSearchEnabled);
         // Optionally, notify backend here if needed
         // Example: window.airisAPI.setWebSearchEnabled?.(this.webSearchEnabled);
       });
+
+      // Set initial state
+      if (this.webSearchEnabled) {
+        webSearchToggle.classList.add("active");
+      }
+
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
