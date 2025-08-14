@@ -45,7 +45,9 @@ class UIComponents {
     // Set toggle state on load
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
-      webSearchToggle.checked = this.webSearchEnabled;
+      if (this.webSearchEnabled) {
+        webSearchToggle.classList.add("active");
+      }
     }
 
     // Set language setting on load
@@ -139,13 +141,28 @@ class UIComponents {
     } // Web Search toggle event
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
-      webSearchToggle.addEventListener("change", (e) => {
-        this.webSearchEnabled = e.target.checked;
+      webSearchToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.webSearchEnabled = !this.webSearchEnabled;
         Utils.setWebSearchEnabled(this.webSearchEnabled);
+
+        // Update button state
+        if (this.webSearchEnabled) {
+          webSearchToggle.classList.add("active");
+        } else {
+          webSearchToggle.classList.remove("active");
+        }
+
         console.log("Web search enabled:", this.webSearchEnabled);
         // Optionally, notify backend here if needed
         // Example: window.airisAPI.setWebSearchEnabled?.(this.webSearchEnabled);
       });
+
+      // Set initial state
+      if (this.webSearchEnabled) {
+        webSearchToggle.classList.add("active");
+      }
+
       console.log("webSearchEnabled: ", this.webSearchEnabled);
     }
 
@@ -168,17 +185,25 @@ class UIComponents {
     // Chat file upload listeners - UPDATED FOR CHAT INPUT DRAG & DROP
     const chatInputElement = document.getElementById("chat-input");
     const chatFileInput = document.getElementById("chat-file-input");
-    
+
     // File input change
     if (chatFileInput) {
-      chatFileInput.addEventListener("change", (e) => this.handleNewFileSelect(e));
+      chatFileInput.addEventListener("change", (e) =>
+        this.handleNewFileSelect(e)
+      );
     }
-    
+
     // Drag and drop for chat input
     if (chatInputElement) {
-      chatInputElement.addEventListener("dragover", (e) => this.handleChatInputDragOver(e));
-      chatInputElement.addEventListener("dragleave", (e) => this.handleChatInputDragLeave(e));
-      chatInputElement.addEventListener("drop", (e) => this.handleChatInputDrop(e));
+      chatInputElement.addEventListener("dragover", (e) =>
+        this.handleChatInputDragOver(e)
+      );
+      chatInputElement.addEventListener("dragleave", (e) =>
+        this.handleChatInputDragLeave(e)
+      );
+      chatInputElement.addEventListener("drop", (e) =>
+        this.handleChatInputDrop(e)
+      );
     }
 
     // File attachment button (paperclip)
@@ -422,7 +447,8 @@ class UIComponents {
 
     if (chatInput && sendButton) {
       const hasText = chatInput.value.trim().length > 0;
-      const hasFiles = this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
+      const hasFiles =
+        this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
       sendButton.disabled = !(hasText || hasFiles) || this.isProcessing;
     }
   }
@@ -432,16 +458,21 @@ class UIComponents {
     const message = chatInput.value.trim();
 
     // Allow sending if there's either a message or files attached
-    if ((!message && (!this.chatUploadedFiles || this.chatUploadedFiles.length === 0)) || this.isProcessing) return;
+    if (
+      (!message &&
+        (!this.chatUploadedFiles || this.chatUploadedFiles.length === 0)) ||
+      this.isProcessing
+    )
+      return;
 
     this.isProcessing = true;
     chatInput.value = "";
-    
+
     // Clear chat files preview immediately when send button is pressed
     const filesToUpload = [...this.chatUploadedFiles]; // Copy the files array
     this.chatUploadedFiles = []; // Clear the files array
     this.updateChatFilesPreview(); // Hide the preview immediately
-    
+
     this.toggleSendButton();
 
     // Create new session if none exists
@@ -462,7 +493,7 @@ class UIComponents {
     if (filesToUpload.length > 0) {
       // Show uploading status for each file
       for (const file of filesToUpload) {
-        this.addFileStatusMessage(file.name, 'uploading');
+        this.addFileStatusMessage(file.name, "uploading");
       }
 
       // Upload files one by one
@@ -474,18 +505,18 @@ class UIComponents {
             uploadedFiles.push({
               name: file.name,
               size: file.size,
-              id: response.data.file_id || response.data.filename
+              id: response.data.file_id || response.data.filename,
             });
-            
+
             // Update status to success
-            this.updateFileStatusMessage(file.name, 'success');
+            this.updateFileStatusMessage(file.name, "success");
           } else {
             // Update status to error
-            this.updateFileStatusMessage(file.name, 'error', 'Upload failed');
+            this.updateFileStatusMessage(file.name, "error", "Upload failed");
           }
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
-          this.updateFileStatusMessage(file.name, 'error', 'Upload failed');
+          this.updateFileStatusMessage(file.name, "error", "Upload failed");
         }
       }
     }
@@ -506,11 +537,27 @@ class UIComponents {
         );
 
         if (response) {
-          this.addMessageToChat("assistant", response.content, response.images || []);
+          // Extract response content properly from API response
+          const responseContent =
+            response.response || response.content || response.data?.response;
+          const responseImages = response.images || response.data?.images || [];
+
+          if (responseContent) {
+            this.addMessageToChat("assistant", responseContent, responseImages);
+          } else {
+            console.warn("Empty response received:", response);
+            this.addMessageToChat(
+              "assistant",
+              "Response received but content was empty. Please try again."
+            );
+          }
         }
       } catch (error) {
         console.error("Chat error:", error);
-        this.addMessageToChat("error", "Sorry, there was an error processing your request. Please try again.");
+        this.addMessageToChat(
+          "error",
+          "Sorry, there was an error processing your request. Please try again."
+        );
       } finally {
         this.hideTypingIndicator();
       }
@@ -636,11 +683,8 @@ class UIComponents {
                 </div>
             `;
     } else if (type === "assistant") {
-      // Detect and format metadata content automatically
+      // Simple content processing
       let processedContent = content || "No response received";
-
-      // Auto-detect and format metadata sections
-      processedContent = this.formatMetadataContent(processedContent);
 
       // Safely parse markdown content, fallback to escaped HTML if marked fails
       let parsedContent;
@@ -663,15 +707,6 @@ class UIComponents {
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
-
-      // Apply metadata formatting immediately after adding the message
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        const messageTextElement = messageDiv.querySelector(".message-text");
-        if (messageTextElement) {
-          this.applyMetadataFormatting(messageTextElement);
-        }
-      });
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -694,55 +729,52 @@ class UIComponents {
 
       const imagesContainer = document.createElement("div");
       imagesContainer.className = "message-images";
-      imagesContainer.style.cssText = `
-        margin-top: 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 8px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
+
+      // Add a header for the images section
+      const imagesHeader = document.createElement("div");
+      imagesHeader.className = "images-header";
+      imagesHeader.innerHTML = `
+        <i class="fas fa-paperclip"></i>
+        <span>Attachments</span>
       `;
+      imagesHeader.style.cssText = `
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--text-primary);
+        opacity: 0.8;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      `;
+
+      imagesContainer.appendChild(imagesHeader);
 
       images.forEach((image, index) => {
         const imageWrapper = document.createElement("div");
         imageWrapper.className = "message-image-wrapper";
-        imageWrapper.style.cssText = `
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 6px;
-        `;
 
         const img = document.createElement("img");
         img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
         img.alt = `Attached Image: ${image.filename}`;
         img.className = "message-image";
         img.style.cssText = `
-          max-width: 400px;
+          max-width: 100%;
           max-height: 300px;
-          border-radius: 8px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          cursor: pointer;
-          transition: all 0.3s ease;
           object-fit: contain;
-          background: white;
-          border: 2px solid transparent;
+          cursor: pointer;
         `;
 
-        // Hover effects
-        img.addEventListener("mouseenter", () => {
-          img.style.transform = "scale(1.02)";
-          img.style.boxShadow = "0 6px 20px rgba(0,0,0,0.25)";
-          img.style.borderColor = "var(--accent-primary, #007bff)";
+        // Add loading placeholder effect
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
         });
 
-        img.addEventListener("mouseleave", () => {
-          img.style.transform = "scale(1)";
-          img.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-          img.style.borderColor = "transparent";
-        });
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.3s ease";
 
         // Click to expand functionality
         img.addEventListener("click", () => {
@@ -751,19 +783,7 @@ class UIComponents {
 
         const caption = document.createElement("div");
         caption.className = "image-caption";
-        caption.textContent = `📎 ${image.filename}`;
-        caption.style.cssText = `
-          font-size: 0.75em;
-          color: #666;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          background: rgba(255, 255, 255, 0.9);
-          padding: 4px 8px;
-          border-radius: 4px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          max-width: 400px;
-          word-break: break-all;
-          font-weight: 500;
-        `;
+        caption.innerHTML = `${image.filename}`;
 
         imageWrapper.appendChild(img);
         imageWrapper.appendChild(caption);
@@ -779,13 +799,10 @@ class UIComponents {
 
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // Apply syntax highlighting and force metadata styling
+    // Apply syntax highlighting
     messageDiv.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightBlock(block);
     });
-
-    // Apply metadata formatting to new message
-    this.applyMetadataFormatting(messageDiv);
   }
 
   showTypingIndicator() {
@@ -849,51 +866,66 @@ class UIComponents {
     const img = document.createElement("img");
     img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
     img.style.cssText = `
-      max-width: 95%;
-      max-height: 85%;
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      max-width: 90%;
+      max-height: 80%;
+      border-radius: 12px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.6);
       object-fit: contain;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
     `;
 
     const caption = document.createElement("div");
-    caption.textContent = image.filename;
+    caption.innerHTML = `
+      <i class="fas fa-image"></i>
+      <span>${image.filename}</span>
+    `;
     caption.style.cssText = `
       color: white;
       font-size: 1.1em;
-      margin-top: 16px;
+      margin-top: 20px;
       text-align: center;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 8px 16px;
-      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 12px 20px;
+      border-radius: 25px;
       font-family: 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
     `;
 
     const closeButton = document.createElement("div");
-    closeButton.innerHTML = "✕";
+    closeButton.innerHTML = '<i class="fas fa-times"></i>';
     closeButton.style.cssText = `
       position: absolute;
-      top: 20px;
-      right: 30px;
+      top: 25px;
+      right: 35px;
       color: white;
-      font-size: 2em;
+      font-size: 1.5em;
       cursor: pointer;
-      background: rgba(0, 0, 0, 0.5);
-      width: 40px;
-      height: 40px;
+      background: rgba(0, 0, 0, 0.6);
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.3s ease;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
     `;
 
     closeButton.addEventListener("mouseenter", () => {
-      closeButton.style.background = "rgba(255, 0, 0, 0.7)";
+      closeButton.style.background = "rgba(239, 68, 68, 0.8)";
+      closeButton.style.transform = "scale(1.05)";
     });
 
     closeButton.addEventListener("mouseleave", () => {
-      closeButton.style.background = "rgba(0, 0, 0, 0.5)";
+      closeButton.style.background = "rgba(0, 0, 0, 0.6)";
+      closeButton.style.transform = "scale(1)";
     });
 
     modal.appendChild(img);
@@ -977,10 +1009,13 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Images are stored in message metadata or content
-          const images = msg.images || [];
+          // Extract images properly - they should be fresh for each message
+          const images = msg.images || msg.metadata?.images || [];
 
-          this.addMessageToChat(msg.role, msg.content, images);
+          // Ensure images are not accumulated from previous sessions
+          const cleanImages = Array.isArray(images) ? images.slice() : [];
+
+          this.addMessageToChat(msg.role, msg.content, cleanImages);
 
           // Update local chat history
           if (msg.role === "user") {
@@ -992,24 +1027,14 @@ class UIComponents {
             ) {
               this.chatHistory[this.chatHistory.length - 1].assistant =
                 msg.content;
-              this.chatHistory[this.chatHistory.length - 1].images = images;
+              this.chatHistory[this.chatHistory.length - 1].images =
+                cleanImages;
             }
           }
         });
 
         // Update UI to show active session
         this.updateChatSessionsUI();
-
-        // Apply metadata formatting more reliably
-        // Use requestAnimationFrame to ensure DOM is ready
-        requestAnimationFrame(() => {
-          this.fixExistingMetadataFormatting();
-
-          // Apply additional formatting passes to catch any delayed renders
-          setTimeout(() => this.fixExistingMetadataFormatting(), 100);
-          setTimeout(() => this.fixExistingMetadataFormatting(), 300);
-          setTimeout(() => this.fixExistingMetadataFormatting(), 600);
-        });
 
         console.log("Loaded chat session:", sessionId);
         this.showNotification("Chat session loaded", "success");
@@ -1244,88 +1269,6 @@ class UIComponents {
     }
   }
 
-  formatMetadataContent(content) {
-    if (!content || typeof content !== "string") {
-      return content;
-    }
-
-    // First, convert download URLs to clickable links
-    content = this.convertUrlsToLinks(content);
-
-    // More flexible patterns to catch metadata sections with various formatting
-    const metadataPatterns = [
-      /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:/gi,
-      /🗂️\s*Kullanılan Bilgi Metadataları:/gi,
-      /📊\s*Kullanılan Bilgi Metadataları:/gi,
-      /\*\*Kullanılan Bilgi Metadataları:\*\*/gi,
-      /Kullanılan Bilgi Metadataları:/gi,
-    ];
-
-    // Check if content contains any metadata pattern
-    let metadataMatch = null;
-    let matchedPattern = null;
-
-    for (const pattern of metadataPatterns) {
-      const match = content.match(pattern);
-      if (match) {
-        metadataMatch = match;
-        matchedPattern = pattern;
-        break;
-      }
-    }
-
-    if (!metadataMatch) {
-      return content;
-    }
-
-    // Find the actual start of metadata section (including any preceding separators)
-    const fullMatch = metadataMatch[0];
-    const metadataStart = content.indexOf(fullMatch);
-
-    if (metadataStart === -1) {
-      return content;
-    }
-
-    // Check if there's a separator (---) before the metadata
-    let actualStart = metadataStart;
-    const beforeMetadataCheck = content.substring(
-      Math.max(0, metadataStart - 10),
-      metadataStart
-    );
-    const separatorMatch = beforeMetadataCheck.match(/---\s*$/);
-    if (separatorMatch) {
-      actualStart = metadataStart - separatorMatch[0].length;
-    }
-
-    // Extract parts
-    const beforeMetadata = content.substring(0, actualStart).trim();
-    let metadataSection = content.substring(actualStart);
-
-    // Clean up metadata section - remove various formats of the title
-    let cleanedMetadata = metadataSection
-      .replace(/---\s*\n\s*/g, "")
-      .replace(/🗂️\s*Kullanılan Bilgi Metadataları:\s*/gi, "")
-      .replace(/📊\s*Kullanılan Bilgi Metadataları:\s*/gi, "")
-      .replace(/\*\*Kullanılan Bilgi Metadataları:\*\*\s*/gi, "")
-      .replace(/Kullanılan Bilgi Metadataları:\s*/gi, "")
-      .trim();
-
-    // Also remove any trailing separators
-    cleanedMetadata = cleanedMetadata.replace(/\s*---\s*$/, "").trim();
-
-    // Format as code block
-    const formattedMetadata = `\`\`\`\n${cleanedMetadata}\n\`\`\``;
-
-    // Combine everything
-    let result = "";
-    if (beforeMetadata) {
-      result += beforeMetadata + "\n\n";
-    }
-    result += formattedMetadata;
-
-    return result;
-  }
-
   convertUrlsToLinks(content) {
     if (!content || typeof content !== "string") {
       return content;
@@ -1351,232 +1294,6 @@ class UIComponents {
     });
 
     return content;
-  }
-
-  fixExistingMetadataFormatting() {
-    const chatMessages = document.getElementById("chat-messages");
-    if (!chatMessages) return;
-
-    const messages = chatMessages.querySelectorAll(
-      ".message.assistant-message"
-    );
-
-    console.log(`Fixing metadata formatting for ${messages.length} messages`);
-
-    messages.forEach((messageDiv, index) => {
-      const messageText = messageDiv.querySelector(".message-text");
-      if (!messageText) return;
-
-      // Get the original content - try to get from data attribute first, then fallback to text
-      let originalContent =
-        messageDiv.dataset.originalContent ||
-        messageText.textContent ||
-        messageText.innerText;
-
-      // Store original content if not already stored
-      if (!messageDiv.dataset.originalContent) {
-        messageDiv.dataset.originalContent = originalContent;
-      }
-
-      // Enhanced metadata detection
-      const metadataIndicators = [
-        "Kullanılan Bilgi Metadataları:",
-        "🗂️",
-        "📊",
-        "Kaynak:",
-        "- Kaynak:",
-        "📂 Kaynak:",
-        "İşlem Durumu:",
-        "Kategori:",
-        "- Kategori:",
-        "🏷️ Kategori:",
-        "Tarih:",
-        "- Tarih:",
-        "📅 Tarih:",
-        "Belge Türü:",
-        "📄 Belge Türü:",
-        "- Belge Türü:",
-        "Alpha Vantage", // Financial data indicator
-        "Finansal veriler",
-      ];
-
-      const hasMetadata = metadataIndicators.some((indicator) =>
-        originalContent.includes(indicator)
-      );
-
-      if (hasMetadata) {
-        console.log(`Processing message ${index + 1} with metadata`);
-
-        // Check if metadata is already properly formatted
-        const hasFormattedMetadata = messageText.querySelector("pre code");
-        const hasMetadataLabel = messageText.querySelector(".metadata-label");
-
-        // If already properly formatted, just apply styling
-        if (hasFormattedMetadata && hasMetadataLabel) {
-          this.applyMetadataFormatting(messageText);
-          return;
-        }
-
-        // Remove any existing metadata labels first
-        const existingLabels = messageText.querySelectorAll(".metadata-label");
-        existingLabels.forEach((label) => label.remove());
-
-        try {
-          // Process the content with our improved formatters
-          const formattedContent = this.formatMetadataContent(originalContent);
-
-          // Parse markdown and update content
-          const parsedContent = marked.parse(formattedContent);
-          messageText.innerHTML = parsedContent;
-
-          // Apply our enhanced styling
-          this.applyMetadataFormatting(messageText);
-
-          console.log(`Successfully reformatted message ${index + 1}`);
-        } catch (error) {
-          console.warn(`Failed to reformat message ${index + 1}:`, error);
-
-          // Fallback: try to apply basic formatting
-          try {
-            this.applyMetadataFormatting(messageText);
-          } catch (fallbackError) {
-            console.warn(
-              `Fallback formatting also failed for message ${index + 1}:`,
-              fallbackError
-            );
-          }
-        }
-      }
-    });
-
-    console.log("Metadata formatting fix completed");
-  }
-
-  applyMetadataFormatting(container) {
-    // Detect dark mode
-    const isDarkMode =
-      document.body.classList.contains("dark-theme") ||
-      document.documentElement.getAttribute("data-theme") === "dark";
-
-    // Apply our metadata styling to a specific container
-    container.querySelectorAll("pre").forEach((preBlock) => {
-      // Check if this pre block contains metadata content
-      const preContent = preBlock.textContent || preBlock.innerText;
-      const metadataKeywords = [
-        "Kaynak:",
-        "İşlem Durumu:",
-        "Kategori:",
-        "dosya",
-        "sayfa",
-        "kimlik",
-        "yazışma",
-        "bilgilendirme",
-      ];
-      const hasMetadataContent = metadataKeywords.some((keyword) =>
-        preContent.includes(keyword)
-      );
-
-      // Only apply metadata styling if it contains actual metadata
-      if (!hasMetadataContent) {
-        return;
-      }
-
-      if (isDarkMode) {
-        // Dark mode colors
-        preBlock.style.cssText = `
-          background-color: #1e293b !important;
-          border: 1px solid #334155 !important;
-          border-left: 4px solid #3b82f6 !important;
-          border-radius: 8px !important;
-          padding: 16px !important;
-          margin: 12px 0 !important;
-          overflow-x: auto !important;
-          position: relative !important;
-        `;
-      } else {
-        // Light mode colors
-        preBlock.style.cssText = `
-          background-color: #f0f2f5 !important;
-          border: 1px solid #d1d5db !important;
-          border-left: 4px solid #3b82f6 !important;
-          border-radius: 8px !important;
-          padding: 16px !important;
-          margin: 12px 0 !important;
-          overflow-x: auto !important;
-          position: relative !important;
-        `;
-      }
-
-      // Always add metadata label to code blocks that contain metadata content
-      const existingLabel = preBlock.querySelector(".metadata-label");
-
-      if (!existingLabel) {
-        const label = document.createElement("div");
-        label.className = "metadata-label";
-
-        if (isDarkMode) {
-          // Dark mode label styling
-          label.style.cssText = `
-            font-size: 11px !important;
-            color: #60a5fa !important;
-            font-weight: 600 !important;
-            margin-bottom: 12px !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            background-color: rgba(59, 130, 246, 0.15) !important;
-            padding: 6px 12px !important;
-            border-radius: 4px !important;
-            border-left: 3px solid #60a5fa !important;
-            display: inline-block !important;
-          `;
-        } else {
-          // Light mode label styling
-          label.style.cssText = `
-            font-size: 11px !important;
-            color: #3b82f6 !important;
-            font-weight: 600 !important;
-            margin-bottom: 12px !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            background-color: rgba(59, 130, 246, 0.1) !important;
-            padding: 6px 12px !important;
-            border-radius: 4px !important;
-            border-left: 3px solid #3b82f6 !important;
-            display: inline-block !important;
-          `;
-        }
-
-        label.textContent = "📊 Kullanılan Bilgi Metadataları";
-        preBlock.insertBefore(label, preBlock.firstChild);
-      }
-
-      // Force code styling
-      preBlock.querySelectorAll("code, code *").forEach((codeEl) => {
-        if (isDarkMode) {
-          // Dark mode code styling
-          codeEl.style.cssText = `
-            background: none !important;
-            background-color: transparent !important;
-            color: #cbd5e1 !important;
-            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
-            font-size: 13px !important;
-            line-height: 1.6 !important;
-          `;
-        } else {
-          // Light mode code styling
-          codeEl.style.cssText = `
-            background: none !important;
-            background-color: transparent !important;
-            color: #4b5563 !important;
-            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
-            font-size: 13px !important;
-            line-height: 1.6 !important;
-          `;
-        }
-      });
-    });
   }
 
   // Chat file upload methods
@@ -1608,7 +1325,7 @@ class UIComponents {
     e.stopPropagation();
     const uploadArea = document.getElementById("chat-file-upload");
     uploadArea?.classList.remove("drag-over");
-    
+
     const files = Array.from(e.dataTransfer.files);
     this.addFilesToChat(files);
   }
@@ -1621,31 +1338,36 @@ class UIComponents {
 
   addFilesToChat(files) {
     const validFiles = files.filter((file) => Utils.validateFile(file));
-    
-    validFiles.forEach(file => {
+
+    validFiles.forEach((file) => {
       // Check if file already exists
-      if (!this.chatUploadedFiles.find(f => f.name === file.name)) {
+      if (!this.chatUploadedFiles.find((f) => f.name === file.name)) {
         this.chatUploadedFiles.push(file);
       }
     });
-    
+
     this.updateChatFilesPreview();
-    
+
     if (validFiles.length > 0) {
-      this.showNotification(`${validFiles.length} file(s) attached to chat`, "success");
+      this.showNotification(
+        `${validFiles.length} file(s) attached to chat`,
+        "success"
+      );
     }
   }
 
   updateChatFilesPreview() {
     const uploadArea = document.getElementById("chat-file-upload");
     const filesPreview = document.getElementById("chat-uploaded-files");
-    
+
     if (!uploadArea || !filesPreview) return;
-    
+
     if (this.chatUploadedFiles.length > 0) {
       uploadArea.style.display = "block";
-      
-      filesPreview.innerHTML = this.chatUploadedFiles.map((file, index) => `
+
+      filesPreview.innerHTML = this.chatUploadedFiles
+        .map(
+          (file, index) => `
         <div class="chat-file-item">
           <i class="${Utils.getFileIcon(file.name)}"></i>
           <span class="file-name">${Utils.escapeHtml(file.name)}</span>
@@ -1653,12 +1375,14 @@ class UIComponents {
             <i class="fas fa-times"></i>
           </button>
         </div>
-      `).join('');
+      `
+        )
+        .join("");
     } else {
       uploadArea.style.display = "none";
       filesPreview.innerHTML = "";
     }
-    
+
     // Update send button state when files change
     this.toggleSendButton();
   }
@@ -1695,7 +1419,7 @@ class UIComponents {
     event.stopPropagation();
     const chatInput = document.getElementById("chat-input");
     chatInput.classList.remove("drag-over");
-    
+
     const files = Array.from(event.dataTransfer.files);
     this.addFilesToChat(files);
   }
@@ -1704,38 +1428,39 @@ class UIComponents {
     if (!this.chatUploadedFiles) {
       this.chatUploadedFiles = [];
     }
-    
+
     // Add files to the upload queue
-    files.forEach(file => {
+    files.forEach((file) => {
       this.chatUploadedFiles.push(file);
     });
-    
+
     // Update the preview
     this.updateChatFilesPreview();
   }
 
   // File status message methods
-  addFileStatusMessage(fileName, status, errorMessage = '') {
+  addFileStatusMessage(fileName, status, errorMessage = "") {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
     let statusIcon, statusText, statusClass;
-    
+
     switch (status) {
-      case 'uploading':
-        statusIcon = '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
-        statusText = '';
-        statusClass = 'uploading';
+      case "uploading":
+        statusIcon =
+          '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
+        statusText = "";
+        statusClass = "uploading";
         break;
-      case 'success':
-        statusIcon = '✅';
+      case "success":
+        statusIcon = "✅";
         statusText = `Uploaded successfully`;
-        statusClass = 'success';
+        statusClass = "success";
         break;
-      case 'error':
-        statusIcon = '❌';
-        statusText = errorMessage || 'Upload failed';
-        statusClass = 'error';
+      case "error":
+        statusIcon = "❌";
+        statusText = errorMessage || "Upload failed";
+        statusClass = "error";
         break;
     }
 
@@ -1744,7 +1469,9 @@ class UIComponents {
     messageElement.innerHTML = `
       <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(fileName)}</span>: ${statusText}
+        <span class="file-name">${Utils.escapeHtml(
+          fileName
+        )}</span>: ${statusText}
       </div>
     `;
 
@@ -1755,22 +1482,24 @@ class UIComponents {
     messageElement.dataset.fileName = fileName;
   }
 
-  updateFileStatusMessage(fileName, status, errorMessage = '') {
-    const statusMessage = document.querySelector(`[data-file-name="${fileName}"]`);
+  updateFileStatusMessage(fileName, status, errorMessage = "") {
+    const statusMessage = document.querySelector(
+      `[data-file-name="${fileName}"]`
+    );
     if (!statusMessage) return;
 
     let statusIcon, statusText, statusClass;
-    
+
     switch (status) {
-      case 'success':
-        statusIcon = '✅';
+      case "success":
+        statusIcon = "✅";
         statusText = `Uploaded successfully`;
-        statusClass = 'success';
+        statusClass = "success";
         break;
-      case 'error':
-        statusIcon = '❌';
-        statusText = errorMessage || 'Upload failed';
-        statusClass = 'error';
+      case "error":
+        statusIcon = "❌";
+        statusText = errorMessage || "Upload failed";
+        statusClass = "error";
         break;
     }
 
@@ -1779,7 +1508,9 @@ class UIComponents {
     statusMessage.innerHTML = `
       <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(fileName)}</span>: ${statusText}
+        <span class="file-name">${Utils.escapeHtml(
+          fileName
+        )}</span>: ${statusText}
       </div>
     `;
   }
@@ -1871,7 +1602,7 @@ class UIComponents {
 
   async loadFileLibrary() {
     try {
-      // Fetch the file list with metadata from the backend
+      // Fetch the file list from the backend
       const response = await fetch("http://localhost:8001/api/files");
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
@@ -1896,7 +1627,7 @@ class UIComponents {
         return;
       }
 
-      // Render each file with metadata
+      // Render each file
       files.forEach((file) => {
         const fileItem = document.createElement("div");
         fileItem.className = "file-card";
@@ -1967,7 +1698,7 @@ class UIComponents {
 
   async loadCreatedDocumentsLibrary() {
     try {
-      // Fetch the created documents list with metadata from the backend
+      // Fetch the created documents list from the backend
       const response = await fetch(
         "http://localhost:8001/api/created-documents"
       );
@@ -1998,7 +1729,7 @@ class UIComponents {
         return;
       }
 
-      // Render each created document with metadata
+      // Render each created document
       files.forEach((file) => {
         const fileItem = document.createElement("div");
         fileItem.className = "file-card";
@@ -2418,7 +2149,6 @@ class UIComponents {
     }
   }
 
-
   async loadAnalytics() {
     try {
       const metrics = await window.apiService.getSystemStats();
@@ -2538,9 +2268,6 @@ class UIComponents {
     this.isDarkMode = !this.isDarkMode;
     this.applyTheme();
     localStorage.setItem("airis-theme", this.isDarkMode ? "dark" : "light");
-
-    // Reformat existing metadata with new theme
-    this.refreshMetadataFormatting();
   }
 
   applyTheme() {
@@ -2552,42 +2279,6 @@ class UIComponents {
         ? '<i class="fas fa-sun"></i>'
         : '<i class="fas fa-moon"></i>';
     }
-  }
-
-  refreshMetadataFormatting() {
-    // Refresh all existing metadata formatting when theme changes
-    console.log("Refreshing metadata formatting after theme change");
-
-    const chatMessages = document.getElementById("chat-messages");
-    if (!chatMessages) return;
-
-    const messages = chatMessages.querySelectorAll(
-      ".message.assistant-message"
-    );
-    console.log(
-      `Refreshing formatting for ${messages.length} assistant messages`
-    );
-
-    messages.forEach((messageDiv, index) => {
-      const messageText = messageDiv.querySelector(".message-text");
-      if (messageText) {
-        // Remove any existing metadata labels to prevent duplicates
-        const existingLabels = messageText.querySelectorAll(".metadata-label");
-        existingLabels.forEach((label) => label.remove());
-
-        // Reapply formatting with current theme
-        this.applyMetadataFormatting(messageText);
-        console.log(`Refreshed formatting for message ${index + 1}`);
-      }
-    });
-
-    // Also fix existing metadata formatting to ensure consistency
-    // Small delay to ensure theme classes are applied
-    setTimeout(() => {
-      this.fixExistingMetadataFormatting();
-    }, 100);
-
-    console.log("Metadata formatting refresh completed");
   }
 
   // Settings management
@@ -2910,7 +2601,6 @@ class UIComponents {
 
       stageElement.textContent = translatedText;
     };
-
 
     // Update status texts
     const statusTexts = document.querySelectorAll(".status-text");
@@ -3813,10 +3503,10 @@ class UIComponents {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       // Update progress bar during upload
-      xhr.upload.addEventListener('progress', (e) => {
+      xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
           const percentComplete = Math.round((e.loaded / e.total) * 100);
           this.updateFileUploadProgress(fileIndex, percentComplete);
@@ -3824,43 +3514,45 @@ class UIComponents {
       });
 
       // Handle successful upload
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener("load", () => {
         try {
           const response = JSON.parse(xhr.responseText);
           this.updateFileUploadProgress(fileIndex, 100);
           resolve(response);
         } catch (error) {
-          reject(new Error('Invalid response format'));
+          reject(new Error("Invalid response format"));
         }
       });
 
       // Handle upload error
-      xhr.addEventListener('error', () => {
-        reject(new Error('Upload failed'));
+      xhr.addEventListener("error", () => {
+        reject(new Error("Upload failed"));
       });
 
       // Handle upload abort
-      xhr.addEventListener('abort', () => {
-        reject(new Error('Upload aborted'));
+      xhr.addEventListener("abort", () => {
+        reject(new Error("Upload aborted"));
       });
 
       // Start upload
-      xhr.open('POST', 'http://localhost:8000/upload');
+      xhr.open("POST", "http://localhost:8000/upload");
       xhr.send(formData);
     });
   }
 
   // Update file upload progress
   updateFileUploadProgress(fileIndex, percentage) {
-    const filePreview = document.querySelector(`[data-file-index="${fileIndex}"]`);
+    const filePreview = document.querySelector(
+      `[data-file-index="${fileIndex}"]`
+    );
     if (filePreview) {
-      const progressFill = filePreview.querySelector('.upload-progress-fill');
-      const progressText = filePreview.querySelector('.upload-progress-text');
-      
+      const progressFill = filePreview.querySelector(".upload-progress-fill");
+      const progressText = filePreview.querySelector(".upload-progress-text");
+
       if (progressFill) {
         progressFill.style.width = `${percentage}%`;
       }
-      
+
       if (progressText) {
         progressText.textContent = `${percentage}%`;
       }
@@ -3868,32 +3560,38 @@ class UIComponents {
   }
 
   // Update file upload status (success/failure)
-  updateFileUploadStatus(fileIndex, success, errorMessage = '') {
-    const filePreview = document.querySelector(`[data-file-index="${fileIndex}"]`);
+  updateFileUploadStatus(fileIndex, success, errorMessage = "") {
+    const filePreview = document.querySelector(
+      `[data-file-index="${fileIndex}"]`
+    );
     if (filePreview) {
-      const uploadStatus = filePreview.querySelector('.upload-status');
-      const progressContainer = filePreview.querySelector('.upload-progress-container');
-      
+      const uploadStatus = filePreview.querySelector(".upload-status");
+      const progressContainer = filePreview.querySelector(
+        ".upload-progress-container"
+      );
+
       if (success) {
-        uploadStatus.textContent = '✓ Uploaded';
-        uploadStatus.className = 'upload-status';
-        uploadStatus.style.color = 'var(--accent-success, #10b981)';
+        uploadStatus.textContent = "✓ Uploaded";
+        uploadStatus.className = "upload-status";
+        uploadStatus.style.color = "var(--accent-success, #10b981)";
       } else {
-        uploadStatus.textContent = `❌ ${errorMessage || 'Failed'}`;
-        uploadStatus.className = 'upload-status';
-        uploadStatus.style.color = 'var(--error-color, #ef4444)';
+        uploadStatus.textContent = `❌ ${errorMessage || "Failed"}`;
+        uploadStatus.className = "upload-status";
+        uploadStatus.style.color = "var(--error-color, #ef4444)";
       }
-      
+
       // Hide progress bar after completion
       if (progressContainer) {
-        progressContainer.style.display = 'none';
+        progressContainer.style.display = "none";
       }
     }
   }
 
   // Update files header after all uploads complete
   updateFilesHeader(uploadedCount) {
-    const latestMessage = document.querySelector('.chat-message:last-child .uploaded-files-header');
+    const latestMessage = document.querySelector(
+      ".chat-message:last-child .uploaded-files-header"
+    );
     if (latestMessage) {
       latestMessage.textContent = `📎 Uploaded Files (${uploadedCount})`;
     }

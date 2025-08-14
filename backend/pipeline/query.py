@@ -5,7 +5,7 @@ from backend.core.agents import create_rag_agent
 from backend.retrieval.retriever import retrieve_top_k, retrieve_with_keyword_search, retrieve_hybrid, load_vectorstore, retrieve_with_keyword_helping
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query import reflect_and_retry, spell_check, detect_language, filter_docs_by_selected_files, refine_query
+from backend.utils.query import spell_check, detect_language, filter_docs_by_selected_files, refine_query
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.core.tools.visual import get_image_datas
@@ -238,27 +238,24 @@ async def run_orchestration(
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
     logger.debug(f"🧠 Answer: {answer}")
-    # Apply reflection and potential retries
-    final_answer = reflect_and_retry(
-        prompt=masked_query, initial_answer=answer, max_retries=2
-    )
-    logger.debug(f"🧠 Final Answer: {final_answer}")
-
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted
     docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
 
     # 6. Maske çöz
-    final_answer = unmask_text(final_answer)
+    final_answer = unmask_text(answer)
 
-    # 7. Add assistant response to chat history
+    # 7. Get images and add assistant response to chat history with images
+    images = get_image_datas()
     if session_id:
+        # Include images in metadata so they persist in chat history
+        metadata = {"images": images} if images else None
         chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, final_answer
+            session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
     
     
     return {
         "response":final_answer,
-        "images": get_image_datas()
+        "images": images
     }
