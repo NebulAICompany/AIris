@@ -2,10 +2,10 @@ from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
-from backend.retrieval.retriever import retrieve_top_k, load_vectorstore
+from backend.retrieval.retriever import retrieve_top_k, retrieve_with_keyword_search, retrieve_hybrid, load_vectorstore, retrieve_with_keyword_helping
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query import reflect_and_retry, spell_check, detect_language, filter_docs_by_selected_files, refine_query
+from backend.utils.query import spell_check, detect_language, filter_docs_by_selected_files, refine_query
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.core.tools.visual import get_image_datas
@@ -28,12 +28,14 @@ async def run_orchestration(
     pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
+    search_method: str = "vector",  # "vector", "keyword", or "hybrid"
 ) -> Dict[str, Any]:
 
     logger.info(f"🔍 Query Orchestrator started:")
     logger.info(f"   - Query: {query}")
     logger.info(f"   - Web Search Enabled: {web_search_enabled}")
     logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
+    logger.info(f"   - Search Method: {search_method}")
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
 
@@ -77,7 +79,8 @@ async def run_orchestration(
         }
 
     # 3. Hassas bilgileri maskele
-    masked_query = mask_text(preprocessed_query, "query")
+    masked_query_list = await mask_text([preprocessed_query], "query")
+    masked_query = masked_query_list[0]
     logger.debug(f"Masked Query: {masked_query}")
 
     ENABLED_RAG_TECHNIQUES = []
@@ -159,9 +162,26 @@ async def run_orchestration(
         reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
         # 4. Enhanced Retrieval + Reranking 
-        retrieved_docs = retrieve_top_k(
-            client=client, query=preprocessed_query, k=15, selected_files=selected_files
-        )  # Get more docs for better reranking
+        if search_method == "keyword":
+            logger.info("🔍 Using keyword search (BM25)")
+            retrieved_docs = retrieve_with_keyword_search(
+                query=preprocessed_query, k=15, selected_files=selected_files
+            )
+        elif search_method == "hybrid":
+            logger.info("🔍 Using hybrid search (vector + keyword)")
+            retrieved_docs = retrieve_hybrid(
+                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+            )
+        elif search_method == "vector_keyword_helping":
+            logger.info("🔍 Using vector + keyword search helping")
+            retrieved_docs = retrieve_with_keyword_helping(
+                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+            )
+        else:  # Default to vector search
+            logger.info("🔍 Using vector search")
+            retrieved_docs = retrieve_top_k(
+                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+            )  # Get more docs for better reranking
 
         if not retrieved_docs:
             logger.warning("No retrieved docs")
@@ -218,27 +238,24 @@ async def run_orchestration(
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
     logger.debug(f"🧠 Answer: {answer}")
-    # Apply reflection and potential retries
-    final_answer = reflect_and_retry(
-        prompt=masked_query, initial_answer=answer, max_retries=2
-    )
-    logger.debug(f"🧠 Final Answer: {final_answer}")
-
     # 5.5. Ensure consistent metadata formatting
     # Use the retrieved documents to ensure metadata is properly formatted
     docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
 
     # 6. Maske çöz
-    final_answer = unmask_text(final_answer)
+    final_answer = unmask_text(answer)
 
-    # 7. Add assistant response to chat history
+    # 7. Get images and add assistant response to chat history with images
+    images = get_image_datas()
     if session_id:
+        # Include images in metadata so they persist in chat history
+        metadata = {"images": images} if images else None
         chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, final_answer
+            session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
     
     
     return {
         "response":final_answer,
-        "images": get_image_datas()
+        "images": images
     }

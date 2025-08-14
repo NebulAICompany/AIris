@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from azure.ai.textanalytics.aio import TextAnalyticsClient as AsyncTextAnalyticsClient
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
@@ -41,6 +42,10 @@ concurrent_client = ConcurrentOpenAI(
 tavily_client = TavilyClient(TAVILY_API_KEY)
 ta_credential = AzureKeyCredential(AZURE_LANGUAGE_KEY)
 text_analytics_client = TextAnalyticsClient(
+        endpoint=AZURE_LANGUAGE_ENDPOINT,
+        credential=ta_credential)
+
+async_text_analytics_client = AsyncTextAnalyticsClient(
         endpoint=AZURE_LANGUAGE_ENDPOINT,
         credential=ta_credential)
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
@@ -90,6 +95,9 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"}
 
 # Document extensions
 DOCUMENT_EXTENSIONS = {".pdf", ".txt", ".docx", ".xlsx", ".xls", ".doc"}
+
+# Search configuration
+DEFAULT_SEARCH_METHOD = "vector_keyword_helping"  # "vector", "keyword", "vector_keyword_helping", or "hybrid"
 
 # Convert Path objects to strings for backward compatibility
 UPLOADS_PATH_STR = str(UPLOADS_PATH)

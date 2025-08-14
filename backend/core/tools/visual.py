@@ -70,7 +70,7 @@ def image_visualizer(image_ids: List[str]) -> str:
 
     set_image_datas(images_data)
 
-    return "images loaded successfully"
+    return "images loaded successfully into attachments. Do not add into answer, it is already in attachments."
 
 
 @function_tool

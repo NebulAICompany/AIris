@@ -1,14 +1,6 @@
 import time
 from backend.monitoring.metrics import llm_duration_seconds
 from agents import Agent, Runner
-from pathlib import Path
-
-PROJECT_ROOT = Path(__file__).parent.parent.parent
-import dotenv
-
-env_path = PROJECT_ROOT / ".env"
-dotenv.load_dotenv(env_path)
-
 
 async def generate_answer(prompt: str, agent: Agent) -> str:
     try:

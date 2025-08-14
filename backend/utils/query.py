@@ -97,77 +97,6 @@ def normalize_repeated_chars(word: str) -> str:
 
     return "".join(result)
 
-
-def reflect_and_retry(
-        prompt: str, initial_answer: str, max_retries: int = 2
-) -> str:
-    current_answer = initial_answer
-    retry_count = 0
-
-    while retry_count < max_retries:
-        reflection_prompt = f"""
-        Evaluate the following question and answer pair:
-
-        Question: {prompt}
-
-        Answer: {current_answer}
-
-        Please evaluate the answer based on these criteria:
-        1. Completeness: Does it fully address all aspects of the question?
-        2. Accuracy: Is the information correct and well-supported by sources?
-        3. Clarity: Is the reasoning process clear and well-structured?
-        4. Source Attribution: Are all sources properly cited?
-
-        Provide your evaluation in this format:
-        Completeness: [Score 1-5]
-        Accuracy: [Score 1-5]
-        Clarity: [Score 1-5]
-        Source Attribution: [Score 1-5]
-        Overall Assessment: [Pass/Fail]
-        Improvement Suggestions: [List specific areas for improvement]
-        """
-
-        # Use the agent for reflection
-        reflection_result = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "you are a helpful assistant that evaluates answers."},
-                {"role": "user", "content": reflection_prompt },
-            ],
-            max_tokens=800,
-            temperature=0.0,
-        )
-        reflection = reflection_result.choices[0].message.content.strip()
-
-        # Check if the answer needs improvement
-        if "Overall Assessment: Fail" in reflection:
-            retry_count += 1
-            if retry_count < max_retries:
-                # Create an enhanced prompt with the reflection feedback
-                enhanced_prompt = f"""
-                Previous Answer: {current_answer}
-
-                Evaluation Feedback: {reflection}
-
-                Please provide an improved answer addressing the feedback above.
-                """
-                # Get improved answer using the agent
-                result = openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant that gets improved answer."},
-                        {"role": "user", "content": enhanced_prompt },
-                    ],
-                    max_tokens=800,
-                    temperature=0.0,
-                )
-                current_answer = result.choices[0].message.content.strip()
-        else:
-            return current_answer
-
-    return current_answer
-
-
 def filter_docs_by_selected_files(
     docs: List, selected_files: Optional[List[str]]
 ) -> List:
@@ -205,6 +134,6 @@ def refine_query(user_query, lang: str = "Turkish") -> str:
             {"role": "system", "content": f"{refinement_prompt} Give your answer in {lang} language."},
             {"role": "user", "content": user_query}
         ],
-        temperature=0.3
+        temperature=0.0,
     )
     return response.choices[0].message.content
