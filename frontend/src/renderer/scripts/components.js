@@ -1241,78 +1241,25 @@ class UIComponents {
     // First, convert download URLs to clickable links
     content = this.convertUrlsToLinks(content);
 
-    // More flexible patterns to catch metadata sections with various formatting
+    // Remove metadata sections entirely
     const metadataPatterns = [
-      /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:/gi,
-      /🗂️\s*Kullanılan Bilgi Metadataları:/gi,
-      /📊\s*Kullanılan Bilgi Metadataları:/gi,
-      /\*\*Kullanılan Bilgi Metadataları:\*\*/gi,
-      /Kullanılan Bilgi Metadataları:/gi,
+      /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
+      /🗂️\s*Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
+      /📊\s*Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
+      /\*\*Kullanılan Bilgi Metadataları:\*\*[\s\S]*?(?=\n\n|\n$|$)/gi,
+      /Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
     ];
 
-    // Check if content contains any metadata pattern
-    let metadataMatch = null;
-    let matchedPattern = null;
-
+    // Remove all metadata sections
     for (const pattern of metadataPatterns) {
-      const match = content.match(pattern);
-      if (match) {
-        metadataMatch = match;
-        matchedPattern = pattern;
-        break;
-      }
+      content = content.replace(pattern, '');
     }
 
-    if (!metadataMatch) {
-      return content;
-    }
+    // Clean up any extra whitespace or separators left behind
+    content = content.replace(/---\s*$/gm, '').trim();
+    content = content.replace(/\n{3,}/g, '\n\n');
 
-    // Find the actual start of metadata section (including any preceding separators)
-    const fullMatch = metadataMatch[0];
-    const metadataStart = content.indexOf(fullMatch);
-
-    if (metadataStart === -1) {
-      return content;
-    }
-
-    // Check if there's a separator (---) before the metadata
-    let actualStart = metadataStart;
-    const beforeMetadataCheck = content.substring(
-      Math.max(0, metadataStart - 10),
-      metadataStart
-    );
-    const separatorMatch = beforeMetadataCheck.match(/---\s*$/);
-    if (separatorMatch) {
-      actualStart = metadataStart - separatorMatch[0].length;
-    }
-
-    // Extract parts
-    const beforeMetadata = content.substring(0, actualStart).trim();
-    let metadataSection = content.substring(actualStart);
-
-    // Clean up metadata section - remove various formats of the title
-    let cleanedMetadata = metadataSection
-      .replace(/---\s*\n\s*/g, "")
-      .replace(/🗂️\s*Kullanılan Bilgi Metadataları:\s*/gi, "")
-      .replace(/📊\s*Kullanılan Bilgi Metadataları:\s*/gi, "")
-      .replace(/\*\*Kullanılan Bilgi Metadataları:\*\*\s*/gi, "")
-      .replace(/Kullanılan Bilgi Metadataları:\s*/gi, "")
-      .trim();
-
-    // Also remove any trailing separators
-    cleanedMetadata = cleanedMetadata.replace(/\s*---\s*$/, "").trim();
-
-    // Format as code block
-    const formattedMetadata = `\`\`\`\n${cleanedMetadata}\n\`\`\``;
-
-    // Combine everything
-    let result = "";
-    if (beforeMetadata) {
-      result += beforeMetadata + "\n\n";
-    }
-    result += formattedMetadata;
-
-    return result;
+    return content;
   }
 
   convertUrlsToLinks(content) {
@@ -1343,229 +1290,13 @@ class UIComponents {
   }
 
   fixExistingMetadataFormatting() {
-    const chatMessages = document.getElementById("chat-messages");
-    if (!chatMessages) return;
-
-    const messages = chatMessages.querySelectorAll(
-      ".message.assistant-message"
-    );
-
-    console.log(`Fixing metadata formatting for ${messages.length} messages`);
-
-    messages.forEach((messageDiv, index) => {
-      const messageText = messageDiv.querySelector(".message-text");
-      if (!messageText) return;
-
-      // Get the original content - try to get from data attribute first, then fallback to text
-      let originalContent =
-        messageDiv.dataset.originalContent ||
-        messageText.textContent ||
-        messageText.innerText;
-
-      // Store original content if not already stored
-      if (!messageDiv.dataset.originalContent) {
-        messageDiv.dataset.originalContent = originalContent;
-      }
-
-      // Enhanced metadata detection
-      const metadataIndicators = [
-        "Kullanılan Bilgi Metadataları:",
-        "🗂️",
-        "📊",
-        "Kaynak:",
-        "- Kaynak:",
-        "📂 Kaynak:",
-        "İşlem Durumu:",
-        "Kategori:",
-        "- Kategori:",
-        "🏷️ Kategori:",
-        "Tarih:",
-        "- Tarih:",
-        "📅 Tarih:",
-        "Belge Türü:",
-        "📄 Belge Türü:",
-        "- Belge Türü:",
-        "Alpha Vantage", // Financial data indicator
-        "Finansal veriler",
-      ];
-
-      const hasMetadata = metadataIndicators.some((indicator) =>
-        originalContent.includes(indicator)
-      );
-
-      if (hasMetadata) {
-        console.log(`Processing message ${index + 1} with metadata`);
-
-        // Check if metadata is already properly formatted
-        const hasFormattedMetadata = messageText.querySelector("pre code");
-        const hasMetadataLabel = messageText.querySelector(".metadata-label");
-
-        // If already properly formatted, just apply styling
-        if (hasFormattedMetadata && hasMetadataLabel) {
-          this.applyMetadataFormatting(messageText);
-          return;
-        }
-
-        // Remove any existing metadata labels first
-        const existingLabels = messageText.querySelectorAll(".metadata-label");
-        existingLabels.forEach((label) => label.remove());
-
-        try {
-          // Process the content with our improved formatters
-          const formattedContent = this.formatMetadataContent(originalContent);
-
-          // Parse markdown and update content
-          const parsedContent = marked.parse(formattedContent);
-          messageText.innerHTML = parsedContent;
-
-          // Apply our enhanced styling
-          this.applyMetadataFormatting(messageText);
-
-          console.log(`Successfully reformatted message ${index + 1}`);
-        } catch (error) {
-          console.warn(`Failed to reformat message ${index + 1}:`, error);
-
-          // Fallback: try to apply basic formatting
-          try {
-            this.applyMetadataFormatting(messageText);
-          } catch (fallbackError) {
-            console.warn(
-              `Fallback formatting also failed for message ${index + 1}:`,
-              fallbackError
-            );
-          }
-        }
-      }
-    });
-
-    console.log("Metadata formatting fix completed");
+    // Metadata formatting disabled - do nothing
+    return;
   }
 
   applyMetadataFormatting(container) {
-    // Detect dark mode
-    const isDarkMode =
-      document.body.classList.contains("dark-theme") ||
-      document.documentElement.getAttribute("data-theme") === "dark";
-
-    // Apply our metadata styling to a specific container
-    container.querySelectorAll("pre").forEach((preBlock) => {
-      // Check if this pre block contains metadata content
-      const preContent = preBlock.textContent || preBlock.innerText;
-      const metadataKeywords = [
-        "Kaynak:",
-        "İşlem Durumu:",
-        "Kategori:",
-        "dosya",
-        "sayfa",
-        "kimlik",
-        "yazışma",
-        "bilgilendirme",
-      ];
-      const hasMetadataContent = metadataKeywords.some((keyword) =>
-        preContent.includes(keyword)
-      );
-
-      // Only apply metadata styling if it contains actual metadata
-      if (!hasMetadataContent) {
-        return;
-      }
-
-      if (isDarkMode) {
-        // Dark mode colors
-        preBlock.style.cssText = `
-          background-color: #1e293b !important;
-          border: 1px solid #334155 !important;
-          border-left: 4px solid #3b82f6 !important;
-          border-radius: 8px !important;
-          padding: 16px !important;
-          margin: 12px 0 !important;
-          overflow-x: auto !important;
-          position: relative !important;
-        `;
-      } else {
-        // Light mode colors
-        preBlock.style.cssText = `
-          background-color: #f0f2f5 !important;
-          border: 1px solid #d1d5db !important;
-          border-left: 4px solid #3b82f6 !important;
-          border-radius: 8px !important;
-          padding: 16px !important;
-          margin: 12px 0 !important;
-          overflow-x: auto !important;
-          position: relative !important;
-        `;
-      }
-
-      // Always add metadata label to code blocks that contain metadata content
-      const existingLabel = preBlock.querySelector(".metadata-label");
-
-      if (!existingLabel) {
-        const label = document.createElement("div");
-        label.className = "metadata-label";
-
-        if (isDarkMode) {
-          // Dark mode label styling
-          label.style.cssText = `
-            font-size: 11px !important;
-            color: #60a5fa !important;
-            font-weight: 600 !important;
-            margin-bottom: 12px !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            background-color: rgba(59, 130, 246, 0.15) !important;
-            padding: 6px 12px !important;
-            border-radius: 4px !important;
-            border-left: 3px solid #60a5fa !important;
-            display: inline-block !important;
-          `;
-        } else {
-          // Light mode label styling
-          label.style.cssText = `
-            font-size: 11px !important;
-            color: #3b82f6 !important;
-            font-weight: 600 !important;
-            margin-bottom: 12px !important;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-            text-transform: uppercase !important;
-            letter-spacing: 0.5px !important;
-            background-color: rgba(59, 130, 246, 0.1) !important;
-            padding: 6px 12px !important;
-            border-radius: 4px !important;
-            border-left: 3px solid #3b82f6 !important;
-            display: inline-block !important;
-          `;
-        }
-
-        label.textContent = "📊 Kullanılan Bilgi Metadataları";
-        preBlock.insertBefore(label, preBlock.firstChild);
-      }
-
-      // Force code styling
-      preBlock.querySelectorAll("code, code *").forEach((codeEl) => {
-        if (isDarkMode) {
-          // Dark mode code styling
-          codeEl.style.cssText = `
-            background: none !important;
-            background-color: transparent !important;
-            color: #cbd5e1 !important;
-            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
-            font-size: 13px !important;
-            line-height: 1.6 !important;
-          `;
-        } else {
-          // Light mode code styling
-          codeEl.style.cssText = `
-            background: none !important;
-            background-color: transparent !important;
-            color: #4b5563 !important;
-            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace !important;
-            font-size: 13px !important;
-            line-height: 1.6 !important;
-          `;
-        }
-      });
-    });
+    // Metadata formatting disabled - do nothing
+    return;
   }
 
   // Chat file upload methods
@@ -2544,27 +2275,8 @@ class UIComponents {
   }
 
   refreshMetadataFormatting() {
-    // Refresh all existing metadata formatting when theme changes
-    console.log("Refreshing metadata formatting after theme change");
-
-    const chatMessages = document.getElementById("chat-messages");
-    if (!chatMessages) return;
-
-    const messages = chatMessages.querySelectorAll(
-      ".message.assistant-message"
-    );
-    console.log(
-      `Refreshing formatting for ${messages.length} assistant messages`
-    );
-
-    messages.forEach((messageDiv, index) => {
-      const messageText = messageDiv.querySelector(".message-text");
-      if (messageText) {
-        console.log(`Processed message ${index + 1} (metadata formatting disabled)`);
-      }
-    });
-
-    console.log("Metadata formatting refresh completed");
+    // Metadata formatting disabled - do nothing
+    return;
   }
 
   // Settings management
