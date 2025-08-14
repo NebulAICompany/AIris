@@ -168,17 +168,25 @@ class UIComponents {
     // Chat file upload listeners - UPDATED FOR CHAT INPUT DRAG & DROP
     const chatInputElement = document.getElementById("chat-input");
     const chatFileInput = document.getElementById("chat-file-input");
-    
+
     // File input change
     if (chatFileInput) {
-      chatFileInput.addEventListener("change", (e) => this.handleNewFileSelect(e));
+      chatFileInput.addEventListener("change", (e) =>
+        this.handleNewFileSelect(e)
+      );
     }
-    
+
     // Drag and drop for chat input
     if (chatInputElement) {
-      chatInputElement.addEventListener("dragover", (e) => this.handleChatInputDragOver(e));
-      chatInputElement.addEventListener("dragleave", (e) => this.handleChatInputDragLeave(e));
-      chatInputElement.addEventListener("drop", (e) => this.handleChatInputDrop(e));
+      chatInputElement.addEventListener("dragover", (e) =>
+        this.handleChatInputDragOver(e)
+      );
+      chatInputElement.addEventListener("dragleave", (e) =>
+        this.handleChatInputDragLeave(e)
+      );
+      chatInputElement.addEventListener("drop", (e) =>
+        this.handleChatInputDrop(e)
+      );
     }
 
     // File attachment button (paperclip)
@@ -422,7 +430,8 @@ class UIComponents {
 
     if (chatInput && sendButton) {
       const hasText = chatInput.value.trim().length > 0;
-      const hasFiles = this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
+      const hasFiles =
+        this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
       sendButton.disabled = !(hasText || hasFiles) || this.isProcessing;
     }
   }
@@ -432,16 +441,21 @@ class UIComponents {
     const message = chatInput.value.trim();
 
     // Allow sending if there's either a message or files attached
-    if ((!message && (!this.chatUploadedFiles || this.chatUploadedFiles.length === 0)) || this.isProcessing) return;
+    if (
+      (!message &&
+        (!this.chatUploadedFiles || this.chatUploadedFiles.length === 0)) ||
+      this.isProcessing
+    )
+      return;
 
     this.isProcessing = true;
     chatInput.value = "";
-    
+
     // Clear chat files preview immediately when send button is pressed
     const filesToUpload = [...this.chatUploadedFiles]; // Copy the files array
     this.chatUploadedFiles = []; // Clear the files array
     this.updateChatFilesPreview(); // Hide the preview immediately
-    
+
     this.toggleSendButton();
 
     // Create new session if none exists
@@ -462,7 +476,7 @@ class UIComponents {
     if (filesToUpload.length > 0) {
       // Show uploading status for each file
       for (const file of filesToUpload) {
-        this.addFileStatusMessage(file.name, 'uploading');
+        this.addFileStatusMessage(file.name, "uploading");
       }
 
       // Upload files one by one
@@ -474,18 +488,18 @@ class UIComponents {
             uploadedFiles.push({
               name: file.name,
               size: file.size,
-              id: response.data.file_id || response.data.filename
+              id: response.data.file_id || response.data.filename,
             });
-            
+
             // Update status to success
-            this.updateFileStatusMessage(file.name, 'success');
+            this.updateFileStatusMessage(file.name, "success");
           } else {
             // Update status to error
-            this.updateFileStatusMessage(file.name, 'error', 'Upload failed');
+            this.updateFileStatusMessage(file.name, "error", "Upload failed");
           }
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
-          this.updateFileStatusMessage(file.name, 'error', 'Upload failed');
+          this.updateFileStatusMessage(file.name, "error", "Upload failed");
         }
       }
     }
@@ -507,19 +521,26 @@ class UIComponents {
 
         if (response) {
           // Extract response content properly from API response
-          const responseContent = response.response || response.content || response.data?.response;
+          const responseContent =
+            response.response || response.content || response.data?.response;
           const responseImages = response.images || response.data?.images || [];
-          
+
           if (responseContent) {
             this.addMessageToChat("assistant", responseContent, responseImages);
           } else {
             console.warn("Empty response received:", response);
-            this.addMessageToChat("assistant", "Response received but content was empty. Please try again.");
+            this.addMessageToChat(
+              "assistant",
+              "Response received but content was empty. Please try again."
+            );
           }
         }
       } catch (error) {
         console.error("Chat error:", error);
-        this.addMessageToChat("error", "Sorry, there was an error processing your request. Please try again.");
+        this.addMessageToChat(
+          "error",
+          "Sorry, there was an error processing your request. Please try again."
+        );
       } finally {
         this.hideTypingIndicator();
       }
@@ -645,7 +666,7 @@ class UIComponents {
                 </div>
             `;
     } else if (type === "assistant") {
-      // Simple content processing without metadata handling
+      // Simple content processing
       let processedContent = content || "No response received";
 
       // Safely parse markdown content, fallback to escaped HTML if marked fails
@@ -776,13 +797,10 @@ class UIComponents {
 
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // Apply syntax highlighting and force metadata styling
+    // Apply syntax highlighting
     messageDiv.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightBlock(block);
     });
-
-    // Apply metadata formatting to new message
-    this.applyMetadataFormatting(messageDiv);
   }
 
   showTypingIndicator() {
@@ -976,7 +994,7 @@ class UIComponents {
         session.messages.forEach((msg) => {
           // Extract images properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
-          
+
           // Ensure images are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
 
@@ -992,7 +1010,8 @@ class UIComponents {
             ) {
               this.chatHistory[this.chatHistory.length - 1].assistant =
                 msg.content;
-              this.chatHistory[this.chatHistory.length - 1].images = cleanImages;
+              this.chatHistory[this.chatHistory.length - 1].images =
+                cleanImages;
             }
           }
         });
@@ -1233,35 +1252,6 @@ class UIComponents {
     }
   }
 
-  formatMetadataContent(content) {
-    if (!content || typeof content !== "string") {
-      return content;
-    }
-
-    // First, convert download URLs to clickable links
-    content = this.convertUrlsToLinks(content);
-
-    // Remove metadata sections entirely
-    const metadataPatterns = [
-      /---\s*\n\s*🗂️\s*Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
-      /🗂️\s*Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
-      /📊\s*Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
-      /\*\*Kullanılan Bilgi Metadataları:\*\*[\s\S]*?(?=\n\n|\n$|$)/gi,
-      /Kullanılan Bilgi Metadataları:[\s\S]*?(?=\n\n|\n$|$)/gi,
-    ];
-
-    // Remove all metadata sections
-    for (const pattern of metadataPatterns) {
-      content = content.replace(pattern, '');
-    }
-
-    // Clean up any extra whitespace or separators left behind
-    content = content.replace(/---\s*$/gm, '').trim();
-    content = content.replace(/\n{3,}/g, '\n\n');
-
-    return content;
-  }
-
   convertUrlsToLinks(content) {
     if (!content || typeof content !== "string") {
       return content;
@@ -1287,16 +1277,6 @@ class UIComponents {
     });
 
     return content;
-  }
-
-  fixExistingMetadataFormatting() {
-    // Metadata formatting disabled - do nothing
-    return;
-  }
-
-  applyMetadataFormatting(container) {
-    // Metadata formatting disabled - do nothing
-    return;
   }
 
   // Chat file upload methods
@@ -1328,7 +1308,7 @@ class UIComponents {
     e.stopPropagation();
     const uploadArea = document.getElementById("chat-file-upload");
     uploadArea?.classList.remove("drag-over");
-    
+
     const files = Array.from(e.dataTransfer.files);
     this.addFilesToChat(files);
   }
@@ -1341,31 +1321,36 @@ class UIComponents {
 
   addFilesToChat(files) {
     const validFiles = files.filter((file) => Utils.validateFile(file));
-    
-    validFiles.forEach(file => {
+
+    validFiles.forEach((file) => {
       // Check if file already exists
-      if (!this.chatUploadedFiles.find(f => f.name === file.name)) {
+      if (!this.chatUploadedFiles.find((f) => f.name === file.name)) {
         this.chatUploadedFiles.push(file);
       }
     });
-    
+
     this.updateChatFilesPreview();
-    
+
     if (validFiles.length > 0) {
-      this.showNotification(`${validFiles.length} file(s) attached to chat`, "success");
+      this.showNotification(
+        `${validFiles.length} file(s) attached to chat`,
+        "success"
+      );
     }
   }
 
   updateChatFilesPreview() {
     const uploadArea = document.getElementById("chat-file-upload");
     const filesPreview = document.getElementById("chat-uploaded-files");
-    
+
     if (!uploadArea || !filesPreview) return;
-    
+
     if (this.chatUploadedFiles.length > 0) {
       uploadArea.style.display = "block";
-      
-      filesPreview.innerHTML = this.chatUploadedFiles.map((file, index) => `
+
+      filesPreview.innerHTML = this.chatUploadedFiles
+        .map(
+          (file, index) => `
         <div class="chat-file-item">
           <i class="${Utils.getFileIcon(file.name)}"></i>
           <span class="file-name">${Utils.escapeHtml(file.name)}</span>
@@ -1373,12 +1358,14 @@ class UIComponents {
             <i class="fas fa-times"></i>
           </button>
         </div>
-      `).join('');
+      `
+        )
+        .join("");
     } else {
       uploadArea.style.display = "none";
       filesPreview.innerHTML = "";
     }
-    
+
     // Update send button state when files change
     this.toggleSendButton();
   }
@@ -1415,7 +1402,7 @@ class UIComponents {
     event.stopPropagation();
     const chatInput = document.getElementById("chat-input");
     chatInput.classList.remove("drag-over");
-    
+
     const files = Array.from(event.dataTransfer.files);
     this.addFilesToChat(files);
   }
@@ -1424,38 +1411,39 @@ class UIComponents {
     if (!this.chatUploadedFiles) {
       this.chatUploadedFiles = [];
     }
-    
+
     // Add files to the upload queue
-    files.forEach(file => {
+    files.forEach((file) => {
       this.chatUploadedFiles.push(file);
     });
-    
+
     // Update the preview
     this.updateChatFilesPreview();
   }
 
   // File status message methods
-  addFileStatusMessage(fileName, status, errorMessage = '') {
+  addFileStatusMessage(fileName, status, errorMessage = "") {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
     let statusIcon, statusText, statusClass;
-    
+
     switch (status) {
-      case 'uploading':
-        statusIcon = '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
-        statusText = '';
-        statusClass = 'uploading';
+      case "uploading":
+        statusIcon =
+          '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
+        statusText = "";
+        statusClass = "uploading";
         break;
-      case 'success':
-        statusIcon = '✅';
+      case "success":
+        statusIcon = "✅";
         statusText = `Uploaded successfully`;
-        statusClass = 'success';
+        statusClass = "success";
         break;
-      case 'error':
-        statusIcon = '❌';
-        statusText = errorMessage || 'Upload failed';
-        statusClass = 'error';
+      case "error":
+        statusIcon = "❌";
+        statusText = errorMessage || "Upload failed";
+        statusClass = "error";
         break;
     }
 
@@ -1464,7 +1452,9 @@ class UIComponents {
     messageElement.innerHTML = `
       <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(fileName)}</span>: ${statusText}
+        <span class="file-name">${Utils.escapeHtml(
+          fileName
+        )}</span>: ${statusText}
       </div>
     `;
 
@@ -1475,22 +1465,24 @@ class UIComponents {
     messageElement.dataset.fileName = fileName;
   }
 
-  updateFileStatusMessage(fileName, status, errorMessage = '') {
-    const statusMessage = document.querySelector(`[data-file-name="${fileName}"]`);
+  updateFileStatusMessage(fileName, status, errorMessage = "") {
+    const statusMessage = document.querySelector(
+      `[data-file-name="${fileName}"]`
+    );
     if (!statusMessage) return;
 
     let statusIcon, statusText, statusClass;
-    
+
     switch (status) {
-      case 'success':
-        statusIcon = '✅';
+      case "success":
+        statusIcon = "✅";
         statusText = `Uploaded successfully`;
-        statusClass = 'success';
+        statusClass = "success";
         break;
-      case 'error':
-        statusIcon = '❌';
-        statusText = errorMessage || 'Upload failed';
-        statusClass = 'error';
+      case "error":
+        statusIcon = "❌";
+        statusText = errorMessage || "Upload failed";
+        statusClass = "error";
         break;
     }
 
@@ -1499,7 +1491,9 @@ class UIComponents {
     statusMessage.innerHTML = `
       <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(fileName)}</span>: ${statusText}
+        <span class="file-name">${Utils.escapeHtml(
+          fileName
+        )}</span>: ${statusText}
       </div>
     `;
   }
@@ -1591,7 +1585,7 @@ class UIComponents {
 
   async loadFileLibrary() {
     try {
-      // Fetch the file list with metadata from the backend
+      // Fetch the file list from the backend
       const response = await fetch("http://localhost:8001/api/files");
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
@@ -1616,7 +1610,7 @@ class UIComponents {
         return;
       }
 
-      // Render each file with metadata
+      // Render each file
       files.forEach((file) => {
         const fileItem = document.createElement("div");
         fileItem.className = "file-card";
@@ -1687,7 +1681,7 @@ class UIComponents {
 
   async loadCreatedDocumentsLibrary() {
     try {
-      // Fetch the created documents list with metadata from the backend
+      // Fetch the created documents list from the backend
       const response = await fetch(
         "http://localhost:8001/api/created-documents"
       );
@@ -1718,7 +1712,7 @@ class UIComponents {
         return;
       }
 
-      // Render each created document with metadata
+      // Render each created document
       files.forEach((file) => {
         const fileItem = document.createElement("div");
         fileItem.className = "file-card";
@@ -2138,7 +2132,6 @@ class UIComponents {
     }
   }
 
-
   async loadAnalytics() {
     try {
       const metrics = await window.apiService.getSystemStats();
@@ -2258,9 +2251,6 @@ class UIComponents {
     this.isDarkMode = !this.isDarkMode;
     this.applyTheme();
     localStorage.setItem("airis-theme", this.isDarkMode ? "dark" : "light");
-
-    // Reformat existing metadata with new theme
-    this.refreshMetadataFormatting();
   }
 
   applyTheme() {
@@ -2272,11 +2262,6 @@ class UIComponents {
         ? '<i class="fas fa-sun"></i>'
         : '<i class="fas fa-moon"></i>';
     }
-  }
-
-  refreshMetadataFormatting() {
-    // Metadata formatting disabled - do nothing
-    return;
   }
 
   // Settings management
@@ -2599,7 +2584,6 @@ class UIComponents {
 
       stageElement.textContent = translatedText;
     };
-
 
     // Update status texts
     const statusTexts = document.querySelectorAll(".status-text");
@@ -3502,10 +3486,10 @@ class UIComponents {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       // Update progress bar during upload
-      xhr.upload.addEventListener('progress', (e) => {
+      xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
           const percentComplete = Math.round((e.loaded / e.total) * 100);
           this.updateFileUploadProgress(fileIndex, percentComplete);
@@ -3513,43 +3497,45 @@ class UIComponents {
       });
 
       // Handle successful upload
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener("load", () => {
         try {
           const response = JSON.parse(xhr.responseText);
           this.updateFileUploadProgress(fileIndex, 100);
           resolve(response);
         } catch (error) {
-          reject(new Error('Invalid response format'));
+          reject(new Error("Invalid response format"));
         }
       });
 
       // Handle upload error
-      xhr.addEventListener('error', () => {
-        reject(new Error('Upload failed'));
+      xhr.addEventListener("error", () => {
+        reject(new Error("Upload failed"));
       });
 
       // Handle upload abort
-      xhr.addEventListener('abort', () => {
-        reject(new Error('Upload aborted'));
+      xhr.addEventListener("abort", () => {
+        reject(new Error("Upload aborted"));
       });
 
       // Start upload
-      xhr.open('POST', 'http://localhost:8000/upload');
+      xhr.open("POST", "http://localhost:8000/upload");
       xhr.send(formData);
     });
   }
 
   // Update file upload progress
   updateFileUploadProgress(fileIndex, percentage) {
-    const filePreview = document.querySelector(`[data-file-index="${fileIndex}"]`);
+    const filePreview = document.querySelector(
+      `[data-file-index="${fileIndex}"]`
+    );
     if (filePreview) {
-      const progressFill = filePreview.querySelector('.upload-progress-fill');
-      const progressText = filePreview.querySelector('.upload-progress-text');
-      
+      const progressFill = filePreview.querySelector(".upload-progress-fill");
+      const progressText = filePreview.querySelector(".upload-progress-text");
+
       if (progressFill) {
         progressFill.style.width = `${percentage}%`;
       }
-      
+
       if (progressText) {
         progressText.textContent = `${percentage}%`;
       }
@@ -3557,32 +3543,38 @@ class UIComponents {
   }
 
   // Update file upload status (success/failure)
-  updateFileUploadStatus(fileIndex, success, errorMessage = '') {
-    const filePreview = document.querySelector(`[data-file-index="${fileIndex}"]`);
+  updateFileUploadStatus(fileIndex, success, errorMessage = "") {
+    const filePreview = document.querySelector(
+      `[data-file-index="${fileIndex}"]`
+    );
     if (filePreview) {
-      const uploadStatus = filePreview.querySelector('.upload-status');
-      const progressContainer = filePreview.querySelector('.upload-progress-container');
-      
+      const uploadStatus = filePreview.querySelector(".upload-status");
+      const progressContainer = filePreview.querySelector(
+        ".upload-progress-container"
+      );
+
       if (success) {
-        uploadStatus.textContent = '✓ Uploaded';
-        uploadStatus.className = 'upload-status';
-        uploadStatus.style.color = 'var(--accent-success, #10b981)';
+        uploadStatus.textContent = "✓ Uploaded";
+        uploadStatus.className = "upload-status";
+        uploadStatus.style.color = "var(--accent-success, #10b981)";
       } else {
-        uploadStatus.textContent = `❌ ${errorMessage || 'Failed'}`;
-        uploadStatus.className = 'upload-status';
-        uploadStatus.style.color = 'var(--error-color, #ef4444)';
+        uploadStatus.textContent = `❌ ${errorMessage || "Failed"}`;
+        uploadStatus.className = "upload-status";
+        uploadStatus.style.color = "var(--error-color, #ef4444)";
       }
-      
+
       // Hide progress bar after completion
       if (progressContainer) {
-        progressContainer.style.display = 'none';
+        progressContainer.style.display = "none";
       }
     }
   }
 
   // Update files header after all uploads complete
   updateFilesHeader(uploadedCount) {
-    const latestMessage = document.querySelector('.chat-message:last-child .uploaded-files-header');
+    const latestMessage = document.querySelector(
+      ".chat-message:last-child .uploaded-files-header"
+    );
     if (latestMessage) {
       latestMessage.textContent = `📎 Uploaded Files (${uploadedCount})`;
     }
