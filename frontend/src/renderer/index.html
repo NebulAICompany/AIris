@@ -59,17 +59,6 @@
             </div>
           </div>
           <div class="header-right">
-            <div class="header-controls">
-              <div class="header-toggle-websearch">
-                <label class="toggle-switch">
-                  <input type="checkbox" id="web-search-toggle" />
-                  <span class="slider"></span>
-                </label>
-                <span class="toggle-label" data-i18n="webSearch"
-                  >Web Search</span
-                >
-              </div>
-            </div>
             <div class="header-actions">
               <button
                 id="theme-toggle"
@@ -223,11 +212,26 @@
               <div class="chat-input-container">
                 <div class="chat-input-wrapper">
                   <!-- Chat file upload area (for showing selected files) -->
-                  <div class="chat-file-upload-area" id="chat-file-upload" style="display: none;">
-                    <div class="uploaded-files-preview" id="chat-uploaded-files"></div>
+                  <div
+                    class="chat-file-upload-area"
+                    id="chat-file-upload"
+                    style="display: none"
+                  >
+                    <div
+                      class="uploaded-files-preview"
+                      id="chat-uploaded-files"
+                    ></div>
                   </div>
-                  
+
                   <div class="chat-input-controls">
+                    <button
+                      id="web-search-toggle"
+                      class="web-search-button"
+                      title=""
+                      data-i18n-title="toggleWebSearch"
+                    >
+                      <i class="fas fa-globe"></i>
+                    </button>
                     <button
                       id="file-attachment-btn"
                       class="file-attachment-button"
@@ -254,7 +258,7 @@
                     </button>
                   </div>
                 </div>
-                
+
                 <!-- Hidden file input for chat uploads -->
                 <input
                   type="file"

@@ -749,7 +749,8 @@ body.dark-theme .image-caption {
 }
 
 .file-attachment-button,
-.file-selection-button {
+.file-selection-button,
+.web-search-button {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 50%;
@@ -759,15 +760,80 @@ body.dark-theme .image-caption {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   color: var(--text-secondary);
+  position: relative;
+  overflow: visible;
 }
 
 .file-attachment-button:hover,
-.file-selection-button:hover {
+.file-selection-button:hover,
+.web-search-button:hover {
   background: var(--accent-primary);
   border-color: var(--accent-primary);
   color: white;
+}
+
+.web-search-button.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: 2px solid #059669;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3),
+    0 6px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: scale(1.002);
+}
+
+.web-search-button.active::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: conic-gradient(from 0deg, #10b981, #3b82f6, #8b5cf6, #10b981);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 2s linear infinite;
+  opacity: 0.8;
+}
+
+.web-search-button.active i {
+  animation: webSearchPulse 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+  font-size: 1.1em;
+}
+
+/* Web Search Button Normal State Enhancement */
+.web-search-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.web-search-button:not(.active):hover {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  border-color: #d1d5db;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes webSearchPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
 }
 
 .uploaded-files-preview {
@@ -3641,7 +3707,8 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 
 @media (max-width: 480px) {
   .file-selection-button,
-  .file-attachment-button {
+  .file-attachment-button,
+  .web-search-button {
     width: 40px;
     height: 40px;
   }
@@ -3704,10 +3771,24 @@ body.dark-theme .chat-file-item:hover {
 }
 
 body.dark-theme .file-attachment-button,
-body.dark-theme .file-selection-button {
+body.dark-theme .file-selection-button,
+body.dark-theme .web-search-button {
   background: var(--bg-secondary);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
+}
+
+body.dark-theme .web-search-button.active {
+  background: linear-gradient(135deg, #10b981, #047857);
+  border: 2px solid #047857;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4),
+    0 6px 25px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .web-search-button.active::after {
+  background: conic-gradient(from 0deg, #10b981, #3b82f6, #8b5cf6, #10b981);
+  opacity: 0.9;
 }
 
 /* Dark theme support for uploaded files preview */
