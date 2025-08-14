@@ -245,14 +245,17 @@ async def run_orchestration(
     # 6. Maske çöz
     final_answer = unmask_text(answer)
 
-    # 7. Add assistant response to chat history
+    # 7. Get images and add assistant response to chat history with images
+    images = get_image_datas()
     if session_id:
+        # Include images in metadata so they persist in chat history
+        metadata = {"images": images} if images else None
         chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, final_answer
+            session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
     
     
     return {
         "response":final_answer,
-        "images": get_image_datas()
+        "images": images
     }
