@@ -50,27 +50,6 @@ class AIrisApp {
       // Load chat sessions
       await this.uiComponents.loadChatSessions();
 
-      // Fix any existing metadata formatting after loading
-      // Use requestAnimationFrame to ensure DOM is ready
-      requestAnimationFrame(() => {
-        if (this.uiComponents) {
-          this.uiComponents.fixExistingMetadataFormatting();
-
-          // Apply additional formatting passes to catch any delayed renders
-          setTimeout(() => {
-            if (this.uiComponents) {
-              this.uiComponents.fixExistingMetadataFormatting();
-            }
-          }, 200);
-
-          setTimeout(() => {
-            if (this.uiComponents) {
-              this.uiComponents.fixExistingMetadataFormatting();
-            }
-          }, 500);
-        }
-      });
-
       // Initialize currency service
       logger.info("Initializing currency service...", "APP");
       this.currencyService = new CurrencyService();
