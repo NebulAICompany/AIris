@@ -16,9 +16,9 @@ logger = get_logger("QUERY_PIPELINE")
 def preprocess_query(query: str):
     lang = detect_language(query)
     logger.debug(f"Detected Language: {lang}")
-    # if lang=="Turkish":
-    #     corrected = spell_check(query)
-    #     return corrected, lang
+    if lang=="Turkish":
+        corrected = spell_check(query)
+        return corrected, lang
     return query, lang
 
 
