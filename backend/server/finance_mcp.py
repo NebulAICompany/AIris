@@ -1,6 +1,13 @@
 import httpx
+import sys
+from pathlib import Path
 from typing import Dict, Any
 from mcp.server.fastmcp import FastMCP
+
+# Add project root to Python path to allow imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from backend.shared.constants import ALPHA_VANTAGE_API_KEY, ALPHA_VANTAGE_BASE_URL
 
 mcp = FastMCP("alpha_vantage")

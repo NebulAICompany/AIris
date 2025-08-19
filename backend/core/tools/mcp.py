@@ -18,8 +18,8 @@ alpha_vantage_mcp_server = MCPServerStdio(
     name="Alpha Vantage MCP Server",
     params={
         "command": "python",
-        "args": ["-m", "src.alpha_vantage_mcp.server"],
-        "cwd": str(PROJECT_ROOT / "backend/server/alpha-vantage-mcp"),
+        "args": ["-m", "finance_mcp"],
+        "cwd": str(PROJECT_ROOT / "backend/server"),
         "env": os.environ.copy(),
     }
 )
