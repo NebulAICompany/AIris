@@ -541,10 +541,9 @@ class UIComponents {
           const responseContent =
             response.response || response.content || response.data?.response;
           const responseImages = response.images || response.data?.images || [];
-          const responseCharts = response.charts || response.data?.charts || {};
 
           if (responseContent) {
-            this.addMessageToChat("assistant", responseContent, responseImages, responseCharts);
+            this.addMessageToChat("assistant", responseContent, responseImages);
           } else {
             console.warn("Empty response received:", response);
             this.addMessageToChat(
@@ -664,7 +663,7 @@ class UIComponents {
     }
   }
 
-  addMessageToChat(type, content, images = [], charts = {}) {
+  addMessageToChat(type, content, images = []) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
