@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration
 from backend.core.chat import chat_history_manager
+from backend.core.chart_storage import chart_storage
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
 from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH_STR, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH, DEFAULT_SEARCH_METHOD
@@ -667,4 +668,91 @@ def get_verification_types():
         logger.error(f"Error getting verification types: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Error getting verification types: {error_message}"
+        )
+
+
+# Chart Endpoints
+@router.get("/chart/{chart_id}", response_class=HTMLResponse)
+def get_chart(chart_id: str):
+    """
+    Retrieve chart HTML by chart ID
+    """
+    try:
+        chart_html = chart_storage.get_chart(chart_id)
+        
+        if chart_html is None:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Chart not found: {chart_id}"
+            )
+        
+        logger.info(f"Serving chart: {chart_id}")
+        return chart_html
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error retrieving chart {chart_id}: {error_message}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error retrieving chart: {error_message}"
+        )
+
+
+@router.get("/chart/{chart_id}/metadata")
+def get_chart_metadata(chart_id: str):
+    """
+    Get chart metadata by chart ID
+    """
+    try:
+        metadata = chart_storage.get_chart_metadata(chart_id)
+        
+        if metadata is None:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Chart not found: {chart_id}"
+            )
+        
+        # Convert datetime to string for JSON serialization
+        if 'created_at' in metadata:
+            metadata['created_at'] = metadata['created_at'].isoformat()
+            
+        return metadata
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error retrieving chart metadata {chart_id}: {error_message}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error retrieving chart metadata: {error_message}"
+        )
+
+
+@router.get("/charts")
+def list_charts(limit: int = 50):
+    """
+    List recent charts with metadata
+    """
+    try:
+        charts = chart_storage.list_charts(limit=limit)
+        
+        # Convert datetime to string for JSON serialization
+        for chart in charts:
+            if 'created_at' in chart:
+                chart['created_at'] = chart['created_at'].isoformat()
+        
+        return {
+            "charts": charts,
+            "count": len(charts)
+        }
+        
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error listing charts: {error_message}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error listing charts: {error_message}"
         )

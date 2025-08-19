@@ -142,6 +142,79 @@ class APIService {
       };
     }
   }
+
+  // Fetch chart HTML by chart ID
+  async fetchChart(chartId) {
+    try {
+      console.log(`[API] Fetching chart: ${chartId}`);
+      
+      const response = await fetch(`${this.baseURL}/api/chart/${chartId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch chart: ${response.status}`);
+      }
+
+      const chartHtml = await response.text();
+      console.log(`[API] Chart fetched successfully: ${chartId} (${chartHtml.length} chars)`);
+      
+      return chartHtml;
+    } catch (error) {
+      console.error(`[API] Error fetching chart ${chartId}:`, error);
+      throw error;
+    }
+  }
+
+  // Fetch chart metadata by chart ID
+  async fetchChartMetadata(chartId) {
+    try {
+      const response = await this.api.get(`/api/chart/${chartId}/metadata`);
+      return response.data;
+    } catch (error) {
+      console.error(`[API] Error fetching chart metadata ${chartId}:`, error);
+      throw error;
+    }
+  }
+
+  // Detect chart IDs in text and fetch them
+  async processChartIds(text) {
+    if (!text) return { processedText: text, charts: {} };
+
+    // Regex to find chart IDs (UUIDs)
+    const chartIdRegex = /chart_id["\s]*:["\s]*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/gi;
+    const charts = {};
+    const foundIds = [];
+
+    let match;
+    while ((match = chartIdRegex.exec(text)) !== null) {
+      const chartId = match[1];
+      if (!foundIds.includes(chartId)) {
+        foundIds.push(chartId);
+      }
+    }
+
+    // Fetch all found charts
+    for (const chartId of foundIds) {
+      try {
+        const chartHtml = await this.fetchChart(chartId);
+        charts[chartId] = chartHtml;
+        console.log(`[API] Successfully fetched chart ${chartId}`);
+      } catch (error) {
+        console.error(`[API] Failed to fetch chart ${chartId}:`, error);
+        charts[chartId] = null;
+      }
+    }
+
+    return {
+      processedText: text,
+      charts: charts,
+      chartIds: foundIds
+    };
+  }
   // Send query to AI system
   async sendQuery(
     query,
@@ -174,12 +247,18 @@ class APIService {
         }
       );
 
+      // Process response for chart IDs
+      const responseText = response.data.response || response.data;
+      const chartData = await this.processChartIds(responseText);
+
       return {
         success: true,
         data: response.data,
-        response: response.data.response || response.data,
+        response: chartData.processedText,
         images: response.data.images || [],
         sessionId: response.data.sessionId,
+        charts: chartData.charts,
+        chartIds: chartData.chartIds,
       };
     } catch (error) {
       console.error("Query API error:", error);

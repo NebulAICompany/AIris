@@ -16,6 +16,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from backend.shared.constants import ALPHA_VANTAGE_API_KEY, ALPHA_VANTAGE_BASE_URL
+from backend.core.chart_storage import chart_storage
 
 mcp = FastMCP("alpha_vantage")
 async def make_request(params: Dict[str, Any]) -> Dict[str, Any]:
@@ -412,6 +413,13 @@ async def create_interactive_chart(
             config={'displayModeBar': True, 'responsive': True}
         )
 
+        # Store chart HTML separately and get chart ID
+        chart_id = chart_storage.store_chart(
+            chart_html=chart_html,
+            chart_type='interactive',
+            symbol=symbol
+        )
+
         # İstatistikler
         latest_price = float(df['Close'].iloc[-1])
         prev_price = float(df['Close'].iloc[-2]) if len(df) > 1 else latest_price
@@ -432,7 +440,7 @@ async def create_interactive_chart(
 
         return {
             "success": True,
-            "chart_html": chart_html,
+            "chart_id": chart_id,
             "stats": stats,
             "message": f"✅ {symbol} için {chart_type} grafiği başarıyla oluşturuldu ({len(df)} veri noktası)"
         }
@@ -541,9 +549,16 @@ async def create_comparison_chart(
             config={'displayModeBar': True, 'responsive': True}
         )
 
+        # Store chart HTML separately and get chart ID
+        chart_id = chart_storage.store_chart(
+            chart_html=chart_html,
+            chart_type='comparison',
+            symbols=list(all_data.keys())
+        )
+
         return {
             "success": True,
-            "chart_html": chart_html,
+            "chart_id": chart_id,
             "symbols_processed": list(all_data.keys()),
             "message": f"✅ {len(all_data)} hisse senedi karşılaştırma grafiği oluşturuldu"
         }
