@@ -7,7 +7,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 from datetime import datetime
-import logging
 import uuid
 
 # Add project root to Python path to allow imports
@@ -20,11 +19,12 @@ from backend.shared.constants import (
     CHARTS_DIR,
 )
 
-# Setup logging for chart operations
-logging.basicConfig(level=logging.INFO)
-chart_logger = logging.getLogger("CHART_OPERATIONS")
+# Setup logging for chart operations using loguru
+from loguru import logger
 
-mcp = FastMCP("alpha_vantage")
+chart_logger = logger.bind(name="CHART_OPERATIONS")
+
+mcp = FastMCP("finance")
 
 # Global chart data storage
 all_chart_data = []
@@ -282,6 +282,7 @@ async def create_stock_chart(
         # Ensure CHARTS_DIR exists
         CHARTS_DIR.mkdir(parents=True, exist_ok=True)
         chart_logger.info(f"📁 Charts directory ensured: {CHARTS_DIR}")
+        chart_logger.info(f"🚀 Starting chart creation for symbols: {symbols}")
 
         if len(symbols) > 6:
             return {"error": "En fazla 6 hisse senedi analiz edilebilir"}
