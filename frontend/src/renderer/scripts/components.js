@@ -541,9 +541,15 @@ class UIComponents {
           const responseContent =
             response.response || response.content || response.data?.response;
           const responseImages = response.images || response.data?.images || [];
+          const responseCharts = response.charts || response.data?.charts || [];
 
           if (responseContent) {
-            this.addMessageToChat("assistant", responseContent, responseImages);
+            this.addMessageToChat(
+              "assistant",
+              responseContent,
+              responseImages,
+              responseCharts
+            );
           } else {
             console.warn("Empty response received:", response);
             this.addMessageToChat(
@@ -663,7 +669,7 @@ class UIComponents {
     }
   }
 
-  addMessageToChat(type, content, images = []) {
+  addMessageToChat(type, content, images = [], charts = []) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
@@ -794,6 +800,91 @@ class UIComponents {
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
         messageContent.appendChild(imagesContainer);
+      }
+    }
+
+    // Add charts if provided
+    if (charts && charts.length > 0) {
+      const chartsContainer = document.createElement("div");
+      chartsContainer.className = "message-charts";
+
+      const chartsHeader = document.createElement("div");
+      chartsHeader.className = "charts-header";
+      chartsHeader.innerHTML = `
+        <i class="fas fa-chart-line"></i>
+        <span>Interactive Charts (${charts.length})</span>
+`;
+
+      chartsContainer.appendChild(chartsHeader);
+
+      charts.forEach((chart, index) => {
+        const chartWrapper = document.createElement("div");
+        chartWrapper.className = "message-chart-wrapper";
+
+        // Create iframe for chart content
+        const chartFrame = document.createElement("iframe");
+        chartFrame.className = "message-chart";
+        chartFrame.srcdoc = chart.data || chart.content; // Handle both possible field names
+        chartFrame.style.cssText = `
+          width: 100%;
+          height: 600px;
+          border: none;
+          border-radius: 8px;
+          background: white;
+        `;
+
+        // Add security attributes
+        chartFrame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+        chartFrame.setAttribute("loading", "lazy");
+
+        // Add loading placeholder effect
+        chartFrame.addEventListener("load", () => {
+          chartFrame.style.opacity = "1";
+          chartWrapper.classList.add("loaded");
+        });
+
+        chartFrame.style.opacity = "0";
+        chartFrame.style.transition = "opacity 0.5s ease";
+
+        const caption = document.createElement("div");
+        caption.className = "chart-caption";
+
+        // Extract chart metadata for caption
+        const chartInfo = [];
+        if (chart.symbols && chart.symbols.length > 0) {
+          chartInfo.push(`Symbols: ${chart.symbols.join(", ")}`);
+        }
+        if (chart.chart_type) {
+          chartInfo.push(
+            `Type: ${
+              chart.chart_type.charAt(0).toUpperCase() +
+              chart.chart_type.slice(1)
+            }`
+          );
+        }
+        if (chart.period) {
+          chartInfo.push(
+            `Period: ${
+              chart.period.charAt(0).toUpperCase() + chart.period.slice(1)
+            }`
+          );
+        }
+        if (chart.time_range_days) {
+          chartInfo.push(`Range: ${chart.time_range_days} days`);
+        }
+
+        caption.innerHTML =
+          chartInfo.length > 0 ? chartInfo.join(" • ") : `Chart ${index + 1}`;
+
+        chartWrapper.appendChild(chartFrame);
+        chartWrapper.appendChild(caption);
+        chartsContainer.appendChild(chartWrapper);
+      });
+
+      // Charts container'ını message content'in içine ekle
+      const messageContent = messageDiv.querySelector(".message-content");
+      if (messageContent) {
+        messageContent.appendChild(chartsContainer);
       }
     }
 
