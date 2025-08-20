@@ -373,6 +373,8 @@ input:checked + .slider:before {
   flex: 1;
   display: flex;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 /* Sidebar */
@@ -431,6 +433,8 @@ input:checked + .slider:before {
   background-color: var(--bg-primary);
   overflow: hidden;
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .tab-content {
@@ -438,6 +442,7 @@ input:checked + .slider:before {
   padding: 24px;
   overflow-y: auto;
   display: none;
+  margin: 0;
 }
 
 .tab-content.active {
@@ -448,6 +453,7 @@ input:checked + .slider:before {
 #chat-tab {
   padding: 0;
   overflow: hidden;
+  margin: 0;
 }
 
 /* Utility Classes */
@@ -1189,21 +1195,22 @@ input:checked + .slider:before {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .chat-header-main h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 1px;
 }
 
 .chat-header-main p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 11px;
+  margin: 0;
 }
 
 .chat-session-controls {
@@ -1279,16 +1286,19 @@ input:checked + .slider:before {
   flex-direction: column;
   height: 100%;
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .chat-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 16px 24px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-primary);
   flex-shrink: 0;
+  margin: 0;
 }
 
 .chat-messages {
