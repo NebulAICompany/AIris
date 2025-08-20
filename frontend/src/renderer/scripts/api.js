@@ -179,6 +179,7 @@ class APIService {
         data: response.data,
         response: response.data.response || response.data,
         images: response.data.images || [],
+        charts: response.data.charts || [],
         sessionId: response.data.sessionId,
       };
     } catch (error) {
@@ -220,6 +221,7 @@ class APIService {
         success: false,
         error: errorMessage,
         images: [], // Error durumunda empty images array
+        charts: [], // Error durumunda empty charts array
       };
     }
   }
