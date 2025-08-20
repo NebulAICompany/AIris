@@ -36,7 +36,7 @@ class LanguageService {
         settings: "Settings",
 
         // Chat Section
-        aiFinancialAssistant: "AI Financial Assistant",
+        aiFinancialAssistant: "AIris Financial Assistant",
         askQuestions:
           "Ask questions about your financial documents and get AI-powered insights",
         history: "History",
@@ -46,7 +46,7 @@ class LanguageService {
         loadingChatHistory: "Loading chat history...",
         welcomeToAiris: "Welcome to AIris!",
         welcomeMessage:
-          "I'm your AI financial assistant. Upload some documents and start asking questions about your financial data.",
+          "I'm your AIris financial assistant. Upload some documents and start asking questions about your financial data.",
         suggestedQuestions: {
           latestReport: "What's in my latest report?",
           analyzeTrends: "Analyze financial trends",
@@ -323,7 +323,7 @@ class LanguageService {
         settings: "Ayarlar",
 
         // Chat Section
-        aiFinancialAssistant: "AI Finansal Asistan",
+        aiFinancialAssistant: "AIris Finansal Asistan",
         askQuestions:
           "Finansal belgeleriniz hakkında sorular sorun ve AI destekli öngörüler alın",
         history: "Geçmiş",
@@ -333,7 +333,7 @@ class LanguageService {
         loadingChatHistory: "Sohbet geçmişi yükleniyor...",
         welcomeToAiris: "AIris'e Hoş Geldiniz!",
         welcomeMessage:
-          "Ben sizin AI finansal asistanınızım. Bazı belgeler yükleyin ve finansal verileriniz hakkında sorular sormaya başlayın.",
+          "Ben sizin AIris finansal asistanınızım. Bazı belgeler yükleyin ve finansal verileriniz hakkında sorular sormaya başlayın.",
         suggestedQuestions: {
           latestReport: "Son raporumda neler var?",
           analyzeTrends: "Finansal trendleri analiz et",
