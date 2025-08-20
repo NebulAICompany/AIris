@@ -284,8 +284,13 @@ async def run_orchestration(
     images = get_image_datas()
     charts = get_chart_datas()
     if session_id:
-        # Include images in metadata so they persist in chat history
-        metadata = {"images": images, "charts": charts} if images else None
+        metadata = {}
+        if images:
+            metadata["images"] = images
+        if charts:
+            metadata["charts"] = charts
+
+        metadata = metadata if metadata else None
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer, metadata
         )

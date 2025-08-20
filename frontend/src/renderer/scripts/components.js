@@ -821,6 +821,10 @@ class UIComponents {
         const chartWrapper = document.createElement("div");
         chartWrapper.className = "message-chart-wrapper";
 
+        // Create chart header with controls
+        const chartHeader = document.createElement("div");
+        chartHeader.className = "chart-header";
+
         // Create iframe for chart content
         const chartFrame = document.createElement("iframe");
         chartFrame.className = "message-chart";
@@ -846,6 +850,16 @@ class UIComponents {
         chartFrame.style.opacity = "0";
         chartFrame.style.transition = "opacity 0.5s ease";
 
+        // Create fullscreen button
+        const fullscreenBtn = document.createElement("button");
+        fullscreenBtn.className = "chart-fullscreen-btn";
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fullscreenBtn.title = "Tam Ekran Yap";
+        fullscreenBtn.addEventListener("click", () => {
+          this.showChartFullscreen(chart, index);
+        });
+
+        // Create caption
         const caption = document.createElement("div");
         caption.className = "chart-caption";
 
@@ -876,6 +890,9 @@ class UIComponents {
         caption.innerHTML =
           chartInfo.length > 0 ? chartInfo.join(" • ") : `Chart ${index + 1}`;
 
+        // Add header with fullscreen button
+        chartHeader.appendChild(fullscreenBtn);
+        chartWrapper.appendChild(chartHeader);
         chartWrapper.appendChild(chartFrame);
         chartWrapper.appendChild(caption);
         chartsContainer.appendChild(chartWrapper);
@@ -894,6 +911,97 @@ class UIComponents {
     messageDiv.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightBlock(block);
     });
+  }
+
+  showChartFullscreen(chart, index) {
+    // Create fullscreen modal
+    const modal = document.createElement("div");
+    modal.className = "chart-fullscreen-modal";
+    modal.id = `chart-fullscreen-${index}`;
+
+    const modalContent = document.createElement("div");
+    modalContent.className = "chart-fullscreen-content";
+
+    // Create header with close button
+    const modalHeader = document.createElement("div");
+    modalHeader.className = "chart-fullscreen-header";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "chart-fullscreen-close";
+    closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+    closeBtn.title = "Kapat";
+    closeBtn.addEventListener("click", () => {
+      modal.remove();
+      document.body.style.overflow = "auto";
+    });
+
+    // Create title
+    const title = document.createElement("h3");
+    title.className = "chart-fullscreen-title";
+
+    // Extract chart metadata for title
+    const chartInfo = [];
+    if (chart.symbols && chart.symbols.length > 0) {
+      chartInfo.push(chart.symbols.join(", "));
+    }
+    if (chart.chart_type) {
+      chartInfo.push(
+        chart.chart_type.charAt(0).toUpperCase() + chart.chart_type.slice(1)
+      );
+    }
+    if (chart.period) {
+      chartInfo.push(
+        chart.period.charAt(0).toUpperCase() + chart.period.slice(1)
+      );
+    }
+
+    title.textContent =
+      chartInfo.length > 0 ? chartInfo.join(" - ") : `Chart ${index + 1}`;
+
+    modalHeader.appendChild(closeBtn);
+    modalHeader.appendChild(title);
+
+    // Create fullscreen iframe
+    const fullscreenFrame = document.createElement("iframe");
+    fullscreenFrame.className = "chart-fullscreen-frame";
+    fullscreenFrame.srcdoc = chart.data || chart.content;
+    fullscreenFrame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+
+    // Add content to modal
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(fullscreenFrame);
+    modal.appendChild(modalContent);
+
+    // Add to body and prevent scrolling
+    document.body.appendChild(modal);
+    document.body.style.overflow = "hidden";
+
+    // Focus modal for keyboard navigation
+    modal.focus();
+
+    // Close on escape key
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        modal.remove();
+        document.body.style.overflow = "auto";
+        document.removeEventListener("keydown", handleEscape);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+
+    // Close on outside click
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.remove();
+        document.body.style.overflow = "auto";
+        document.removeEventListener("keydown", handleEscape);
+      }
+    });
+
+    // Animate in
+    setTimeout(() => {
+      modal.classList.add("active");
+    }, 10);
   }
 
   showTypingIndicator() {
@@ -1100,13 +1208,20 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images properly - they should be fresh for each message
+          // Extract images and charts properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
+          const charts = msg.charts || msg.metadata?.charts || [];
 
-          // Ensure images are not accumulated from previous sessions
+          // Ensure images and charts are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
+          const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
 
-          this.addMessageToChat(msg.role, msg.content, cleanImages);
+          this.addMessageToChat(
+            msg.role,
+            msg.content,
+            cleanImages,
+            cleanCharts
+          );
 
           // Update local chat history
           if (msg.role === "user") {
@@ -1120,6 +1235,8 @@ class UIComponents {
                 msg.content;
               this.chatHistory[this.chatHistory.length - 1].images =
                 cleanImages;
+              this.chatHistory[this.chatHistory.length - 1].charts =
+                cleanCharts;
             }
           }
         });
