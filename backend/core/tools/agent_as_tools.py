@@ -1,14 +1,14 @@
 from agents import Agent
-from backend.core.prompts import alpha_vantage_prompt, office_agent_prompt
-from backend.core.tools.mcp import alpha_vantage_mcp_server
+from backend.core.prompts import finance_agent_prompt, office_agent_prompt
+from backend.core.tools.mcp import finance_mcp_server
 from .document import create_excel_from_table, create_word_document
 
 document_tools = [create_excel_from_table, create_word_document]
 
-alpha_vantage_agent = Agent(
-    name="Alpha Vantage Finance Agent",
-    instructions=alpha_vantage_prompt,
-    mcp_servers=[alpha_vantage_mcp_server],
+finance_agent = Agent(
+    name="Finance Agent",
+    instructions=finance_agent_prompt,
+    mcp_servers=[finance_mcp_server],
 )
 
 office_agent = Agent(
@@ -28,13 +28,15 @@ office_agent_tool = office_agent.as_tool(
         - Any task requiring Word or Excel functionality""",
 )
 
-alpha_vantage_tool = alpha_vantage_agent.as_tool(
-    tool_name="financial_data_analysis",
-    tool_description="""Use this tool for financial data analysis including:
-    - Stock quotes and company information
-    - Cryptocurrency rates and analysis
-    - Historical price data and time series
-    - Option chain data and technical analysis
-    - Market trends and volatility analysis
-    - Any financial data query or analysis""",
+finance_agent_tool = finance_agent.as_tool(
+    tool_name="finance_agent",
+    tool_description="""Use this tool for comprehensive financial data analysis including:
+    - Real-time stock quotes and company information
+    - Historical price data (intraday, daily, weekly, monthly)
+    - Technical analysis with moving averages and volume indicators
+    - Professional stock chart creation (candlestick, line, area)
+    - Multi-stock comparison charts with multiple layouts
+    - Market trend analysis and volatility assessment
+    - Alpha Vantage API integration for market data
+    - Any financial data query requiring data retrieval or visualization""",
 )
