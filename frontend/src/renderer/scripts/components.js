@@ -727,83 +727,7 @@ class UIComponents {
             `;
     }
 
-    chatMessages.appendChild(messageDiv);
-
-    // Add images if any (yeni özellik)
-    if (images && images.length > 0) {
-      console.log(`Adding ${images.length} images to message`);
-
-      const imagesContainer = document.createElement("div");
-      imagesContainer.className = "message-images";
-
-      // Add a header for the images section
-      const imagesHeader = document.createElement("div");
-      imagesHeader.className = "images-header";
-      imagesHeader.innerHTML = `
-        <i class="fas fa-paperclip"></i>
-        <span>Attachments</span>
-      `;
-      imagesHeader.style.cssText = `
-        grid-column: 1 / -1;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.9em;
-        font-weight: 600;
-        color: var(--text-primary);
-        opacity: 0.8;
-        margin-bottom: 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
-      `;
-
-      imagesContainer.appendChild(imagesHeader);
-
-      images.forEach((image, index) => {
-        const imageWrapper = document.createElement("div");
-        imageWrapper.className = "message-image-wrapper";
-
-        const img = document.createElement("img");
-        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
-        img.alt = `Attached Image: ${image.filename}`;
-        img.className = "message-image";
-        img.style.cssText = `
-          max-width: 100%;
-          max-height: 300px;
-          object-fit: contain;
-          cursor: pointer;
-        `;
-
-        // Add loading placeholder effect
-        img.addEventListener("load", () => {
-          img.style.opacity = "1";
-        });
-
-        img.style.opacity = "0";
-        img.style.transition = "opacity 0.3s ease";
-
-        // Click to expand functionality
-        img.addEventListener("click", () => {
-          this.showImageModal(image);
-        });
-
-        const caption = document.createElement("div");
-        caption.className = "image-caption";
-        caption.innerHTML = `${image.filename}`;
-
-        imageWrapper.appendChild(img);
-        imageWrapper.appendChild(caption);
-        imagesContainer.appendChild(imageWrapper);
-      });
-
-      // Images container'ını message content'in içine ekle
-      const messageContent = messageDiv.querySelector(".message-content");
-      if (messageContent) {
-        messageContent.appendChild(imagesContainer);
-      }
-    }
-
-    // Add charts if provided
+    // Add charts if provided (BEFORE the message content, so they appear above the response)
     if (charts && charts.length > 0) {
       const chartsContainer = document.createElement("div");
       chartsContainer.className = "message-charts";
@@ -812,7 +736,7 @@ class UIComponents {
       chartsHeader.className = "charts-header";
       chartsHeader.innerHTML = `
         <i class="fas fa-chart-line"></i>
-        <span>Interactive Charts (${charts.length})</span>
+        <span>Interactive Charts</span>
 `;
 
       chartsContainer.appendChild(chartsHeader);
@@ -898,10 +822,86 @@ class UIComponents {
         chartsContainer.appendChild(chartWrapper);
       });
 
-      // Charts container'ını message content'in içine ekle
+      // Charts container'ı message content'in en başına ekle (response metninden önce)
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
-        messageContent.appendChild(chartsContainer);
+        messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+      }
+    }
+
+    chatMessages.appendChild(messageDiv);
+
+    // Add images if any (AFTER charts, so they appear below the response)
+    if (images && images.length > 0) {
+      console.log(`Adding ${images.length} images to message`);
+
+      const imagesContainer = document.createElement("div");
+      imagesContainer.className = "message-images";
+
+      // Add a header for the images section
+      const imagesHeader = document.createElement("div");
+      imagesHeader.className = "images-header";
+      imagesHeader.innerHTML = `
+        <i class="fas fa-paperclip"></i>
+        <span>Attachments</span>
+      `;
+      imagesHeader.style.cssText = `
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--text-primary);
+        opacity: 0.8;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+      `;
+
+      imagesContainer.appendChild(imagesHeader);
+
+      images.forEach((image, index) => {
+        const imageWrapper = document.createElement("div");
+        imageWrapper.className = "message-image-wrapper";
+
+        const img = document.createElement("img");
+        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
+        img.alt = `Attached Image: ${image.filename}`;
+        img.className = "message-image";
+        img.style.cssText = `
+          max-width: 100%;
+          max-height: 300px;
+          object-fit: contain;
+          cursor: pointer;
+        `;
+
+        // Add loading placeholder effect
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
+        });
+
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.3s ease";
+
+        // Click to expand functionality
+        img.addEventListener("click", () => {
+          this.showImageModal(image);
+        });
+
+        const caption = document.createElement("div");
+        caption.className = "image-caption";
+        caption.innerHTML = `${image.filename}`;
+
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(caption);
+        imagesContainer.appendChild(imageWrapper);
+      });
+
+      // Images container'ını message content'in içine ekle
+      const messageContent = messageDiv.querySelector(".message-content");
+      if (messageContent) {
+        messageContent.appendChild(imagesContainer);
       }
     }
 
