@@ -2,11 +2,11 @@ from agents import Agent
 from .prompts import wolfram_instructions, rag_agent_instructions
 from typing import List
 from .tools.api import web_search_tool, wolfram_alpha_query
-from .tools.agent_as_tools import alpha_vantage_tool, office_agent_tool
+from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
 
 rag_agent_as_tools = [
-    alpha_vantage_tool,
+    finance_agent_tool,
     office_agent_tool,
     wolfram_alpha_query,
     image_visualizer,
