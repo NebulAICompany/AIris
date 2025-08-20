@@ -738,6 +738,8 @@ body.dark-theme .image-caption {
   height: 100%;
   display: flex;
   flex-direction: column;
+  margin: 0;
+  padding: 0;
 }
 
 /* Chat History Dropdown */
@@ -927,18 +929,20 @@ body.dark-theme .image-caption {
 }
 
 .chat-header {
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .chat-header h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   color: var(--text-primary);
 }
 
 .chat-header p {
   color: var(--text-secondary);
+  margin: 0;
+  font-size: 11px;
 }
 
 .chat-messages {
