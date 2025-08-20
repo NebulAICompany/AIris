@@ -13,14 +13,14 @@ from concurrent_openai import ConcurrentOpenAI
 load_dotenv()
 
 # Constants for API keys and endpoints
-AZURE_LANGUAGE_KEY = os.environ.get('AZURE_LANGUAGE_KEY')
-TAVILY_API_KEY = os.environ.get('TAVILY_API_KEY')
+AZURE_LANGUAGE_KEY = os.environ.get("AZURE_LANGUAGE_KEY")
+TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 AZURE_DOCUMENT_INTELLIGENCE_KEY = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
-ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
-AZURE_LANGUAGE_ENDPOINT = os.environ.get('AZURE_LANGUAGE_ENDPOINT')
+ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+AZURE_LANGUAGE_ENDPOINT = os.environ.get("AZURE_LANGUAGE_ENDPOINT")
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
 WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
@@ -29,26 +29,27 @@ WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
 # Constants for API clients
 
 document_intelligence_client = DocumentIntelligenceClient(
-        endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT, credential=AzureKeyCredential(str(AZURE_DOCUMENT_INTELLIGENCE_KEY))
-    )
+    endpoint=AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT,
+    credential=AzureKeyCredential(str(AZURE_DOCUMENT_INTELLIGENCE_KEY)),
+)
 
 async_openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 concurrent_client = ConcurrentOpenAI(
     client=async_openai_client,
     max_concurrent_requests=5,
-    requests_per_minute=450,         # hesabınızdaki RPM’e göre ayarlayın
-    tokens_per_minute=27000
+    requests_per_minute=450,  # hesabınızdaki RPM’e göre ayarlayın
+    tokens_per_minute=27000,
 )
 tavily_client = TavilyClient(TAVILY_API_KEY)
 ta_credential = AzureKeyCredential(AZURE_LANGUAGE_KEY)
 text_analytics_client = TextAnalyticsClient(
-        endpoint=AZURE_LANGUAGE_ENDPOINT,
-        credential=ta_credential)
+    endpoint=AZURE_LANGUAGE_ENDPOINT, credential=ta_credential
+)
 
 async_text_analytics_client = AsyncTextAnalyticsClient(
-        endpoint=AZURE_LANGUAGE_ENDPOINT,
-        credential=ta_credential)
+    endpoint=AZURE_LANGUAGE_ENDPOINT, credential=ta_credential
+)
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
 
 # Constants for file paths
@@ -60,6 +61,9 @@ PROJECT_ROOT = BASE_DIR.parent  # AIris/ directory
 DATABASE_DIR = BASE_DIR / "database"
 CHAT_HISTORY_DB_PATH = DATABASE_DIR / "chat_history.db"
 MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
+
+# Charts directory
+CHARTS_DIR = DATABASE_DIR / "charts"
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
@@ -87,8 +91,18 @@ ZEMBEREK_JAR_PATH = BASE_DIR / "shared" / "zemberek-full.jar"
 
 # File extensions
 ALLOWED_FILE_EXTENSIONS = {
-    ".pdf", ".txt", ".docx", ".xlsx", ".xls", ".doc",
-    ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"
+    ".pdf",
+    ".txt",
+    ".docx",
+    ".xlsx",
+    ".xls",
+    ".doc",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".tiff",
 }
 
 # Image extensions
