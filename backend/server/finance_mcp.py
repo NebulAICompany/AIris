@@ -1,5 +1,6 @@
 import httpx
 import sys
+import json
 from pathlib import Path
 from typing import Dict, Any
 from mcp.server.fastmcp import FastMCP
@@ -26,8 +27,8 @@ chart_logger = logger.bind(name="CHART_OPERATIONS")
 
 mcp = FastMCP("finance")
 
-# Global chart data storage
-all_chart_data = []
+# Chart data file path
+CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 
 
 async def make_request(params: Dict[str, Any]) -> Dict[str, Any]:
@@ -225,25 +226,49 @@ async def get_global_quote(
 
 # Chart management functions
 def get_chart_datas():
-    chart_logger.info(
-        f"📊 get_chart_datas() called - Returning {len(all_chart_data)} charts"
-    )
-    for i, chart in enumerate(all_chart_data):
+    """Get chart data from JSON file storage"""
+    try:
+        if not CHART_DATA_FILE.exists():
+            chart_logger.info(
+                "📊 get_chart_datas() called - No chart data file found, returning empty list"
+            )
+            return []
+
+        with open(CHART_DATA_FILE, "r", encoding="utf-8") as f:
+            chart_data = json.load(f)
+
         chart_logger.info(
-            f"  Chart {i+1}: {type(chart)} - Length: {len(str(chart)) if chart else 0}"
+            f"📊 get_chart_datas() called - Returning {len(chart_data)} charts from file"
         )
-    return all_chart_data
+        for i, chart in enumerate(chart_data):
+            chart_logger.info(
+                f"  Chart {i+1}: {type(chart)} - Length: {len(str(chart)) if chart else 0}"
+            )
+        return chart_data
+    except Exception as e:
+        chart_logger.error(f"❌ Error reading chart data: {e}")
+        return []
 
 
 def set_chart_data(data):
-    global all_chart_data
-    chart_logger.info(f"📊 set_chart_data() called with data type: {type(data)}")
-    chart_logger.info(f"  Data length: {len(str(data)) if data else 0}")
-    chart_logger.info(f"  Data preview: {str(data)[:200] if data else 'None'}...")
-    all_chart_data = data
-    chart_logger.info(
-        f"  Global all_chart_data updated - Now contains {len(all_chart_data)} charts"
-    )
+    """Set chart data to JSON file storage - overwrites file each time"""
+    try:
+        # Ensure CHARTS_DIR exists
+        CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+
+        chart_logger.info(f"📊 set_chart_data() called with data type: {type(data)}")
+        chart_logger.info(f"  Data length: {len(str(data)) if data else 0}")
+        chart_logger.info(f"  Data preview: {str(data)[:200] if data else 'None'}...")
+
+        # Overwrite file with new chart data (don't append)
+        with open(CHART_DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump([data], f, ensure_ascii=False, indent=2)
+
+        chart_logger.info(
+            f"  Chart data saved to file: {CHART_DATA_FILE} - New chart data written"
+        )
+    except Exception as e:
+        chart_logger.error(f"❌ Error saving chart data: {e}")
 
 
 @mcp.tool()
@@ -875,11 +900,25 @@ async def create_stock_chart(
         chart_logger.info(f"✅ HTML generated successfully - Length: {len(chart_html)}")
         chart_logger.info(f"  HTML preview: {chart_html[:300]}...")
 
-        chart_logger.info("📊 Setting chart data in global variable...")
-        set_chart_data(chart_html)
-
         chart_id = str(uuid.uuid4())
         chart_file = CHARTS_DIR / f"{chart_id}.html"
+
+        # Create chart data with metadata - same structure as images
+        chart_data = {
+            "filename": f"{chart_id}.html",
+            "data": chart_html,
+            "reference": chart_id,
+            "type": "text/html",
+            "symbols": symbols_list,
+            "chart_type": chart_type,
+            "period": period,
+            "time_range_days": time_range_days,
+            "created_at": datetime.now().isoformat(),
+            "file_path": str(chart_file),
+        }
+
+        chart_logger.info("📊 Setting chart data to global storage...")
+        set_chart_data(chart_data)
 
         chart_logger.info(f"💾 Saving chart to file: {chart_file}")
         try:
