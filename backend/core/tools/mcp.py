@@ -14,8 +14,8 @@ try:
 except Exception as e:
     logger.warning(f"Warning: Could not load .env file: {e}")
 
-alpha_vantage_mcp_server = MCPServerStdio(
-    name="Alpha Vantage MCP Server",
+finance_mcp_server = MCPServerStdio(
+    name="Finance MCP Server",
     params={
         "command": "python",
         "args": [str(PROJECT_ROOT / "backend/server" / "finance_mcp.py")],
@@ -25,7 +25,7 @@ alpha_vantage_mcp_server = MCPServerStdio(
 )
 
 all_mcp_servers = [
-    alpha_vantage_mcp_server,
+    finance_mcp_server,
     # Add other MCP servers here as needed
 ]
 
