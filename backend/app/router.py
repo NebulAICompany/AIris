@@ -237,9 +237,16 @@ def list_files():
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
+        # Import the temporary file check function
+        from backend.utils.preview import PreviewGenerator
+
         files = []
         for file in uploads_dir.iterdir():
             if file.is_file():
+                # Skip temporary files
+                if PreviewGenerator._is_temporary_file(str(file)):
+                    continue
+
                 files.append(
                     {
                         "name": file.name,
