@@ -18,6 +18,7 @@ from backend.shared.constants import (
     ALPHA_VANTAGE_API_KEY,
     ALPHA_VANTAGE_BASE_URL,
     CHARTS_DIR,
+    CHART_DATA_FILE,
 )
 
 # Setup logging for chart operations using loguru
@@ -26,9 +27,6 @@ from loguru import logger
 chart_logger = logger.bind(name="CHART_OPERATIONS")
 
 mcp = FastMCP("finance")
-
-# Chart data file path
-CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 
 
 async def make_request(params: Dict[str, Any]) -> Dict[str, Any]:
