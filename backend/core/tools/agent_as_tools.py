@@ -1,9 +1,11 @@
 from agents import Agent
 from backend.core.prompts import finance_agent_prompt, office_agent_prompt
 from backend.core.tools.mcp import finance_mcp_server
-from .document import create_excel_file, create_word_document
+from .document import *
 
-document_tools = [create_excel_file, create_word_document]
+document_tools = [create_excel_file, create_word_document,
+                  create_powerpoint_presentation, add_powerpoint_slide, modify_word_content,
+                  modify_excel_cells, create_excel_charts]
 
 finance_agent = Agent(
     name="Finance Agent",
