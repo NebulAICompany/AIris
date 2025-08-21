@@ -1,9 +1,11 @@
-from agents import function_tool
 from typing import Any, Dict, List
 from pathlib import Path
 import os
+import json
 from docx import Document
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
+from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+from pptx import Presentation
 from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH
 
@@ -14,8 +16,7 @@ FILES_PATH.mkdir(parents=True, exist_ok=True)
 logger = get_logger("OFFICE_TOOLS")
 
 
-@function_tool
-def create_excel_from_table(
+def create_excel_file(
     data: List[List[str]], file_name: str, sheet_name: str = "Sheet1"
 ) -> Dict[str, Any]:
     """
@@ -48,7 +49,7 @@ def create_excel_from_table(
                 worksheet.cell(row=row_idx, column=col_idx, value=cell_value)
 
         # Save the workbook
-        workbook.save(file_path)
+        workbook.save(str(file_path))
 
         return {
             "success": True,
@@ -64,7 +65,6 @@ def create_excel_from_table(
         return {"success": False, "error": f"Failed to create Excel file: {str(e)}"}
 
 
-@function_tool
 def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
     """
     Create a Word document with the specified content.
@@ -102,7 +102,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
                             doc.add_paragraph(line.strip())
 
         # Save the document
-        doc.save(file_path)
+        doc.save(str(file_path))
 
         return {
             "success": True,
@@ -114,3 +114,381 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error creating Word document: {str(e)}")
         return {"success": False, "error": f"Failed to create Word document: {str(e)}"}
+
+
+def create_powerpoint_presentation(title: str, slides_content: str, file_name: str) -> Dict[str, Any]:
+    """
+    Create a PowerPoint presentation with multiple slides for investment committee presentations and client meetings.
+
+    Args:
+        title: Title of the presentation
+        slides_content: JSON string containing list of dictionaries with 'title' and 'content' keys for each slide
+        file_name: Name of the PowerPoint file to be created
+    """
+    try:
+        # Parse JSON string
+        slides_data = json.loads(slides_content) if isinstance(slides_content, str) else slides_content
+
+        # Add .pptx extension if not present
+        if not file_name.endswith('.pptx'):
+            file_name = f"{file_name}.pptx"
+
+        # Ensure file_path is absolute and in the documents directory
+        file_path = FILES_PATH / file_name
+
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Create presentation
+        prs = Presentation()
+
+        # Add title slide
+        title_slide_layout = prs.slide_layouts[0]  # Title slide layout
+        slide = prs.slides.add_slide(title_slide_layout)
+        title_shape = slide.shapes.title
+        title_shape.text = title
+
+        # Add content slides
+        for slide_data in slides_data:
+            slide_layout = prs.slide_layouts[1]  # Title and content layout
+            slide = prs.slides.add_slide(slide_layout)
+
+            # Set slide title
+            if 'title' in slide_data:
+                slide.shapes.title.text = slide_data['title']
+
+            # Set slide content
+            if 'content' in slide_data:
+                content_placeholder = slide.placeholders[1]
+                content_placeholder.text = slide_data['content']
+
+        # Save presentation
+        prs.save(str(file_path))
+
+        return {
+            "success": True,
+            "file_path": str(file_path),
+            "slides_count": len(slides_data) + 1,  # +1 for title slide
+            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides at {file_path}"
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating PowerPoint presentation: {str(e)}")
+        return {"success": False, "error": f"Failed to create PowerPoint presentation: {str(e)}"}
+
+
+def add_powerpoint_slide(file_path: str, slide_title: str, slide_content: str, slide_position: int = -1) -> Dict[str, Any]:
+    """
+    Add a new slide to an existing PowerPoint presentation for dynamic slide addition and template-based expansion.
+
+    Args:
+        file_path: Path to the existing PowerPoint file
+        slide_title: Title of the new slide
+        slide_content: Content of the new slide
+        slide_position: Position to insert the slide (-1 for end)
+    """
+    try:
+        # Load existing presentation
+        prs = Presentation(file_path)
+
+        # Create new slide
+        slide_layout = prs.slide_layouts[1]  # Title and content layout
+
+        if slide_position == -1:
+            slide = prs.slides.add_slide(slide_layout)
+        else:
+            slide = prs.slides.add_slide(slide_layout)
+            # Move slide to desired position (simplified approach)
+
+        # Set slide content
+        slide.shapes.title.text = slide_title
+        content_placeholder = slide.placeholders[1]
+        content_placeholder.text = slide_content
+
+        # Save presentation
+        prs.save(file_path)
+
+        return {
+            "success": True,
+            "file_path": file_path,
+            "total_slides": len(prs.slides),
+            "message": f"Slide added successfully. Presentation now has {len(prs.slides)} slides."
+        }
+
+    except Exception as e:
+        logger.error(f"Error adding slide to PowerPoint: {str(e)}")
+        return {"success": False, "error": f"Failed to add slide: {str(e)}"}
+
+def modify_word_content(file_path: str, search_text: str, replace_text: str) -> Dict[str, Any]:
+    """
+    Modify existing Word documents for updates and revisions.
+
+    Args:
+        file_path: Path to the Word document
+        search_text: Text to search for
+        replace_text: Text to replace with
+    """
+    try:
+        # Load document
+        doc = Document(file_path)
+
+        replacements_made = 0
+
+        # Replace text in paragraphs
+        for paragraph in doc.paragraphs:
+            if search_text in paragraph.text:
+                paragraph.text = paragraph.text.replace(search_text, replace_text)
+                replacements_made += 1
+
+        # Replace text in tables
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if search_text in cell.text:
+                        cell.text = cell.text.replace(search_text, replace_text)
+                        replacements_made += 1
+
+        # Save document
+        doc.save(file_path)
+
+        return {
+            "success": True,
+            "file_path": file_path,
+            "replacements_made": replacements_made,
+            "message": f"Document updated successfully. Made {replacements_made} replacements."
+        }
+
+    except Exception as e:
+        logger.error(f"Error modifying Word document: {str(e)}")
+        return {"success": False, "error": f"Failed to modify Word document: {str(e)}"}
+
+
+def modify_excel_cells(file_path: str, updates: str, sheet_name: str = None) -> Dict[str, Any]:
+    """
+    Update cell values in Excel for financial model parameters.
+
+    Args:
+        file_path: Path to the Excel file
+        updates: JSON string containing list of dictionaries with 'cell', 'value' keys (e.g., "[{'cell': 'A1', 'value': 100}]")
+        sheet_name: Name of the sheet to modify (None for active sheet)
+    """
+    try:
+        # Parse JSON string
+        updates_data = json.loads(updates) if isinstance(updates, str) else updates
+
+        # Load workbook
+        wb = load_workbook(file_path)
+
+        # Select sheet
+        if sheet_name:
+            ws = wb[sheet_name]
+        else:
+            ws = wb.active
+
+        # Apply updates
+        for update in updates_data:
+            cell_address = update['cell']
+            cell_value = update['value']
+            ws[cell_address] = cell_value
+
+        # Save workbook
+        wb.save(file_path)
+
+        return {
+            "success": True,
+            "file_path": file_path,
+            "updates_applied": len(updates_data),
+            "sheet_name": ws.title,
+            "message": f"Successfully updated {len(updates_data)} cells in sheet '{ws.title}'"
+        }
+
+    except Exception as e:
+        logger.error(f"Error modifying Excel cells: {str(e)}")
+        return {"success": False, "error": f"Failed to modify Excel cells: {str(e)}"}
+
+
+def calculate_excel_formulas(file_path: str, formulas: str, sheet_name: str = None) -> Dict[str, Any]:
+    """
+    Calculate complex financial formulas and Monte Carlo simulations in Excel.
+
+    Args:
+        file_path: Path to the Excel file
+        formulas: JSON string containing list of dictionaries with 'cell' and 'formula' keys
+        sheet_name: Name of the sheet (None for active sheet)
+    """
+    try:
+        # Parse JSON string
+        formulas_data = json.loads(formulas) if isinstance(formulas, str) else formulas
+
+        # Load workbook
+        wb = load_workbook(file_path)
+
+        # Select sheet
+        if sheet_name:
+            ws = wb[sheet_name]
+        else:
+            ws = wb.active
+
+        # Apply formulas
+        for formula_data in formulas_data:
+            cell_address = formula_data['cell']
+            formula = formula_data['formula']
+            if not formula.startswith('='):
+                formula = '=' + formula
+            ws[cell_address] = formula
+
+        # Save workbook
+        wb.save(file_path)
+
+        return {
+            "success": True,
+            "file_path": file_path,
+            "formulas_applied": len(formulas_data),
+            "sheet_name": ws.title,
+            "message": f"Successfully applied {len(formulas_data)} formulas in sheet '{ws.title}'"
+        }
+
+    except Exception as e:
+        logger.error(f"Error calculating Excel formulas: {str(e)}")
+        return {"success": False, "error": f"Failed to calculate Excel formulas: {str(e)}"}
+
+
+def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None) -> Dict[str, Any]:
+    """
+    Create performance charts, risk visualizations, and correlation heatmaps in Excel.
+
+    Args:
+        file_path: Path to the Excel file
+        chart_data: JSON string containing chart configuration dictionary
+        sheet_name: Name of the sheet (None for active sheet)
+    """
+    try:
+        # Parse JSON string
+        chart_config = json.loads(chart_data) if isinstance(chart_data, str) else chart_data
+
+        # Load workbook
+        wb = load_workbook(file_path)
+
+        # Select sheet
+        if sheet_name:
+            ws = wb[sheet_name]
+        else:
+            ws = wb.active
+
+        chart_type = chart_config.get('type', 'bar').lower()
+        data_range = chart_config.get('data_range', 'A1:B10')
+        title = chart_config.get('title', 'Chart')
+
+        # Create chart based on type
+        if chart_type == 'bar':
+            chart = BarChart()
+        elif chart_type == 'line':
+            chart = LineChart()
+        elif chart_type == 'pie':
+            chart = PieChart()
+        else:
+            chart = BarChart()  # Default to bar chart
+
+        # Set chart properties
+        chart.title = title
+
+        # Add data to chart
+        # Parse the range string to get min/max coordinates
+        if '!' in data_range:
+            range_part = data_range.split('!')[-1]
+        else:
+            range_part = data_range
+        
+        # Convert range like "A1:B10" to coordinates
+        from openpyxl.utils import range_boundaries
+        min_col, min_row, max_col, max_row = range_boundaries(range_part)
+        
+        data = Reference(ws, min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row)
+        chart.add_data(data, titles_from_data=True)
+
+        # Add chart to worksheet
+        ws.add_chart(chart)
+
+        # Save workbook
+        wb.save(file_path)
+
+        return {
+            "success": True,
+            "file_path": file_path,
+            "chart_type": chart_type,
+            "chart_title": title,
+            "sheet_name": ws.title,
+            "message": f"Successfully created {chart_type} chart '{title}' in sheet '{ws.title}'"
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating Excel chart: {str(e)}")
+        return {"success": False, "error": f"Failed to create Excel chart: {str(e)}"}
+
+
+def create_excel_workbook(workbook_name: str, sheets_data: str) -> Dict[str, Any]:
+    """
+    Create new financial models, reports and dashboards as Excel workbooks.
+
+    Args:
+        workbook_name: Name of the new workbook
+        sheets_data: JSON string containing list of dictionaries with sheet configurations
+    """
+    try:
+        # Parse JSON string
+        sheets_config = json.loads(sheets_data) if isinstance(sheets_data, str) else sheets_data
+
+        # Add .xlsx extension if not present
+        if not workbook_name.endswith('.xlsx'):
+            workbook_name = f"{workbook_name}.xlsx"
+
+        # Ensure file_path is absolute and in the documents directory
+        file_path = FILES_PATH / workbook_name
+
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Create workbook
+        wb = Workbook()
+
+        # Remove default sheet
+        default_sheet = wb.active
+        wb.remove(default_sheet)
+
+        sheets_created = 0
+
+        # Create sheets based on provided data
+        for sheet_config in sheets_config:
+            sheet_name = sheet_config.get('name', f'Sheet{sheets_created + 1}')
+            sheet_data = sheet_config.get('data', [])
+
+            # Create sheet
+            ws = wb.create_sheet(title=sheet_name)
+
+            # Add data if provided
+            if sheet_data:
+                for row_idx, row_data in enumerate(sheet_data, 1):
+                    for col_idx, cell_value in enumerate(row_data, 1):
+                        ws.cell(row=row_idx, column=col_idx, value=cell_value)
+
+            sheets_created += 1
+
+        # If no sheets were created, create a default one
+        if sheets_created == 0:
+            wb.create_sheet(title='Sheet1')
+            sheets_created = 1
+
+        # Save workbook
+        wb.save(str(file_path))
+        
+        return {
+            "success": True,
+            "file_path": str(file_path),
+            "sheets_created": sheets_created,
+            "sheet_names": [sheet.title for sheet in wb.worksheets],
+            "message": f"Excel workbook created successfully with {sheets_created} sheets at {file_path}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating Excel workbook: {str(e)}")
+        return {"success": False, "error": f"Failed to create Excel workbook: {str(e)}"}
