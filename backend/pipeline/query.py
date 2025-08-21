@@ -2,23 +2,36 @@ from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
 from backend.core.agents import create_rag_agent
-from backend.retrieval.retriever import retrieve_top_k, retrieve_with_keyword_search, retrieve_hybrid, load_vectorstore, retrieve_with_keyword_helping
+from backend.retrieval.retriever import (
+    retrieve_top_k,
+    retrieve_with_keyword_search,
+    retrieve_hybrid,
+    load_vectorstore,
+    retrieve_with_keyword_helping,
+)
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query import spell_check, detect_language, filter_docs_by_selected_files, refine_query
+from backend.utils.query import (
+    spell_check,
+    detect_language,
+    filter_docs_by_selected_files,
+    refine_query,
+)
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.core.tools.visual import get_image_datas
 from backend.shared.logger import get_logger
+from backend.server.finance_mcp import get_chart_datas
 
 logger = get_logger("QUERY_PIPELINE")
+
 
 def preprocess_query(query: str):
     lang = detect_language(query)
     logger.debug(f"Detected Language: {lang}")
-    if lang=="Turkish":
-        corrected = spell_check(query)
-        return corrected, lang
+    # if lang=="Turkish":
+    #     corrected = spell_check(query)
+    #     return corrected, lang
     return query, lang
 
 
@@ -39,7 +52,6 @@ async def run_orchestration(
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
 
-
     # Handle chat history and session management
     if session_id:
         # Add user message to chat history
@@ -54,7 +66,9 @@ async def run_orchestration(
         # Reduce history if too long
         session = chat_history_manager.get_session(session_id)
         if session and len(session.messages) > 30:
-            logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
+            logger.info(
+                f"   - Reducing chat history from {len(session.messages)} messages"
+            )
             chat_history_manager.reduce_history(session, target_messages=20)
     else:
         conversation_context = []
@@ -75,7 +89,8 @@ async def run_orchestration(
         logger.warning("moderation error")
         return {
             "response": f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}",
-            "images": []
+            "images": [],
+            "charts": [],
         }
 
     # 3. Hassas bilgileri maskele
@@ -96,13 +111,14 @@ async def run_orchestration(
             num_queries=4,
             top_n=5,
             final_rerank=True,
-            excessive_k=60
+            excessive_k=60,
         )
 
         if not fusion_docs:
             return {
                 "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                "images": []
+                "images": [],
+                "charts": [],
             }
 
         logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
@@ -116,12 +132,14 @@ async def run_orchestration(
             if selected_files:
                 return {
                     "response": f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım.",
-                    "images": []
+                    "images": [],
+                    "charts": [],
                 }
             else:
                 return {
                     "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                    "images": []
+                    "images": [],
+                    "charts": [],
                 }
 
         # Use filtered fusion docs directly (they're already optimized and reranked)
@@ -131,15 +149,14 @@ async def run_orchestration(
         from backend.retrieval.rse import retrieve_with_rse
 
         rse_chunks, rse_scores = retrieve_with_rse(
-            client=client,
-            query=preprocessed_query,
-            k=15
+            client=client, query=preprocessed_query, k=15
         )
 
         if not rse_chunks:
             return {
                 "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                "images": []
+                "images": [],
+                "charts": [],
             }
         # logger.debug(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
 
@@ -150,18 +167,20 @@ async def run_orchestration(
             if selected_files:
                 return {
                     "response": f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı.",
-                    "images": []
+                    "images": [],
+                    "charts": [],
                 }
             else:
                 return {
                     "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                    "images": []
+                    "images": [],
+                    "charts": [],
                 }
 
         # Use filtered RSE-enhanced chunks directly (they're already optimized)
         reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
     else:
-        # 4. Enhanced Retrieval + Reranking 
+        # 4. Enhanced Retrieval + Reranking
         if search_method == "keyword":
             logger.info("🔍 Using keyword search (BM25)")
             retrieved_docs = retrieve_with_keyword_search(
@@ -170,24 +189,34 @@ async def run_orchestration(
         elif search_method == "hybrid":
             logger.info("🔍 Using hybrid search (vector + keyword)")
             retrieved_docs = retrieve_hybrid(
-                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+                client=client,
+                query=preprocessed_query,
+                k=15,
+                selected_files=selected_files,
             )
         elif search_method == "vector_keyword_helping":
             logger.info("🔍 Using vector + keyword search helping")
             retrieved_docs = retrieve_with_keyword_helping(
-                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+                client=client,
+                query=preprocessed_query,
+                k=15,
+                selected_files=selected_files,
             )
         else:  # Default to vector search
             logger.info("🔍 Using vector search")
             retrieved_docs = retrieve_top_k(
-                client=client, query=preprocessed_query, k=15, selected_files=selected_files
+                client=client,
+                query=preprocessed_query,
+                k=15,
+                selected_files=selected_files,
             )  # Get more docs for better reranking
 
         if not retrieved_docs:
             logger.warning("No retrieved docs")
             return {
                 "response": "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı.",
-                "images": []
+                "images": [],
+                "charts": [],
             }
 
         # Extract only the content from the retrieved docs before reranking
@@ -203,7 +232,10 @@ async def run_orchestration(
 
     included_parent_chunk_ids = []
     for doc in reranked_docs:
-        if pre_embedding_process == "pdr" and doc["metadata"].get("content_type") == "child":
+        if (
+            pre_embedding_process == "pdr"
+            and doc["metadata"].get("content_type") == "child"
+        ):
             if doc["metadata"].get("parent_chunk_id") in included_parent_chunk_ids:
                 continue
             else:
@@ -218,7 +250,10 @@ async def run_orchestration(
 
         metadata_str = ""
         metadata_str += f"Source: {metadata.get('file_name')}\n"
-        if pre_embedding_process == "pdr" and doc["metadata"].get("content_type") == "child":
+        if (
+            pre_embedding_process == "pdr"
+            and doc["metadata"].get("content_type") == "child"
+        ):
             metadata_str += f"Parent Chunk ID: {metadata.get('parent_chunk_id')}\n"
         context_entries.append(
             f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
@@ -247,15 +282,17 @@ async def run_orchestration(
 
     # 7. Get images and add assistant response to chat history with images
     images = get_image_datas()
+    charts = get_chart_datas()
     if session_id:
-        # Include images in metadata so they persist in chat history
-        metadata = {"images": images} if images else None
+        metadata = {}
+        if images:
+            metadata["images"] = images
+        if charts:
+            metadata["charts"] = charts
+
+        metadata = metadata if metadata else None
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
-    
-    
-    return {
-        "response":final_answer,
-        "images": images
-    }
+
+    return {"response": final_answer, "images": images, "charts": charts}
