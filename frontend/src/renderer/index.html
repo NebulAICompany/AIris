@@ -21,17 +21,13 @@
     />
   </head>
   <body>
-    <div id="app" class="app-container">
+    <div id="app" class="app-container" style="display: none">
       <!-- Header -->
       <header class="header">
         <div class="header-content">
           <div class="header-left">
             <div class="logo">
-              <i class="fas fa-brain"></i>
-              <span class="logo-text" data-i18n="logoText">AIris</span>
-              <span class="logo-subtitle" data-i18n="logoSubtitle"
-                >Financial AI</span
-              >
+              <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
             </div>
           </div>
           <div class="header-center">
@@ -764,8 +760,12 @@
       </main>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
+    <!-- Loading Overlay - Kept hidden to skip initial loading screen -->
+    <div
+      id="loading-overlay"
+      class="loading-overlay hidden"
+      style="display: none"
+    >
       <div class="loading-content">
         <div class="loading-spinner"></div>
         <div class="loading-text" data-i18n="loading">Processing...</div>

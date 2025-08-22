@@ -39,7 +39,8 @@ class UIComponents {
 
   init() {
     this.setupEventListeners();
-    this.loadTheme();
+    // Theme loading moved to AIrisApp class to load before loading screen
+    // this.loadTheme();
     this.initializeComponents();
 
     // Set toggle state on load
@@ -2468,24 +2469,43 @@ class UIComponents {
   // Theme management
   loadTheme() {
     const savedTheme = localStorage.getItem("airis-theme") || "light";
-    this.isDarkMode = savedTheme === "dark";
+    this.currentTheme = savedTheme;
     this.applyTheme();
   }
 
   toggleTheme() {
-    this.isDarkMode = !this.isDarkMode;
+    // Cycle through themes: light -> dark -> nebula -> light
+    const themes = ["light", "dark", "nebula"];
+    const currentIndex = themes.indexOf(this.currentTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    this.currentTheme = themes[nextIndex];
     this.applyTheme();
-    localStorage.setItem("airis-theme", this.isDarkMode ? "dark" : "light");
+    localStorage.setItem("airis-theme", this.currentTheme);
   }
 
   applyTheme() {
-    document.body.classList.toggle("dark-theme", this.isDarkMode);
+    // Remove all theme classes
+    document.body.classList.remove("dark-theme", "nebula-theme");
+    
+    // Apply current theme class
+    if (this.currentTheme === "dark") {
+      document.body.classList.add("dark-theme");
+    } else if (this.currentTheme === "nebula") {
+      document.body.classList.add("nebula-theme");
+    }
 
     const themeToggle = document.getElementById("theme-toggle");
     if (themeToggle) {
-      themeToggle.innerHTML = this.isDarkMode
-        ? '<i class="fas fa-sun"></i>'
-        : '<i class="fas fa-moon"></i>';
+      if (this.currentTheme === "light") {
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        themeToggle.setAttribute("title", "Switch to Dark Theme");
+      } else if (this.currentTheme === "dark") {
+        themeToggle.innerHTML = '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
+        themeToggle.setAttribute("title", "Switch to Nebula Theme");
+      } else if (this.currentTheme === "nebula") {
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        themeToggle.setAttribute("title", "Switch to Light Theme");
+      }
     }
   }
 
