@@ -8,6 +8,7 @@ class AIrisApp {
     this.uiComponents = null;
     this.isInitialized = false;
     this.backendConnected = false;
+    this.currentTheme = "light";
 
     this.init();
   }
@@ -30,6 +31,9 @@ class AIrisApp {
 
   async start() {
     try {
+      // Load themes first before showing loading screen
+      this.loadTheme();
+
       // Show loading screen
       this.showLoadingScreen();
 
@@ -451,6 +455,39 @@ class AIrisApp {
     }
   }
 
+  // Theme management
+  loadTheme() {
+    const savedTheme = localStorage.getItem("airis-theme") || "light";
+    this.currentTheme = savedTheme;
+    this.applyTheme();
+  }
+
+  applyTheme() {
+    // Remove all theme classes
+    document.body.classList.remove("dark-theme", "nebula-theme");
+    
+    // Apply current theme class
+    if (this.currentTheme === "dark") {
+      document.body.classList.add("dark-theme");
+    } else if (this.currentTheme === "nebula") {
+      document.body.classList.add("nebula-theme");
+    }
+
+    const themeToggle = document.getElementById("theme-toggle");
+    if (themeToggle) {
+      if (this.currentTheme === "light") {
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        themeToggle.setAttribute("title", "Switch to Dark Theme");
+      } else if (this.currentTheme === "dark") {
+        themeToggle.innerHTML = '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
+        themeToggle.setAttribute("title", "Switch to Nebula Theme");
+      } else if (this.currentTheme === "nebula") {
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        themeToggle.setAttribute("title", "Switch to Light Theme");
+      }
+    }
+  }
+
   // Development helpers
   getDebugInfo() {
     return {
@@ -459,7 +496,7 @@ class AIrisApp {
       currentTab: this.uiComponents?.currentTab,
       chatHistory: this.uiComponents?.chatHistory?.length || 0,
       uploadedFiles: this.uiComponents?.uploadedFiles?.length || 0,
-      theme: this.uiComponents?.isDarkMode ? "dark" : "light",
+      theme: this.currentTheme,
       currencyService: window.currencyService?.getCurrentData() || null,
     };
   }

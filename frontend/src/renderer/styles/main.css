@@ -1168,20 +1168,20 @@ body.nebula-theme::after {
 
 @keyframes starTwinkle {
   0%, 100% {
-    opacity: 0.96;
-    filter: brightness(1);
+    opacity: 1;
+    filter: brightness(1) saturate(1);
   }
   25% {
-    opacity: 0.9;
-    filter: brightness(1.06);
+    opacity: 0.85;
+    filter: brightness(1.15) saturate(1.1);
   }
   50% {
-    opacity: 0.92;
-    filter: brightness(0.97);
+    opacity: 0.95;
+    filter: brightness(0.9) saturate(0.95);
   }
   75% {
-    opacity: 0.88;
-    filter: brightness(1.08);
+    opacity: 0.8;
+    filter: brightness(1.2) saturate(1.15);
   }
 }
 
@@ -1756,7 +1756,7 @@ body.nebula-theme .app-container::before {
 /* Shooting stars layer (diagonal streaks) */
 body.nebula-theme .main-content::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-  /* Much sparser shooting stars: greatly increased spacing, subtle opacity */
+  /* Seamless looping shooting stars with matched pattern size */
   background-image:
     repeating-linear-gradient(
       -45deg,
@@ -1812,7 +1812,10 @@ body.nebula-theme .btn.btn-primary:hover {
 }
 @keyframes shootingStars {
   0% { background-position: 0 0, 0 0; }
-  100% { background-position: -1600px 1600px, -1900px 1900px; }
+  100% { 
+    /* Move exactly one pattern cycle for seamless loop */
+    background-position: -2262px 2262px, -2687px 2687px; 
+  }
 }
 
 
