@@ -128,7 +128,7 @@ class AIrisApp {
     loadingScreen.innerHTML = `
             <div class="loading-content">
                 <div class="loading-logo">
-                    <i class="fas fa-brain"></i>
+                    <img src="assets/logo.png" alt="AIris Logo" class="loading-logo-image">
                 </div>
                 <h2>AIris</h2>
                 <p>Initializing AI Financial Assistant...</p>
@@ -145,13 +145,13 @@ class AIrisApp {
     const loadingScreen = document.getElementById("loading-screen");
     if (loadingScreen) {
       loadingScreen.classList.add("fade-out");
-      
+
       // Show the main app content now that loading is complete
       const appContainer = document.getElementById("app");
       if (appContainer) {
         appContainer.style.display = "flex";
       }
-      
+
       setTimeout(() => {
         loadingScreen.remove();
       }, 500);
@@ -472,7 +472,7 @@ class AIrisApp {
   applyTheme() {
     // Remove all theme classes
     document.body.classList.remove("dark-theme", "nebula-theme");
-    
+
     // Apply current theme class
     if (this.currentTheme === "dark") {
       document.body.classList.add("dark-theme");
@@ -486,7 +486,8 @@ class AIrisApp {
         themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
         themeToggle.setAttribute("title", "Switch to Dark Theme");
       } else if (this.currentTheme === "dark") {
-        themeToggle.innerHTML = '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
+        themeToggle.innerHTML =
+          '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
         themeToggle.setAttribute("title", "Switch to Nebula Theme");
       } else if (this.currentTheme === "nebula") {
         themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
