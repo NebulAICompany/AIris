@@ -837,11 +837,8 @@ body.dark-theme .image-caption {
   font-weight: 500;
   margin-bottom: 4px;
   display: -webkit-box;
-  display: box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
-  box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;
 }
@@ -4285,3 +4282,434 @@ body.dark-theme .uploaded-file-preview {
 body.dark-theme .uploaded-file-preview:hover {
   background: var(--bg-primary);
 }
+
+/* ======================================
+   NEBULA THEME - MAGICAL COSMIC EXPERIENCE
+   ====================================== */
+
+/* Nebula theme support for charts */
+body.nebula-theme .message-charts {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.15)
+  ) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.25), 0 0 40px rgba(236, 72, 153, 0.1) !important;
+}
+
+body.nebula-theme .message-chart-wrapper {
+  background: rgba(13, 2, 33, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4), 0 0 20px rgba(236, 72, 153, 0.2) !important;
+}
+
+body.nebula-theme .message-chart-wrapper:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 12px 50px rgba(139, 92, 246, 0.5), 0 0 30px rgba(236, 72, 153, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+body.nebula-theme .chart-caption {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(236, 72, 153, 0.15)) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Nebula theme for fullscreen modal */
+body.nebula-theme .chart-fullscreen-content {
+  background: linear-gradient(135deg, #0D0221, #1A0B2E) !important;
+  box-shadow: 0 25px 80px rgba(139, 92, 246, 0.4) !important;
+}
+
+body.nebula-theme .chart-fullscreen-header {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.1)) !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .chart-fullscreen-title {
+  color: var(--text-primary) !important;
+  text-shadow: 0 0 15px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme support for images */
+body.nebula-theme .message-images {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15),
+    rgba(236, 72, 153, 0.1)
+  ) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .message-image-wrapper {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .message-image-wrapper:hover {
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4), 0 0 20px rgba(236, 72, 153, 0.2) !important;
+}
+
+body.nebula-theme .image-caption {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.1)) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Nebula theme support for upload animation */
+body.nebula-theme .upload-animation .dots span {
+  background: linear-gradient(45deg, #8B5CF6, #EC4899) !important;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme adjustments for upload progress */
+body.nebula-theme .upload-progress {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .progress-bar {
+  background: linear-gradient(90deg, #8B5CF6, #EC4899) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme adjustments */
+body.nebula-theme .file-card-preview {
+  background: rgba(13, 2, 33, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .preview-image img {
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .excel-data th {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.1)) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Nebula theme code blocks */
+body.nebula-theme .message-text pre,
+body.nebula-theme .message-content pre,
+body.nebula-theme .markdown-content pre,
+body.nebula-theme div pre,
+body.nebula-theme pre.hljs,
+body.nebula-theme pre[class*="hljs"] {
+  background: rgba(13, 2, 33, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2), inset 0 0 20px rgba(236, 72, 153, 0.05) !important;
+}
+
+body.nebula-theme .message-text pre code,
+body.nebula-theme .message-text code {
+  color: var(--text-primary) !important;
+  text-shadow: 0 0 5px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Nebula theme toggle switches */
+body.nebula-theme .toggle-switch {
+  background: rgba(13, 2, 33, 0.8) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .toggle-switch:hover {
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+body.nebula-theme .slider {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(236, 72, 153, 0.2)) !important;
+}
+
+body.nebula-theme .slider:before {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899) !important;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.5) !important;
+}
+
+body.nebula-theme .toggle-switch input:checked + .slider {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899) !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5) !important;
+}
+
+body.nebula-theme .toggle-switch input:checked + .slider:before {
+  background: #E8D5FF !important;
+  box-shadow: 0 0 15px rgba(232, 213, 255, 0.8) !important;
+}
+
+/* Nebula theme status badges */
+body.nebula-theme .status-badge.verified {
+  background: linear-gradient(135deg, #06D6A0, #059669) !important;
+  box-shadow: 0 0 15px rgba(6, 214, 160, 0.4) !important;
+}
+
+body.nebula-theme .status-badge.rejected {
+  background: linear-gradient(135deg, #FF006E, #DC2626) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 110, 0.4) !important;
+}
+
+body.nebula-theme .status-badge.review-required {
+  background: linear-gradient(135deg, #FFD60A, #F59E0B) !important;
+  box-shadow: 0 0 15px rgba(255, 214, 10, 0.4) !important;
+}
+
+body.nebula-theme .verification-issues {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(255, 0, 110, 0.3) !important;
+}
+
+/* Nebula theme file selection */
+body.nebula-theme .file-selection-content {
+  background: rgba(13, 2, 33, 0.95) !important;
+}
+
+body.nebula-theme .file-item-icon.pdf {
+  background: linear-gradient(135deg, #FF006E, #DC2626) !important;
+}
+
+body.nebula-theme .file-item-icon.docx {
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important;
+}
+
+body.nebula-theme .file-item-icon.xlsx {
+  background: linear-gradient(135deg, #06D6A0, #059669) !important;
+}
+
+body.nebula-theme .file-item-icon.txt {
+  background: linear-gradient(135deg, #64748B, #475569) !important;
+}
+
+body.nebula-theme .file-item-icon.jpg,
+body.nebula-theme .file-item-icon.png,
+body.nebula-theme .file-item-icon.jpeg {
+  background: linear-gradient(135deg, #8B5CF6, #EC4899) !important;
+}
+
+/* Nebula theme chat file upload */
+body.nebula-theme .chat-file-upload-area {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 2px dashed rgba(139, 92, 246, 0.4) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1) !important;
+}
+
+body.nebula-theme .chat-file-upload-area.drag-over {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-color: rgba(139, 92, 246, 0.7) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.3), 0 0 30px rgba(236, 72, 153, 0.2) !important;
+}
+
+body.nebula-theme .chat-file-item {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+body.nebula-theme .chat-file-item:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+body.nebula-theme .file-attachment-button,
+body.nebula-theme .file-selection-button,
+body.nebula-theme .web-search-button {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.1)) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .web-search-button.active {
+  background: linear-gradient(135deg, #06D6A0, #059669) !important;
+  border: 2px solid #059669 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.4), 0 8px 30px rgba(6, 214, 160, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+body.nebula-theme .web-search-button.active::after {
+  background: conic-gradient(from 0deg, #06D6A0, #8B5CF6, #EC4899, #06D6A0) !important;
+  opacity: 0.9 !important;
+}
+
+/* Nebula theme support for uploaded files preview */
+body.nebula-theme .uploaded-files-container {
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 2, 33, 0.95),
+    rgba(26, 11, 46, 0.9)
+  ) !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .uploaded-files-header {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.25),
+    rgba(236, 72, 153, 0.15)
+  ) !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .uploaded-file-preview:hover {
+  background: rgba(139, 92, 246, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Nebula theme upload progress */
+body.nebula-theme .upload-progress-bar {
+  background: rgba(13, 2, 33, 0.8) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .upload-progress-fill {
+  background: linear-gradient(90deg, #8B5CF6, #EC4899) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme for large upload zone */
+body.nebula-theme .chat-file-upload-zone {
+  border: 2px dashed rgba(139, 92, 246, 0.4) !important;
+  background: rgba(13, 2, 33, 0.8) !important;
+}
+
+body.nebula-theme .chat-file-upload-zone:hover {
+  background: rgba(139, 92, 246, 0.05) !important;
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .chat-file-upload-zone.drag-over {
+  background: rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.8) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Nebula theme for chat input drag over */
+body.nebula-theme .chat-input.drag-over {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Nebula theme for file status messages */
+body.nebula-theme .file-status-message {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .file-status-message.uploading {
+  background: rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .file-status-message.success {
+  background: rgba(6, 214, 160, 0.15) !important;
+  box-shadow: 0 0 15px rgba(6, 214, 160, 0.3) !important;
+}
+
+body.nebula-theme .file-status-message.error {
+  background: rgba(255, 0, 110, 0.15) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 110, 0.3) !important;
+}
+
+body.nebula-theme .uploaded-file-preview {
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  background: rgba(13, 2, 33, 0.5) !important;
+}
+
+body.nebula-theme .uploaded-file-preview:hover {
+  background: rgba(139, 92, 246, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+
+/* ===============================
+   NEBULA THEME – COMPONENT HUD LAYERS
+   Adds complex overlays to charts and modals to evoke a futuristic dashboard.
+   =============================== */
+
+/* Ensure containers can host overlays */
+body.nebula-theme .message-charts,
+body.nebula-theme .message-chart-wrapper,
+body.nebula-theme .chart-fullscreen-content {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fine grid overlay for charts */
+body.nebula-theme .message-charts::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(139,92,246,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.08) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px;
+  background-position: 0 0, 0 0;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  animation: hudGridPan 80s linear infinite;
+  z-index: 1;
+}
+
+/* Scanline + glow sweep overlay for charts */
+body.nebula-theme .message-charts::after {
+  content: ""; position: absolute; inset: -20% 0 -20% 0; pointer-events: none;
+  background:
+    /* horizontal scanlines */
+    repeating-linear-gradient(0deg, rgba(232,213,255,0.06) 0 2px, transparent 2px 6px),
+    /* vertical faint lines */
+    repeating-linear-gradient(90deg, rgba(139,92,246,0.05) 0 1px, transparent 1px 12px),
+    /* moving glow bar */
+    linear-gradient(0deg, transparent 0%, rgba(139,92,246,0.15) 48%, rgba(236,72,153,0.18) 50%, rgba(139,92,246,0.15) 52%, transparent 100%);
+  background-size: 100% 6px, 12px 100%, 100% 18%;
+  background-repeat: repeat, repeat, no-repeat;
+  background-position: 0 0, 0 0, 0 -60%;
+  animation: scanlinePan 16s linear infinite, glowSweep 9s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+/* Fullscreen chart content gets crisper HUD */
+body.nebula-theme .chart-fullscreen-content::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(139,92,246,0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.1) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px;
+  opacity: 0.55; mix-blend-mode: screen; z-index: 1;
+  animation: hudGridPan 60s linear infinite;
+}
+
+body.nebula-theme .chart-fullscreen-content::after {
+  content: ""; position: absolute; inset: -15% -5%; pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(232,213,255,0.07) 0 2px, transparent 2px 6px),
+    linear-gradient(90deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06), rgba(6,214,160,0.06));
+  background-size: 100% 6px, 400% 100%;
+  background-position: 0 0, 0 0;
+  animation: scanlinePan 14s linear infinite, auroraSweep 22s ease-in-out infinite;
+  mix-blend-mode: screen; z-index: 2;
+}
+
+/* Make image wrappers feel holographic */
+body.nebula-theme .message-image-wrapper::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(60% 80% at 50% 0%, rgba(139,92,246,0.15), transparent 70%);
+  mix-blend-mode: screen; z-index: 1;
+}
+
+/* Slightly stronger glow on interactive nebula buttons */
+body.nebula-theme .file-attachment-button:hover,
+body.nebula-theme .file-selection-button:hover,
+body.nebula-theme .web-search-button:hover {
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.25), 0 14px 34px rgba(236,72,153,0.35) !important;
+}
+
+/* Keyframes used by HUD overlays */
+@keyframes hudGridPan { to { background-position: 600px 600px, 600px 600px; } }
+@keyframes scanlinePan { from { background-position-y: 0; } to { background-position-y: 100%; } }
+@keyframes glowSweep { 0%,100% { background-position: 0 -60%; } 50% { background-position: 0 120%; } }
+@keyframes auroraSweep { 0%,100% { background-position: 0 0; } 50% { background-position: 200% 0; } }
