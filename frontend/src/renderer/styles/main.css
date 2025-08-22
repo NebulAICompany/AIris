@@ -1076,25 +1076,25 @@ body.nebula-theme::after {
   bottom: 0;
   background:
     /* FAR STARS (tiny, dense) */
-    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.55) 50%, transparent 51%),
-    radial-gradient(1px 1px at 80px 120px, rgba(255,255,255,0.5) 50%, transparent 51%),
-    radial-gradient(1px 1px at 130px 90px, rgba(255,255,255,0.55) 50%, transparent 51%),
-    radial-gradient(1px 1px at 160px 170px, rgba(255,255,255,0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 80px 120px, rgba(255,255,255,0.65) 50%, transparent 51%),
+    radial-gradient(1px 1px at 130px 90px, rgba(255,255,255,0.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 160px 170px, rgba(255,255,255,0.65) 50%, transparent 51%),
 
     /* MID STARS (slightly larger) */
-    radial-gradient(1.5px 1.5px at 60px 40px, rgba(255,255,255,0.7) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 10px 140px, rgba(255,255,255,0.65) 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 180px 70px, rgba(255,255,255,0.7) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 60px 40px, rgba(255,255,255,0.8) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 10px 140px, rgba(255,255,255,0.75) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 180px 70px, rgba(255,255,255,0.8) 50%, transparent 51%),
 
     /* NEAR STARS (bright with soft glow) */
-    radial-gradient(3px 3px at 90px 20px, rgba(255,255,255,0.9) 35%, rgba(255,255,255,0.25) 65%, transparent 66%),
-    radial-gradient(2.5px 2.5px at 140px 150px, rgba(255,255,255,0.92) 35%, rgba(255,255,255,0.25) 65%, transparent 66%),
-    radial-gradient(2px 2px at 30px 100px, rgba(255,255,255,0.88) 40%, rgba(255,255,255,0.2) 70%, transparent 71%),
+    radial-gradient(3px 3px at 90px 20px, rgba(255,255,255,0.95) 35%, rgba(255,255,255,0.3) 65%, transparent 66%),
+    radial-gradient(2.5px 2.5px at 140px 150px, rgba(255,255,255,0.97) 35%, rgba(255,255,255,0.3) 65%, transparent 66%),
+    radial-gradient(2px 2px at 30px 100px, rgba(255,255,255,0.93) 40%, rgba(255,255,255,0.28) 70%, transparent 71%),
 
     /* TINTED STARS (subtle palette hints) */
-    radial-gradient(1.5px 1.5px at 50px 160px, rgba(236,72,153,0.6) 45%, transparent 46%),
-    radial-gradient(1.5px 1.5px at 120px 30px, rgba(139,92,246,0.6) 45%, transparent 46%),
-    radial-gradient(1.5px 1.5px at 170px 110px, rgba(6,214,160,0.55) 45%, transparent 46%),
+    radial-gradient(1.5px 1.5px at 50px 160px, rgba(236,72,153,0.7) 45%, transparent 46%),
+    radial-gradient(1.5px 1.5px at 120px 30px, rgba(139,92,246,0.68) 45%, transparent 46%),
+    radial-gradient(1.5px 1.5px at 170px 110px, rgba(6,214,160,0.65) 45%, transparent 46%),
 
     /* Enhanced swirling patterns (toned to not overpower stars) */
     radial-gradient(ellipse 480px 230px at 50% 20%, rgba(139, 92, 246, 0.14) 0%, rgba(139, 92, 246, 0.06) 35%, rgba(139, 92, 246, 0.02) 60%, transparent 85%),
@@ -1109,10 +1109,10 @@ body.nebula-theme::after {
 
   /* Star tiles for procedural distribution */
   background-size:
-    220px 220px, 220px 220px, 220px 220px, 220px 220px,
+    200px 200px, 200px 200px, 200px 200px, 200px 200px,
+    260px 260px, 260px 260px, 260px 260px,
+    340px 340px, 340px 340px, 340px 340px,
     280px 280px, 280px 280px, 280px 280px,
-    360px 360px, 360px 360px, 360px 360px,
-    300px 300px, 300px 300px, 300px 300px,
     auto, auto, auto,
     auto, auto, auto, auto;
   background-repeat:
@@ -1810,7 +1810,10 @@ body.nebula-theme .btn.btn-primary:hover {
   0%,100% { transform: translate3d(0,0,0) rotate(0deg) scale(1); opacity: 0.5; }
   50% { transform: translate3d(-2%, -1%, 0) rotate(1deg) scale(1.03); opacity: 0.8; }
 }
-@keyframes shootingStars { from { background-position: 0 0; } to { background-position: -1400px 1400px; } }
+@keyframes shootingStars {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: -1600px 1600px, -1900px 1900px; }
+}
 
 
 /* Nebula theme – Keep chat area clean (no stars behind chat) */
