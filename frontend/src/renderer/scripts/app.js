@@ -145,6 +145,13 @@ class AIrisApp {
     const loadingScreen = document.getElementById("loading-screen");
     if (loadingScreen) {
       loadingScreen.classList.add("fade-out");
+      
+      // Show the main app content now that loading is complete
+      const appContainer = document.getElementById("app");
+      if (appContainer) {
+        appContainer.style.display = "flex";
+      }
+      
       setTimeout(() => {
         loadingScreen.remove();
       }, 500);
