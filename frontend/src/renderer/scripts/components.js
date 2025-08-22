@@ -39,7 +39,8 @@ class UIComponents {
 
   init() {
     this.setupEventListeners();
-    this.loadTheme();
+    // Theme loading moved to AIrisApp class to load before loading screen
+    // this.loadTheme();
     this.initializeComponents();
 
     // Set toggle state on load
