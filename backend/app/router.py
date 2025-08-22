@@ -643,13 +643,11 @@ async def verify_document(
 
         logger.info(f"File saved for verification: {temp_file_path}")
 
-        # Import and run verification pipeline
-        from backend.utils.verification import verification_pipeline
+        # Import and run verification function
+        from backend.utils.verification import verify_document
 
-        # Run verification with Wolfram Alpha (always enabled)
-        verification_result = verification_pipeline.verify_document(
-            str(temp_file_path), verification_type
-        )
+        # Run verification
+        verification_result = await verify_document(str(temp_file_path))
 
         # Clean up temporary file
         try:
@@ -687,13 +685,21 @@ def get_verification_types():
     Get available document verification types
     """
     try:
-        from backend.utils.verification import verification_pipeline
-
-        verification_types = verification_pipeline.verification_types
+        verification_types = [
+            "invoice",
+            "receipt",
+            "bank_statement",
+            "payslip",
+            "contract",
+            "tax_declaration",
+            "expense_voucher",
+            "other",
+            "auto",
+        ]
 
         return {
             "verification_types": verification_types,
-            "supported_formats": verification_pipeline.supported_formats,
+            "supported_formats": [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
             "default_type": "auto",
         }
 
