@@ -608,6 +608,33 @@ class APIService {
     }
   }
 
+  // News Chat API method
+  async sendNewsChatQuery(message, newsContext) {
+    try {
+      const response = await this.api.post("/api/news-chat", {
+        query: message,
+        news_context: newsContext,
+        web_search_enabled: true
+      }, {
+        timeout: 120000 // 2 minutes timeout for news chat
+      });
+
+      return {
+        success: response.data.status === "success",
+        response: response.data.response,
+        images: response.data.images || [],
+        sessionId: response.data.sessionId
+      };
+    } catch (error) {
+      console.error("[API] News chat error:", error);
+      return {
+        success: false,
+        error: error.message.includes("aborted") ? "Request timed out - please try again" : error.message,
+        response: null
+      };
+    }
+  }
+
   // Document Verification API methods
   async getVerificationTypes() {
     try {

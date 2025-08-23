@@ -637,6 +637,50 @@
                     </div>
                   </div>
                 </article>
+
+                <!-- News Chat Section -->
+                <div class="news-chat-section" id="news-chat-section">
+                  <div class="news-chat-header">
+                    <h3 data-i18n="askAboutNews">Ask about this news</h3>
+                    <p data-i18n="chatDescription">Ask questions about this news article and get AI-powered insights</p>
+                  </div>
+                  
+                  <!-- Chat Input (Initially visible) -->
+                  <div class="news-chat-input-container" id="news-chat-input-container">
+                    <div class="news-chat-input-wrapper">
+                      <input 
+                        type="text" 
+                        id="news-chat-input" 
+                        class="news-chat-input" 
+                        placeholder="Ask a question about this news..."
+                        data-i18n-placeholder="askQuestionPlaceholder"
+                      >
+                      <button id="news-chat-send" class="news-chat-send-btn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Chat Messages (Initially hidden) -->
+                  <div class="news-chat-messages" id="news-chat-messages" style="display: none;">
+                    <div class="news-chat-messages-container" id="news-chat-messages-container">
+                      <!-- Chat messages will be inserted here -->
+                    </div>
+                    
+                    <div class="news-chat-input-wrapper">
+                      <input 
+                        type="text" 
+                        id="news-chat-input-messages" 
+                        class="news-chat-input" 
+                        placeholder="Ask a follow-up question..."
+                        data-i18n-placeholder="followUpQuestionPlaceholder"
+                      >
+                      <button id="news-chat-send-messages" class="news-chat-send-btn" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

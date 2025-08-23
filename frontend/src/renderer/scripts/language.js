@@ -93,6 +93,12 @@ class LanguageService {
         fetchLatestNews: "Fetch Latest News",
         getLatestNews: "Get Latest News",
         autoUpdateInfo: "Auto-updates every 45 minutes",
+        
+        // News Chat Section
+        askAboutNews: "Ask about this news",
+        chatDescription: "Ask questions about this news article and get AI-powered insights",
+        askQuestionPlaceholder: "Ask a question about this news...",
+        followUpQuestionPlaceholder: "Ask a follow-up question...",
 
         // Analytics Section
         systemAnalytics: "System Analytics",
@@ -387,6 +393,12 @@ class LanguageService {
         fetchLatestNews: "Son Haberleri Getir",
         getLatestNews: "Son Haberleri Getir",
         autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
+        
+        // News Chat Section
+        askAboutNews: "Bu haber hakkında soru sor",
+        chatDescription: "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
+        askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
+        followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
         // Analytics Section
         systemAnalytics: "Sistem Analitikleri",
