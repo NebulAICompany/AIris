@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from backend.pipeline.query import run_orchestration
+from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
@@ -22,6 +22,12 @@ class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
     preEmbeddingProcess: str = "pdr"
+    sessionId: Optional[str] = None
+
+class NewsChatRequest(BaseModel):
+    query: str
+    news_context: dict
+    web_search_enabled: bool = True
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
@@ -81,6 +87,52 @@ async def handle_query(request: QueryRequest):
         logger.error(f"Error processing query: {str(e)}")
         api_requests_total.labels(status="error").inc()
         raise e
+
+
+@router.post("/news-chat")
+async def handle_news_chat(request: NewsChatRequest):
+    """
+    Handle news-specific chat queries with news context and web search capabilities.
+    """
+    global request_counter
+    try:
+        request_counter += 1
+
+        query = request.query
+        news_context = request.news_context
+        web_search_enabled = request.web_search_enabled
+        session_id = request.sessionId
+
+        logger.info(f"📰 News Chat API Router received:")
+        logger.info(f"   - Query: {query}")
+        logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
+        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
+        logger.info(f"   - Session ID: {session_id}")
+
+        # Process news chat query
+        answer = await run_news_chat_orchestration(
+            query,
+            news_context,
+            web_search_enabled,
+            session_id
+        )
+
+        logger.info("News chat query processed successfully")
+        api_requests_total.labels(status="success").inc()
+
+        return {
+            "status": "success",
+            "response": answer.get("response"),
+            "images": answer.get("images", []),
+            "sessionId": answer.get("session_id", session_id)
+        }
+
+    except Exception as e:
+        logger.error(f"Error processing news chat query: {str(e)}")
+        api_requests_total.labels(status="error").inc()
+        raise HTTPException(
+            status_code=500, detail=f"Error processing news chat query: {str(e)}"
+        )
 
 
 @router.post("/upload")

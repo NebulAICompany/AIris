@@ -2852,6 +2852,9 @@ class UIComponents {
 
     // Populate sources list
     this.populateSourcesList(article);
+
+    // Initialize news chat functionality
+    this.initializeNewsChat(article);
   }
 
   populateNewsContent(article) {
@@ -4198,6 +4201,216 @@ class UIComponents {
     if (latestMessage) {
       latestMessage.textContent = `📎 Uploaded Files (${uploadedCount})`;
     }
+  }
+
+  // News Chat Methods
+  initializeNewsChat(article) {
+    this.currentNewsArticle = article;
+    this.newsChatHistory = [];
+    
+    // Initialize chat input handlers
+    this.initializeNewsChatInputs();
+    
+    // Reset chat interface
+    this.resetNewsChatInterface();
+  }
+
+  initializeNewsChatInputs() {
+    const chatInput = document.getElementById('news-chat-input');
+    const chatSendBtn = document.getElementById('news-chat-send');
+    const chatInputMessages = document.getElementById('news-chat-input-messages');
+    const chatSendBtnMessages = document.getElementById('news-chat-send-messages');
+
+    if (chatInput && chatSendBtn) {
+      chatInput.addEventListener('input', () => {
+        chatSendBtn.disabled = !chatInput.value.trim();
+      });
+
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && chatInput.value.trim()) {
+          e.preventDefault();
+          this.sendNewsChatMessage(chatInput.value.trim());
+        }
+      });
+
+      chatSendBtn.addEventListener('click', () => {
+        if (chatInput.value.trim()) {
+          this.sendNewsChatMessage(chatInput.value.trim());
+        }
+      });
+    }
+
+    if (chatInputMessages && chatSendBtnMessages) {
+      chatInputMessages.addEventListener('input', () => {
+        chatSendBtnMessages.disabled = !chatInputMessages.value.trim();
+      });
+
+      chatInputMessages.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && chatInputMessages.value.trim()) {
+          e.preventDefault();
+          this.sendNewsChatMessage(chatInputMessages.value.trim());
+        }
+      });
+
+      chatSendBtnMessages.addEventListener('click', () => {
+        if (chatInputMessages.value.trim()) {
+          this.sendNewsChatMessage(chatInputMessages.value.trim());
+        }
+      });
+    }
+  }
+
+  resetNewsChatInterface() {
+    const inputContainer = document.getElementById('news-chat-input-container');
+    const messagesContainer = document.getElementById('news-chat-messages');
+    const messagesList = document.getElementById('news-chat-messages-container');
+
+    if (inputContainer) inputContainer.style.display = 'block';
+    if (messagesContainer) messagesContainer.style.display = 'none';
+    if (messagesList) messagesList.innerHTML = '';
+  }
+
+  async sendNewsChatMessage(message) {
+    // Clear input
+    const chatInput = document.getElementById('news-chat-input');
+    const chatInputMessages = document.getElementById('news-chat-input-messages');
+    
+    if (chatInput) chatInput.value = '';
+    if (chatInputMessages) chatInputMessages.value = '';
+    
+    // Disable send buttons
+    const chatSendBtn = document.getElementById('news-chat-send');
+    const chatSendBtnMessages = document.getElementById('news-chat-send-messages');
+    
+    if (chatSendBtn) chatSendBtn.disabled = true;
+    if (chatSendBtnMessages) chatSendBtnMessages.disabled = true;
+
+    // Show chat interface if this is the first message
+    if (this.newsChatHistory.length === 0) {
+      this.showNewsChatInterface();
+    }
+
+    // Add user message to chat
+    this.addNewsChatMessage('user', message);
+
+    // Show typing indicator
+    this.showNewsChatTyping();
+
+    try {
+      // Send to backend
+      const response = await this.sendNewsQuery(message);
+
+      if (response && response.response) {
+        this.addNewsChatMessage('assistant', response.response);
+      } else {
+        this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
+      }
+    } catch (error) {
+      console.error('News chat error:', error);
+      this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
+    } finally {
+      this.hideNewsChatTyping();
+    }
+  }
+
+  showNewsChatInterface() {
+    const inputContainer = document.getElementById('news-chat-input-container');
+    const messagesContainer = document.getElementById('news-chat-messages');
+
+    if (inputContainer) inputContainer.style.display = 'none';
+    if (messagesContainer) messagesContainer.style.display = 'block';
+  }
+
+  addNewsChatMessage(role, content) {
+    const messagesContainer = document.getElementById('news-chat-messages-container');
+    if (!messagesContainer) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `news-chat-message ${role}`;
+    
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.innerHTML = `
+      <div class="message-content">${this.formatNewsChatMessage(content)}</div>
+      <div class="message-time">${time}</div>
+    `;
+
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Add to history
+    this.newsChatHistory.push({ role, content, timestamp: new Date() });
+  }
+
+  formatNewsChatMessage(content) {
+    // Basic formatting for links and line breaks
+    return content
+      .replace(/\n/g, '<br>')
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  }
+
+  showNewsChatTyping() {
+    const messagesContainer = document.getElementById('news-chat-messages-container');
+    if (!messagesContainer) return;
+
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'news-chat-typing';
+    typingDiv.id = 'news-chat-typing';
+    
+    typingDiv.innerHTML = `
+      <span>AI is thinking</span>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  hideNewsChatTyping() {
+    const typingDiv = document.getElementById('news-chat-typing');
+    if (typingDiv) {
+      typingDiv.remove();
+    }
+  }
+
+  async sendNewsQuery(message) {
+    try {
+      const apiService = window.apiService;
+      if (!apiService) {
+        throw new Error('API service not available');
+      }
+
+      // Prepare news context
+      const newsContext = this.prepareNewsContext();
+
+      // Send query to backend
+      const response = await apiService.sendNewsChatQuery(message, newsContext);
+      return response;
+    } catch (error) {
+      console.error('Error sending news query:', error);
+      throw error;
+    }
+  }
+
+  prepareNewsContext() {
+    if (!this.currentNewsArticle) return {};
+
+    const clusterData = this.findClusterForArticle(this.currentNewsArticle);
+    
+    return {
+      title: this.currentNewsArticle.title,
+      summary: this.currentNewsArticle.summary || this.currentNewsArticle.unified_description || '',
+      content: this.currentNewsArticle.content || '',
+      source: this.currentNewsArticle.source,
+      sources: clusterData?.sources || this.currentNewsArticle.sources || [],
+      published: this.currentNewsArticle.published,
+      url: this.currentNewsArticle.url,
+      cluster_data: clusterData || null
+    };
   }
 }
 
