@@ -53,6 +53,13 @@ async def run_orchestration(
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
 
+    # Clear previous attachments at the start of each new query
+    logger.info("🧹 Clearing previous attachments...")
+    clear_image_datas()
+    clear_chart_datas()
+    clear_generated_files()
+    logger.info("✅ Previous attachments cleared")
+
     # Handle chat history and session management
     if session_id:
         # Add user message to chat history
@@ -274,10 +281,6 @@ async def run_orchestration(
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
     logger.debug(f"🧠 Answer: {answer}")
-    # 5.5. Ensure consistent metadata formatting
-    # Use the retrieved documents to ensure metadata is properly formatted
-    docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
-
     # 6. Maske çöz
     final_answer = unmask_text(answer)
 
@@ -299,10 +302,6 @@ async def run_orchestration(
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
-
-    clear_generated_files()
-    clear_image_datas()
-    clear_chart_datas()
 
     return {
         "response": final_answer,
