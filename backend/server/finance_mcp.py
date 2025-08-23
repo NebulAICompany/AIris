@@ -269,6 +269,25 @@ def set_chart_data(data):
         chart_logger.error(f"❌ Error saving chart data: {e}")
 
 
+def clear_chart_datas():
+    """Clear chart data from JSON file storage"""
+    try:
+        if CHART_DATA_FILE.exists():
+            # Clear the file by writing an empty list
+            with open(CHART_DATA_FILE, "w", encoding="utf-8") as f:
+                json.dump([], f, ensure_ascii=False, indent=2)
+
+            chart_logger.info(
+                f"📊 clear_chart_datas() called - Chart data cleared from file"
+            )
+        else:
+            chart_logger.info(
+                f"📊 clear_chart_datas() called - No chart data file found to clear"
+            )
+    except Exception as e:
+        chart_logger.error(f"❌ Error clearing chart data: {e}")
+
+
 @mcp.tool()
 async def create_stock_chart(
     symbols: list,
