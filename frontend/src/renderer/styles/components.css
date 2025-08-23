@@ -1,5 +1,68 @@
 /* Components CSS - Specific UI Elements */
 
+/* File type specific colors for generated files in attachments */
+.excel-preview i {
+  color: #217346;
+}
+
+.word-preview i {
+  color: #2b579a;
+}
+
+.powerpoint-preview i {
+  color: #d24726;
+}
+
+.pdf-preview i {
+  color: #dc3545;
+}
+
+.default-preview i {
+  color: #6c757d;
+}
+
+.file-preview-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  color: var(--text-primary);
+}
+
+.file-preview-content i {
+  font-size: 1.2em;
+  margin-bottom: 0;
+}
+
+.file-preview-content .file-type {
+  font-size: 0.6em;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* Minimal attachments toggle animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+  }
+}
+
+.images-header:hover {
+  background: rgba(59, 130, 246, 0.02);
+}
+
+.toggle-icon {
+  transition: transform 0.2s ease;
+}
+
 /* Chart Display Styles */
 .message-charts {
   margin-top: 16px;

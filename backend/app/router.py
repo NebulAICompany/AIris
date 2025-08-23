@@ -82,6 +82,7 @@ async def handle_query(request: QueryRequest):
             "response": answer.get("response"),
             "images": answer.get("images", []),
             "charts": answer.get("charts", []),
+            "generatedFiles": answer.get("generatedFiles", []),
             "sessionId": answer.get("session_id", session_id),
         }
 

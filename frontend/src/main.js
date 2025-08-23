@@ -164,6 +164,42 @@ class AIrisApp {
       }
     });
 
+    // Handle generated file opening
+    ipcMain.handle("open-generated-file", async (event, filePath) => {
+      try {
+        const { shell } = require("electron");
+
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+          return {
+            success: false,
+            error: "File not found at specified path",
+          };
+        }
+
+        // Open file with default application
+        const result = await shell.openPath(filePath);
+
+        if (result) {
+          // If result is not empty, there was an error
+          return {
+            success: false,
+            error: result,
+          };
+        }
+
+        return {
+          success: true,
+          message: "File opened successfully",
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
     // Handle file opening
     ipcMain.handle("open-file", async (event, fileName) => {
       try {
