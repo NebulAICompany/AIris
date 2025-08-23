@@ -1243,16 +1243,16 @@ class UIComponents {
         this.updateChatSessionsUI();
 
         console.log("Loaded chat session:", sessionId);
-        this.showNotification("Chat session loaded", "success");
+        this.showNotification("Chat loaded", "success");
         return true;
       } else {
         console.error("Failed to load chat session:", response.error);
-        this.showNotification("Failed to load chat session", "error");
+        this.showNotification("Failed to load chat", "error");
         return false;
       }
     } catch (error) {
       console.error("Error loading chat session:", error);
-      this.showNotification("Error loading chat session", "error");
+      this.showNotification("Error loading chat", "error");
       return false;
     }
   }
@@ -1293,15 +1293,15 @@ class UIComponents {
         // Reload sessions list
         await this.loadChatSessions();
 
-        this.showNotification("Chat session deleted successfully", "success");
+        this.showNotification("Chat session deleted", "success");
         return true;
       } else {
-        this.showNotification("Failed to delete chat session", "error");
+        this.showNotification("Failed to delete chat", "error");
         return false;
       }
     } catch (error) {
       console.error("Error deleting chat session:", error);
-      this.showNotification("Error deleting chat session", "error");
+      this.showNotification("Error deleting chat", "error");
       return false;
     }
   }
@@ -1315,10 +1315,10 @@ class UIComponents {
 
     if (sessionId) {
       console.log("New chat session created:", sessionId);
-      this.showNotification("Started new chat session", "success");
+      this.showNotification("New chat started", "success");
     } else {
       console.error("Failed to create new chat session");
-      this.showNotification("Failed to create new chat session", "error");
+      this.showNotification("Failed to create new chat", "error");
     }
   }
 
@@ -1403,7 +1403,7 @@ class UIComponents {
       sessionsList.appendChild(sessionItem);
     });
 
-    console.log("Chat sessions UI updated successfully");
+    console.log("Chat sessions UI updated");
   }
 
   createChatSessionItem(session) {
@@ -1660,7 +1660,7 @@ class UIComponents {
         break;
       case "success":
         statusIcon = "✅";
-        statusText = `Uploaded successfully`;
+        statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
@@ -1699,7 +1699,7 @@ class UIComponents {
     switch (status) {
       case "success":
         statusIcon = "✅";
-        statusText = `Uploaded successfully`;
+        statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
@@ -2033,7 +2033,7 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Network error"
+            error.message || "Connection error"
           )}</span>
         </div>
       `;
@@ -2046,7 +2046,7 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview error: ${Utils.escapeHtml(
-            previewData.error || "Unknown error"
+            previewData.error || "Error occurred"
           )}</span>
         </div>
       `;
@@ -2176,7 +2176,7 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Network error"
+            error.message || "Connection error"
           )}</span>
         </div>
       `;
@@ -2302,7 +2302,7 @@ class UIComponents {
       // Show confirmation dialog
       console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
       const confirmed = confirm(
-        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`
+        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the document archive.`
       );
 
       if (!confirmed) {
@@ -2338,13 +2338,8 @@ class UIComponents {
       console.log("📋 Frontend: API response received:", response);
 
       if (response.success) {
-        console.log(
-          "✅ Frontend: Deletion successful, showing success message"
-        );
-        this.showNotification(
-          `File "${fileName}" deleted successfully`,
-          "success"
-        );
+        console.log("✅ Frontend: Deletion completed, showing success message");
+        this.showNotification(`File "${fileName}" deleted`, "success");
         // Refresh the file list
         console.log("🔄 Frontend: Refreshing file list");
         this.loadFileLibrary();
@@ -2405,20 +2400,15 @@ class UIComponents {
       console.log("📋 Frontend: API response received:", response);
 
       if (response.success) {
-        console.log(
-          "✅ Frontend: Deletion successful, showing success message"
-        );
-        this.showNotification(
-          `Created document "${fileName}" deleted successfully`,
-          "success"
-        );
+        console.log("✅ Frontend: Deletion completed, showing success message");
+        this.showNotification(`Document "${fileName}" deleted`, "success");
         // Refresh the created documents list
         console.log("🔄 Frontend: Refreshing created documents list");
         this.loadCreatedDocumentsLibrary();
       } else {
         console.error("❌ Frontend: Deletion failed:", response.error);
         this.showNotification(
-          `Failed to delete created document: ${response.error}`,
+          `Failed to delete document: ${response.error}`,
           "error"
         );
       }
@@ -2426,7 +2416,7 @@ class UIComponents {
       console.error("❌ Frontend: Error deleting created document:", error);
       console.error("❌ Frontend: Error details:", error.message, error.stack);
       this.showNotification(
-        "Failed to delete created document. Please try again.",
+        "Failed to delete document. Please try again.",
         "error"
       );
     }
@@ -3946,7 +3936,7 @@ class UIComponents {
       ".chat-message:last-child .uploaded-files-header"
     );
     if (latestMessage) {
-      latestMessage.textContent = `📎 Uploaded Files (${uploadedCount})`;
+      latestMessage.textContent = `📎 Files (${uploadedCount})`;
     }
   }
 }
