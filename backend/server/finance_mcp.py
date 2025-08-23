@@ -235,9 +235,6 @@ def get_chart_datas():
         with open(CHART_DATA_FILE, "r", encoding="utf-8") as f:
             chart_data = json.load(f)
 
-        chart_logger.info(
-            f"📊 get_chart_datas() called - Returning {len(chart_data)} charts from file"
-        )
         for i, chart in enumerate(chart_data):
             chart_logger.info(
                 f"  Chart {i+1}: {type(chart)} - Length: {len(str(chart)) if chart else 0}"
