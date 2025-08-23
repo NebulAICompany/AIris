@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld("airisAPI", {
   selectFile: () => ipcRenderer.invoke("select-file"),
   openFile: (fileName) => ipcRenderer.invoke("open-file", fileName),
   deleteFile: (fileName) => ipcRenderer.invoke("delete-file", fileName),
+  deleteCreatedDocument: (fileName) =>
+    ipcRenderer.invoke("delete-file", fileName, true),
 
   // Health and monitoring
   checkHealth: () => ipcRenderer.invoke("check-health"),
