@@ -249,56 +249,71 @@ class AIrisApp {
     });
 
     // Handle file deletion
-    ipcMain.handle("delete-file", async (event, fileName) => {
-      logger.info(`Delete file request received: ${fileName}`, "IPC");
-
-      try {
-        const url = `http://localhost:8001/api/files/${encodeURIComponent(
-          fileName
-        )}`;
-        logger.info(`Sending DELETE request to: ${url}`, "IPC");
-
-        const response = await fetch(url, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        logger.debug(
-          `Response status: ${response.status}, ok: ${response.ok}`,
+    ipcMain.handle(
+      "delete-file",
+      async (event, fileName, isCreatedDocument = false) => {
+        logger.info(
+          `Delete file request received: ${fileName} (created document: ${isCreatedDocument})`,
           "IPC"
         );
 
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ detail: "Unknown error" }));
-          logger.error(
-            `Delete request failed: ${JSON.stringify(errorData)}`,
+        try {
+          let url;
+          if (isCreatedDocument) {
+            url = `http://localhost:8001/api/created-documents/${encodeURIComponent(
+              fileName
+            )}`;
+          } else {
+            url = `http://localhost:8001/api/files/${encodeURIComponent(
+              fileName
+            )}`;
+          }
+
+          logger.info(`Sending DELETE request to: ${url}`, "IPC");
+
+          const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          logger.debug(
+            `Response status: ${response.status}, ok: ${response.ok}`,
             "IPC"
           );
+
+          if (!response.ok) {
+            const errorData = await response
+              .json()
+              .catch(() => ({ detail: "Unknown error" }));
+            logger.error(
+              `Delete request failed: ${JSON.stringify(errorData)}`,
+              "IPC"
+            );
+            return {
+              success: false,
+              error:
+                errorData.detail || `HTTP error! status: ${response.status}`,
+            };
+          }
+
+          const result = await response.json();
+          logger.info(`File deleted successfully: ${fileName}`, "IPC");
+          return {
+            success: true,
+            data: result,
+          };
+        } catch (error) {
+          logger.error(`Failed to delete file: ${error.message}`, "IPC");
+          logger.debug(`Error details: ${error.stack}`, "IPC");
           return {
             success: false,
-            error: errorData.detail || `HTTP error! status: ${response.status}`,
+            error: error.message,
           };
         }
-
-        const result = await response.json();
-        logger.info(`File deleted successfully: ${fileName}`, "IPC");
-        return {
-          success: true,
-          data: result,
-        };
-      } catch (error) {
-        logger.error(`Failed to delete file: ${error.message}`, "IPC");
-        logger.debug(`Error details: ${error.stack}`, "IPC");
-        return {
-          success: false,
-          error: error.message,
-        };
       }
-    });
+    );
 
     // Handle app info requests
     ipcMain.handle("get-app-info", () => {

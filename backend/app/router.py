@@ -633,6 +633,35 @@ def get_created_document_preview(filename: str):
         )
 
 
+@router.delete("/created-documents/{filename}")
+def delete_created_document(filename: str):
+    """
+    Delete a created document from local storage.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        # Delete the file
+        file_path.unlink()
+
+        logger.info(f"Created document deleted successfully: {filename}")
+
+        return {
+            "message": f"Created document '{filename}' deleted successfully",
+            "success": True,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error deleting created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting created document: {error_message}",
+        )
+
+
 @router.get("/finance-news")
 async def get_finance_news():
     """

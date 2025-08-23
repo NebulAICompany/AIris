@@ -294,7 +294,15 @@ class UIComponents {
         const deleteBtn = e.target.closest(".delete-btn");
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
-          this.deleteFile(fileName);
+          // Check if this is a created document or regular file based on context
+          const fileCard = deleteBtn.closest(".file-card");
+          if (fileCard && fileCard.closest("#created-documents-grid")) {
+            // This is a created document
+            this.deleteCreatedDocument(fileName);
+          } else {
+            // This is a regular file
+            this.deleteFile(fileName);
+          }
         }
       }
 
@@ -1946,7 +1954,13 @@ class UIComponents {
                 )} • ${Utils.formatDate(file.created_at)}</div>
               </div>
             </div>
-
+            <div class="file-card-actions">
+              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
+                file.name
+              )}" title="Delete file">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
           <div class="file-card-preview" id="created-preview-${Utils.escapeHtml(
             file.name
@@ -1958,10 +1972,13 @@ class UIComponents {
           </div>
         `;
 
-        // Add click handler to open created document (but not on preview area)
+        // Add click handler to open created document (but not on preview area or action buttons)
         fileItem.addEventListener("click", (e) => {
-          // Don't open file if clicking on preview area
-          if (!e.target.closest(".file-card-preview")) {
+          // Don't open file if clicking on action buttons or preview area
+          if (
+            !e.target.closest(".file-card-actions") &&
+            !e.target.closest(".file-card-preview")
+          ) {
             this.openCreatedDocument(file.name);
           }
         });
@@ -2343,6 +2360,73 @@ class UIComponents {
       console.error("❌ Frontend: Error details:", error.message, error.stack);
       this.showNotification(
         "Failed to delete file. Please try again.",
+        "error"
+      );
+    }
+  }
+
+  async deleteCreatedDocument(fileName) {
+    console.log("🗑️ Frontend: deleteCreatedDocument called for:", fileName);
+
+    try {
+      // Show confirmation dialog
+      console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
+      const confirmed = confirm(
+        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file from your local storage.`
+      );
+
+      if (!confirmed) {
+        console.log("❌ Frontend: User cancelled deletion for:", fileName);
+        return;
+      }
+
+      console.log("✅ Frontend: User confirmed deletion for:", fileName);
+
+      // Show loading state
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showNotification(t("deletingFile"), "info");
+
+      console.log(
+        "🚀 Frontend: Calling IPC to delete created document:",
+        fileName
+      );
+
+      // Request the IPC service to delete the created document
+      const result = await window.airisAPI.deleteCreatedDocument(fileName);
+
+      if (!result.success) {
+        throw new Error(`Failed to delete created document: ${result.error}`);
+      }
+
+      const response = { success: true, message: result.data.message };
+
+      console.log("📋 Frontend: API response received:", response);
+
+      if (response.success) {
+        console.log(
+          "✅ Frontend: Deletion successful, showing success message"
+        );
+        this.showNotification(
+          `Created document "${fileName}" deleted successfully`,
+          "success"
+        );
+        // Refresh the created documents list
+        console.log("🔄 Frontend: Refreshing created documents list");
+        this.loadCreatedDocumentsLibrary();
+      } else {
+        console.error("❌ Frontend: Deletion failed:", response.error);
+        this.showNotification(
+          `Failed to delete created document: ${response.error}`,
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("❌ Frontend: Error deleting created document:", error);
+      console.error("❌ Frontend: Error details:", error.message, error.stack);
+      this.showNotification(
+        "Failed to delete created document. Please try again.",
         "error"
       );
     }
