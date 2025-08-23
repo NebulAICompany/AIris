@@ -2256,17 +2256,16 @@ body.dark-theme .progress-bar {
 
 /* File Preview Styles */
 .file-card-preview {
-  margin-top: 16px;
-  padding: 20px;
+  margin-top: 12px;
+  padding: 4px;
   background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
-  border-radius: var(--border-radius-lg);
-  border: 2px solid var(--border-color);
-  min-height: 200px;
-  max-height: 400px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  height: 320px;
   overflow: hidden;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
 }
@@ -2298,11 +2297,10 @@ body.dark-theme .progress-bar {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  flex: 1;
-  min-height: 160px;
+  gap: 12px;
+  height: 100%;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
   background: linear-gradient(
     135deg,
@@ -2314,7 +2312,7 @@ body.dark-theme .progress-bar {
 }
 
 .preview-loading i {
-  font-size: 24px;
+  font-size: 22px;
   color: var(--accent-primary);
   animation: spin 1s linear infinite;
 }
@@ -2334,11 +2332,10 @@ body.dark-theme .progress-bar {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  flex: 1;
-  min-height: 160px;
+  gap: 10px;
+  height: 100%;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
   background: linear-gradient(
     135deg,
@@ -2347,7 +2344,7 @@ body.dark-theme .progress-bar {
   );
   border-radius: var(--border-radius);
   border: 1px dashed var(--border-color);
-  padding: 20px;
+  padding: 12px;
 }
 
 .preview-error {
@@ -2362,8 +2359,8 @@ body.dark-theme .progress-bar {
 
 .preview-error i,
 .preview-info i {
-  font-size: 32px;
-  margin-bottom: 8px;
+  font-size: 28px;
+  margin-bottom: 6px;
 }
 
 .preview-error i {
@@ -2378,9 +2375,8 @@ body.dark-theme .progress-bar {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1;
-  min-height: 160px;
-  padding: 16px;
+  height: 100%;
+  padding: 0;
   position: relative;
 }
 
@@ -2401,12 +2397,12 @@ body.dark-theme .progress-bar {
 }
 
 .preview-image img {
-  max-width: 100%;
-  max-height: 320px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.15);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 1;
@@ -2425,7 +2421,7 @@ body.dark-theme .progress-bar {
   align-items: center;
   width: 100%;
   height: 100%;
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--border-radius);
   overflow: hidden;
 }
 
@@ -2464,9 +2460,9 @@ body.dark-theme .progress-bar {
 .preview-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 8px 12px;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
   background: linear-gradient(
     135deg,
     var(--accent-primary),
@@ -2474,9 +2470,10 @@ body.dark-theme .progress-bar {
   );
   color: white;
   border-radius: var(--border-radius);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
 }
 
 .preview-header i {
@@ -2484,23 +2481,33 @@ body.dark-theme .progress-bar {
 }
 
 .preview-content {
-  padding: 8px;
+  padding: 6px;
   background: rgba(255, 255, 255, 0.02);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  flex: 1;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.preview-content span {
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
 }
 
 .preview-text {
-  flex: 1;
-  min-height: 160px;
-  max-height: 320px;
-  overflow-y: auto;
+  height: 100%;
+  overflow: hidden;
   font-family: var(--font-mono, "Courier New", monospace);
-  padding: 16px;
+  padding: 4px;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.05),
@@ -2511,6 +2518,8 @@ body.dark-theme .progress-bar {
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview-text::before {
@@ -2533,24 +2542,25 @@ body.dark-theme .progress-bar {
   line-height: 1.6;
   color: var(--text-primary);
   margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 8px;
   background: rgba(255, 255, 255, 0.02);
   border-radius: 4px;
-  flex: 1;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  max-width: 100%;
 }
 
 .preview-excel {
-  flex: 1;
-  min-height: 160px;
-  max-height: 320px;
-  overflow: auto;
-  padding: 16px;
+  height: 100%;
+  overflow: hidden;
+  padding: 4px;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.05),
@@ -2561,6 +2571,8 @@ body.dark-theme .progress-bar {
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview-excel::before {
@@ -2579,18 +2591,19 @@ body.dark-theme .progress-bar {
 }
 
 .excel-summary {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
-  margin-bottom: 12px;
-  padding: 12px;
-  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
   background: rgba(255, 255, 255, 0.03);
   border-radius: var(--border-radius);
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .excel-data {
-  flex: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -2602,12 +2615,12 @@ body.dark-theme .progress-bar {
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  flex: 1;
+  height: 100%;
 }
 
 .excel-data th,
 .excel-data td {
-  padding: 8px 12px;
+  padding: 6px 8px;
   border: 1px solid var(--border-color);
   text-align: left;
   transition: background-color 0.2s ease;
@@ -2668,25 +2681,24 @@ body.dark-theme .excel-data th {
   }
 
   .file-card-preview {
-    min-height: 150px;
-    max-height: 300px;
-    padding: 16px;
+    height: 280px;
+    padding: 4px;
     display: flex;
     flex-direction: column;
   }
 
   .preview-image img {
-    max-height: 250px;
+    max-height: 200px;
   }
 
   .preview-text,
   .preview-excel {
-    max-height: 250px;
+    max-height: 220px;
   }
 
   .preview-header {
-    font-size: 12px;
-    padding: 6px 10px;
+    font-size: 11px;
+    padding: 5px 8px;
   }
 }
 
@@ -2697,9 +2709,8 @@ body.dark-theme .excel-data th {
   }
 
   .file-card-preview {
-    min-height: 120px;
-    max-height: 250px;
-    padding: 12px;
+    height: 240px;
+    padding: 4px;
     display: flex;
     flex-direction: column;
   }

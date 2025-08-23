@@ -298,17 +298,6 @@ class UIComponents {
         }
       }
 
-      // Handle download button clicks for created documents
-      if (e.target.closest(".download-btn")) {
-        e.preventDefault();
-        e.stopPropagation();
-        const downloadBtn = e.target.closest(".download-btn");
-        const fileName = downloadBtn.dataset.filename;
-        if (fileName) {
-          this.openCreatedDocument(fileName);
-        }
-      }
-
       // Handle news article clicks
       if (e.target.closest(".news-item")) {
         const newsItem = e.target.closest(".news-item");
@@ -1957,13 +1946,7 @@ class UIComponents {
                 )} • ${Utils.formatDate(file.created_at)}</div>
               </div>
             </div>
-            <div class="file-card-actions">
-              <button class="file-action-btn download-btn" data-filename="${Utils.escapeHtml(
-                file.name
-              )}" title="Download created document">
-                <i class="fas fa-download"></i>
-              </button>
-            </div>
+
           </div>
           <div class="file-card-preview" id="created-preview-${Utils.escapeHtml(
             file.name
@@ -1975,13 +1958,10 @@ class UIComponents {
           </div>
         `;
 
-        // Add click handler to open created document (but not on action buttons)
+        // Add click handler to open created document (but not on preview area)
         fileItem.addEventListener("click", (e) => {
-          // Don't open file if clicking on action buttons or preview area
-          if (
-            !e.target.closest(".file-card-actions") &&
-            !e.target.closest(".file-card-preview")
-          ) {
+          // Don't open file if clicking on preview area
+          if (!e.target.closest(".file-card-preview")) {
             this.openCreatedDocument(file.name);
           }
         });
@@ -2247,7 +2227,21 @@ class UIComponents {
         ? window.languageService.t.bind(window.languageService)
         : (key) => key;
 
-      // Try to download the created document through the web API
+      // Try to open the file using Electron's API first
+      if (window.airisAPI && window.airisAPI.openFile) {
+        try {
+          await window.airisAPI.openFile(fileName);
+          this.showNotification(`${t("openedFile")} ${fileName}`, "success");
+          return;
+        } catch (electronError) {
+          console.warn(
+            "Electron API failed, trying web fallback:",
+            electronError
+          );
+        }
+      }
+
+      // Fallback: Try to download the file through the web API
       try {
         const downloadUrl = `http://localhost:8001/api/created-documents/${encodeURIComponent(
           fileName
@@ -2256,10 +2250,24 @@ class UIComponents {
         this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
-        this.showNotification(
-          `${t("failedToOpenFile")} ${fileName}. ${t("sorryEncounteredError")}`,
-          "error"
+
+        // Last resort: Try to get file info
+        const response = await fetch(
+          `http://localhost:8001/api/created-documents/${encodeURIComponent(
+            fileName
+          )}`
         );
+        if (response.ok) {
+          const fileInfo = await response.json();
+          this.showNotification(
+            `${fileName} (${Utils.formatFileSize(fileInfo.size || 0)}) - ${t(
+              "unableToOpenDirectly"
+            )}`,
+            "warning"
+          );
+        } else {
+          throw new Error("Unable to access file");
+        }
       }
     } catch (error) {
       console.error("Error opening created document:", error);
