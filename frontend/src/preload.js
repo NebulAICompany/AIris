@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld("airisAPI", {
     ipcRenderer.invoke("upload-file", fileData, fileName),
   selectFile: () => ipcRenderer.invoke("select-file"),
   openFile: (fileName) => ipcRenderer.invoke("open-file", fileName),
+  openGeneratedFile: (filePath) =>
+    ipcRenderer.invoke("open-generated-file", filePath),
   deleteFile: (fileName) => ipcRenderer.invoke("delete-file", fileName),
   deleteCreatedDocument: (fileName) =>
     ipcRenderer.invoke("delete-file", fileName, true),

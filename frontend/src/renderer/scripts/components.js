@@ -540,13 +540,16 @@ class UIComponents {
             response.response || response.content || response.data?.response;
           const responseImages = response.images || response.data?.images || [];
           const responseCharts = response.charts || response.data?.charts || [];
+          const responseGeneratedFiles =
+            response.generatedFiles || response.data?.generatedFiles || [];
 
           if (responseContent) {
             this.addMessageToChat(
               "assistant",
               responseContent,
               responseImages,
-              responseCharts
+              responseCharts,
+              responseGeneratedFiles
             );
           } else {
             console.warn("Empty response received:", response);
@@ -667,7 +670,13 @@ class UIComponents {
     }
   }
 
-  addMessageToChat(type, content, images = [], charts = []) {
+  addMessageToChat(
+    type,
+    content,
+    images = [],
+    charts = [],
+    generatedFiles = []
+  ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
@@ -829,77 +838,151 @@ class UIComponents {
 
     chatMessages.appendChild(messageDiv);
 
-    // Add images if any (AFTER charts, so they appear below the response)
-    if (images && images.length > 0) {
-      console.log(`Adding ${images.length} images to message`);
+    // Add attachments (images and generated files) if any (AFTER charts, so they appear below the response)
+    if (
+      (images && images.length > 0) ||
+      (generatedFiles && generatedFiles.length > 0)
+    ) {
+      console.log(
+        `Adding ${(images || []).length} images and ${
+          (generatedFiles || []).length
+        } generated files to message`
+      );
 
-      const imagesContainer = document.createElement("div");
-      imagesContainer.className = "message-images";
+      const attachmentsContainer = document.createElement("div");
+      attachmentsContainer.className = "message-images"; // Keep existing class for styling
 
-      // Add a header for the images section
-      const imagesHeader = document.createElement("div");
-      imagesHeader.className = "images-header";
-      imagesHeader.innerHTML = `
-        <i class="fas fa-paperclip"></i>
-        <span>Attachments</span>
+      // Add a header for the attachments section with toggle functionality
+      // Add a minimal header for the attachments section with toggle functionality
+      const attachmentsHeader = document.createElement("div");
+      attachmentsHeader.className = "images-header";
+      attachmentsHeader.innerHTML = `
+        <i class="fas fa-paperclip" style="font-size: 0.9em; opacity: 0.7;"></i>
+        <span style="font-size: 1em; opacity: 0.9;">${
+          (images || []).length + (generatedFiles || []).length
+        } attachment</span>
+        <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
       `;
-      imagesHeader.style.cssText = `
+      attachmentsHeader.style.cssText = `
         grid-column: 1 / -1;
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 0.9em;
-        font-weight: 600;
-        color: var(--text-primary);
-        opacity: 0.8;
-        margin-bottom: 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        gap: 6px;
+        font-size: 0.75em;
+        color: var(--text-secondary);
+        margin: 8px 0 4px 0;
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s ease;
       `;
 
-      imagesContainer.appendChild(imagesHeader);
+      // Create minimal content container that will be toggleable
+      const attachmentsContent = document.createElement("div");
+      attachmentsContent.className = "attachments-content";
+      attachmentsContent.style.cssText = `
+        display: none;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+        padding: 4px 0;
+        animation: slideDown 0.2s ease-out;
+      `;
 
-      images.forEach((image, index) => {
-        const imageWrapper = document.createElement("div");
-        imageWrapper.className = "message-image-wrapper";
+      // Add toggle functionality
+      let isExpanded = false;
+      const toggleIcon = attachmentsHeader.querySelector(".toggle-icon");
 
-        const img = document.createElement("img");
-        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
-        img.alt = `Attached Image: ${image.filename}`;
-        img.className = "message-image";
-        img.style.cssText = `
-          max-width: 100%;
-          max-height: 300px;
-          object-fit: contain;
-          cursor: pointer;
-        `;
+      attachmentsHeader.addEventListener("click", () => {
+        isExpanded = !isExpanded;
 
-        // Add loading placeholder effect
-        img.addEventListener("load", () => {
-          img.style.opacity = "1";
-        });
-
-        img.style.opacity = "0";
-        img.style.transition = "opacity 0.3s ease";
-
-        // Click to expand functionality
-        img.addEventListener("click", () => {
-          this.showImageModal(image);
-        });
-
-        const caption = document.createElement("div");
-        caption.className = "image-caption";
-        caption.innerHTML = `${image.filename}`;
-
-        imageWrapper.appendChild(img);
-        imageWrapper.appendChild(caption);
-        imagesContainer.appendChild(imageWrapper);
+        if (isExpanded) {
+          attachmentsContent.style.display = "grid";
+          toggleIcon.style.transform = "rotate(180deg)";
+          toggleIcon.className = "fas fa-chevron-up toggle-icon";
+        } else {
+          attachmentsContent.style.display = "none";
+          toggleIcon.style.transform = "rotate(0deg)";
+          toggleIcon.className = "fas fa-chevron-down toggle-icon";
+        }
       });
 
-      // Images container'ını message content'in içine ekle
+      attachmentsContainer.appendChild(attachmentsHeader);
+      attachmentsContainer.appendChild(attachmentsContent);
+
+      // Add images first
+      if (images && images.length > 0) {
+        images.forEach((image, index) => {
+          const imageWrapper = document.createElement("div");
+          imageWrapper.className = "message-image-wrapper";
+
+          const img = document.createElement("img");
+          img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
+          img.alt = `Attached Image: ${image.filename}`;
+          img.className = "message-image";
+          img.style.cssText = `
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            cursor: pointer;
+          `;
+
+          // Add loading placeholder effect
+          img.addEventListener("load", () => {
+            img.style.opacity = "1";
+          });
+
+          img.style.opacity = "0";
+          img.style.transition = "opacity 0.3s ease";
+
+          // Click to expand functionality
+          img.addEventListener("click", () => {
+            this.showImageModal(image);
+          });
+
+          const caption = document.createElement("div");
+          caption.className = "image-caption";
+          caption.innerHTML = `${image.filename}`;
+
+          imageWrapper.appendChild(img);
+          imageWrapper.appendChild(caption);
+          attachmentsContent.appendChild(imageWrapper);
+        });
+      }
+
+      // Add generated files after images
+      if (generatedFiles && generatedFiles.length > 0) {
+        generatedFiles.forEach((file, index) => {
+          const fileWrapper = document.createElement("div");
+          fileWrapper.className = "message-image-wrapper"; // Use same class as images for consistent styling
+
+          // Create file preview based on file type
+          const filePreview = this.createFilePreview(file);
+
+          const caption = document.createElement("div");
+          caption.className = "image-caption"; // Use same class as images for consistent styling
+          caption.innerHTML = `${file.filename}`;
+          caption.style.cssText = `
+          font-size: 0.65em;
+          color: var(--text-secondary);
+          text-align: center;
+          max-width: 80px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          opacity: 0.8;
+        `;
+
+          fileWrapper.appendChild(filePreview);
+          fileWrapper.appendChild(caption);
+          attachmentsContent.appendChild(fileWrapper);
+        });
+      }
+
+      // Attachments container'ını message content'in içine ekle
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
-        messageContent.appendChild(imagesContainer);
+        messageContent.appendChild(attachmentsContainer);
       }
     }
 
@@ -1034,6 +1117,91 @@ class UIComponents {
     }
   }
 
+  // Create file preview based on file type
+  createFilePreview(file) {
+    const filePreview = document.createElement("div");
+    filePreview.className = "file-preview";
+
+    // Get file extension
+    const fileExtension = file.filename.split(".").pop().toLowerCase();
+
+    // Create icon based on file type
+    let iconClass = "fas fa-file";
+    let previewContent = "";
+
+    switch (fileExtension) {
+      case "xlsx":
+        iconClass = "fas fa-file-excel";
+        previewContent = `
+          <div class="file-preview-content excel-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">Excel</span>
+          </div>
+        `;
+        break;
+      case "docx":
+        iconClass = "fas fa-file-word";
+        previewContent = `
+          <div class="file-preview-content word-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">Word</span>
+          </div>
+        `;
+        break;
+      case "pptx":
+        iconClass = "fas fa-file-powerpoint";
+        previewContent = `
+          <div class="file-preview-content powerpoint-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">PowerPoint</span>
+          </div>
+        `;
+        break;
+      case "pdf":
+        iconClass = "fas fa-file-pdf";
+        previewContent = `
+          <div class="file-preview-content pdf-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">PDF</span>
+          </div>
+        `;
+        break;
+      default:
+        previewContent = `
+          <div class="file-preview-content default-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">${fileExtension.toUpperCase()}</span>
+          </div>
+        `;
+    }
+
+    filePreview.innerHTML = previewContent;
+    filePreview.style.cssText = `
+      max-width: 100%;
+      max-height: 80px;
+      width: 60px;
+      height: 60px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      overflow: hidden;
+    `;
+
+    // No hover effects for minimal design
+
+    // Click to open file
+    filePreview.addEventListener("click", () => {
+      this.openGeneratedFile(file);
+    });
+
+    return filePreview;
+  }
+
   // Image modal for full-size viewing
   showImageModal(image) {
     // Remove existing modal if any
@@ -1151,6 +1319,37 @@ class UIComponents {
     document.addEventListener("keydown", handleEscape);
   }
 
+  // Open generated file
+  openGeneratedFile(file) {
+    try {
+      // Use Electron's shell to open the file with default application
+      if (window.airisAPI && window.airisAPI.openGeneratedFile) {
+        window.airisAPI
+          .openGeneratedFile(file.file_path)
+          .then((result) => {
+            if (!result.success) {
+              console.error("Error opening file:", result.error);
+              alert(`Error opening file: ${result.error}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error opening generated file:", error);
+            alert(`Error opening file: ${error.message}`);
+          });
+      } else {
+        // Fallback: try to open with system default application
+        console.log(`Opening file: ${file.file_path}`);
+        // You can implement additional logic here if needed
+        alert(
+          `File: ${file.filename}\nPath: ${file.file_path}\n\nThis file has been created successfully. You can find it in the specified directory.`
+        );
+      }
+    } catch (error) {
+      console.error("Error opening generated file:", error);
+      alert(`Error opening file: ${error.message}`);
+    }
+  }
+
   clearChat() {
     const chatMessages = document.getElementById("chat-messages");
     if (chatMessages) {
@@ -1206,19 +1405,24 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images and charts properly - they should be fresh for each message
+          // Extract images, charts, and generated files properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
+          const generatedFiles = msg.metadata?.generatedFiles || [];
 
-          // Ensure images and charts are not accumulated from previous sessions
+          // Ensure images, charts, and generated files are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
+          const cleanGeneratedFiles = Array.isArray(generatedFiles)
+            ? generatedFiles.slice()
+            : [];
 
           this.addMessageToChat(
             msg.role,
             msg.content,
             cleanImages,
-            cleanCharts
+            cleanCharts,
+            cleanGeneratedFiles
           );
 
           // Update local chat history
@@ -1235,6 +1439,8 @@ class UIComponents {
                 cleanImages;
               this.chatHistory[this.chatHistory.length - 1].charts =
                 cleanCharts;
+              this.chatHistory[this.chatHistory.length - 1].generatedFiles =
+                cleanGeneratedFiles;
             }
           }
         });

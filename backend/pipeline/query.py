@@ -280,19 +280,38 @@ async def run_orchestration(
     # 6. Maske çöz
     final_answer = unmask_text(answer)
 
-    # 7. Get images and add assistant response to chat history with images
+    # 7. Get images, charts, and generated files and add assistant response to chat history
     images = get_image_datas()
     charts = get_chart_datas()
+
+    # Get generated files from office tools
+    from backend.core.tools.office import GENERATED_FILES
+
+    generated_files = []
+    if GENERATED_FILES:
+        generated_files = GENERATED_FILES.copy()
+        # Clear the list after sending to frontend
+        from backend.core.tools.office import clear_generated_files
+
+        clear_generated_files()
+
     if session_id:
         metadata = {}
         if images:
             metadata["images"] = images
         if charts:
             metadata["charts"] = charts
+        if generated_files:
+            metadata["generatedFiles"] = generated_files
 
         metadata = metadata if metadata else None
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
 
-    return {"response": final_answer, "images": images, "charts": charts}
+    return {
+        "response": final_answer,
+        "images": images,
+        "charts": charts,
+        "generatedFiles": generated_files,
+    }

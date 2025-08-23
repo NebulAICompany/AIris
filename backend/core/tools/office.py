@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 from pathlib import Path
 import os
 import json
+from datetime import datetime
 from docx import Document
 from openpyxl import Workbook, load_workbook
 from openpyxl.chart import BarChart, LineChart, PieChart, Reference
@@ -10,11 +11,15 @@ from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH
 from agents import function_tool
 
+# Global variable to track generated files
+GENERATED_FILES = []
+
 FILES_PATH = Path(CREATED_DOCUMENTS_PATH)
 FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 
 logger = get_logger("OFFICE_TOOLS")
+
 
 @function_tool()
 def create_excel_file(
@@ -27,7 +32,7 @@ def create_excel_file(
         data: List of lists representing table rows and columns
         file_name: Name of the Excel file to be created
         sheet_name: Name of the Excel sheet (default: "Sheet1")
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -40,7 +45,7 @@ def create_excel_file(
     """
     try:
         # Add .xlsx extension if not present
-        if not file_name.endswith('.xlsx'):
+        if not file_name.endswith(".xlsx"):
             file_name = f"{file_name}.xlsx"
 
         # Ensure file_path is absolute and in the uploads directory
@@ -62,6 +67,16 @@ def create_excel_file(
         # Save the workbook
         workbook.save(str(file_path))
 
+        # Add to generated files list
+        file_info = {
+            "filename": file_name,
+            "file_path": str(file_path),
+            "file_type": "excel",
+            "created_at": datetime.now().isoformat(),
+            "message": f"Excel file created successfully with {len(data)} rows",
+        }
+        GENERATED_FILES.append(file_info)
+
         return {
             "success": True,
             "file_path": str(file_path),
@@ -69,11 +84,13 @@ def create_excel_file(
             "rows": len(data),
             "columns": len(data[0]) if data else 0,
             "message": f"Excel file created successfully with {len(data)} rows at {file_path}",
+            "file_info": file_info,
         }
 
     except Exception as e:
         logger.error(f"Error creating Excel file: {str(e)}")
         return {"success": False, "error": f"Failed to create Excel file: {str(e)}"}
+
 
 @function_tool()
 def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
@@ -83,7 +100,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
     Args:
         content: Text content to be added to the document
         file_name: Name of the file to be created
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -94,7 +111,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
     """
     try:
         # Add .docx extension if not present
-        if not file_name.endswith('.docx'):
+        if not file_name.endswith(".docx"):
             file_name = f"{file_name}.docx"
 
         # Ensure file_path is absolute and in the uploads directory
@@ -123,19 +140,33 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
         # Save the document
         doc.save(str(file_path))
 
+        # Add to generated files list
+        file_info = {
+            "filename": file_name,
+            "file_path": str(file_path),
+            "file_type": "word",
+            "created_at": datetime.now().isoformat(),
+            "message": f"Word document created successfully with {len(paragraphs)} paragraphs",
+        }
+        GENERATED_FILES.append(file_info)
+
         return {
             "success": True,
             "file_path": str(file_path),
             "paragraphs": len(paragraphs),
             "message": f"Word document created successfully at {file_path}",
+            "file_info": file_info,
         }
 
     except Exception as e:
         logger.error(f"Error creating Word document: {str(e)}")
         return {"success": False, "error": f"Failed to create Word document: {str(e)}"}
 
+
 @function_tool()
-def create_powerpoint_presentation(title: str, slides_content: str, file_name: str) -> Dict[str, Any]:
+def create_powerpoint_presentation(
+    title: str, slides_content: str, file_name: str
+) -> Dict[str, Any]:
     """
     Create a PowerPoint presentation with multiple slides for investment committee presentations and client meetings.
 
@@ -143,7 +174,7 @@ def create_powerpoint_presentation(title: str, slides_content: str, file_name: s
         title: Title of the presentation
         slides_content: JSON string containing list of dictionaries with 'title' and 'content' keys for each slide
         file_name: Name of the PowerPoint file to be created
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -154,10 +185,14 @@ def create_powerpoint_presentation(title: str, slides_content: str, file_name: s
     """
     try:
         # Parse JSON string
-        slides_data = json.loads(slides_content) if isinstance(slides_content, str) else slides_content
+        slides_data = (
+            json.loads(slides_content)
+            if isinstance(slides_content, str)
+            else slides_content
+        )
 
         # Add .pptx extension if not present
-        if not file_name.endswith('.pptx'):
+        if not file_name.endswith(".pptx"):
             file_name = f"{file_name}.pptx"
 
         # Ensure file_path is absolute and in the documents directory
@@ -181,30 +216,47 @@ def create_powerpoint_presentation(title: str, slides_content: str, file_name: s
             slide = prs.slides.add_slide(slide_layout)
 
             # Set slide title
-            if 'title' in slide_data:
-                slide.shapes.title.text = slide_data['title']
+            if "title" in slide_data:
+                slide.shapes.title.text = slide_data["title"]
 
             # Set slide content
-            if 'content' in slide_data:
+            if "content" in slide_data:
                 content_placeholder = slide.placeholders[1]
-                content_placeholder.text = slide_data['content']
+                content_placeholder.text = slide_data["content"]
 
         # Save presentation
         prs.save(str(file_path))
+
+        # Add to generated files list
+        file_info = {
+            "filename": file_name,
+            "file_path": str(file_path),
+            "file_type": "powerpoint",
+            "created_at": datetime.now().isoformat(),
+            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides",
+        }
+        GENERATED_FILES.append(file_info)
 
         return {
             "success": True,
             "file_path": str(file_path),
             "slides_count": len(slides_data) + 1,  # +1 for title slide
-            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides at {file_path}"
+            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides at {file_path}",
+            "file_info": file_info,
         }
 
     except Exception as e:
         logger.error(f"Error creating PowerPoint presentation: {str(e)}")
-        return {"success": False, "error": f"Failed to create PowerPoint presentation: {str(e)}"}
+        return {
+            "success": False,
+            "error": f"Failed to create PowerPoint presentation: {str(e)}",
+        }
+
 
 @function_tool()
-def add_powerpoint_slide(file_path: str, slide_title: str, slide_content: str, slide_position: int = -1) -> Dict[str, Any]:
+def add_powerpoint_slide(
+    file_path: str, slide_title: str, slide_content: str, slide_position: int = -1
+) -> Dict[str, Any]:
     """
     Add a new slide to an existing PowerPoint presentation for dynamic slide addition and template-based expansion.
 
@@ -213,7 +265,7 @@ def add_powerpoint_slide(file_path: str, slide_title: str, slide_content: str, s
         slide_title: Title of the new slide
         slide_content: Content of the new slide
         slide_position: Position to insert the slide (-1 for end)
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -247,14 +299,18 @@ def add_powerpoint_slide(file_path: str, slide_title: str, slide_content: str, s
             "success": True,
             "file_path": file_path,
             "total_slides": len(prs.slides),
-            "message": f"Slide added successfully. Presentation now has {len(prs.slides)} slides."
+            "message": f"Slide added successfully. Presentation now has {len(prs.slides)} slides.",
         }
 
     except Exception as e:
         logger.error(f"Error adding slide to PowerPoint: {str(e)}")
         return {"success": False, "error": f"Failed to add slide: {str(e)}"}
+
+
 @function_tool()
-def modify_word_content(file_path: str, search_text: str, replace_text: str) -> Dict[str, Any]:
+def modify_word_content(
+    file_path: str, search_text: str, replace_text: str
+) -> Dict[str, Any]:
     """
     Modify existing Word documents for updates and revisions.
 
@@ -262,7 +318,7 @@ def modify_word_content(file_path: str, search_text: str, replace_text: str) -> 
         file_path: Path to the Word document
         search_text: Text to search for
         replace_text: Text to replace with
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -298,15 +354,18 @@ def modify_word_content(file_path: str, search_text: str, replace_text: str) -> 
             "success": True,
             "file_path": file_path,
             "replacements_made": replacements_made,
-            "message": f"Document updated successfully. Made {replacements_made} replacements."
+            "message": f"Document updated successfully. Made {replacements_made} replacements.",
         }
 
     except Exception as e:
         logger.error(f"Error modifying Word document: {str(e)}")
         return {"success": False, "error": f"Failed to modify Word document: {str(e)}"}
 
+
 @function_tool()
-def modify_excel_cells(file_path: str, updates: str, sheet_name: str = None) -> Dict[str, Any]:
+def modify_excel_cells(
+    file_path: str, updates: str, sheet_name: str = None
+) -> Dict[str, Any]:
     """
     Update cell values in Excel for financial model parameters.
 
@@ -314,7 +373,7 @@ def modify_excel_cells(file_path: str, updates: str, sheet_name: str = None) -> 
         file_path: Path to the Excel file
         updates: JSON string containing list of dictionaries with 'cell', 'value' keys (e.g., "[{'cell': 'A1', 'value': 100}]")
         sheet_name: Name of the sheet to modify (None for active sheet)
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -339,8 +398,8 @@ def modify_excel_cells(file_path: str, updates: str, sheet_name: str = None) -> 
 
         # Apply updates
         for update in updates_data:
-            cell_address = update['cell']
-            cell_value = update['value']
+            cell_address = update["cell"]
+            cell_value = update["value"]
             ws[cell_address] = cell_value
 
         # Save workbook
@@ -351,7 +410,7 @@ def modify_excel_cells(file_path: str, updates: str, sheet_name: str = None) -> 
             "file_path": file_path,
             "updates_applied": len(updates_data),
             "sheet_name": ws.title,
-            "message": f"Successfully updated {len(updates_data)} cells in sheet '{ws.title}'"
+            "message": f"Successfully updated {len(updates_data)} cells in sheet '{ws.title}'",
         }
 
     except Exception as e:
@@ -360,7 +419,9 @@ def modify_excel_cells(file_path: str, updates: str, sheet_name: str = None) -> 
 
 
 @function_tool()
-def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None) -> Dict[str, Any]:
+def create_excel_charts(
+    file_path: str, chart_data: str, sheet_name: str = None
+) -> Dict[str, Any]:
     """
     Create performance charts, risk visualizations, and correlation heatmaps in Excel.
 
@@ -368,7 +429,7 @@ def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None)
         file_path: Path to the Excel file
         chart_data: JSON string containing chart configuration dictionary
         sheet_name: Name of the sheet (None for active sheet)
-    
+
     Returns:
         Dict[str, Any]: A dictionary containing:
             - success (bool): True if operation succeeded, False otherwise
@@ -381,7 +442,9 @@ def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None)
     """
     try:
         # Parse JSON string
-        chart_config = json.loads(chart_data) if isinstance(chart_data, str) else chart_data
+        chart_config = (
+            json.loads(chart_data) if isinstance(chart_data, str) else chart_data
+        )
 
         # Load workbook
         wb = load_workbook(file_path)
@@ -392,16 +455,16 @@ def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None)
         else:
             ws = wb.active
 
-        chart_type = chart_config.get('type', 'bar').lower()
-        data_range = chart_config.get('data_range', 'A1:B10')
-        title = chart_config.get('title', 'Chart')
+        chart_type = chart_config.get("type", "bar").lower()
+        data_range = chart_config.get("data_range", "A1:B10")
+        title = chart_config.get("title", "Chart")
 
         # Create chart based on type
-        if chart_type == 'bar':
+        if chart_type == "bar":
             chart = BarChart()
-        elif chart_type == 'line':
+        elif chart_type == "line":
             chart = LineChart()
-        elif chart_type == 'pie':
+        elif chart_type == "pie":
             chart = PieChart()
         else:
             chart = BarChart()  # Default to bar chart
@@ -411,16 +474,19 @@ def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None)
 
         # Add data to chart
         # Parse the range string to get min/max coordinates
-        if '!' in data_range:
-            range_part = data_range.split('!')[-1]
+        if "!" in data_range:
+            range_part = data_range.split("!")[-1]
         else:
             range_part = data_range
-        
+
         # Convert range like "A1:B10" to coordinates
         from openpyxl.utils import range_boundaries
+
         min_col, min_row, max_col, max_row = range_boundaries(range_part)
-        
-        data = Reference(ws, min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row)
+
+        data = Reference(
+            ws, min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row
+        )
         chart.add_data(data, titles_from_data=True)
 
         # Add chart to worksheet
@@ -435,9 +501,42 @@ def create_excel_charts(file_path: str, chart_data: str, sheet_name: str = None)
             "chart_type": chart_type,
             "chart_title": title,
             "sheet_name": ws.title,
-            "message": f"Successfully created {chart_type} chart '{title}' in sheet '{ws.title}'"
+            "message": f"Successfully created {chart_type} chart '{title}' in sheet '{ws.title}'",
         }
 
     except Exception as e:
         logger.error(f"Error creating Excel chart: {str(e)}")
         return {"success": False, "error": f"Failed to create Excel chart: {str(e)}"}
+
+
+@function_tool()
+def get_generated_files() -> Dict[str, Any]:
+    """
+    Get list of all files generated by AI tools.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing:
+            - success (bool): True if operation succeeded, False otherwise
+            - files (List): List of generated file information
+            - count (int): Total number of generated files
+            - error (str): Error message (if failed)
+    """
+    try:
+        return {
+            "success": True,
+            "files": GENERATED_FILES,
+            "count": len(GENERATED_FILES),
+            "message": f"Retrieved {len(GENERATED_FILES)} generated files",
+        }
+    except Exception as e:
+        logger.error(f"Error getting generated files: {str(e)}")
+        return {"success": False, "error": f"Failed to get generated files: {str(e)}"}
+
+
+def clear_generated_files():
+    """
+    Clear the generated files list.
+    """
+    global GENERATED_FILES
+    GENERATED_FILES.clear()
+    logger.info("Generated files list cleared")
