@@ -19,9 +19,10 @@ from backend.utils.query import (
 )
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
-from backend.core.tools.visual import get_image_datas
+from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
-from backend.server.finance_mcp import get_chart_datas
+from backend.server.finance_mcp import get_chart_datas, clear_chart_datas
+from backend.core.tools.office import get_generated_files, clear_generated_files
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -283,17 +284,7 @@ async def run_orchestration(
     # 7. Get images, charts, and generated files and add assistant response to chat history
     images = get_image_datas()
     charts = get_chart_datas()
-
-    # Get generated files from office tools
-    from backend.core.tools.office import GENERATED_FILES
-
-    generated_files = []
-    if GENERATED_FILES:
-        generated_files = GENERATED_FILES.copy()
-        # Clear the list after sending to frontend
-        from backend.core.tools.office import clear_generated_files
-
-        clear_generated_files()
+    generated_files = get_generated_files()
 
     if session_id:
         metadata = {}
@@ -308,6 +299,10 @@ async def run_orchestration(
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
+
+    clear_generated_files()
+    clear_image_datas()
+    clear_chart_datas()
 
     return {
         "response": final_answer,
