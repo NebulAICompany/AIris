@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
-from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.utils.parser import AzureParser, TxtParser, ImageParser
 from backend.pipeline.vector import PreEmbeddingProcess
 

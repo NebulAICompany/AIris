@@ -19,9 +19,10 @@ from backend.utils.query import (
 )
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
-from backend.core.tools.visual import get_image_datas
+from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
-from backend.server.finance_mcp import get_chart_datas
+from backend.server.finance_mcp import get_chart_datas, clear_chart_datas
+from backend.core.tools.office import get_generated_files, clear_generated_files
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -51,6 +52,13 @@ async def run_orchestration(
     logger.info(f"   - Search Method: {search_method}")
     logger.info(f"   - Session ID: {session_id}")
     logger.info(f"   - Selected Files: {selected_files}")
+
+    # Clear previous attachments at the start of each new query
+    logger.info("🧹 Clearing previous attachments...")
+    clear_image_datas()
+    clear_chart_datas()
+    clear_generated_files()
+    logger.info("✅ Previous attachments cleared")
 
     # Handle chat history and session management
     if session_id:
@@ -273,26 +281,31 @@ async def run_orchestration(
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
     logger.debug(f"🧠 Answer: {answer}")
-    # 5.5. Ensure consistent metadata formatting
-    # Use the retrieved documents to ensure metadata is properly formatted
-    docs_for_metadata = reranked_docs if "reranked_docs" in locals() else []
-
     # 6. Maske çöz
     final_answer = unmask_text(answer)
 
-    # 7. Get images and add assistant response to chat history with images
+    # 7. Get images, charts, and generated files and add assistant response to chat history
     images = get_image_datas()
     charts = get_chart_datas()
+    generated_files = get_generated_files()
+
     if session_id:
         metadata = {}
         if images:
             metadata["images"] = images
         if charts:
             metadata["charts"] = charts
+        if generated_files:
+            metadata["generatedFiles"] = generated_files
 
         metadata = metadata if metadata else None
         chat_history_manager.add_message(
             session_id, MessageRole.ASSISTANT, final_answer, metadata
         )
 
-    return {"response": final_answer, "images": images, "charts": charts}
+    return {
+        "response": final_answer,
+        "images": images,
+        "charts": charts,
+        "generatedFiles": generated_files,
+    }

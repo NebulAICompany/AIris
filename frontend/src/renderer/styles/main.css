@@ -6,6 +6,7 @@
   --bg-secondary: #f8fafc;
   --bg-tertiary: #f1f5f9;
   --text-primary: #1e293b;
+  --text-primary-rgb: 30, 41, 59;
   --text-secondary: #64748b;
   --text-muted: #94a3b8;
   --border-color: #e2e8f0;
@@ -40,6 +41,7 @@
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
   --text-primary: #f8fafc;
+  --text-primary-rgb: 248, 250, 252;
   --text-secondary: #cbd5e1;
   --text-muted: #64748b;
   --border-color: #334155;
@@ -542,11 +544,7 @@ input:checked + .slider:before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    var(--accent-primary),
-    var(--accent-secondary)
-  );
+  background: var(--bg-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -561,7 +559,7 @@ input:checked + .slider:before {
 
 .loading-content {
   text-align: center;
-  color: white;
+  color: var(--text-primary);
 }
 
 .loading-logo {
@@ -597,8 +595,8 @@ input:checked + .slider:before {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top: 3px solid white;
+  border: 3px solid var(--text-muted);
+  border-top: 3px solid var(--text-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -990,6 +988,7 @@ body.dark-theme {
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
   --text-primary: #f8fafc;
+  --text-primary-rgb: 248, 250, 252;
   --text-secondary: #cbd5e1;
   --text-muted: #64748b;
   --border-color: #334155;
@@ -1004,6 +1003,7 @@ body.nebula-theme {
   --bg-secondary: #1a0b2e;
   --bg-tertiary: #2d1b4e;
   --text-primary: #e8d5ff;
+  --text-primary-rgb: 232, 213, 255;
   --text-secondary: #c084fc;
   --text-muted: #a855f7;
   --border-color: #6366f1;

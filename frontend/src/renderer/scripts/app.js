@@ -330,10 +330,7 @@ class AIrisApp {
       this.updateConnectionStatus(this.backendConnected);
 
       if (this.backendConnected && this.uiComponents) {
-        this.uiComponents.showNotification(
-          "Backend connection restored!",
-          "success"
-        );
+        this.uiComponents.showNotification("Connection restored!", "success");
       }
 
       return this.backendConnected;

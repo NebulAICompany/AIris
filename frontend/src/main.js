@@ -164,13 +164,49 @@ class AIrisApp {
       }
     });
 
+    // Handle generated file opening
+    ipcMain.handle("open-generated-file", async (event, filePath) => {
+      try {
+        const { shell } = require("electron");
+
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+          return {
+            success: false,
+            error: "File not found at specified path",
+          };
+        }
+
+        // Open file with default application
+        const result = await shell.openPath(filePath);
+
+        if (result) {
+          // If result is not empty, there was an error
+          return {
+            success: false,
+            error: result,
+          };
+        }
+
+        return {
+          success: true,
+          message: "File opened successfully",
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+    });
+
     // Handle file opening
     ipcMain.handle("open-file", async (event, fileName) => {
       try {
         const { shell } = require("electron");
         const path = require("path");
 
-        // Construct the file path
+        // First try to find the file in uploads directory
         const uploadsDir = path.join(
           __dirname,
           "..",
@@ -179,13 +215,26 @@ class AIrisApp {
           "database",
           "uploads"
         );
-        const filePath = path.join(uploadsDir, fileName);
+        let filePath = path.join(uploadsDir, fileName);
 
-        // Check if file exists
+        // If file not found in uploads, try created_documents directory
+        if (!fs.existsSync(filePath)) {
+          const createdDocsDir = path.join(
+            __dirname,
+            "..",
+            "..",
+            "backend",
+            "database",
+            "created_documents"
+          );
+          filePath = path.join(createdDocsDir, fileName);
+        }
+
+        // Check if file exists in either location
         if (!fs.existsSync(filePath)) {
           return {
             success: false,
-            error: "File not found",
+            error: "File not found in uploads or created_documents directories",
           };
         }
 
@@ -236,56 +285,71 @@ class AIrisApp {
     });
 
     // Handle file deletion
-    ipcMain.handle("delete-file", async (event, fileName) => {
-      logger.info(`Delete file request received: ${fileName}`, "IPC");
-
-      try {
-        const url = `http://localhost:8001/api/files/${encodeURIComponent(
-          fileName
-        )}`;
-        logger.info(`Sending DELETE request to: ${url}`, "IPC");
-
-        const response = await fetch(url, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        logger.debug(
-          `Response status: ${response.status}, ok: ${response.ok}`,
+    ipcMain.handle(
+      "delete-file",
+      async (event, fileName, isCreatedDocument = false) => {
+        logger.info(
+          `Delete file request received: ${fileName} (created document: ${isCreatedDocument})`,
           "IPC"
         );
 
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ detail: "Unknown error" }));
-          logger.error(
-            `Delete request failed: ${JSON.stringify(errorData)}`,
+        try {
+          let url;
+          if (isCreatedDocument) {
+            url = `http://localhost:8001/api/created-documents/${encodeURIComponent(
+              fileName
+            )}`;
+          } else {
+            url = `http://localhost:8001/api/files/${encodeURIComponent(
+              fileName
+            )}`;
+          }
+
+          logger.info(`Sending DELETE request to: ${url}`, "IPC");
+
+          const response = await fetch(url, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          logger.debug(
+            `Response status: ${response.status}, ok: ${response.ok}`,
             "IPC"
           );
+
+          if (!response.ok) {
+            const errorData = await response
+              .json()
+              .catch(() => ({ detail: "Unknown error" }));
+            logger.error(
+              `Delete request failed: ${JSON.stringify(errorData)}`,
+              "IPC"
+            );
+            return {
+              success: false,
+              error:
+                errorData.detail || `HTTP error! status: ${response.status}`,
+            };
+          }
+
+          const result = await response.json();
+          logger.info(`File deleted successfully: ${fileName}`, "IPC");
+          return {
+            success: true,
+            data: result,
+          };
+        } catch (error) {
+          logger.error(`Failed to delete file: ${error.message}`, "IPC");
+          logger.debug(`Error details: ${error.stack}`, "IPC");
           return {
             success: false,
-            error: errorData.detail || `HTTP error! status: ${response.status}`,
+            error: error.message,
           };
         }
-
-        const result = await response.json();
-        logger.info(`File deleted successfully: ${fileName}`, "IPC");
-        return {
-          success: true,
-          data: result,
-        };
-      } catch (error) {
-        logger.error(`Failed to delete file: ${error.message}`, "IPC");
-        logger.debug(`Error details: ${error.stack}`, "IPC");
-        return {
-          success: false,
-          error: error.message,
-        };
       }
-    });
+    );
 
     // Handle app info requests
     ipcMain.handle("get-app-info", () => {
