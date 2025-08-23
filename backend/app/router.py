@@ -57,14 +57,6 @@ async def handle_query(request: QueryRequest):
         # Use system-level default search method
         search_method = DEFAULT_SEARCH_METHOD
 
-        logger.info(f"📝 API Router received:")
-        logger.info(f"   - Query: {query}")
-        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-        logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
-        logger.info(f"   - Search Method (from config): {search_method}")
-        logger.info(f"   - Session ID: {session_id}")
-        logger.info(f"   - Selected Files: {selected_files}")
-
         answer = await run_orchestration(
             query,
             web_search_enabled,
@@ -73,15 +65,13 @@ async def handle_query(request: QueryRequest):
             selected_files,
             search_method,
         )
-        logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()
-
-        logger.info("Query processed successfully")
 
         return {
             "response": answer.get("response"),
             "images": answer.get("images", []),
             "charts": answer.get("charts", []),
+            "generatedFiles": answer.get("generatedFiles", []),
             "sessionId": answer.get("session_id", session_id),
         }
 
@@ -98,8 +88,6 @@ async def handle_upload(file: UploadFile = File(...)):
         # Increment simple counter
         request_counter += 1
 
-        logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
-
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(UPLOADS_PATH)
         uploads_dir.mkdir(parents=True, exist_ok=True)
@@ -108,8 +96,6 @@ async def handle_upload(file: UploadFile = File(...)):
         file_path = uploads_dir / file.filename
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-
-        logger.info(f"File saved to: {file_path}")
 
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
@@ -492,6 +478,33 @@ def download_file(filename: str):
         )
 
 
+@router.get("/files/{filename}")
+def get_file_info(filename: str):
+    """
+    Get information about a specific file.
+    """
+    try:
+        file_path = Path(UPLOADS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        stats = file_path.stat()
+        return {
+            "name": filename,
+            "size": stats.st_size,
+            "created_at": datetime.fromtimestamp(stats.st_ctime).isoformat(),
+            "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting file info {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting file info: {error_message}",
+        )
+
+
 @router.get("/files/{filename}/preview")
 def get_file_preview(filename: str):
     """
@@ -546,6 +559,33 @@ def download_created_document(filename: str):
         )
 
 
+@router.get("/created-documents/{filename}")
+def get_created_document_info(filename: str):
+    """
+    Get information about a specific created document.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        stats = file_path.stat()
+        return {
+            "name": filename,
+            "size": stats.st_size,
+            "created_at": datetime.fromtimestamp(stats.st_ctime).isoformat(),
+            "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting created document info {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting created document info: {error_message}",
+        )
+
+
 @router.get("/created-documents/{filename}/preview")
 def get_created_document_preview(filename: str):
     """
@@ -576,6 +616,35 @@ def get_created_document_preview(filename: str):
         )
         raise HTTPException(
             status_code=500, detail=f"Error generating preview: {error_message}"
+        )
+
+
+@router.delete("/created-documents/{filename}")
+def delete_created_document(filename: str):
+    """
+    Delete a created document from local storage.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        # Delete the file
+        file_path.unlink()
+
+        logger.info(f"Created document deleted successfully: {filename}")
+
+        return {
+            "message": f"Created document '{filename}' deleted successfully",
+            "success": True,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error deleting created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting created document: {error_message}",
         )
 
 
