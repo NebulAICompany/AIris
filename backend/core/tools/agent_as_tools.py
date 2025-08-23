@@ -1,5 +1,5 @@
 from agents import Agent
-from backend.core.prompts import alpha_vantage_prompt, office_agent_prompt
+from backend.core.prompts import alpha_vantage_prompt, office_agent_prompt, news_summarization_prompt
 from backend.core.tools.mcp import alpha_vantage_mcp_server
 from .document import create_excel_from_table, create_word_document
 
@@ -17,6 +17,12 @@ office_agent = Agent(
     tools=[
         *document_tools,
     ],
+)
+
+news_summarization_agent = Agent(
+    name="Financial News Summarization Agent",
+    instructions=news_summarization_prompt,
+    tools=[],  # This agent uses only LLM capabilities, no external tools
 )
 
 office_agent_tool = office_agent.as_tool(
@@ -37,4 +43,15 @@ alpha_vantage_tool = alpha_vantage_agent.as_tool(
     - Option chain data and technical analysis
     - Market trends and volatility analysis
     - Any financial data query or analysis""",
+)
+
+news_summarization_tool = news_summarization_agent.as_tool(
+    tool_name="financial_news_summarization",
+    tool_description="""Use this tool for creating unified summaries from multiple financial news articles covering the same story:
+    - Combine titles and descriptions from multiple news sources
+    - Create concise, unified titles for clustered news stories
+    - Generate comprehensive summaries that synthesize information from all sources
+    - Maintain objectivity and financial accuracy
+    - Format output as JSON with unified_title and unified_description fields
+    - Best used when you have 2+ articles about the same financial event/story""",
 )

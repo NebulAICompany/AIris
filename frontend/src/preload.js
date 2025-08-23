@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld("airisAPI", {
   // Development tools
   openDevTools: () => ipcRenderer.invoke("open-dev-tools"),
 
+  // External URL handling
+  openExternalUrl: (url) => ipcRenderer.invoke("open-external-url", url),
+
   // App info
   getAppInfo: () => ipcRenderer.invoke("get-app-info"),
 

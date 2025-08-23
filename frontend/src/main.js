@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const logger = require("./logger");
@@ -122,6 +122,7 @@ class AIrisApp {
     ipcMain.removeAllListeners("upload-file");
     ipcMain.removeAllListeners("check-health");
     ipcMain.removeAllListeners("open-dev-tools");
+    ipcMain.removeAllListeners("open-external-url");
 
     // Handle file selection dialog
     ipcMain.handle("select-file", async () => {
@@ -403,6 +404,18 @@ class AIrisApp {
     ipcMain.handle("open-dev-tools", () => {
       if (this.mainWindow && this.mainWindow.webContents) {
         this.mainWindow.webContents.openDevTools();
+      }
+    });
+
+    // Handle external URL opening
+    ipcMain.handle("open-external-url", async (event, url) => {
+      try {
+        logger.info(`Opening external URL: ${url}`);
+        await shell.openExternal(url);
+        return { success: true };
+      } catch (error) {
+        logger.error(`Failed to open external URL: ${error.message}`);
+        return { success: false, error: error.message };
       }
     });
   }

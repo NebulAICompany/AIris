@@ -87,6 +87,12 @@ class LanguageService {
         loadingNews: "Loading latest finance news...",
         lastUpdated: "Last updated",
         readMore: "Read More",
+        backToNews: "Back to News",
+        sourcesTitle: "Sources",
+        noNewsAvailable: "No news available",
+        fetchLatestNews: "Fetch Latest News",
+        getLatestNews: "Get Latest News",
+        autoUpdateInfo: "Auto-updates every 45 minutes",
 
         // Analytics Section
         systemAnalytics: "System Analytics",
@@ -375,6 +381,12 @@ class LanguageService {
         loadingNews: "En son finans haberleri yükleniyor...",
         lastUpdated: "Son güncelleme",
         readMore: "Devamını Oku",
+        backToNews: "Haberlere Geri Dön",
+        sourcesTitle: "Kaynaklar",
+        noNewsAvailable: "Haber bulunmuyor",
+        fetchLatestNews: "Son Haberleri Getir",
+        getLatestNews: "Son Haberleri Getir",
+        autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
 
         // Analytics Section
         systemAnalytics: "Sistem Analitikleri",
@@ -500,8 +512,9 @@ class LanguageService {
 
         // Time format
         minutesAgo: "dk önce",
-        hoursAgo: "sa önce",
+        hoursAgo: "sa önce", 
         daysAgo: "gün önce",
+        justNow: "Şimdi",
 
         // Action buttons
         retryAction: "Tekrar Dene",
