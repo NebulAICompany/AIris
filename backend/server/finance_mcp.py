@@ -947,7 +947,7 @@ async def create_stock_chart(
 
         chart_logger.info(f"🎯 Chart operation completed - ID: {chart_id}")
         return {
-            "message": f"✅ {len(symbols_list)} stock {chart_type} chart created successfully ({subplot_layout} layout). Chart loaded successfully into attachments. Do not add into answer, it is already in attachments."
+            "message": f"✅ {len(symbols_list)} stock {chart_type} chart created successfully ({subplot_layout} layout). Chart is displayed above this response for your analysis."
         }
 
     except Exception as e:
