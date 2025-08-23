@@ -1,13 +1,49 @@
 import re
 import html
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Optional
 from backend.shared.logger import get_logger
 import feedparser
 import datetime
 from dateutil import parser as date_parser
+import asyncio
+import httpx
+from dataclasses import dataclass
+import numpy as np
 
 logger = get_logger("NEWS_UTILS")
+
+# Handle pytz import gracefully
+try:
+    import pytz
+    PYTZ_AVAILABLE = True
+except ImportError:
+    PYTZ_AVAILABLE = False
+    logger.warning("pytz not available, using basic timezone handling")
+
+# Financial news RSS sources configuration
+@dataclass
+class NewsSource:
+    name: str
+    rss_url: str
+    language: str = "tr"  # Default to Turkish
+    
+# Clean list of reliable Turkish financial news sources
+FINANCIAL_NEWS_SOURCES = [
+    NewsSource("NTV Ekonomi", "https://www.ntv.com.tr/ekonomi.rss", "tr"),
+    NewsSource("Anadolu Ajansı Ekonomi", "https://www.aa.com.tr/tr/rss/default?cat=ekonomi", "tr"),
+    NewsSource("Cumhuriyet Ekonomi", "https://www.cumhuriyet.com.tr/rss/ekonomi", "tr"),
+    NewsSource("Milliyet Ekonomi", "https://www.milliyet.com.tr/rss/rssnew/ekonomi.xml", "tr"),
+    NewsSource("Sabah Ekonomi", "https://www.sabah.com.tr/rss/ekonomi.xml", "tr"),
+    NewsSource("Star Ekonomi", "https://www.star.com.tr/rss/rss.asp?cid=15", "tr"),
+    NewsSource("Takvim Ekonomi", "https://www.takvim.com.tr/rss/ekonomi.xml", "tr"),
+    NewsSource("Yeni Şafak Ekonomi", "https://www.yenisafak.com/rss?xml=ekonomi", "tr"),
+    NewsSource("A Haber Ekonomi", "https://www.ahaber.com.tr/rss/ekonomi.xml", "tr"),
+    NewsSource("CNN Türk Ekonomi", "https://www.cnnturk.com/feed/rss/ekonomi/news", "tr"),
+    NewsSource("CNBC-e", "https://www.cnbce.com/rss", "tr"),
+    NewsSource("Investing.com TR", "https://tr.investing.com/rss/news.rss", "tr"),
+    NewsSource("Dünya Gazetesi", "https://www.dunya.com/rss/ekonomi.xml", "tr"),
+]
 
 def clean_turkish_text(text):
     """
@@ -167,75 +203,847 @@ class NewsArticle(BaseModel):
     link: str
     published: str
     summary: str = ""
-    source: str = "Dunya Ekonomi"
+    source: str = "Unknown"
     image_url: str = ""
     image_width: int = 0
     image_height: int = 0
+    source_language: str = "en"
+    
+
+class ClusteredNews(BaseModel):
+    """Represents a news story that appears across multiple sources"""
+    unified_title: str
+    unified_description: str  
+    sources: List[str]
+    articles: List[NewsArticle]
+    available_images: List[dict] = []
+    relevance_score: float = 0.0
+    published_earliest: str = ""
+    published_latest: str = ""
 
 
 class NewsResponse(BaseModel):
-    articles: List[NewsArticle]
-    total_count: int
+    clustered_articles: List[ClusteredNews]
+    single_articles: List[NewsArticle]  # Articles that appear in only one source
+    total_clusters: int
+    total_articles: int
+    articles_with_summary: int = 0
+    articles_without_summary: int = 0  
+    summary_coverage_percentage: float = 0.0
     last_updated: str
 
-def fetch_and_parse_news(rss_url: str = None) -> List[NewsArticle]:
-    logger.info("Fetching finance news from Dünya Gazetesi RSS")
 
-    # Dünya Gazetesi RSS feed URL
-    if rss_url is None:
-        rss_url = "https://www.dunya.com/rss/ekonomi.xml"
+# Removed: are_articles_similar - replaced with LLM-based clustering
+
+
+def normalize_datetime(date_str: str) -> datetime.datetime:
+    """
+    Normalize datetime strings to Turkish timezone (GMT+3) aware datetime objects.
+    This ensures proper time display for Turkish users.
+    """
+    if not date_str:
+        if PYTZ_AVAILABLE:
+            turkey_tz = pytz.timezone('Europe/Istanbul')
+            return datetime.datetime.min.replace(tzinfo=turkey_tz)
+        else:
+            # GMT+3 offset
+            turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
+            return datetime.datetime.min.replace(tzinfo=turkey_offset)
+    
+    try:
+        parsed_date = date_parser.parse(date_str)
+        
+        if PYTZ_AVAILABLE:
+            turkey_tz = pytz.timezone('Europe/Istanbul')
+            
+            # If the date is offset-naive (no timezone info), assume it's Turkish local time
+            if parsed_date.tzinfo is None:
+                parsed_date = turkey_tz.localize(parsed_date)
+            else:
+                # Convert any timezone to Turkish time
+                parsed_date = parsed_date.astimezone(turkey_tz)
+        else:
+            # Fallback without pytz - use GMT+3
+            turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
+            if parsed_date.tzinfo is None:
+                parsed_date = parsed_date.replace(tzinfo=turkey_offset)
+            else:
+                parsed_date = parsed_date.astimezone(turkey_offset)
+            
+        return parsed_date
+        
+    except Exception as e:
+        logger.warning(f"Failed to parse date '{date_str}': {e}")
+        if PYTZ_AVAILABLE:
+            turkey_tz = pytz.timezone('Europe/Istanbul')
+            return datetime.datetime.min.replace(tzinfo=turkey_tz)
+        else:
+            turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
+            return datetime.datetime.min.replace(tzinfo=turkey_offset)
+
+async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str]:
+    """
+    Generate comprehensive unified title and description from multiple articles using AI agent.
+    """
+    if not articles:
+        return {"title": "No title", "description": "No description"}
+    
+    if len(articles) == 1:
+        return {"title": articles[0].title, "description": articles[0].summary or "No summary available"}
+    
+    logger.info(f"🤖 Generating comprehensive unified summary for {len(articles)} articles")
+    
+    try:
+        # Import agent infrastructure
+        from backend.core.agents import create_rag_agent
+        from backend.core.runner import generate_answer
+        from backend.core.prompts import news_summarization_prompt
+        
+        # Create specialized summarization agent
+        agent = create_rag_agent(
+            local_context="",
+            web_search_enabled=False,
+            query="Generate comprehensive unified news summary",
+            instruction=news_summarization_prompt
+        )
+        
+        # Prepare comprehensive article data for the agent
+        sources = list(set([article.source for article in articles]))
+        
+        # Collect available images from all articles
+        available_images = []
+        for i, article in enumerate(articles):
+            if article.image_url and article.image_url.strip():
+                available_images.append({
+                    'source': article.source,
+                    'url': article.image_url,
+                    'width': article.image_width,
+                    'height': article.image_height,
+                    'article_index': i
+                })
+        
+        # Prepare article text with image information
+        articles_text = f"""
+**Story from {len(articles)} articles across {len(sources)} sources:**
+
+**Available Images ({len(available_images)} total):**
+"""
+        
+        for img in available_images:
+            articles_text += f"- Image from {img['source']}: {img['url']} ({img['width']}x{img['height']})\n"
+        
+        articles_text += "\n**Articles:**\n"
+        
+        for i, article in enumerate(articles):
+            published_info = ""
+            if article.published:
+                try:
+                    from datetime import datetime
+                    pub_date = datetime.fromisoformat(article.published.replace('Z', '+00:00'))
+                    published_info = f" (Published: {pub_date.strftime('%Y-%m-%d %H:%M')})"
+                except:
+                    published_info = f" (Published: {article.published})"
+            
+            image_info = ""
+            if article.image_url and article.image_url.strip():
+                image_info = f"\n**Image:** {article.image_url} ({article.image_width}x{article.image_height})"
+            
+            articles_text += f"""
+**Article {i+1} - Source: {article.source}**{published_info}
+**Title:** {article.title}
+**Content:** {article.summary or "No summary available"}{image_info}
+**Link:** {article.link}
+
+"""
+        
+        # Create comprehensive analysis prompt
+        analysis_prompt = f"""{articles_text}
+
+**Task:** Create a comprehensive unified summary combining ALL information from these {len(articles)} articles.
+
+**Requirements:**
+1. Create a unified title that captures the complete story
+2. Write a LONG, DETAILED description (500+ words) that includes:
+   - Every important detail from all sources
+   - All numbers, percentages, dates, and specific data
+   - All quotes and statements from officials/analysts
+   - Complete context and background information
+   - All unique perspectives and angles from different sources
+   - Chronological flow of events if applicable
+
+**Turkish Financial Context:** Include relevant context about Turkish financial institutions, economic indicators, and market dynamics where applicable.
+
+Provide your response in JSON format as specified in your instructions."""
+
+        # Get comprehensive summary from agent
+        logger.info("📝 Requesting comprehensive summary from AI agent...")
+        response = await generate_answer(analysis_prompt, agent)
+        logger.info(f"✅ AI summary response received ({len(response)} chars)")
+        
+        # Parse JSON response with improved extraction
+        import json
+        import re
+        
+        try:
+            # Clean up the response and extract JSON more robustly
+            response_clean = response.strip()
+            
+            # Method 1: Try to find complete JSON object
+            json_pattern = r'\{[^{}]*"unified_title"[^{}]*"unified_description"[^{}]*\}'
+            json_match = re.search(json_pattern, response_clean, re.DOTALL)
+            
+            json_str = None
+            if json_match:
+                json_str = json_match.group(0)
+            else:
+                # Method 2: Extract between first { and last }
+                json_start = response_clean.find('{')
+                json_end = response_clean.rfind('}') + 1
+                
+                if json_start != -1 and json_end > json_start:
+                    potential_json = response_clean[json_start:json_end]
+                    
+                    # Try to fix common JSON formatting issues
+                    potential_json = potential_json.replace('\n', ' ')
+                    potential_json = re.sub(r'\s+', ' ', potential_json)  # Multiple spaces to single
+                    potential_json = potential_json.replace('": "', '": "').replace('" : "', '": "')
+                    
+                    # Check if it contains our required keys
+                    if "unified_title" in potential_json and "unified_description" in potential_json:
+                        json_str = potential_json
+            
+            if json_str:
+                # Additional cleanup for common issues
+                json_str = json_str.replace('""', '"')  # Fix doubled quotes
+                json_str = re.sub(r'",\s*}', '"}', json_str)  # Fix trailing commas
+                
+                parsed_response = json.loads(json_str)
+                
+                unified_title = parsed_response.get("unified_title", "").strip()
+                unified_description = parsed_response.get("unified_description", "").strip()
+                
+                # Validate the extracted content
+                if unified_title and unified_description and len(unified_description) > 50:
+                    logger.info(f"📰 Successfully parsed AI summary: {len(unified_description)} chars")
+                    
+                    # Return summary with available images for frontend processing
+                    return {
+                        "title": unified_title,
+                        "description": unified_description,
+                        "available_images": available_images
+                    }
+                else:
+                    logger.warning(f"AI response has insufficient content: title={len(unified_title)}, desc={len(unified_description)}")
+                    
+            else:
+                logger.warning("Could not extract valid JSON structure from AI response")
+                
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON parsing failed: {e}")
+            logger.debug(f"Attempted to parse: {json_str[:300] if json_str else 'No JSON extracted'}...")
+            logger.debug(f"Full AI response preview: {response_clean[:500]}...")
+        except Exception as e:
+            logger.warning(f"Unexpected error in JSON parsing: {e}")
+            logger.debug(f"Full AI response preview: {response_clean[:500] if 'response_clean' in locals() else response[:500]}...")
+        
+        # Fallback to intelligent combination if AI fails
+        logger.info("🔄 Using intelligent fallback summarization")
+        return _create_fallback_summary(articles)
+        
+    except Exception as e:
+        logger.error(f"❌ AI summarization failed: {e}")
+        logger.info("🔄 Using intelligent fallback summarization")
+        return _create_fallback_summary(articles)
+
+
+def _create_fallback_summary(articles: List[NewsArticle]) -> Dict[str, str]:
+    """Create intelligent fallback summary when AI agent fails"""
+    try:
+        sources = list(set([article.source for article in articles]))
+        
+        # Create comprehensive title
+        longest_title_article = max(articles, key=lambda x: len(x.title))
+        unified_title = f"{longest_title_article.title} ({len(sources)} kaynak)"
+        
+        # Collect available images
+        available_images = []
+        for i, article in enumerate(articles):
+            if article.image_url and article.image_url.strip():
+                available_images.append({
+                    'source': article.source,
+                    'url': article.image_url,
+                    'width': article.image_width,
+                    'height': article.image_height,
+                    'article_index': i
+                })
+        
+        # Combine all available content comprehensively
+        all_content = []
+        for article in articles:
+            content_parts = [f"**{article.source}:**", article.title]
+            if article.summary and len(article.summary.strip()) > 10:
+                content_parts.append(article.summary)
+            all_content.append(" ".join(content_parts))
+        
+        # Create comprehensive fallback description with basic image placement
+        description_parts = [
+            f"Bu haber {len(sources)} farklı kaynaktan derlenmiştir: {', '.join(sources)}.",
+            ""
+        ]
+        
+        # Add lead image marker if available
+        if available_images:
+            description_parts.append("{{IMAGE_LEAD}}")
+            description_parts.append("")
+        
+        # Add content sections
+        mid_content_count = 0
+        for i, content in enumerate(all_content):
+            description_parts.append(content)
+            
+            # Add mid images strategically
+            if available_images and mid_content_count < 2 and i < len(all_content) - 1:
+                if (i + 1) % 2 == 0:  # Every second article
+                    mid_content_count += 1
+                    description_parts.append(f"{{{{IMAGE_MID_{mid_content_count}}}}}")
+                    description_parts.append("")
+        
+        description_parts.append("")
+        description_parts.append("Bu kapsamlı haber özeti tüm kaynaklardan gelen bilgileri birleştirmektedir.")
+        
+        unified_description = "\n".join(description_parts)
+        
+        return {
+            "title": unified_title,
+            "description": unified_description,
+            "available_images": available_images
+        }
+        
+    except Exception as e:
+        logger.warning(f"Even fallback summary failed: {e}")
+        return {
+            "title": articles[0].title, 
+            "description": articles[0].summary or "İçerik mevcut değil",
+            "available_images": []
+        }
+
+
+def fetch_single_source_news(source: NewsSource, max_articles: int = 20) -> List[NewsArticle]:
+    """Fetch news from a single RSS source"""
+    logger.info(f"Fetching news from {source.name}")
+    
+    try:
+        # Set a proper user agent to avoid blocking
+        feedparser.USER_AGENT = "AIris Financial News Aggregator/1.0"
+        
+        # All sources are now reliable after removing Yeni Akit
 
     # Parse the RSS feed with proper encoding handling
-    feed = feedparser.parse(rss_url)
+        feed = feedparser.parse(source.rss_url)
 
-    # Ensure proper UTF-8 encoding for Turkish content
-    if hasattr(feed, "encoding") and feed.encoding:
-        logger.info(f"RSS feed encoding: {feed.encoding}")
-    else:
-        logger.info("RSS feed encoding not specified, assuming UTF-8")
+        # Check if we got any entries at all
+        if not hasattr(feed, 'entries') or len(feed.entries) == 0:
+            logger.warning(f"No entries found in RSS feed for {source.name}")
+            return []
+            
+        # Check for parsing issues (but be more lenient)
+        if feed.bozo:
+            # Only log encoding warnings at DEBUG level to reduce noise
+            exception_str = str(feed.bozo_exception).lower()
+            if "encoding" in exception_str or "us-ascii" in exception_str:
+                logger.debug(f"Minor encoding issue for {source.name}: {feed.bozo_exception}")
+            else:
+                logger.warning(f"RSS feed parse warning for {source.name}: {feed.bozo_exception}")
+            
+            # Skip if it's a critical parsing error (not just encoding issues)
+            if "not well-formed" in exception_str:
+                logger.error(f"Critical XML parsing error for {source.name}, skipping")
+                return []
 
-    # Check if feed was parsed successfully
-    if feed.bozo:
-        logger.warning(f"RSS feed parse error: {feed.bozo_exception}")
+        # Extract news articles
+        news_articles = []
+        processed_count = 0
+        
+        for entry in feed.entries:
+            if processed_count >= max_articles:
+                break
+                
+            try:
+                # Clean the title and summary
+                if source.language == "tr":
+                    title = clean_turkish_text(entry.get("title", "No title"))
+                    summary = clean_turkish_text(
+                        entry.get("summary", "") or entry.get("description", "")
+                    )
+                else:
+                    title = entry.get("title", "No title")
+                    summary = entry.get("summary", "") or entry.get("description", "")
 
-    # Extract news articles and sort by publication date
-    news_articles = []
-    for entry in feed.entries:
-        # Clean the title using comprehensive Turkish text cleaning
-        title = clean_turkish_text(entry.get("title", "No title"))
+                # Skip articles with no meaningful content
+                if not title or title == "No title":
+                    continue
 
-        # Clean the summary/description using comprehensive Turkish text cleaning
-        summary = clean_turkish_text(
-            entry.get("summary", "") or entry.get("description", "")
+                # Extract image information
+                image_url, image_width, image_height = extract_image_info(entry)
+
+                # Normalize the published date to Turkish timezone
+                published_date = entry.get("published", "")
+                if published_date:
+                    try:
+                        # Convert to Turkish time and format consistently
+                        normalized_date = normalize_datetime(published_date)
+                        # Format as ISO string for consistent frontend parsing
+                        published_date = normalized_date.isoformat()
+                    except:
+                        # Keep original if normalization fails
+                        pass
+
+                article = NewsArticle(
+                    title=title,
+                    link=entry.get("link", ""),
+                    published=published_date,
+                    summary=summary,
+                    source=source.name,
+                    image_url=image_url,
+                    image_width=image_width,
+                    image_height=image_height,
+                    source_language=source.language
+                )
+                news_articles.append(article)
+                processed_count += 1
+                
+            except Exception as entry_error:
+                logger.warning(f"Failed to process individual entry from {source.name}: {entry_error}")
+                continue
+
+        logger.info(f"Successfully fetched {len(news_articles)} articles from {source.name}")
+        return news_articles
+        
+    except Exception as e:
+        logger.error(f"Failed to fetch news from {source.name}: {str(e)}")
+        return []
+
+
+async def fetch_all_sources_news(sources: Optional[List[NewsSource]] = None, max_per_source: int = 20) -> List[NewsArticle]:
+    """Fetch news from all configured sources"""
+    if sources is None:
+        sources = FINANCIAL_NEWS_SOURCES
+    
+    all_articles = []
+    
+    # Use asyncio to fetch from multiple sources concurrently
+    tasks = []
+    for source in sources:
+        # Run sync function in thread pool
+        task = asyncio.get_event_loop().run_in_executor(
+            None, fetch_single_source_news, source, max_per_source
         )
+        tasks.append(task)
+    
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    for i, result in enumerate(results):
+        if isinstance(result, Exception):
+            logger.error(f"Failed to fetch from {sources[i].name}: {str(result)}")
+        else:
+            all_articles.extend(result)
+    
+    # Log summary statistics
+    articles_with_summary = sum(1 for article in all_articles if article.summary and len(article.summary.strip()) > 10)
+    articles_without_summary = len(all_articles) - articles_with_summary
+    summary_percentage = (articles_with_summary / len(all_articles) * 100) if all_articles else 0
+    
+    logger.info(f"Total articles fetched from all sources: {len(all_articles)}")
+    logger.info(f"Articles with summaries: {articles_with_summary} ({summary_percentage:.1f}%)")
+    logger.info(f"Articles with titles only: {articles_without_summary} ({100-summary_percentage:.1f}%)")
+    
+    return all_articles
 
-        # Extract image information
-        image_url, image_width, image_height = extract_image_info(entry)
 
-        article = {
-            "title": title,
-            "link": entry.get("link", ""),
-            "published": entry.get("published", ""),
-            "summary": summary,
-            "source": "Dünya Gazetesi",
-            "image_url": image_url,
-            "image_width": image_width,
-            "image_height": image_height,
-        }
-        news_articles.append(article)
+async def cluster_similar_articles(articles: List[NewsArticle]) -> List[List[NewsArticle]]:
+    """
+    Group similar articles together using LLM-based intelligent clustering.
+    Understands Turkish financial context and story relationships.
+    """
+    if len(articles) <= 1:
+        return [[article] for article in articles]
+    
+    try:
+        # Use LLM-based clustering for intelligent story grouping
+        from backend.utils.llm_clustering import cluster_articles_with_llm
+        
+        logger.info(f"🤖 Starting LLM-based clustering for {len(articles)} articles")
+        
+        # Get LLM clustering analysis
+        cluster_result = await cluster_articles_with_llm(articles)
+        
+        # Convert LLM results to article clusters (simplified processing)
+        clusters = []
+        used_indices = set()
+        
+        # Process clustered articles first
+        for cluster_info in cluster_result.clusters:
+            if "article_indices" in cluster_info:
+                article_indices = cluster_info["article_indices"]
+                cluster = []
+                for idx in article_indices:
+                    if isinstance(idx, int) and 0 <= idx < len(articles) and idx not in used_indices:
+                        cluster.append(articles[idx])
+                        used_indices.add(idx)
+                
+                if len(cluster) > 0:
+                    clusters.append(cluster)
+                    theme = cluster_info.get('story_theme', 'Unknown theme')
+                    logger.debug(f"📰 Cluster '{theme}': {len(cluster)} articles")
+        
+        # Add remaining articles as singles
+        for i in range(len(articles)):
+            if i not in used_indices:
+                clusters.append([articles[i]])
+                used_indices.add(i)
+        
+        # Log final results
+        multi_source_clusters = len([c for c in clusters if len(c) > 1])
+        logger.info(f"✅ Clustering complete: {len(clusters)} total clusters, {multi_source_clusters} multi-source")
+        
+        return clusters
+        
+    except Exception as e:
+        logger.error(f"❌ LLM clustering failed: {e}")
+        logger.info("🔄 Fallback: treating each article as individual cluster")
+        return [[article] for article in articles]
+
+
+async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = None, force_refresh: bool = False) -> NewsResponse:
+    """
+    Main function to get aggregated financial news from multiple sources with clustering.
+    This is the enhanced version similar to Perplexity.ai's discover page.
+    
+    Args:
+        sources: Optional list of news sources to use
+        force_refresh: If True, fetch new articles and update database. If False, load from database.
+    """
+    from backend.database.news_database import get_news_database
+    
+    logger.info(f"Starting aggregated financial news fetch (force_refresh={force_refresh})")
+    
+    # Get database instance
+    db = get_news_database()
+    
+    # If not forcing refresh, try to load from database first
+    if not force_refresh:
+        logger.info("📀 Loading news from database...")
+        news_response = await get_news_from_database(db)
+        
+        # If database is empty, do an initial fetch to populate it
+        if news_response.total_articles == 0:
+            logger.info("📰 Database is empty, performing initial fetch...")
+            return await get_aggregated_financial_news(sources=sources, force_refresh=True)
+        
+        return news_response
+    
+    # Force refresh: fetch new articles and update database
+    logger.info("🔄 Force refresh: fetching new articles from RSS sources...")
+    
+    # Fetch all articles from all sources
+    all_articles = await fetch_all_sources_news(sources)
+    
+    if not all_articles:
+        logger.warning("No articles fetched from any source")
+        # Return empty response but still check database
+        return await get_news_from_database(db)
 
     # Sort articles by publication date (newest first)
-    
-
     try:
-        news_articles.sort(
-            key=lambda x: (
-                date_parser.parse(x["published"])
-                if x["published"]
-                else datetime.min
-            ),
+        all_articles.sort(
+            key=lambda x: normalize_datetime(x.published),
             reverse=True,
         )
     except Exception as sort_error:
         logger.warning(f"Could not sort articles by date: {sort_error}")
-    return news_articles
+    
+    # Cluster similar articles using embedding-based semantic similarity
+    clusters = await cluster_similar_articles(all_articles)
+    
+    # Separate multi-source clusters from single articles
+    multi_source_clusters = [cluster for cluster in clusters if len(cluster) > 1]
+    single_articles = [cluster[0] for cluster in clusters if len(cluster) == 1]
+    
+    logger.info(f"🔄 Processing {len(multi_source_clusters)} clusters with parallel AI summarization...")
+    
+    # Run AI summarization for all clusters in parallel
+    clustered_news = []
+    if multi_source_clusters:
+        try:
+            # Create all AI summarization tasks concurrently
+            summarization_tasks = [
+                generate_unified_summary(cluster) 
+                for cluster in multi_source_clusters
+            ]
+            
+            # Run all AI calls concurrently with timeout
+            unified_summaries = await asyncio.wait_for(
+                asyncio.gather(*summarization_tasks, return_exceptions=True),
+                timeout=180  # 3 minutes total timeout for all AI calls
+            )
+            
+            logger.info(f"✅ Completed parallel AI summarization for {len(unified_summaries)} clusters")
+            
+            # Process results and create ClusteredNews objects
+            for cluster, summary_result in zip(multi_source_clusters, unified_summaries):
+                try:
+                    # Handle potential exceptions from individual AI calls
+                    if isinstance(summary_result, Exception):
+                        logger.warning(f"AI summarization failed for cluster: {summary_result}")
+                        # Use fallback summarization
+                        unified_summary = _create_fallback_summary(cluster)
+                    else:
+                        unified_summary = summary_result
+                    
+                    sources_list = list(set([article.source for article in cluster]))
+                    
+                    # Calculate relevance score based on number of sources
+                    relevance_score = min(1.0, len(sources_list) / 5.0)  # Max score at 5+ sources
+                    
+                    # Get earliest and latest publication dates
+                    published_dates = []
+                    for article in cluster:
+                        if article.published:
+                            try:
+                                parsed_date = normalize_datetime(article.published)
+                                published_dates.append(parsed_date)
+                            except:
+                                continue
+                    
+                    earliest_date = min(published_dates).isoformat() if published_dates else ""
+                    latest_date = max(published_dates).isoformat() if published_dates else ""
+                    
+                    clustered_news.append(ClusteredNews(
+                        unified_title=unified_summary["title"],
+                        unified_description=unified_summary["description"],
+                        sources=sources_list,
+                        articles=cluster,
+                        available_images=unified_summary.get("available_images", []),
+                        relevance_score=relevance_score,
+                        published_earliest=earliest_date,
+                        published_latest=latest_date
+                    ))
+                    
+                except Exception as e:
+                    logger.error(f"Failed to process cluster: {e}")
+                    continue
+                    
+        except asyncio.TimeoutError:
+            logger.error("❌ AI summarization timed out after 3 minutes")
+            # Fallback: process clusters with basic summarization
+            for cluster in multi_source_clusters:
+                try:
+                    unified_summary = _create_fallback_summary(cluster)
+                    sources_list = list(set([article.source for article in cluster]))
+                    relevance_score = min(1.0, len(sources_list) / 5.0)
+                    
+                    published_dates = []
+                    for article in cluster:
+                        if article.published:
+                            try:
+                                parsed_date = normalize_datetime(article.published)
+                                published_dates.append(parsed_date)
+                            except:
+                                continue
+                    
+                    earliest_date = min(published_dates).isoformat() if published_dates else ""
+                    latest_date = max(published_dates).isoformat() if published_dates else ""
+                    
+                    clustered_news.append(ClusteredNews(
+                        unified_title=unified_summary["title"],
+                        unified_description=unified_summary["description"],
+                        sources=sources_list,
+                        articles=cluster,
+                        available_images=unified_summary.get("available_images", []),
+                        relevance_score=relevance_score,
+                        published_earliest=earliest_date,
+                        published_latest=latest_date
+                    ))
+                except Exception as e:
+                    logger.error(f"Even fallback processing failed: {e}")
+                    continue
+        
+        except Exception as e:
+            logger.error(f"❌ Parallel AI summarization failed: {e}")
+            # Emergency fallback
+            for cluster in multi_source_clusters:
+                try:
+                    unified_summary = _create_fallback_summary(cluster)
+                    sources_list = list(set([article.source for article in cluster]))
+                    relevance_score = min(1.0, len(sources_list) / 5.0)
+                    
+                    clustered_news.append(ClusteredNews(
+                        unified_title=unified_summary["title"],
+                        unified_description=unified_summary["description"],
+                        sources=sources_list,
+                        articles=cluster,
+                        available_images=unified_summary.get("available_images", []),
+                        relevance_score=relevance_score,
+                        published_earliest="",
+                        published_latest=""
+                    ))
+                except:
+                    continue
+    
+    # Sort clustered news by relevance score (most sources first)
+    clustered_news.sort(key=lambda x: x.relevance_score, reverse=True)
+    
+    logger.info(f"Created {len(clustered_news)} clusters and {len(single_articles)} single articles")
+    
+    # Save clustered articles to database
+    saved_count = 0
+    for cluster in clustered_news:
+        try:
+            # Convert cluster to database format
+            cluster_data = {
+                'unified_title': cluster.unified_title,
+                'unified_description': cluster.unified_description,
+                'articles': [
+                    {
+                        'source': article.source,
+                        'link': article.link,
+                        'published': article.published,
+                        'title': article.title,
+                        'summary': article.summary
+                    } for article in cluster.articles
+                ],
+                'available_images': cluster.available_images
+            }
+            
+            db.save_news_article(cluster_data)
+            saved_count += 1
+            
+        except Exception as e:
+            logger.error(f"Failed to save cluster to database: {e}")
+            continue
+    
+    logger.info(f"💾 Saved/updated {saved_count} news articles to database")
+    
+    # Return fresh data from database
+    return await get_news_from_database(db)
+
+
+async def get_news_from_database(db) -> NewsResponse:
+    """Load news from database and convert to NewsResponse format"""
+    try:
+        # Get news from database
+        db_news = db.get_all_news(limit=50)  # Get latest 50 news articles
+        
+        if not db_news:
+            logger.info("📰 No news found in database")
+            return NewsResponse(
+                clustered_articles=[],
+                single_articles=[],
+                total_clusters=0,
+                total_articles=0,
+                last_updated=datetime.datetime.now().isoformat()
+            )
+        
+        # Convert database records to ClusteredNews objects
+        clustered_articles = []
+        for news_record in db_news:
+            try:
+                # Convert sources back to articles format for frontend compatibility
+                articles = []
+                sources_dict = news_record.get('sources', {})
+                
+                for source_name, source_url in sources_dict.items():
+                    # Create article object from stored data
+                    article = NewsArticle(
+                        title=news_record['unified_title'],
+                        link=source_url,
+                        published=news_record.get('earliest_published_at', ''),
+                        summary=news_record['unified_description'],
+                        source=source_name,
+                        image_url="",  # Will be handled through available_images
+                        image_width=0,
+                        image_height=0,
+                        source_language="tr"
+                    )
+                    articles.append(article)
+                
+                # Convert images back to available_images format
+                available_images = []
+                images_dict = news_record.get('images', {})
+                
+                for source_name, image_data in images_dict.items():
+                    if isinstance(image_data, dict) and image_data.get('url'):
+                        available_images.append({
+                            'source': source_name,
+                            'url': image_data['url'],
+                            'width': image_data.get('width', 0),
+                            'height': image_data.get('height', 0),
+                            'article_index': 0  # Default since we're not tracking this in DB
+                        })
+                
+                # Create ClusteredNews object
+                cluster = ClusteredNews(
+                    unified_title=news_record['unified_title'],
+                    unified_description=news_record['unified_description'],
+                    sources=list(sources_dict.keys()),
+                    articles=articles,
+                    available_images=available_images,
+                    relevance_score=min(1.0, len(sources_dict) / 5.0),
+                    published_earliest=news_record.get('earliest_published_at', ''),
+                    published_latest=news_record.get('latest_published_at', '')
+                )
+                
+                clustered_articles.append(cluster)
+                
+            except Exception as e:
+                logger.error(f"Error converting database record to ClusteredNews: {e}")
+                continue
+        
+        total_articles = sum(len(cluster.articles) for cluster in clustered_articles)
+        
+        logger.info(f"📰 Loaded {len(clustered_articles)} clustered articles from database ({total_articles} total articles)")
+        
+        # Calculate summary statistics
+        articles_with_summary = 0
+        for cluster in clustered_articles:
+            if cluster.unified_description and len(cluster.unified_description.strip()) > 10:
+                articles_with_summary += len(cluster.articles)
+        
+        articles_without_summary = total_articles - articles_with_summary
+        summary_percentage = (articles_with_summary / total_articles * 100) if total_articles else 0.0
+        
+        return NewsResponse(
+            clustered_articles=clustered_articles,
+            single_articles=[],  # We only store clustered articles in database
+            total_clusters=len(clustered_articles),
+            total_articles=total_articles,
+            articles_with_summary=articles_with_summary,
+            articles_without_summary=articles_without_summary,
+            summary_coverage_percentage=round(summary_percentage, 1),
+            last_updated=datetime.datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Error loading news from database: {e}")
+        # Return empty response on error
+        return NewsResponse(
+            clustered_articles=[],
+            single_articles=[],
+            total_clusters=0,
+            total_articles=0,
+            last_updated=datetime.datetime.now().isoformat()
+        )
+
+
+# Legacy function for backward compatibility
+def fetch_and_parse_news(rss_url: str = None) -> List[NewsArticle]:
+    """Legacy function - use get_aggregated_financial_news for new implementation"""
+    logger.info("Using legacy single-source news fetch")
+    
+    if rss_url is None:
+        # Use Dünya Gazetesi as default
+        source = NewsSource("Dünya Gazetesi", "https://www.dunya.com/rss/ekonomi.xml", "tr")
+    else:
+        source = NewsSource("Custom Source", rss_url, "tr")
+    
+    return fetch_single_source_news(source)

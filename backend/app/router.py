@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration
@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
-from backend.utils.news import fetch_and_parse_news
+from backend.utils.news import fetch_and_parse_news, get_aggregated_financial_news
 from qdrant_client import models
 
 logger = get_logger("ROUTER")
@@ -548,27 +548,157 @@ def get_created_document_preview(filename: str):
 
 
 @router.get("/finance-news")
-async def get_finance_news():
+async def get_finance_news(force_refresh: bool = False):
     """
-    Fetch latest finance news from nance RSS feed."""
+    Fetch aggregated financial news from multiple Turkish sources with intelligent clustering.
+    This endpoint provides Perplexity.ai-style news discovery with multi-source story detection.
+    
+    Args:
+        force_refresh: If True, fetch new articles and update database. If False, load from database.
+    """
+    try:
+        # Use the enhanced multi-source aggregation system
+        news_response = await get_aggregated_financial_news(force_refresh=force_refresh)
+
+        logger.info(f"Successfully fetched aggregated financial news: {news_response.total_articles} total articles, {news_response.total_clusters} clusters")
+
+        # Create backward-compatible articles array for existing frontend
+        # TEMPORARILY: Show only clustered articles (multi-source stories)
+        all_articles = []
+        
+        # Add ALL clustered articles (remove limit to see all multi-source stories)
+        for cluster in news_response.clustered_articles:  # Show all clusters, not just top 10
+            # Take the first article from each cluster as representative
+            if cluster.articles:
+                # CREATE A COPY to avoid modifying the original article in cluster data
+                from copy import deepcopy
+                representative_article = deepcopy(cluster.articles[0])
+                
+                # Add cluster info to the article
+                representative_article.title = cluster.unified_title
+                representative_article.summary = cluster.unified_description
+                
+                # Use the earliest publication date from all sources in the cluster
+                representative_article.published = cluster.published_earliest if cluster.published_earliest else representative_article.published
+                
+                # Show multiple sources (up to 3, then add ...)
+                sources = cluster.sources if hasattr(cluster, 'sources') else [article.source for article in cluster.articles]
+                unique_sources = list(dict.fromkeys(sources))  # Remove duplicates while preserving order
+                
+                if len(unique_sources) <= 3:
+                    representative_article.source = ", ".join(unique_sources)
+                else:
+                    representative_article.source = ", ".join(unique_sources[:3]) + "..."
+                
+                all_articles.append(representative_article)
+        
+        # TEMPORARILY: Skip single articles to focus on multi-source clustering
+        # remaining_slots = 20 - len(all_articles)
+        # all_articles.extend(news_response.single_articles[:remaining_slots])
+
+        return {
+            "status": "success",
+            # Enhanced structure for future frontend updates
+            "clustered_articles": news_response.clustered_articles,
+            "single_articles": [],  # TEMPORARILY hidden to focus on clustering
+            "total_clusters": news_response.total_clusters,
+            "total_articles": news_response.total_articles,
+            "sources_count": 13,  # Number of Turkish financial news sources
+            "feature": "multi_source_clustering_only",  # Temporary mode
+            "clustering_method": "llm-based",
+            "display_mode": "clustered_only",  # Indicator we're hiding single articles
+            # Content quality statistics
+            "articles_with_summary": news_response.articles_with_summary,
+            "articles_without_summary": news_response.articles_without_summary,
+            "summary_coverage_percentage": news_response.summary_coverage_percentage,
+            # Backward compatibility for existing frontend
+            "articles": all_articles,  # Only clustered articles now
+            "count": len(all_articles),
+            "last_updated": news_response.last_updated,
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching aggregated finance news: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching finance news: {str(e)}"
+        )
+
+
+@router.get("/finance-news/legacy")
+async def get_finance_news_legacy():
+    """
+    Legacy endpoint: Fetch finance news from single source (Dünya Gazetesi only).
+    Kept for backward compatibility.
+    """
     try:
         news_articles = fetch_and_parse_news()
         # Limit to 20 most recent articles
         news_articles = news_articles[:20]
 
-        logger.info(f"Successfully fetched {len(news_articles)} finance news articles")
+        logger.info(f"Successfully fetched {len(news_articles)} finance news articles (legacy)")
 
         return {
             "status": "success",
             "count": len(news_articles),
             "articles": news_articles,
             "last_updated": datetime.now().isoformat(),
+            "feature": "single_source_legacy"
         }
 
     except Exception as e:
-        logger.error(f"Error fetching finance news: {str(e)}")
+        logger.error(f"Error fetching legacy finance news: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Error fetching finance news: {str(e)}"
+            status_code=500, detail=f"Error fetching legacy finance news: {str(e)}"
+        )
+
+
+@router.get("/finance-news/scheduler/status")
+async def get_finance_news_scheduler_status():
+    """
+    Get status information about the background news scheduler.
+    """
+    try:
+        from backend.scheduler.news_scheduler import get_news_scheduler
+        scheduler = get_news_scheduler()
+        
+        return {
+            "status": "success",
+            "scheduler": scheduler.get_status()
+        }
+    except Exception as e:
+        logger.error(f"Error getting scheduler status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting scheduler status: {str(e)}"
+        )
+
+
+@router.get("/finance-news/sources")
+async def get_finance_news_sources():
+    """
+    Get information about all configured financial news sources.
+    """
+    try:
+        from backend.utils.news import FINANCIAL_NEWS_SOURCES
+        
+        sources_info = []
+        for source in FINANCIAL_NEWS_SOURCES:
+            sources_info.append({
+                "name": source.name,
+                "language": source.language,
+                "active": True
+            })
+        
+        return {
+            "status": "success",
+            "total_sources": len(FINANCIAL_NEWS_SOURCES),
+            "sources": sources_info,
+            "last_updated": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching news sources info: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching news sources: {str(e)}"
         )
 
 
@@ -668,3 +798,669 @@ def get_verification_types():
         raise HTTPException(
             status_code=500, detail=f"Error getting verification types: {error_message}"
         )
+
+
+        try:
+
+            from backend.retrieval.retriever import load_vectorstore
+
+
+
+            client = load_vectorstore(VECTORSTORE_PATH_STR)
+
+            logger.info(f"Vector store loaded successfully")
+
+
+
+            client.delete(
+
+                collection_name="test_collection",
+
+                points_selector=models.Filter(
+
+                    must=[models.FieldCondition(key="metadata.file_name", match=models.MatchValue(value=base_filename))]
+
+                    )
+
+                )
+
+            client.close()
+
+        except Exception as e:
+
+            logger.error(f"Error deleting chunks from vector store: {e}")
+
+
+
+        # Also remove documents from keyword search index
+
+        try:
+
+            from backend.retrieval.keyword_search import get_keyword_search
+
+            
+
+            logger.info(f"🔍 Removing documents from keyword search index for file: {base_filename}")
+
+            keyword_search = get_keyword_search()
+
+            keyword_search.remove_documents_by_file(base_filename)
+
+            keyword_search.save_index()
+
+            logger.info(f"✅ Documents removed from keyword search index")
+
+        except Exception as e:
+
+            logger.error(f"Error deleting documents from keyword search index: {e}")
+
+
+
+
+
+        # Delete the actual file
+
+        logger.info(f"🗑️ Deleting physical file: {file_path}")
+
+        file_path.unlink()
+
+        logger.info(f"✅ Physical file deleted successfully: {filename}")
+
+
+
+        result = {
+
+            "message": f"File '{filename}' deleted successfully",
+
+            "chunks_deleted": len(chunk_ids_to_delete),
+
+            "pii_entries_removed": pii_delete_count,
+
+            "file_path": str(file_path),
+
+        }
+
+        logger.info(f"🎉 Deletion completed successfully: {result}")
+
+        return result
+
+
+
+    except HTTPException:
+
+        logger.error(f"❌ HTTP Exception during deletion: {filename}")
+
+        raise
+
+    except Exception as e:
+
+        logger.error(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
+
+        import traceback
+
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+
+
+
+        raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
+
+
+
+
+
+@router.get("/files/{filename}/download")
+
+def download_file(filename: str):
+
+    """
+
+    Download a file from uploads directory.
+
+    """
+
+    try:
+
+        file_path = Path(UPLOADS_PATH) / filename
+
+
+
+        if not file_path.exists():
+
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+
+
+        return FileResponse(
+
+            path=file_path, filename=filename, media_type="application/octet-stream"
+
+        )
+
+    except Exception as e:
+
+        error_message = str(e)
+
+        logger.error(f"Error downloading file {filename}: {error_message}")
+
+        raise HTTPException(
+
+            status_code=500, detail=f"Error downloading file: {error_message}"
+
+        )
+
+
+
+
+
+@router.get("/files/{filename}/preview")
+
+def get_file_preview(filename: str):
+
+    """
+
+    Generate a preview for the specified file.
+
+    Returns different preview types based on file extension.
+
+    """
+
+    try:
+
+        file_path = Path(UPLOADS_PATH) / filename
+
+
+
+        if not file_path.exists():
+
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+
+
+        from backend.utils.preview import PreviewGenerator
+
+
+
+        preview_generator = PreviewGenerator(str(file_path))
+
+        preview_data = preview_generator.generate_preview()
+
+
+
+        return {
+
+            "filename": filename,
+
+            "preview_type": preview_data["type"],
+
+            "preview_data": preview_data["data"],
+
+            "success": True,
+
+        }
+
+    except Exception as e:
+
+        error_message = str(e)
+
+        logger.error(f"Error generating preview for {filename}: {error_message}")
+
+        raise HTTPException(
+
+            status_code=500, detail=f"Error generating preview: {error_message}"
+
+        )
+
+
+
+
+
+@router.get("/created-documents/{filename}/download")
+
+def download_created_document(filename: str):
+
+    """
+
+    Download a file from created_documents directory.
+
+    """
+
+    try:
+
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+
+
+        if not file_path.exists():
+
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+
+
+        return FileResponse(
+
+            path=file_path, filename=filename, media_type="application/octet-stream"
+
+        )
+
+    except Exception as e:
+
+        error_message = str(e)
+
+        logger.error(f"Error downloading created document {filename}: {error_message}")
+
+        raise HTTPException(
+
+            status_code=500, detail=f"Error downloading created document: {error_message}"
+
+        )
+
+
+
+
+
+@router.get("/created-documents/{filename}/preview")
+
+def get_created_document_preview(filename: str):
+
+    """
+
+    Generate a preview for the specified created document.
+
+    Returns different preview types based on file extension.
+
+    """
+
+    try:
+
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+
+
+        if not file_path.exists():
+
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+
+
+        from backend.utils.preview import PreviewGenerator
+
+
+
+        preview_generator = PreviewGenerator(str(file_path))
+
+        preview_data = preview_generator.generate_preview()
+
+
+
+        return {
+
+            "filename": filename,
+
+            "preview_type": preview_data["type"],
+
+            "preview_data": preview_data["data"],
+
+            "success": True,
+
+        }
+
+    except Exception as e:
+
+        error_message = str(e)
+
+        logger.error(f"Error generating preview for created document {filename}: {error_message}")
+
+        raise HTTPException(
+
+            status_code=500, detail=f"Error generating preview: {error_message}"
+
+        )
+
+
+
+
+
+@router.get("/finance-news")
+
+async def get_finance_news(force_refresh: bool = False):
+    """
+    Fetch aggregated financial news from multiple Turkish sources with intelligent clustering.
+    This endpoint provides Perplexity.ai-style news discovery with multi-source story detection.
+    """
+    try:
+        # Use the enhanced multi-source aggregation system
+        news_response = await get_aggregated_financial_news()
+
+        logger.info(f"Successfully fetched aggregated financial news: {news_response.total_articles} total articles, {news_response.total_clusters} clusters")
+
+        # Create backward-compatible articles array for existing frontend
+        # TEMPORARILY: Show only clustered articles (multi-source stories)
+        all_articles = []
+        
+        # Add ALL clustered articles (remove limit to see all multi-source stories)
+        for cluster in news_response.clustered_articles:  # Show all clusters, not just top 10
+            # Take the first article from each cluster as representative
+            if cluster.articles:
+                # CREATE A COPY to avoid modifying the original article in cluster data
+                from copy import deepcopy
+                representative_article = deepcopy(cluster.articles[0])
+                
+                # Add cluster info to the article
+                representative_article.title = cluster.unified_title
+                representative_article.summary = cluster.unified_description
+                
+                # Use the earliest publication date from all sources in the cluster
+                representative_article.published = cluster.published_earliest if cluster.published_earliest else representative_article.published
+                
+                # Show multiple sources (up to 3, then add ...)
+                sources = cluster.sources if hasattr(cluster, 'sources') else [article.source for article in cluster.articles]
+                unique_sources = list(dict.fromkeys(sources))  # Remove duplicates while preserving order
+                
+                if len(unique_sources) <= 3:
+                    representative_article.source = ", ".join(unique_sources)
+                else:
+                    representative_article.source = ", ".join(unique_sources[:3]) + "..."
+                
+                all_articles.append(representative_article)
+        
+        # TEMPORARILY: Skip single articles to focus on multi-source clustering
+        # remaining_slots = 20 - len(all_articles)
+        # all_articles.extend(news_response.single_articles[:remaining_slots])
+
+        return {
+            "status": "success",
+            # Enhanced structure for future frontend updates
+            "clustered_articles": news_response.clustered_articles,
+            "single_articles": [],  # TEMPORARILY hidden to focus on clustering
+            "total_clusters": news_response.total_clusters,
+            "total_articles": news_response.total_articles,
+            "sources_count": 13,  # Number of Turkish financial news sources
+            "feature": "multi_source_clustering_only",  # Temporary mode
+            "clustering_method": "llm-based",
+            "display_mode": "clustered_only",  # Indicator we're hiding single articles
+            # Content quality statistics
+            "articles_with_summary": news_response.articles_with_summary,
+            "articles_without_summary": news_response.articles_without_summary,
+            "summary_coverage_percentage": news_response.summary_coverage_percentage,
+            # Backward compatibility for existing frontend
+            "articles": all_articles,  # Only clustered articles now
+            "count": len(all_articles),
+            "last_updated": news_response.last_updated,
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching aggregated finance news: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching finance news: {str(e)}"
+        )
+
+
+@router.get("/finance-news/legacy")
+async def get_finance_news_legacy():
+    """
+    Legacy endpoint: Fetch finance news from single source (Dünya Gazetesi only).
+    Kept for backward compatibility.
+    """
+    try:
+
+        news_articles = fetch_and_parse_news()
+
+        # Limit to 20 most recent articles
+
+        news_articles = news_articles[:20]
+
+
+
+        logger.info(f"Successfully fetched {len(news_articles)} finance news articles (legacy)")
+
+
+        return {
+
+            "status": "success",
+
+            "count": len(news_articles),
+
+            "articles": news_articles,
+
+            "last_updated": datetime.now().isoformat(),
+
+            "feature": "single_source_legacy"
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching legacy finance news: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching legacy finance news: {str(e)}"
+        )
+
+
+@router.get("/finance-news/sources")
+async def get_finance_news_sources():
+    """
+    Get information about all configured financial news sources.
+    """
+    try:
+        from backend.utils.news import FINANCIAL_NEWS_SOURCES
+        
+        sources_info = []
+        for source in FINANCIAL_NEWS_SOURCES:
+            sources_info.append({
+                "name": source.name,
+                "language": source.language,
+                "active": True
+            })
+        
+        return {
+            "status": "success",
+            "total_sources": len(FINANCIAL_NEWS_SOURCES),
+            "sources": sources_info,
+            "last_updated": datetime.now().isoformat()
+        }
+
+
+
+    except Exception as e:
+
+        logger.error(f"Error fetching news sources info: {str(e)}")
+        raise HTTPException(
+
+            status_code=500, detail=f"Error fetching news sources: {str(e)}"
+        )
+
+
+
+
+
+# Document Verification Endpoints
+
+@router.post("/verify")
+
+async def verify_document(
+
+    file: UploadFile = File(...),
+
+    verification_type: str = "auto",
+
+):
+
+    """
+
+    Verify a document using the LLM-based verification pipeline with Wolfram Alpha mathematical verification (always enabled)
+
+    """
+
+    global request_counter
+
+    try:
+
+        # Increment request counter
+
+        request_counter += 1
+
+
+
+        logger.info(f"Starting document verification: {file.filename} (type: {verification_type})")
+
+
+
+        # Check file type
+
+        allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
+
+        file_ext = Path(file.filename).suffix.lower()
+
+
+
+        if file_ext not in allowed_extensions:
+
+            raise HTTPException(
+
+                status_code=400,
+
+                detail=f"Unsupported file type: {file_ext}. Allowed types: {', '.join(allowed_extensions)}",
+
+            )
+
+
+
+        # Create verification_uploads directory if it doesn't exist
+
+        verification_dir = Path(VERIFICATION_UPLOADS_PATH)
+
+        verification_dir.mkdir(parents=True, exist_ok=True)
+
+
+
+        # Save uploaded file temporarily
+
+        temp_file_path = verification_dir / file.filename
+
+        with open(temp_file_path, "wb") as buffer:
+
+            shutil.copyfileobj(file.file, buffer)
+
+
+
+        logger.info(f"File saved for verification: {temp_file_path}")
+
+
+
+        # Import and run verification pipeline
+
+        from backend.utils.verification import verification_pipeline
+
+
+
+        # Run verification with Wolfram Alpha (always enabled)
+
+        verification_result = verification_pipeline.verify_document(
+
+            str(temp_file_path), verification_type 
+
+        )
+
+
+
+        # Clean up temporary file
+
+        try:
+
+            temp_file_path.unlink()
+
+            logger.info(f"Temporary file cleaned up: {temp_file_path}")
+
+        except Exception as cleanup_error:
+
+            logger.warning(f"Could not clean up temporary file: {cleanup_error}")
+
+
+
+        logger.info(
+
+            f"Document verification completed: {verification_result.get('status', 'unknown')}"
+
+        )
+
+
+
+        return verification_result
+
+
+
+    except Exception as e:
+
+        error_message = str(e)
+
+        logger.error(
+
+            f"Document verification error for {file.filename}: {error_message}"
+
+        )
+
+
+
+        # Clean up temporary file on error
+
+        try:
+
+            if "temp_file_path" in locals():
+
+                temp_file_path.unlink()
+
+        except:
+
+            pass
+
+        raise HTTPException(
+
+            status_code=500, detail=f"Document verification failed: {error_message}"
+
+        )
+
+
+
+
+
+@router.get("/verification-types")
+
+def get_verification_types():
+
+    """
+
+    Get available document verification types
+
+    """
+
+    try:
+
+        from backend.utils.verification import verification_pipeline
+
+        verification_types = verification_pipeline.verification_types
+
+
+
+        return {
+
+            "verification_types": verification_types,
+
+            "supported_formats": verification_pipeline.supported_formats,
+
+            "default_type": "auto",
+
+        }
+
+
+
+    except Exception as e:
+
+        error_message = str(e)
+
+        logger.error(f"Error getting verification types: {error_message}")
+
+        raise HTTPException(
+
+            status_code=500, detail=f"Error getting verification types: {error_message}"
+
+        )
+
+

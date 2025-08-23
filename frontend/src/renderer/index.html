@@ -585,10 +585,16 @@
                   Latest financial news and market updates
                 </p>
                 <div class="news-controls">
-                  <button id="refresh-news" class="btn btn-secondary">
-                    <i class="fas fa-sync-alt"></i>
-                    <span data-i18n="refresh">Refresh</span>
-                  </button>
+                  <div class="news-refresh-group">
+                    <button id="refresh-news" class="btn btn-primary">
+                      <i class="fas fa-sync-alt"></i>
+                      <span data-i18n="getLatestNews">Get Latest News</span>
+                    </button>
+                    <div class="news-refresh-hint">
+                      <i class="fas fa-info-circle"></i>
+                      <span data-i18n="autoUpdateInfo">Auto-updates every 45 minutes</span>
+                    </div>
+                  </div>
                   <div class="news-status">
                     <span id="news-last-updated" data-i18n="loading"
                       >Loading...</span
@@ -602,6 +608,35 @@
                   <div class="loading-spinner"></div>
                   <p data-i18n="loadingNews">Loading latest finance news...</p>
                 </div>
+              </div>
+
+              <!-- News Detail View -->
+              <div class="news-detail" id="news-detail" style="display: none;">
+                <div class="news-detail-header">
+                  <button class="btn btn-secondary news-detail-back" id="news-detail-back">
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-i18n="backToNews">Back to News</span>
+                  </button>
+                  <div class="news-detail-meta">
+                    <span class="news-detail-sources" id="news-detail-sources"></span>
+                    <span class="news-detail-time" id="news-detail-time"></span>
+                  </div>
+                </div>
+
+                <article class="news-detail-article">
+                  <h1 class="news-detail-title" id="news-detail-title"></h1>
+                  
+                  <div class="news-detail-content" id="news-detail-content">
+                    <!-- AI-generated comprehensive content with images will be inserted here -->
+                  </div>
+                  
+                  <div class="news-detail-sources-section">
+                    <h3 data-i18n="sourcesTitle">Sources</h3>
+                    <div class="news-sources-list" id="news-sources-list">
+                      <!-- Source links will be inserted here -->
+                    </div>
+                  </div>
+                </article>
               </div>
             </div>
           </div>
