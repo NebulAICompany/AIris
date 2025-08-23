@@ -57,14 +57,6 @@ async def handle_query(request: QueryRequest):
         # Use system-level default search method
         search_method = DEFAULT_SEARCH_METHOD
 
-        logger.info(f"📝 API Router received:")
-        logger.info(f"   - Query: {query}")
-        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-        logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
-        logger.info(f"   - Search Method (from config): {search_method}")
-        logger.info(f"   - Session ID: {session_id}")
-        logger.info(f"   - Selected Files: {selected_files}")
-
         answer = await run_orchestration(
             query,
             web_search_enabled,
@@ -73,10 +65,7 @@ async def handle_query(request: QueryRequest):
             selected_files,
             search_method,
         )
-        logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()
-
-        logger.info("Query processed successfully")
 
         return {
             "response": answer.get("response"),
@@ -99,8 +88,6 @@ async def handle_upload(file: UploadFile = File(...)):
         # Increment simple counter
         request_counter += 1
 
-        logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
-
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(UPLOADS_PATH)
         uploads_dir.mkdir(parents=True, exist_ok=True)
@@ -109,8 +96,6 @@ async def handle_upload(file: UploadFile = File(...)):
         file_path = uploads_dir / file.filename
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-
-        logger.info(f"File saved to: {file_path}")
 
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
