@@ -9,6 +9,7 @@ from openpyxl.chart import BarChart, LineChart, PieChart, Reference
 from pptx import Presentation
 from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH
+from backend.security.pii import unmask_text
 from agents import function_tool
 
 # Global variable to track generated files
@@ -54,13 +55,24 @@ def create_excel_file(
         # Create directory if it doesn't exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
+        # Unmask PII data before creating Excel file
+        unmasked_data = []
+        for row_data in data:
+            unmasked_row = []
+            for cell_value in row_data:
+                if isinstance(cell_value, str):
+                    unmasked_row.append(unmask_text(cell_value))
+                else:
+                    unmasked_row.append(cell_value)
+            unmasked_data.append(unmasked_row)
+
         # Create workbook and worksheet
         workbook = Workbook()
         worksheet = workbook.active
         worksheet.title = sheet_name
 
-        # Add data to worksheet
-        for row_idx, row_data in enumerate(data, 1):
+        # Add unmasked data to worksheet
+        for row_idx, row_data in enumerate(unmasked_data, 1):
             for col_idx, cell_value in enumerate(row_data, 1):
                 worksheet.cell(row=row_idx, column=col_idx, value=cell_value)
 
@@ -73,7 +85,7 @@ def create_excel_file(
             "file_path": str(file_path),
             "file_type": "excel",
             "created_at": datetime.now().isoformat(),
-            "message": f"Excel file created successfully with {len(data)} rows",
+            "message": f"Excel file created successfully with {len(unmasked_data)} rows",
         }
         GENERATED_FILES.append(file_info)
 
@@ -120,11 +132,14 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
         # Create directory if it doesn't exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
+        # Unmask PII data before creating Word document
+        unmasked_content = unmask_text(content)
+
         # Create a new document
         doc = Document()
 
-        # Split content into paragraphs and add them
-        paragraphs = content.split("\n\n")
+        # Split unmasked content into paragraphs and add them
+        paragraphs = unmasked_content.split("\n\n")
         for paragraph_text in paragraphs:
             if paragraph_text.strip():
                 # Check if it's a title (simple heuristic)
@@ -204,11 +219,14 @@ def create_powerpoint_presentation(
         # Create presentation
         prs = Presentation()
 
+        # Unmask PII data before creating PowerPoint presentation
+        unmasked_title = unmask_text(title)
+
         # Add title slide
         title_slide_layout = prs.slide_layouts[0]  # Title slide layout
         slide = prs.slides.add_slide(title_slide_layout)
         title_shape = slide.shapes.title
-        title_shape.text = title
+        title_shape.text = unmasked_title
 
         # Add content slides
         for slide_data in slides_data:
@@ -217,12 +235,14 @@ def create_powerpoint_presentation(
 
             # Set slide title
             if "title" in slide_data:
-                slide.shapes.title.text = slide_data["title"]
+                unmasked_slide_title = unmask_text(slide_data["title"])
+                slide.shapes.title.text = unmasked_slide_title
 
             # Set slide content
             if "content" in slide_data:
                 content_placeholder = slide.placeholders[1]
-                content_placeholder.text = slide_data["content"]
+                unmasked_slide_content = unmask_text(slide_data["content"])
+                content_placeholder.text = unmasked_slide_content
 
         # Save presentation
         prs.save(str(file_path))
@@ -287,10 +307,14 @@ def add_powerpoint_slide(
             slide = prs.slides.add_slide(slide_layout)
             # Move slide to desired position (simplified approach)
 
+        # Unmask PII data before adding slide
+        unmasked_slide_title = unmask_text(slide_title)
+        unmasked_slide_content = unmask_text(slide_content)
+
         # Set slide content
-        slide.shapes.title.text = slide_title
+        slide.shapes.title.text = unmasked_slide_title
         content_placeholder = slide.placeholders[1]
-        content_placeholder.text = slide_content
+        content_placeholder.text = unmasked_slide_content
 
         # Save presentation
         prs.save(file_path)
@@ -331,20 +355,28 @@ def modify_word_content(
         # Load document
         doc = Document(file_path)
 
+        # Unmask PII data before modifying Word document
+        unmasked_search_text = unmask_text(search_text)
+        unmasked_replace_text = unmask_text(replace_text)
+
         replacements_made = 0
 
         # Replace text in paragraphs
         for paragraph in doc.paragraphs:
-            if search_text in paragraph.text:
-                paragraph.text = paragraph.text.replace(search_text, replace_text)
+            if unmasked_search_text in paragraph.text:
+                paragraph.text = paragraph.text.replace(
+                    unmasked_search_text, unmasked_replace_text
+                )
                 replacements_made += 1
 
         # Replace text in tables
         for table in doc.tables:
             for row in table.rows:
                 for cell in row.cells:
-                    if search_text in cell.text:
-                        cell.text = cell.text.replace(search_text, replace_text)
+                    if unmasked_search_text in cell.text:
+                        cell.text = cell.text.replace(
+                            unmasked_search_text, unmasked_replace_text
+                        )
                         replacements_made += 1
 
         # Save document
@@ -396,11 +428,17 @@ def modify_excel_cells(
         else:
             ws = wb.active
 
-        # Apply updates
+        # Apply updates with PII unmasking
         for update in updates_data:
             cell_address = update["cell"]
             cell_value = update["value"]
-            ws[cell_address] = cell_value
+
+            # Unmask PII data if the value is a string
+            if isinstance(cell_value, str):
+                unmasked_cell_value = unmask_text(cell_value)
+                ws[cell_address] = unmasked_cell_value
+            else:
+                ws[cell_address] = cell_value
 
         # Save workbook
         wb.save(file_path)
@@ -459,6 +497,9 @@ def create_excel_charts(
         data_range = chart_config.get("data_range", "A1:B10")
         title = chart_config.get("title", "Chart")
 
+        # Unmask PII data in chart title
+        unmasked_title = unmask_text(title)
+
         # Create chart based on type
         if chart_type == "bar":
             chart = BarChart()
@@ -470,7 +511,7 @@ def create_excel_charts(
             chart = BarChart()  # Default to bar chart
 
         # Set chart properties
-        chart.title = title
+        chart.title = unmasked_title
 
         # Add data to chart
         # Parse the range string to get min/max coordinates
