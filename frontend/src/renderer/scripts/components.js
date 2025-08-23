@@ -2062,7 +2062,14 @@ class UIComponents {
       case "image":
         previewElement.innerHTML = `
           <div class="preview-image">
-            <img src="${preview_data}" alt="Document preview" />
+            <div class="preview-image-wrapper">
+              <img src="${preview_data}" alt="Document preview" 
+                   onload="this.parentElement.classList.add('loaded')" />
+              <div class="preview-image-overlay">
+                <i class="fas fa-expand-alt"></i>
+                <span>Click to enlarge</span>
+              </div>
+            </div>
           </div>
         `;
         break;
@@ -2070,7 +2077,13 @@ class UIComponents {
       case "text":
         previewElement.innerHTML = `
           <div class="preview-text">
-            <pre>${Utils.escapeHtml(preview_data)}</pre>
+            <div class="preview-header">
+              <i class="fas fa-file-alt"></i>
+              <span>Text Preview</span>
+            </div>
+            <div class="preview-content">
+              <pre>${Utils.escapeHtml(preview_data)}</pre>
+            </div>
           </div>
         `;
         break;
@@ -2078,6 +2091,10 @@ class UIComponents {
       case "excel":
         previewElement.innerHTML = `
           <div class="preview-excel">
+            <div class="preview-header">
+              <i class="fas fa-table"></i>
+              <span>Spreadsheet Preview</span>
+            </div>
             <div class="excel-summary">
               <strong>${preview_data.columns.length} columns, ${preview_data.rows_shown} rows</strong>
             </div>
@@ -2089,8 +2106,13 @@ class UIComponents {
       case "info":
         previewElement.innerHTML = `
           <div class="preview-info">
-            <i class="fas fa-info-circle"></i>
-            <span>${Utils.escapeHtml(preview_data)}</span>
+            <div class="preview-header">
+              <i class="fas fa-info-circle"></i>
+              <span>Document Information</span>
+            </div>
+            <div class="preview-content">
+              <span>${Utils.escapeHtml(preview_data)}</span>
+            </div>
           </div>
         `;
         break;
@@ -2098,8 +2120,13 @@ class UIComponents {
       case "error":
         previewElement.innerHTML = `
           <div class="preview-error">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>${Utils.escapeHtml(preview_data)}</span>
+            <div class="preview-header">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Preview Error</span>
+            </div>
+            <div class="preview-content">
+              <span>${Utils.escapeHtml(preview_data)}</span>
+            </div>
           </div>
         `;
         break;
@@ -2107,8 +2134,13 @@ class UIComponents {
       default:
         previewElement.innerHTML = `
           <div class="preview-info">
-            <i class="fas fa-file"></i>
-            <span>Preview not available</span>
+            <div class="preview-header">
+              <i class="fas fa-file"></i>
+              <span>Preview Not Available</span>
+            </div>
+            <div class="preview-content">
+              <span>This file type does not support preview</span>
+            </div>
           </div>
         `;
     }
@@ -2486,7 +2518,7 @@ class UIComponents {
   applyTheme() {
     // Remove all theme classes
     document.body.classList.remove("dark-theme", "nebula-theme");
-    
+
     // Apply current theme class
     if (this.currentTheme === "dark") {
       document.body.classList.add("dark-theme");
@@ -2500,7 +2532,8 @@ class UIComponents {
         themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
         themeToggle.setAttribute("title", "Switch to Dark Theme");
       } else if (this.currentTheme === "dark") {
-        themeToggle.innerHTML = '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
+        themeToggle.innerHTML =
+          '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
         themeToggle.setAttribute("title", "Switch to Nebula Theme");
       } else if (this.currentTheme === "nebula") {
         themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
