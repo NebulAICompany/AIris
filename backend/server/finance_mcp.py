@@ -327,7 +327,7 @@ async def create_stock_chart(
         chart_logger.info(f"🚀 Starting chart creation for symbols: {symbols}")
 
         if len(symbols) > 6:
-            return {"error": "En fazla 6 hisse senedi analiz edilebilir"}
+            return {"error": "Maximum 6 stock symbols can be analyzed"}
 
         stock_data = {}
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
@@ -411,7 +411,7 @@ async def create_stock_chart(
                 continue
 
         if not stock_data:
-            return {"error": "Hiçbir sembol için veri alınamadı"}
+            return {"error": "No data could be retrieved for any symbol"}
 
         # Grafik oluşturma
         fig = None
@@ -879,7 +879,7 @@ async def create_stock_chart(
             )
 
         if fig is None:
-            return {"error": "Grafik oluşturulamadı"}
+            return {"error": "Chart could not be created"}
 
         # Ortak layout ayarları
         fig.update_xaxes(rangeslider_visible=False)
@@ -947,11 +947,11 @@ async def create_stock_chart(
 
         chart_logger.info(f"🎯 Chart operation completed - ID: {chart_id}")
         return {
-            "message": f"✅ {len(symbols_list)} hisse için {chart_type} grafiği oluşturuldu ({subplot_layout} layout)"
+            "message": f"✅ {len(symbols_list)} stock {chart_type} chart created successfully ({subplot_layout} layout). Chart loaded successfully into attachments. Do not add into answer, it is already in attachments."
         }
 
     except Exception as e:
-        return {"error": f"Stock chart oluşturma hatası: {str(e)}"}
+        return {"error": f"Stock chart creation error: {str(e)}"}
 
 
 if __name__ == "__main__":

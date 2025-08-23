@@ -83,7 +83,7 @@ def create_excel_file(
             "sheet_name": sheet_name,
             "rows": len(data),
             "columns": len(data[0]) if data else 0,
-            "message": f"Excel file created successfully with {len(data)} rows at {file_path}",
+            "message": f"Excel file created successfully with {len(data)} rows at {file_path}. File loaded successfully into attachments. Do not add into answer, it is already in attachments.",
             "file_info": file_info,
         }
 
@@ -154,7 +154,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
             "success": True,
             "file_path": str(file_path),
             "paragraphs": len(paragraphs),
-            "message": f"Word document created successfully at {file_path}",
+            "message": f"Word document created successfully at {file_path}. File loaded successfully into attachments. Do not add into answer, it is already in attachments.",
             "file_info": file_info,
         }
 
@@ -241,7 +241,7 @@ def create_powerpoint_presentation(
             "success": True,
             "file_path": str(file_path),
             "slides_count": len(slides_data) + 1,  # +1 for title slide
-            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides at {file_path}",
+            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides at {file_path}. File loaded successfully into attachments. Do not add into answer, it is already in attachments.",
             "file_info": file_info,
         }
 
