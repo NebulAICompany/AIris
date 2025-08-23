@@ -492,6 +492,33 @@ def download_file(filename: str):
         )
 
 
+@router.get("/files/{filename}")
+def get_file_info(filename: str):
+    """
+    Get information about a specific file.
+    """
+    try:
+        file_path = Path(UPLOADS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        stats = file_path.stat()
+        return {
+            "name": filename,
+            "size": stats.st_size,
+            "created_at": datetime.fromtimestamp(stats.st_ctime).isoformat(),
+            "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting file info {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting file info: {error_message}",
+        )
+
+
 @router.get("/files/{filename}/preview")
 def get_file_preview(filename: str):
     """
@@ -543,6 +570,33 @@ def download_created_document(filename: str):
         raise HTTPException(
             status_code=500,
             detail=f"Error downloading created document: {error_message}",
+        )
+
+
+@router.get("/created-documents/{filename}")
+def get_created_document_info(filename: str):
+    """
+    Get information about a specific created document.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        stats = file_path.stat()
+        return {
+            "name": filename,
+            "size": stats.st_size,
+            "created_at": datetime.fromtimestamp(stats.st_ctime).isoformat(),
+            "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting created document info {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting created document info: {error_message}",
         )
 
 

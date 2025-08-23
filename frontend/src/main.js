@@ -170,7 +170,7 @@ class AIrisApp {
         const { shell } = require("electron");
         const path = require("path");
 
-        // Construct the file path
+        // First try to find the file in uploads directory
         const uploadsDir = path.join(
           __dirname,
           "..",
@@ -179,13 +179,26 @@ class AIrisApp {
           "database",
           "uploads"
         );
-        const filePath = path.join(uploadsDir, fileName);
+        let filePath = path.join(uploadsDir, fileName);
 
-        // Check if file exists
+        // If file not found in uploads, try created_documents directory
+        if (!fs.existsSync(filePath)) {
+          const createdDocsDir = path.join(
+            __dirname,
+            "..",
+            "..",
+            "backend",
+            "database",
+            "created_documents"
+          );
+          filePath = path.join(createdDocsDir, fileName);
+        }
+
+        // Check if file exists in either location
         if (!fs.existsSync(filePath)) {
           return {
             success: false,
-            error: "File not found",
+            error: "File not found in uploads or created_documents directories",
           };
         }
 
