@@ -224,17 +224,12 @@ class ClusteredNews(BaseModel):
 
 class NewsResponse(BaseModel):
     clustered_articles: List[ClusteredNews]
-    single_articles: List[NewsArticle]  # Articles that appear in only one source
     total_clusters: int
     total_articles: int
     articles_with_summary: int = 0
     articles_without_summary: int = 0  
     summary_coverage_percentage: float = 0.0
     last_updated: str
-
-
-# Removed: are_articles_similar - replaced with LLM-based clustering
-
 
 def normalize_datetime(date_str: str) -> datetime.datetime:
     """
@@ -295,16 +290,15 @@ async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str
     
     try:
         # Import agent infrastructure
-        from backend.core.agents import create_rag_agent
+        from backend.core.agents import create_news_summarization_agent
         from backend.core.runner import generate_answer
         from backend.core.prompts import news_summarization_prompt
         
         # Create specialized summarization agent
-        agent = create_rag_agent(
-            local_context="",
+        agent = create_news_summarization_agent(
+            news_context="",
             web_search_enabled=False,
             query="Generate comprehensive unified news summary",
-            instruction=news_summarization_prompt
         )
         
         # Prepare comprehensive article data for the agent
@@ -661,10 +655,6 @@ async def fetch_all_sources_news(sources: Optional[List[NewsSource]] = None, max
 
 
 async def cluster_similar_articles(articles: List[NewsArticle]) -> List[List[NewsArticle]]:
-    """
-    Group similar articles together using LLM-based intelligent clustering.
-    Understands Turkish financial context and story relationships.
-    """
     if len(articles) <= 1:
         return [[article] for article in articles]
     
@@ -715,14 +705,6 @@ async def cluster_similar_articles(articles: List[NewsArticle]) -> List[List[New
 
 
 async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = None, force_refresh: bool = False) -> NewsResponse:
-    """
-    Main function to get aggregated financial news from multiple sources with clustering.
-    This is the enhanced version similar to Perplexity.ai's discover page.
-    
-    Args:
-        sources: Optional list of news sources to use
-        force_refresh: If True, fetch new articles and update database. If False, load from database.
-    """
     from backend.database.news_database import get_news_database
     
     logger.info(f"Starting aggregated financial news fetch (force_refresh={force_refresh})")
@@ -767,7 +749,6 @@ async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = No
     
     # Separate multi-source clusters from single articles
     multi_source_clusters = [cluster for cluster in clusters if len(cluster) > 1]
-    single_articles = [cluster[0] for cluster in clusters if len(cluster) == 1]
     
     logger.info(f"🔄 Processing {len(multi_source_clusters)} clusters with parallel AI summarization...")
     
@@ -893,7 +874,7 @@ async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = No
     # Sort clustered news by relevance score (most sources first)
     clustered_news.sort(key=lambda x: x.relevance_score, reverse=True)
     
-    logger.info(f"Created {len(clustered_news)} clusters and {len(single_articles)} single articles")
+    logger.info(f"Created {len(clustered_news)} clusters")
     
     # Save clustered articles to database
     saved_count = 0
@@ -938,7 +919,6 @@ async def get_news_from_database(db) -> NewsResponse:
             logger.info("📰 No news found in database")
             return NewsResponse(
                 clustered_articles=[],
-                single_articles=[],
                 total_clusters=0,
                 total_articles=0,
                 last_updated=datetime.datetime.now().isoformat()
@@ -1014,7 +994,6 @@ async def get_news_from_database(db) -> NewsResponse:
         
         return NewsResponse(
             clustered_articles=clustered_articles,
-            single_articles=[],  # We only store clustered articles in database
             total_clusters=len(clustered_articles),
             total_articles=total_articles,
             articles_with_summary=articles_with_summary,
@@ -1028,22 +1007,7 @@ async def get_news_from_database(db) -> NewsResponse:
         # Return empty response on error
         return NewsResponse(
             clustered_articles=[],
-            single_articles=[],
             total_clusters=0,
             total_articles=0,
             last_updated=datetime.datetime.now().isoformat()
         )
-
-
-# Legacy function for backward compatibility
-def fetch_and_parse_news(rss_url: str = None) -> List[NewsArticle]:
-    """Legacy function - use get_aggregated_financial_news for new implementation"""
-    logger.info("Using legacy single-source news fetch")
-    
-    if rss_url is None:
-        # Use Dünya Gazetesi as default
-        source = NewsSource("Dünya Gazetesi", "https://www.dunya.com/rss/ekonomi.xml", "tr")
-    else:
-        source = NewsSource("Custom Source", rss_url, "tr")
-    
-    return fetch_single_source_news(source)
