@@ -20,7 +20,6 @@ logger = get_logger("LLM_CLUSTERING")
 class ClusterResult:
     """Result from LLM clustering analysis"""
     clusters: List[Dict[str, Any]]
-    single_articles: List[int]
     analysis: str
 
 class LLMNewsClusterer:
@@ -73,11 +72,10 @@ class LLMNewsClusterer:
   "clusters": [
     {{"cluster_id": 1, "story_theme": "theme", "article_indices": [0,3,7], "reasoning": "why"}}
   ],
-  "single_articles": [1,2,4],
   "analysis": "brief analysis"
 }}
 
-Be conservative - only cluster truly related stories. Include ALL indices 0-{len(articles)-1}."""
+Be conservative - only cluster truly related stories. You don't need to include all indices."""
 
         return prompt
     
@@ -98,20 +96,13 @@ Be conservative - only cluster truly related stories. Include ALL indices 0-{len
             # Basic structure check only
             if "clusters" not in parsed:
                 parsed["clusters"] = []
-            if "single_articles" not in parsed:
-                parsed["single_articles"] = list(range(total_articles))
             
-            logger.info(f"LLM clustering parsed: {len(parsed['clusters'])} clusters, {len(parsed['single_articles'])} singles")
+            logger.info(f"LLM clustering parsed: {len(parsed['clusters'])} clusters")
             
             return ClusterResult(
                 clusters=parsed["clusters"],
-                single_articles=parsed["single_articles"],
                 analysis=parsed.get("analysis", "LLM clustering completed")
             )
-            
-        except json.JSONDecodeError as e:
-            logger.warning(f"JSON parsing failed: {e}, using fallback")
-            return self._create_fallback_result(total_articles)
         except Exception as e:
             logger.warning(f"Error parsing response: {e}, using fallback")
             return self._create_fallback_result(total_articles)
@@ -120,8 +111,7 @@ Be conservative - only cluster truly related stories. Include ALL indices 0-{len
         """Create fallback result when LLM parsing fails"""
         return ClusterResult(
             clusters=[],
-            single_articles=list(range(total_articles)),
-            analysis="LLM clustering failed, treating all articles as singles"
+            analysis="LLM clustering failed, returning empty clusters"
         )
     
     async def cluster_articles(self, articles: List[NewsArticle]) -> ClusterResult:
@@ -132,7 +122,6 @@ Be conservative - only cluster truly related stories. Include ALL indices 0-{len
         if len(articles) <= 1:
             return ClusterResult(
                 clusters=[],
-                single_articles=list(range(len(articles))),
                 analysis=f"Only {len(articles)} article(s), no clustering needed"
             )
         

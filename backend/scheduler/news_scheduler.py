@@ -46,10 +46,6 @@ class NewsScheduler:
                 
                 if self.is_running:  # Check if still running after sleep
                     await self.fetch_news_update()
-                    
-            except asyncio.CancelledError:
-                logger.info("📰 News scheduler cancelled")
-                break
             except Exception as e:
                 logger.error(f"❌ Error in news scheduler: {e}")
                 # Continue running despite errors
