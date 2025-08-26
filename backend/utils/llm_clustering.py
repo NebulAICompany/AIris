@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from agents import Agent
 from backend.core.runner import generate_answer
+from backend.core.agents import create_clustering_agent
 from backend.core.prompts import news_clustering_prompt
 from backend.shared.logger import get_logger
 from backend.utils.news import NewsArticle
@@ -30,16 +31,6 @@ class LLMNewsClusterer:
     
     def __init__(self):
         self.model = "gpt-4o-mini"  # Balance between accuracy and cost
-    
-    def _create_clustering_agent(self) -> Agent:
-        """Create specialized clustering agent"""
-        agent = Agent(
-            name="Turkish_Financial_News_Clusterer",
-            instructions=news_clustering_prompt,
-            model=self.model,
-            tools=[]  # No tools needed, pure text analysis
-        )
-        return agent
     
     def _prepare_articles_for_analysis(self, articles: List[NewsArticle]) -> str:
         """
@@ -129,7 +120,7 @@ Be conservative - only cluster truly related stories. You don't need to include 
         
         try:
             # Create clustering agent
-            agent = self._create_clustering_agent()
+            agent = create_clustering_agent(news_clustering_prompt)
             
             # Prepare articles for analysis
             analysis_prompt = self._prepare_articles_for_analysis(articles)

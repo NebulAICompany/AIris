@@ -2883,6 +2883,11 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   margin-bottom: 32px;
 }
 
+.news-detail-content strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 .news-detail-content p {
   margin-bottom: 16px;
 }
