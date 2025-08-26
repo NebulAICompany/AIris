@@ -227,9 +227,6 @@ class NewsResponse(BaseModel):
     clustered_articles: List[ClusteredNews]
     total_clusters: int
     total_articles: int
-    articles_with_summary: int = 0
-    articles_without_summary: int = 0  
-    summary_coverage_percentage: float = 0.0
     last_updated: str
 
 def normalize_datetime(date_str: str) -> datetime.datetime:
@@ -642,15 +639,6 @@ async def fetch_all_sources_news(sources: Optional[List[NewsSource]] = None, max
         else:
             all_articles.extend(result)
     
-    # Log summary statistics
-    articles_with_summary = sum(1 for article in all_articles if article.summary and len(article.summary.strip()) > 10)
-    articles_without_summary = len(all_articles) - articles_with_summary
-    summary_percentage = (articles_with_summary / len(all_articles) * 100) if all_articles else 0
-    
-    logger.info(f"Total articles fetched from all sources: {len(all_articles)}")
-    logger.info(f"Articles with summaries: {articles_with_summary} ({summary_percentage:.1f}%)")
-    logger.info(f"Articles with titles only: {articles_without_summary} ({100-summary_percentage:.1f}%)")
-    
     return all_articles
 
 
@@ -983,22 +971,10 @@ async def get_news_from_database(db) -> NewsResponse:
         
         logger.info(f"📰 Loaded {len(clustered_articles)} clustered articles from database ({total_articles} total articles)")
         
-        # Calculate summary statistics
-        articles_with_summary = 0
-        for cluster in clustered_articles:
-            if cluster.unified_description and len(cluster.unified_description.strip()) > 10:
-                articles_with_summary += len(cluster.articles)
-        
-        articles_without_summary = total_articles - articles_with_summary
-        summary_percentage = (articles_with_summary / total_articles * 100) if total_articles else 0.0
-        
         return NewsResponse(
             clustered_articles=clustered_articles,
             total_clusters=len(clustered_articles),
             total_articles=total_articles,
-            articles_with_summary=articles_with_summary,
-            articles_without_summary=articles_without_summary,
-            summary_coverage_percentage=round(summary_percentage, 1),
             last_updated=datetime.datetime.now().isoformat()
         )
         
