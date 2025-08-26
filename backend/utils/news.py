@@ -208,6 +208,7 @@ class NewsArticle(BaseModel):
     image_width: int = 0
     image_height: int = 0
     source_language: str = "en"
+    available_images: List[dict] = []
     
 
 class ClusteredNews(BaseModel):
@@ -296,9 +297,8 @@ async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str
         
         # Create specialized summarization agent
         agent = create_news_summarization_agent(
-            news_context="",
+            instructions=news_summarization_prompt,
             web_search_enabled=False,
-            query="Generate comprehensive unified news summary",
         )
         
         # Prepare comprehensive article data for the agent

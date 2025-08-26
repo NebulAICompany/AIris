@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
-from backend.utils.news import fetch_and_parse_news, get_aggregated_financial_news
+from backend.utils.news import get_aggregated_financial_news
 from qdrant_client import models
 
 logger = get_logger("ROUTER")
@@ -629,7 +629,11 @@ async def get_finance_news(force_refresh: bool = False):
                 # Add cluster info to the article
                 representative_article.title = cluster.unified_title
                 representative_article.summary = cluster.unified_description
-                
+
+                # Add available images from the cluster for frontend display
+                if hasattr(cluster, 'available_images') and cluster.available_images:
+                    representative_article.available_images = cluster.available_images
+
                 # Use the earliest publication date from all sources in the cluster
                 representative_article.published = cluster.published_earliest if cluster.published_earliest else representative_article.published
                 
@@ -673,34 +677,6 @@ async def get_finance_news(force_refresh: bool = False):
         logger.error(f"Error fetching aggregated finance news: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error fetching finance news: {str(e)}"
-        )
-
-
-@router.get("/finance-news/legacy")
-async def get_finance_news_legacy():
-    """
-    Legacy endpoint: Fetch finance news from single source (Dünya Gazetesi only).
-    Kept for backward compatibility.
-    """
-    try:
-        news_articles = fetch_and_parse_news()
-        # Limit to 20 most recent articles
-        news_articles = news_articles[:20]
-
-        logger.info(f"Successfully fetched {len(news_articles)} finance news articles (legacy)")
-
-        return {
-            "status": "success",
-            "count": len(news_articles),
-            "articles": news_articles,
-            "last_updated": datetime.now().isoformat(),
-            "feature": "single_source_legacy"
-        }
-
-    except Exception as e:
-        logger.error(f"Error fetching legacy finance news: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching legacy finance news: {str(e)}"
         )
 
 
@@ -1200,7 +1176,11 @@ async def get_finance_news(force_refresh: bool = False):
                 # Add cluster info to the article
                 representative_article.title = cluster.unified_title
                 representative_article.summary = cluster.unified_description
-                
+
+                # Add available images from the cluster for frontend display
+                if hasattr(cluster, 'available_images') and cluster.available_images:
+                    representative_article.available_images = cluster.available_images
+
                 # Use the earliest publication date from all sources in the cluster
                 representative_article.published = cluster.published_earliest if cluster.published_earliest else representative_article.published
                 
@@ -1245,46 +1225,6 @@ async def get_finance_news(force_refresh: bool = False):
         raise HTTPException(
             status_code=500, detail=f"Error fetching finance news: {str(e)}"
         )
-
-
-@router.get("/finance-news/legacy")
-async def get_finance_news_legacy():
-    """
-    Legacy endpoint: Fetch finance news from single source (Dünya Gazetesi only).
-    Kept for backward compatibility.
-    """
-    try:
-
-        news_articles = fetch_and_parse_news()
-
-        # Limit to 20 most recent articles
-
-        news_articles = news_articles[:20]
-
-
-
-        logger.info(f"Successfully fetched {len(news_articles)} finance news articles (legacy)")
-
-
-        return {
-
-            "status": "success",
-
-            "count": len(news_articles),
-
-            "articles": news_articles,
-
-            "last_updated": datetime.now().isoformat(),
-
-            "feature": "single_source_legacy"
-        }
-
-    except Exception as e:
-        logger.error(f"Error fetching legacy finance news: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching legacy finance news: {str(e)}"
-        )
-
 
 @router.get("/finance-news/sources")
 async def get_finance_news_sources():

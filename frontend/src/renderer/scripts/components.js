@@ -2538,19 +2538,44 @@ class UIComponents {
     }
 
     // Create image HTML if image URL is available
-    const imageHtml = article.image_url
-      ? `
+    let imageHtml = "";
+    let imageSrc = "";
+    let imageAlt = Utils.escapeHtml(article.title);
+    let imageWidth = "";
+    let imageHeight = "";
+
+    // First, try the direct image_url from the article
+    if (article.image_url) {
+      imageSrc = article.image_url;
+      imageWidth = article.image_width ? `width="${article.image_width}"` : "";
+      imageHeight = article.image_height ? `height="${article.image_height}"` : "";
+    }
+    // If no direct image, try available_images from cluster data
+    else if (article.available_images && article.available_images.length > 0) {
+      // Use the first image from available_images (or you can randomize)
+      const selectedImage = article.available_images[0]; // First image
+      // Or randomize: article.available_images[Math.floor(Math.random() * article.available_images.length)]
+
+      imageSrc = selectedImage.url;
+      imageAlt = `${Utils.escapeHtml(article.title)} - Image from ${Utils.escapeHtml(selectedImage.source)}`;
+      imageWidth = selectedImage.width ? `width="${selectedImage.width}"` : "";
+      imageHeight = selectedImage.height ? `height="${selectedImage.height}"` : "";
+    }
+
+    // Create image HTML if we have an image source
+    if (imageSrc) {
+      imageHtml = `
       <div class="news-image">
-        <img src="${Utils.escapeHtml(article.image_url)}" 
-             alt="${Utils.escapeHtml(article.title)}"
+        <img src="${Utils.escapeHtml(imageSrc)}"
+             alt="${imageAlt}"
              loading="lazy"
              onerror="this.style.display='none'"
-             ${article.image_width ? `width="${article.image_width}"` : ""}
-             ${article.image_height ? `height="${article.image_height}"` : ""}
+             ${imageWidth}
+             ${imageHeight}
         />
       </div>
-    `
-      : "";
+    `;
+    }
 
     return `
       <div class="news-item" data-article-index="${article.index || 0}">
@@ -2928,19 +2953,22 @@ class UIComponents {
   }
 
   formatNewsContent(content) {
+    // Convert markdown-style bold formatting to HTML
+    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
     // Convert double line breaks to paragraphs
     const paragraphs = content.split(/\n\s*\n/);
-    
+
     return paragraphs
       .map(para => {
         para = para.trim();
         if (!para) return '';
-        
+
         // Check if it's an image div
         if (para.includes('<div class="news-detail-image')) {
           return para;
         }
-        
+
         // Wrap in paragraph tags
         return `<p>${para}</p>`;
       })
