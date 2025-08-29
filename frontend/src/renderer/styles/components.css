@@ -3037,8 +3037,18 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 }
 
 .news-chat-header {
-  margin-bottom: 20px;
-  text-align: center;
+  display: none;
+}
+
+/* Q&A mode trims the chat section chrome */
+.news-qa-mode .news-chat-section {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.news-qa-mode .news-chat-messages {
+  display: none !important;
 }
 
 .news-chat-header h3 {
@@ -3067,6 +3077,30 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 
 .news-chat-input-container {
   transition: var(--transition);
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg-secondary);
+  padding-top: 12px;
+  /* subtle top shadow to separate from content */
+  box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Fixed chat bar for news detail page */
+.news-chat-fixed {
+  position: fixed !important;
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 0;
+  padding: 12px 24px;
+  background: var(--bg-secondary);
+  box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--border-color);
+  z-index: 20;
+}
+
+.news-chat-fixed-active .news-detail-article {
+  padding-bottom: 120px; /* space for fixed input */
 }
 
 .news-chat-input-wrapper {
@@ -3209,6 +3243,56 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* Rendered AI answer replacing article content */
+.news-ai-answer {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 16px;
+}
+
+.news-ai-answer h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+/* Follow-up Q&A blocks */
+.news-qa-block {
+  margin-top: 24px;
+}
+
+.news-qa-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 24px 0;
+}
+
+/* Q&A thinking indicator */
+.news-qa-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  margin: 12px 0;
+}
+
+.news-qa-thinking .typing-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.news-qa-thinking .typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing-pulse 1.4s infinite ease-in-out;
 }
 
 /* Document Verification Styles */

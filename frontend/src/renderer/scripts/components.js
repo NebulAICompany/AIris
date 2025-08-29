@@ -2802,6 +2802,14 @@ class UIComponents {
     if (backButton) {
       backButton.onclick = () => this.hideNewsDetail();
     }
+
+    // Ensure chat input is fixed at the bottom while viewing details
+    const chatContainer = document.getElementById('news-chat-input-container');
+    const detail = document.getElementById('news-detail');
+    if (chatContainer && detail) {
+      chatContainer.classList.add('news-chat-fixed');
+      detail.classList.add('news-chat-fixed-active');
+    }
   }
 
   hideNewsDetail() {
@@ -2809,6 +2817,13 @@ class UIComponents {
     const newsDetail = document.getElementById("news-detail");
     
     if (!newsGrid || !newsDetail) return;
+
+    // Check if we're in Q&A mode
+    if (this.newsQAStarted && this.currentNewsArticle) {
+      // If in Q&A mode, revert to original news article view
+      this.resetNewsDetailToOriginal();
+      return;
+    }
 
     // Show news grid and hide detail view
     newsDetail.style.display = "none";
@@ -2819,6 +2834,59 @@ class UIComponents {
     if (sourcesListElement && this.sourceLinkClickHandler) {
       sourcesListElement.removeEventListener('click', this.sourceLinkClickHandler);
       this.sourceLinkClickHandler = null;
+    }
+
+    // Remove fixed chat styling when leaving detail view
+    const chatContainer = document.getElementById('news-chat-input-container');
+    if (chatContainer) chatContainer.classList.remove('news-chat-fixed');
+    newsDetail.classList.remove('news-chat-fixed-active');
+  }
+
+  resetNewsDetailToOriginal() {
+    if (!this.currentNewsArticle) return;
+
+    // Reset the news detail view to the original article
+    this.populateNewsDetail(this.currentNewsArticle);
+    
+    // Reset Q&A mode state
+    this.newsQAStarted = false;
+    
+    // Remove Q&A mode styling
+    const newsDetail = document.getElementById("news-detail");
+    if (newsDetail) {
+      newsDetail.classList.remove('news-qa-mode');
+    }
+    
+    // Clear any Q&A container content
+    const newsDetailArticle = document.getElementById("news-detail-article");
+    if (newsDetailArticle) {
+      const qaContainer = newsDetailArticle.querySelector('#news-qa-container');
+      if (qaContainer) {
+        qaContainer.remove();
+      }
+    }
+    
+    // Reset chat interface
+    this.resetNewsChatInterface();
+    
+    // Update button text back to "Back to News"
+    this.updateNewsBackButtonText();
+  }
+
+  updateNewsBackButtonText() {
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    const backButton = document.querySelector('[data-i18n="backToNews"]');
+    if (backButton) {
+      if (this.newsQAStarted) {
+        // In Q&A mode, show "Go back"
+        backButton.textContent = t('goBack');
+      } else {
+        // In normal news view, show "Back to News"
+        backButton.textContent = t('backToNews');
+      }
     }
   }
 
@@ -2880,6 +2948,9 @@ class UIComponents {
 
     // Initialize news chat functionality
     this.initializeNewsChat(article);
+    
+    // Update button text based on current state
+    this.updateNewsBackButtonText();
   }
 
   populateNewsContent(article) {
@@ -4296,6 +4367,9 @@ class UIComponents {
     if (inputContainer) inputContainer.style.display = 'block';
     if (messagesContainer) messagesContainer.style.display = 'none';
     if (messagesList) messagesList.innerHTML = '';
+
+    // Reset Q&A mode state
+    this.newsQAStarted = false;
   }
 
   async sendNewsChatMessage(message) {
@@ -4313,23 +4387,120 @@ class UIComponents {
     if (chatSendBtn) chatSendBtn.disabled = true;
     if (chatSendBtnMessages) chatSendBtnMessages.disabled = true;
 
+    const isFirst = !this.newsQAStarted;
     // Show chat interface if this is the first message
-    if (this.newsChatHistory.length === 0) {
+    if (isFirst) {
       this.showNewsChatInterface();
+      // Turn the user's first query into the article title immediately
+      const titleElement = document.getElementById('news-detail-title');
+      if (titleElement) {
+        titleElement.textContent = message;
+      }
+      // Indicate that the page is now in Q&A mode
+      const contentElement = document.getElementById('news-detail-content');
+      if (contentElement) {
+        contentElement.innerHTML = '';
+      }
+      // Hide sources section in Q&A mode
+      const sourcesSection = document.querySelector('.news-detail-sources-section');
+      if (sourcesSection) {
+        sourcesSection.style.display = 'none';
+      }
+      // Add a body class to trim chat UI in Q&A mode
+      const detail = document.getElementById('news-detail');
+      if (detail) detail.classList.add('news-qa-mode');
+
+      // Create a container for subsequent Q&A blocks
+      const qaContainerId = 'news-qa-container';
+      let qaContainer = document.getElementById(qaContainerId);
+      if (!qaContainer) {
+        qaContainer = document.createElement('div');
+        qaContainer.id = qaContainerId;
+        const article = document.querySelector('.news-detail-article');
+        if (article) article.appendChild(qaContainer);
+      }
+
+      // Mark Q&A mode started so next messages append
+      this.newsQAStarted = true;
+      
+      // Update button text to "Go back"
+      this.updateNewsBackButtonText();
     }
 
-    // Add user message to chat
-    this.addNewsChatMessage('user', message);
+    // Add user message to chat unless it's the first (Q&A) prompt
+    if (!isFirst) {
+      this.addNewsChatMessage('user', message);
+    }
 
     // Show typing indicator
     this.showNewsChatTyping();
+
+    // Build placeholder for thinking with title for follow-ups
+    let qaContentId = null;
+    if (!isFirst) {
+      const mount = document.getElementById('news-qa-container') || document.querySelector('.news-detail-article');
+      if (mount) {
+        qaContentId = `news-qa-content-${Date.now()}`;
+        const block = document.createElement('section');
+        block.className = 'news-qa-block';
+        block.innerHTML = `
+          <hr class="news-qa-divider" />
+          <h1 class="news-detail-title">${Utils.escapeHtml(message)}</h1>
+          <div class="news-detail-content" id="${qaContentId}"></div>
+        `;
+        mount.appendChild(block);
+        const contentEl = document.getElementById(qaContentId);
+        if (contentEl) {
+          const thinking = document.createElement('div');
+          thinking.className = 'news-qa-thinking';
+          thinking.innerHTML = `
+            <span>AI is thinking</span>
+            <div class="typing-dots">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          `;
+          contentEl.appendChild(thinking);
+        }
+      }
+    } else {
+      const contentElement = document.getElementById('news-detail-content');
+      if (contentElement) {
+        const thinking = document.createElement('div');
+        thinking.className = 'news-qa-thinking';
+        thinking.innerHTML = `
+          <span>AI is thinking</span>
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+        contentElement.appendChild(thinking);
+      }
+    }
 
     try {
       // Send to backend
       const response = await this.sendNewsQuery(message);
 
       if (response && response.response) {
-        this.addNewsChatMessage('assistant', response.response);
+        if (!isFirst) {
+          this.addNewsChatMessage('assistant', response.response);
+        }
+        // Replace the entire article content with the generated answer on first query
+        if (isFirst) {
+          const contentElement = document.getElementById('news-detail-content');
+          if (contentElement) {
+            contentElement.innerHTML = `<div class="news-ai-answer">${this.formatNewsChatMessage(response.response)}</div>`;
+          }
+        } else if (qaContentId) {
+          const contentEl = document.getElementById(qaContentId);
+          if (contentEl) {
+            contentEl.innerHTML = `<div class=\"news-ai-answer\">${this.formatNewsChatMessage(response.response)}</div>`;
+          }
+        }
       } else {
         this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
       }
@@ -4338,6 +4509,8 @@ class UIComponents {
       this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
     } finally {
       this.hideNewsChatTyping();
+      // Remove all thinking indicators
+      document.querySelectorAll('.news-qa-thinking').forEach(el => el.remove());
     }
   }
 
@@ -4345,7 +4518,8 @@ class UIComponents {
     const inputContainer = document.getElementById('news-chat-input-container');
     const messagesContainer = document.getElementById('news-chat-messages');
 
-    if (inputContainer) inputContainer.style.display = 'none';
+    // Keep input visible persistently; messages panel may be hidden in Q&A mode
+    if (inputContainer) inputContainer.style.display = 'block';
     if (messagesContainer) messagesContainer.style.display = 'block';
   }
 
@@ -4371,10 +4545,35 @@ class UIComponents {
   }
 
   formatNewsChatMessage(content) {
-    // Basic formatting for links and line breaks
-    return content
-      .replace(/\n/g, '<br>')
-      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Enhanced markdown formatting
+    let formatted = content;
+    
+    // Convert bold text (**text**)
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert italic text (*text*)
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Convert headers (# Header) - must be done before line break conversion
+    formatted = formatted.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+    formatted = formatted.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+    formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+    
+    // Convert numbered lists (1. item)
+    formatted = formatted.replace(/^(\d+)\.\s+(.*$)/gm, '<li>$2</li>');
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+    
+    // Convert bullet lists (- item or * item)
+    formatted = formatted.replace(/^[-*]\s+(.*$)/gm, '<li>$1</li>');
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    
+    // Convert links
+    formatted = formatted.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Convert line breaks last (after all other formatting)
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    return formatted;
   }
 
   showNewsChatTyping() {
