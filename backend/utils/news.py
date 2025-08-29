@@ -693,7 +693,7 @@ async def cluster_similar_articles(articles: List[NewsArticle]) -> List[List[New
 
 
 async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = None, force_refresh: bool = False) -> NewsResponse:
-    from backend.database.news_database import get_news_database
+    from backend.utils.news_database import get_news_database
     
     logger.info(f"Starting aggregated financial news fetch (force_refresh={force_refresh})")
     
@@ -732,6 +732,18 @@ async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = No
     except Exception as sort_error:
         logger.warning(f"Could not sort articles by date: {sort_error}")
     
+    deduplicated_articles = []
+    for article in all_articles:
+        if db.find_existing_news_by_links([article.link]):
+            logger.info(f"🔗 Article already exists: {article.link}")
+        else:
+            deduplicated_articles.append(article)
+    
+    logger.info(f"🔄 Deduplicated {len(all_articles)} articles to {len(deduplicated_articles)}")
+    all_articles = deduplicated_articles
+
+
+
     # Cluster similar articles using embedding-based semantic similarity
     clusters = await cluster_similar_articles(all_articles)
     
@@ -888,7 +900,7 @@ async def get_aggregated_financial_news(sources: Optional[List[NewsSource]] = No
             saved_count += 1
             
         except Exception as e:
-            logger.error(f"Failed to save cluster to database: {e}")
+            logger.error(f"❌ Failed to save cluster to database: {e}")
             continue
     
     logger.info(f"💾 Saved/updated {saved_count} news articles to database")
