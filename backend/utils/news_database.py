@@ -173,7 +173,7 @@ class NewsDatabase:
             # Check if news already exists
             logger.info(f"🔗 All links: {len(all_links)}")
             existing_news = self.find_existing_news_by_links(all_links)
-            logger.info(f"🔗 Existing news: {len(existing_news)}")
+            logger.info(f"🔗 Existing news: {len(existing_news) if existing_news else 0}")
             
             current_time = datetime.now(timezone.utc)
             
