@@ -428,6 +428,19 @@ function initializeGallery() {
   let currentIndex = 0;
   const totalItems = items.length;
 
+  // Responsive gallery handling
+  function handleResponsiveGallery() {
+    const isMobile = window.innerWidth <= 768;
+    const isTablet = window.innerWidth <= 1400;
+
+    if (isMobile || isTablet) {
+      // On mobile/tablet, reset transform to show first slide
+      track.style.transform = "translateX(0)";
+      currentIndex = 0;
+      updateNavigation();
+    }
+  }
+
   function updateNavigation() {
     // Update pagination indicators
     indicators.forEach((indicator, index) => {
@@ -440,6 +453,16 @@ function initializeGallery() {
   }
 
   function goToSlide(index) {
+    const isMobile = window.innerWidth <= 768;
+    const isTablet = window.innerWidth <= 1400;
+
+    if (isMobile || isTablet) {
+      // On mobile/tablet, just update current index without transform
+      currentIndex = index;
+      updateNavigation();
+      return;
+    }
+
     currentIndex = index;
     const translateX = -currentIndex * 100;
     track.style.transform = `translateX(${translateX}%)`;
@@ -456,20 +479,35 @@ function initializeGallery() {
   // Initialize navigation state
   updateNavigation();
 
+  // Handle responsive gallery on resize
+  window.addEventListener("resize", handleResponsiveGallery);
+
+  // Initial responsive check
+  handleResponsiveGallery();
+
   // Touch/swipe support for mobile
   let startX = 0;
   let currentX = 0;
 
   track.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      startX = e.touches[0].clientX;
+    }
   });
 
   track.addEventListener("touchmove", (e) => {
-    currentX = e.touches[0].clientX;
-    e.preventDefault(); // Prevent page scroll during swipe
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      currentX = e.touches[0].clientX;
+      e.preventDefault(); // Prevent page scroll during swipe
+    }
   });
 
   track.addEventListener("touchend", () => {
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) return;
+
     const diff = startX - currentX;
     const threshold = 50;
 
