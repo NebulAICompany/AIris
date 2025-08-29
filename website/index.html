@@ -139,78 +139,136 @@
       <div class="container">
         <div class="section-header">
           <h2 class="section-title">What can AIris do for you?</h2>
-          <p class="section-description">
-            Ask AIris anything about your financial documents.
-          </p>
         </div>
 
-        <div class="features-interactive">
-          <div class="feature-prompt-card">
-            <div class="prompt-header">
-              <div class="prompt-avatar">
-                <i class="fas fa-user"></i>
+        <!-- Horizontal Features Gallery -->
+        <div class="features-horizontal">
+          <div class="gallery-container">
+            <div class="gallery-track">
+              <div class="gallery-item">
+                <div class="feature-demo">
+                  <div class="demo-image">
+                    <div class="image-placeholder">
+                      <span>Document Verification</span>
+                    </div>
+                  </div>
+                  <div class="demo-conversation">
+                    <div class="conversation-bubble user">
+                      <span class="bubble-sender">You</span>
+                      <p>"Is this invoice authentic?"</p>
+                    </div>
+                    <div class="conversation-bubble ai">
+                      <span class="bubble-sender">AIris</span>
+                      <p>
+                        "Document verified ✓ No fraud detected. All signatures
+                        and watermarks are authentic."
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <span class="prompt-user">You</span>
-            </div>
-            <div class="prompt-message user-message">
-              "Is this invoice authentic?"
+
+              <div class="gallery-item">
+                <div class="feature-demo">
+                  <div class="demo-image">
+                    <div class="image-placeholder">
+                      <span>Financial Analysis</span>
+                    </div>
+                  </div>
+                  <div class="demo-conversation">
+                    <div class="conversation-bubble user">
+                      <span class="bubble-sender">You</span>
+                      <p>"Show me Tesla stock with moving averages"</p>
+                    </div>
+                    <div class="conversation-bubble ai">
+                      <span class="bubble-sender">AIris</span>
+                      <p>
+                        "Interactive chart generated ✓ Tesla at $248.50 with
+                        50-day and 200-day moving averages."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gallery-item">
+                <div class="feature-demo">
+                  <div class="demo-image">
+                    <div class="image-placeholder">
+                      <span>Visual Intelligence</span>
+                    </div>
+                  </div>
+                  <div class="demo-conversation">
+                    <div class="conversation-bubble user">
+                      <span class="bubble-sender">You</span>
+                      <p>"What does this revenue chart show?"</p>
+                    </div>
+                    <div class="conversation-bubble ai">
+                      <span class="bubble-sender">AIris</span>
+                      <p>
+                        "Chart analysis complete ✓ 23% Q3 growth with peak in
+                        September. Trend shows strong upward momentum."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gallery-item">
+                <div class="feature-demo">
+                  <div class="demo-image">
+                    <div class="image-placeholder">
+                      <span>Mathematical Computing</span>
+                    </div>
+                  </div>
+                  <div class="demo-conversation">
+                    <div class="conversation-bubble user">
+                      <span class="bubble-sender">You</span>
+                      <p>"Calculate CAGR and statistical significance"</p>
+                    </div>
+                    <div class="conversation-bubble ai">
+                      <span class="bubble-sender">AIris</span>
+                      <p>
+                        "Analysis complete ✓ CAGR: 15.7% with 95% confidence
+                        interval. Results statistically significant."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gallery-item">
+                <div class="feature-demo">
+                  <div class="demo-image">
+                    <div class="image-placeholder">
+                      <span>Web Search</span>
+                    </div>
+                  </div>
+                  <div class="demo-conversation">
+                    <div class="conversation-bubble user">
+                      <span class="bubble-sender">You</span>
+                      <p>"Find latest news about this company"</p>
+                    </div>
+                    <div class="conversation-bubble ai">
+                      <span class="bubble-sender">AIris</span>
+                      <p>
+                        "News retrieved ✓ 5 recent articles: earnings beat
+                        expectations, new partnerships announced."
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="feature-prompt-card response">
-            <div class="prompt-header">
-              <div class="prompt-avatar ai">
-                <i class="fas fa-robot"></i>
-              </div>
-              <span class="prompt-user ai">AIris</span>
-            </div>
-            <div class="prompt-message ai-message">
-              "Document verified ✓ No fraud indicators detected. All watermarks
-              and signatures are authentic."
-            </div>
-          </div>
-
-          <div class="feature-prompt-card">
-            <div class="prompt-header">
-              <div class="prompt-avatar">
-                <i class="fas fa-user"></i>
-              </div>
-              <span class="prompt-user">You</span>
-            </div>
-            <div class="prompt-message user-message">
-              "Export the Q4 revenue data to Excel"
-            </div>
-          </div>
-
-          <div class="feature-prompt-card response">
-            <div class="prompt-header">
-              <div class="prompt-avatar ai">
-                <i class="fas fa-robot"></i>
-              </div>
-              <span class="prompt-user ai">AIris</span>
-            </div>
-            <div class="prompt-message ai-message">
-              "Excel file generated ✓ Q4_Revenue_Data.xlsx ready for download"
-            </div>
-          </div>
-        </div>
-
-        <div class="features-grid-simple">
-          <div class="feature-simple">
-            <i class="fas fa-shield-check"></i>
-            <span>Fraud Detection</span>
-          </div>
-          <div class="feature-simple">
-            <i class="fas fa-search"></i>
-            <span>Document Q&A</span>
-          </div>
-          <div class="feature-simple">
-            <i class="fas fa-download"></i>
-            <span>Instant Export</span>
-          </div>
-          <div class="feature-simple">
-            <i class="fas fa-chart-bar"></i>
-            <span>Auto Reports</span>
+          <!-- Pagination Indicators -->
+          <div class="gallery-pagination">
+            <span class="page-indicator active" data-page="0"></span>
+            <span class="page-indicator" data-page="1"></span>
+            <span class="page-indicator" data-page="2"></span>
+            <span class="page-indicator" data-page="3"></span>
+            <span class="page-indicator" data-page="4"></span>
           </div>
         </div>
       </div>
@@ -265,6 +323,53 @@
               <i class="fas fa-shield-alt"></i>
               <span>Document Verification</span>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Security & Privacy Section -->
+    <section class="security-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Your Data, Your Control</h2>
+          <p class="section-description">
+            Enterprise-grade security with complete privacy protection.
+          </p>
+        </div>
+
+        <div class="security-features">
+          <div class="security-feature">
+            <div class="security-icon">
+              <i class="fas fa-server"></i>
+            </div>
+            <h3>On-Premise Processing</h3>
+            <p>
+              All data processing happens on your local infrastructure. Your
+              documents never leave your environment.
+            </p>
+          </div>
+
+          <div class="security-feature">
+            <div class="security-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>End-to-End Encryption</h3>
+            <p>
+              Military-grade encryption protects your data at rest and in
+              transit. Zero-knowledge architecture ensures privacy.
+            </p>
+          </div>
+
+          <div class="security-feature">
+            <div class="security-icon">
+              <i class="fas fa-user-lock"></i>
+            </div>
+            <h3>No Data Collection</h3>
+            <p>
+              We don't collect, store, or share your financial data. What's
+              yours stays yours, always.
+            </p>
           </div>
         </div>
       </div>

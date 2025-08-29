@@ -411,7 +411,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("🌌 Nebula Intelligence Website Initialized");
   console.log("🚀 AIris Product Website Ready");
+
+  // Initialize Horizontal Gallery Navigation
+  initializeGallery();
 });
+
+// Horizontal Gallery Navigation
+function initializeGallery() {
+  const track = document.querySelector(".gallery-track");
+  const items = document.querySelectorAll(".gallery-item");
+  const pagination = document.querySelector(".gallery-pagination");
+  const indicators = document.querySelectorAll(".page-indicator");
+
+  if (!track || !items.length) return;
+
+  let currentIndex = 0;
+  const totalItems = items.length;
+
+  function updateNavigation() {
+    // Update pagination indicators
+    indicators.forEach((indicator, index) => {
+      if (index === currentIndex) {
+        indicator.classList.add("active");
+      } else {
+        indicator.classList.remove("active");
+      }
+    });
+  }
+
+  function goToSlide(index) {
+    currentIndex = index;
+    const translateX = -currentIndex * 100;
+    track.style.transform = `translateX(${translateX}%)`;
+    updateNavigation();
+  }
+
+  // Add pagination click events
+  indicators.forEach((indicator, index) => {
+    indicator.addEventListener("click", () => {
+      goToSlide(index);
+    });
+  });
+
+  // Initialize navigation state
+  updateNavigation();
+
+  // Touch/swipe support for mobile
+  let startX = 0;
+  let currentX = 0;
+
+  track.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+  });
+
+  track.addEventListener("touchmove", (e) => {
+    currentX = e.touches[0].clientX;
+    e.preventDefault(); // Prevent page scroll during swipe
+  });
+
+  track.addEventListener("touchend", () => {
+    const diff = startX - currentX;
+    const threshold = 50;
+
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && currentIndex < totalItems - 1) {
+        // Swipe left - next
+        goToSlide(currentIndex + 1);
+        console.log("Swiped left - Next slide");
+      } else if (diff < 0 && currentIndex > 0) {
+        // Swipe right - prev
+        goToSlide(currentIndex - 1);
+        console.log("Swiped right - Previous slide");
+      }
+    }
+  });
+
+  console.log("🎠 Horizontal Gallery Navigation Initialized");
+}
 
 // Add CSS animations dynamically
 const style = document.createElement("style");
