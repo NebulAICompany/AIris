@@ -19,6 +19,7 @@ class NebulaWebsite {
     this.setupVideoPlayer();
     this.setupDownloadButtons();
     this.setupScrollIndicator();
+    this.setupContactForm();
     this.startPerformanceAnimations();
   }
 
@@ -65,10 +66,11 @@ class NebulaWebsite {
           if (
             targetId === "features" ||
             targetId === "demo" ||
-            targetId === "contact" ||
             targetId === "screenshots"
           ) {
             extraPadding = -60; // Half the negative padding for better positioning
+          } else if (targetId === "contact") {
+            extraPadding = -150; // More negative padding for contact section
           }
 
           const targetPosition =
@@ -225,6 +227,163 @@ class NebulaWebsite {
         behavior: "smooth",
       });
     }
+  }
+
+  // Contact form functionality
+  setupContactForm() {
+    const contactForm = document.getElementById("contact-form");
+    if (contactForm) {
+      contactForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.handleContactFormSubmit(contactForm);
+      });
+
+      // Add real-time validation
+      this.setupFormValidation(contactForm);
+    }
+  }
+
+  setupFormValidation(form) {
+    const inputs = form.querySelectorAll("input, select, textarea");
+
+    inputs.forEach((input) => {
+      input.addEventListener("blur", () => {
+        this.validateField(input);
+      });
+
+      input.addEventListener("input", () => {
+        if (input.classList.contains("error")) {
+          this.validateField(input);
+        }
+      });
+    });
+  }
+
+  validateField(field) {
+    const value = field.value.trim();
+    const fieldName = field.name;
+    let isValid = true;
+    let errorMessage = "";
+
+    // Remove existing error styling
+    field.classList.remove("error");
+    this.removeFieldError(field);
+
+    // Validation rules
+    switch (fieldName) {
+      case "name":
+        if (!value) {
+          isValid = false;
+          errorMessage = "Name is required";
+        } else if (value.length < 2) {
+          isValid = false;
+          errorMessage = "Name must be at least 2 characters";
+        }
+        break;
+
+      case "email":
+        if (!value) {
+          isValid = false;
+          errorMessage = "Email is required";
+        } else if (!this.isValidEmail(value)) {
+          isValid = false;
+          errorMessage = "Please enter a valid email address";
+        }
+        break;
+
+      case "subject":
+        if (!value) {
+          isValid = false;
+          errorMessage = "Please select a subject";
+        }
+        break;
+
+      case "message":
+        if (!value) {
+          isValid = false;
+          errorMessage = "Message is required";
+        } else if (value.length < 10) {
+          isValid = false;
+          errorMessage = "Message must be at least 10 characters";
+        }
+        break;
+    }
+
+    if (!isValid) {
+      field.classList.add("error");
+      this.showFieldError(field, errorMessage);
+    }
+
+    return isValid;
+  }
+
+  isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  showFieldError(field, message) {
+    const errorElement = document.createElement("div");
+    errorElement.className = "field-error";
+    errorElement.textContent = message;
+    errorElement.style.cssText = `
+      color: var(--error);
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: block;
+    `;
+
+    field.parentNode.appendChild(errorElement);
+  }
+
+  removeFieldError(field) {
+    const existingError = field.parentNode.querySelector(".field-error");
+    if (existingError) {
+      existingError.remove();
+    }
+  }
+
+  handleContactFormSubmit(form) {
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    // Validate all fields
+    const inputs = form.querySelectorAll("input, select, textarea");
+    let isFormValid = true;
+
+    inputs.forEach((input) => {
+      if (!this.validateField(input)) {
+        isFormValid = false;
+      }
+    });
+
+    if (!isFormValid) {
+      this.showNotification("Please fix the errors in the form", "error");
+      return;
+    }
+
+    // Show loading state
+    const submitBtn = form.querySelector(".submit-btn");
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = "Sending...";
+    submitBtn.disabled = true;
+
+    // Simulate form submission (replace with actual API call)
+    setTimeout(() => {
+      // Reset form
+      form.reset();
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+
+      // Show success message
+      this.showNotification(
+        "Message sent successfully! We'll get back to you soon.",
+        "success"
+      );
+
+      // Log form data (in production, send to server)
+      console.log("Contact form submitted:", data);
+    }, 2000);
   }
 
   handleDownload(platform) {

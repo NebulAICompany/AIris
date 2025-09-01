@@ -361,22 +361,62 @@
     <!-- Contact Section -->
     <section id="contact" class="contact">
       <div class="container">
-        <div class="contact-content">
-          <div class="contact-info">
-            <h2 class="section-title">Ready to transform your workflow?</h2>
-            <p class="section-description">
-              Get in touch with us to learn more about AIris and how it can help
-              your business.
-            </p>
+        <div class="section-header">
+          <h2 class="section-title">Ready to transform your workflow?</h2>
+        </div>
 
-            <div class="contact-methods">
-              <div class="contact-method">
-                <i class="fas fa-envelope"></i>
-                <div>
-                  <h4>Email Us</h4>
-                  <p>nebulaicompany@gmail.com</p>
+        <div class="contact-content">
+          <div class="contact-form-section">
+            <div class="contact-form">
+              <h3 class="form-title">Send us a Message</h3>
+              <form id="contact-form" class="message-form">
+                <div class="form-group">
+                  <label for="name">Name *</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Your full name"
+                    required
+                  />
                 </div>
-              </div>
+
+                <div class="form-group">
+                  <label for="email">Email *</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="your.email@example.com"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="subject">Subject *</label>
+                  <select id="subject" name="subject" required>
+                    <option value="">Select a subject</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="demo">Request Demo</option>
+                    <option value="support">Technical Support</option>
+                    <option value="partnership">Partnership</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="message">Message *</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    placeholder="Tell us how we can help you..."
+                    rows="5"
+                    required
+                  ></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit</button>
+              </form>
             </div>
           </div>
         </div>
@@ -411,7 +451,13 @@
         </div>
 
         <div class="footer-bottom">
-          <p>&copy; NebulAI Intelligence. All rights reserved.</p>
+          <div class="footer-info">
+            <p>&copy; NebulAI Intelligence. All rights reserved.</p>
+            <a href="mailto:nebulaicompany@gmail.com" class="footer-email">
+              <i class="fas fa-envelope"></i>
+              nebulaicompany@gmail.com
+            </a>
+          </div>
           <div class="social-links">
             <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             <a href="#" aria-label="LinkedIn"

@@ -1385,8 +1385,153 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  max-width: 600px;
+  max-width: 1000px;
   margin: 0 auto;
+}
+
+/* Contact Form Styles */
+.contact-form-section {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 11, 46, 0.6),
+    rgba(45, 27, 78, 0.4)
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: var(--border-radius-lg);
+  padding: 2rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.form-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--border-radius);
+  background: rgba(139, 92, 246, 0.05);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238b5cf6' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.submit-btn {
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 0.5rem;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Form Validation Styles */
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: var(--error);
+  background: rgba(255, 0, 110, 0.05);
+  box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.1);
+}
+
+.field-error {
+  color: var(--error);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+  animation: slideInError 0.3s ease-out;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .contact-methods {
@@ -1396,13 +1541,21 @@ body {
   margin-top: 2rem;
 }
 
+.contact-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+}
+
 .contact-method {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.contact-method i {
+.contact-icon {
   width: 48px;
   height: 48px;
   border-radius: var(--border-radius);
@@ -1416,16 +1569,78 @@ body {
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  font-size: 1.2rem;
 }
 
-.contact-method h4 {
+.contact-details h4 {
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   color: var(--text-primary);
+  font-size: 1.1rem;
 }
 
-.contact-method p {
+.contact-details p {
   color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.email-link {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.5rem;
+  transition: var(--transition);
+}
+
+.email-link:hover {
+  color: var(--accent-secondary);
+  text-decoration: underline;
+}
+
+.response-time {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.connect-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.connect-section h4 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.connect-section .social-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.connect-section .social-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: var(--transition);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.connect-section .social-link:hover {
+  background: rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .download-section {
@@ -1600,9 +1815,36 @@ body {
   border-top: 1px solid rgba(139, 92, 246, 0.2);
 }
 
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .footer-bottom p {
   color: var(--text-secondary);
   font-size: 0.875rem;
+  margin: 0;
+}
+
+.footer-email {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.footer-email:hover {
+  color: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.footer-email i {
+  font-size: 0.9rem;
 }
 
 .social-links {
@@ -1632,7 +1874,8 @@ body {
 @media (max-width: 1400px) {
   .tech-content,
   .demo-container,
-  .about-content {
+  .about-content,
+  .contact-content {
     grid-template-columns: 1fr;
     gap: 3rem;
   }
