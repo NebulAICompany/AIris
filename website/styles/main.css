@@ -470,53 +470,73 @@ body {
   line-height: 1.6;
 }
 
-.hero-prompt-box {
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.1),
-    rgba(168, 85, 247, 0.1)
-  );
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: var(--border-radius);
-  padding: 1.2rem 1.5rem;
-  margin: 2rem 0;
+.scroll-indicator {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 1rem;
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.scroll-indicator:hover {
+  transform: translateY(-2px);
+}
+
+.scroll-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+.scroll-arrow {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(168, 85, 247, 0.2)
+  );
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  font-size: 1.2rem;
+  animation: scrollBounce 2s ease-in-out infinite;
   backdrop-filter: blur(10px);
 }
 
-.prompt-icon {
-  color: var(--accent-primary);
-  font-size: 1.2rem;
-  flex-shrink: 0;
+.scroll-arrow:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.3),
+    rgba(168, 85, 247, 0.3)
+  );
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
 }
 
-.prompt-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.prompt-label {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.prompt-example {
-  font-size: 1rem;
-  color: var(--text-primary);
-  font-style: italic;
-  font-weight: 400;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 3rem;
+@keyframes scrollBounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-4px);
+  }
 }
 
 .hero-stats {
@@ -1661,9 +1681,19 @@ body {
     font-size: 2rem;
   }
 
-  .hero-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .scroll-indicator {
+    margin-top: 3rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .scroll-text {
+    font-size: 0.8rem;
+  }
+
+  .scroll-arrow {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
   }
 
   .hero-stats {
@@ -1695,18 +1725,6 @@ body {
   }
 
   /* Mobile Hero */
-  .hero-prompt-box {
-    padding: 1rem;
-    margin: 1.5rem 0;
-  }
-
-  .prompt-content {
-    gap: 0.2rem;
-  }
-
-  .prompt-example {
-    font-size: 0.95rem;
-  }
 
   /* Mobile Features */
   .features-horizontal {
