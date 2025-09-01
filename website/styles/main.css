@@ -39,7 +39,7 @@
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Performance optimized transitions for navbar */
-  --navbar-transition: backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --navbar-transition: backdrop-filter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* Reset & Base Styles */
@@ -302,6 +302,12 @@ body {
   text-decoration: none;
   /* Add text shadow for better readability over transparent background */
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+.nav-brand:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .nav-logo {
@@ -331,7 +337,7 @@ body {
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  transition: var(--transition);
+  transition: color 0.3s ease, text-shadow 0.3s ease;
   position: relative;
   /* Enhanced text contrast for transparent background */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -356,7 +362,7 @@ body {
     var(--accent-primary),
     var(--accent-secondary)
   );
-  transition: var(--transition);
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .nav-link:hover::after,
