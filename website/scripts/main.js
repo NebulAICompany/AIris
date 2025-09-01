@@ -18,6 +18,7 @@ class NebulaWebsite {
     this.setupAnimations();
     this.setupVideoPlayer();
     this.setupDownloadButtons();
+    this.setupScrollIndicator();
     this.startPerformanceAnimations();
   }
 
@@ -186,6 +187,29 @@ class NebulaWebsite {
         this.handleDownload(platform);
       });
     });
+  }
+
+  // Scroll indicator functionality
+  setupScrollIndicator() {
+    const scrollIndicator = document.querySelector(".scroll-indicator");
+    if (scrollIndicator) {
+      scrollIndicator.addEventListener("click", () => {
+        this.scrollToNextSection();
+      });
+    }
+  }
+
+  scrollToNextSection() {
+    const featuresSection = document.getElementById("features");
+    if (featuresSection) {
+      const navbarHeight = this.navbar.offsetHeight;
+      const targetPosition = featuresSection.offsetTop - navbarHeight;
+
+      window.scrollTo({
+        top: targetPosition,
+        behavior: "smooth",
+      });
+    }
   }
 
   handleDownload(platform) {
