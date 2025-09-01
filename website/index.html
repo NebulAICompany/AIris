@@ -79,13 +79,26 @@
           <span class="brand-text">AIris</span>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <a href="#home" class="nav-link">Home</a>
-          <a href="#features" class="nav-link">Features</a>
-          <a href="#demo" class="nav-link">Demo</a>
-          <a href="#screenshots" class="nav-link">Gallery</a>
-          <a href="#contact" class="nav-link">Contact</a>
+          <a href="#home" class="nav-link" data-translate="nav.home">Home</a>
+          <a href="#features" class="nav-link" data-translate="nav.features"
+            >Features</a
+          >
+          <a href="#demo" class="nav-link" data-translate="nav.demo">Demo</a>
+          <a href="#screenshots" class="nav-link" data-translate="nav.gallery"
+            >Gallery</a
+          >
+          <a href="#contact" class="nav-link" data-translate="nav.contact"
+            >Contact</a
+          >
         </div>
         <div class="nav-actions">
+          <button
+            class="language-switcher"
+            id="language-switcher"
+            aria-label="Switch language"
+          >
+            Türkçe
+          </button>
           <button class="mobile-menu-toggle" id="mobile-menu-toggle">
             <span></span>
             <span></span>
@@ -100,20 +113,28 @@
       <div class="hero-container">
         <div class="hero-content">
           <h1 class="hero-title">
-            All your financial operations
-            <span class="gradient-text">in one platform</span>
+            <span data-translate="hero.title"
+              >All your financial operations</span
+            >
+            <span class="gradient-text" data-translate="hero.titleHighlight"
+              >in one platform</span
+            >
           </h1>
           <p class="hero-description">
-            AIris handles document verification, financial analysis, data
-            processing, and market research.
-            <strong
+            <span data-translate="hero.description"
+              >AIris handles document verification, financial analysis, data
+              processing, and market research.</span
+            >
+            <strong data-translate="hero.descriptionHighlight"
               >No additional resources needed - everything you need is
               here.</strong
             >
           </p>
 
           <div class="scroll-indicator">
-            <div class="scroll-text">Discover AIris</div>
+            <div class="scroll-text" data-translate="hero.discover">
+              Discover AIris
+            </div>
             <div class="scroll-arrow">
               <i class="fas fa-chevron-down"></i>
             </div>
@@ -126,7 +147,9 @@
     <section id="features" class="features">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">What can AIris do for you?</h2>
+          <h2 class="section-title" data-translate="features.title">
+            What can AIris do for you?
+          </h2>
         </div>
 
         <!-- Horizontal Features Gallery -->
@@ -137,17 +160,29 @@
                 <div class="feature-demo">
                   <div class="demo-image">
                     <div class="image-placeholder">
-                      <span>Document Verification</span>
+                      <span data-translate="features.documentVerification"
+                        >Document Verification</span
+                      >
                     </div>
                   </div>
                   <div class="demo-conversation">
                     <div class="conversation-bubble user">
-                      <span class="bubble-sender">You</span>
-                      <p>"Is this invoice authentic?"</p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.userMessage"
+                        >You</span
+                      >
+                      <p data-translate="features.documentQuestion">
+                        "Is this invoice authentic?"
+                      </p>
                     </div>
                     <div class="conversation-bubble ai">
-                      <span class="bubble-sender">AIris</span>
-                      <p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.airisMessage"
+                        >AIris</span
+                      >
+                      <p data-translate="features.documentAnswer">
                         "Document verified ✓ No fraud detected. All signatures
                         and watermarks are authentic."
                       </p>
@@ -160,17 +195,29 @@
                 <div class="feature-demo">
                   <div class="demo-image">
                     <div class="image-placeholder">
-                      <span>Financial Analysis</span>
+                      <span data-translate="features.financialAnalysis"
+                        >Financial Analysis</span
+                      >
                     </div>
                   </div>
                   <div class="demo-conversation">
                     <div class="conversation-bubble user">
-                      <span class="bubble-sender">You</span>
-                      <p>"Show me Tesla stock with moving averages"</p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.userMessage"
+                        >You</span
+                      >
+                      <p data-translate="features.analysisQuestion">
+                        "Show me Tesla stock with moving averages"
+                      </p>
                     </div>
                     <div class="conversation-bubble ai">
-                      <span class="bubble-sender">AIris</span>
-                      <p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.airisMessage"
+                        >AIris</span
+                      >
+                      <p data-translate="features.analysisAnswer">
                         "Interactive chart generated ✓ Tesla at $248.50 with
                         50-day and 200-day moving averages."
                       </p>
@@ -183,17 +230,29 @@
                 <div class="feature-demo">
                   <div class="demo-image">
                     <div class="image-placeholder">
-                      <span>Visual Intelligence</span>
+                      <span data-translate="features.visualIntelligence"
+                        >Visual Intelligence</span
+                      >
                     </div>
                   </div>
                   <div class="demo-conversation">
                     <div class="conversation-bubble user">
-                      <span class="bubble-sender">You</span>
-                      <p>"What does this revenue chart show?"</p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.userMessage"
+                        >You</span
+                      >
+                      <p data-translate="features.visualQuestion">
+                        "What does this revenue chart show?"
+                      </p>
                     </div>
                     <div class="conversation-bubble ai">
-                      <span class="bubble-sender">AIris</span>
-                      <p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.airisMessage"
+                        >AIris</span
+                      >
+                      <p data-translate="features.visualAnswer">
                         "Chart analysis complete ✓ 23% Q3 growth with peak in
                         September. Trend shows strong upward momentum."
                       </p>
@@ -206,17 +265,29 @@
                 <div class="feature-demo">
                   <div class="demo-image">
                     <div class="image-placeholder">
-                      <span>Mathematical Computing</span>
+                      <span data-translate="features.mathematicalComputing"
+                        >Mathematical Computing</span
+                      >
                     </div>
                   </div>
                   <div class="demo-conversation">
                     <div class="conversation-bubble user">
-                      <span class="bubble-sender">You</span>
-                      <p>"Calculate CAGR and statistical significance"</p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.userMessage"
+                        >You</span
+                      >
+                      <p data-translate="features.mathQuestion">
+                        "Calculate CAGR and statistical significance"
+                      </p>
                     </div>
                     <div class="conversation-bubble ai">
-                      <span class="bubble-sender">AIris</span>
-                      <p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.airisMessage"
+                        >AIris</span
+                      >
+                      <p data-translate="features.mathAnswer">
                         "Analysis complete ✓ CAGR: 15.7% with 95% confidence
                         interval. Results statistically significant."
                       </p>
@@ -229,17 +300,29 @@
                 <div class="feature-demo">
                   <div class="demo-image">
                     <div class="image-placeholder">
-                      <span>Web Search</span>
+                      <span data-translate="features.webSearch"
+                        >Web Search</span
+                      >
                     </div>
                   </div>
                   <div class="demo-conversation">
                     <div class="conversation-bubble user">
-                      <span class="bubble-sender">You</span>
-                      <p>"Find latest news about this company"</p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.userMessage"
+                        >You</span
+                      >
+                      <p data-translate="features.searchQuestion">
+                        "Find latest news about this company"
+                      </p>
                     </div>
                     <div class="conversation-bubble ai">
-                      <span class="bubble-sender">AIris</span>
-                      <p>
+                      <span
+                        class="bubble-sender"
+                        data-translate="features.airisMessage"
+                        >AIris</span
+                      >
+                      <p data-translate="features.searchAnswer">
                         "News retrieved ✓ 5 recent articles: earnings beat
                         expectations, new partnerships announced."
                       </p>
@@ -266,8 +349,10 @@
     <section id="demo" class="demo">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">See AIris in Action</h2>
-          <p class="section-description">
+          <h2 class="section-title" data-translate="demo.title">
+            See AIris in Action
+          </h2>
+          <p class="section-description" data-translate="demo.description">
             Watch how AIris transforms complex financial document processing
             into simple, automated workflows.
           </p>
@@ -280,8 +365,10 @@
                 <i class="fas fa-play"></i>
               </div>
               <div class="video-overlay">
-                <h3>AIris Product Demo</h3>
-                <p>Complete walkthrough of features and capabilities</p>
+                <h3 data-translate="demo.videoTitle">AIris Product Demo</h3>
+                <p data-translate="demo.videoDescription">
+                  Complete walkthrough of features and capabilities
+                </p>
               </div>
             </div>
           </div>
@@ -292,24 +379,28 @@
     <!-- Screenshots Section -->
     <section id="screenshots" class="screenshots">
       <div class="container">
-        <h2 class="section-title">Gallery</h2>
+        <h2 class="section-title" data-translate="gallery.title">Gallery</h2>
         <div class="screenshots-grid">
           <div class="screenshot-item">
             <div class="screenshot-placeholder">
               <i class="fas fa-image"></i>
-              <span>Main Dashboard</span>
+              <span data-translate="gallery.mainDashboard">Main Dashboard</span>
             </div>
           </div>
           <div class="screenshot-item">
             <div class="screenshot-placeholder">
               <i class="fas fa-chart-line"></i>
-              <span>Financial Charts</span>
+              <span data-translate="gallery.financialCharts"
+                >Financial Charts</span
+              >
             </div>
           </div>
           <div class="screenshot-item">
             <div class="screenshot-placeholder">
               <i class="fas fa-shield-alt"></i>
-              <span>Document Verification</span>
+              <span data-translate="gallery.documentVerification"
+                >Document Verification</span
+              >
             </div>
           </div>
         </div>
@@ -320,8 +411,10 @@
     <section class="security-section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Your Data, Your Control</h2>
-          <p class="section-description">
+          <h2 class="section-title" data-translate="security.title">
+            Your Data, Your Control
+          </h2>
+          <p class="section-description" data-translate="security.description">
             Enterprise-grade security with complete privacy protection.
           </p>
         </div>
@@ -331,8 +424,8 @@
             <div class="security-icon">
               <i class="fas fa-server"></i>
             </div>
-            <h3>On-Premise Processing</h3>
-            <p>
+            <h3 data-translate="security.onPremise">On-Premise Processing</h3>
+            <p data-translate="security.onPremiseDesc">
               All data processing happens on your local infrastructure. Your
               documents never leave your environment.
             </p>
@@ -342,8 +435,8 @@
             <div class="security-icon">
               <i class="fas fa-shield-alt"></i>
             </div>
-            <h3>End-to-End Encryption</h3>
-            <p>
+            <h3 data-translate="security.encryption">End-to-End Encryption</h3>
+            <p data-translate="security.encryptionDesc">
               Military-grade encryption protects your data at rest and in
               transit. Zero-knowledge architecture ensures privacy.
             </p>
@@ -353,8 +446,10 @@
             <div class="security-icon">
               <i class="fas fa-user-lock"></i>
             </div>
-            <h3>No Data Collection</h3>
-            <p>
+            <h3 data-translate="security.noDataCollection">
+              No Data Collection
+            </h3>
+            <p data-translate="security.noDataCollectionDesc">
               We don't collect, store, or share your financial data. What's
               yours stays yours, always.
             </p>
@@ -367,60 +462,103 @@
     <section id="contact" class="contact">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Ready to transform your workflow?</h2>
+          <h2 class="section-title" data-translate="contact.title">
+            Ready to transform your workflow?
+          </h2>
         </div>
 
         <div class="contact-content">
           <div class="contact-form-section">
             <div class="contact-form">
-              <h3 class="form-title">Send us a Message</h3>
+              <h3 class="form-title" data-translate="contact.formTitle">
+                Send us a Message
+              </h3>
               <form id="contact-form" class="message-form">
                 <div class="form-group">
-                  <label for="name">Name *</label>
+                  <label for="name" data-translate="contact.name">Name *</label>
                   <input
                     type="text"
                     id="name"
                     name="name"
                     placeholder="Your full name"
+                    data-translate="contact.namePlaceholder"
                     required
                   />
                 </div>
 
                 <div class="form-group">
-                  <label for="email">Email *</label>
+                  <label for="email" data-translate="contact.email"
+                    >Email *</label
+                  >
                   <input
                     type="email"
                     id="email"
                     name="email"
                     placeholder="your.email@example.com"
+                    data-translate="contact.emailPlaceholder"
                     required
                   />
                 </div>
 
                 <div class="form-group">
-                  <label for="subject">Subject *</label>
+                  <label for="subject" data-translate="contact.subject"
+                    >Subject *</label
+                  >
                   <select id="subject" name="subject" required>
-                    <option value="">Select a subject</option>
-                    <option value="general">General Inquiry</option>
-                    <option value="demo">Request Demo</option>
-                    <option value="support">Technical Support</option>
-                    <option value="partnership">Partnership</option>
-                    <option value="other">Other</option>
+                    <option
+                      value=""
+                      data-translate="contact.subjectPlaceholder"
+                    >
+                      Select a subject
+                    </option>
+                    <option
+                      value="general"
+                      data-translate="contact.generalInquiry"
+                    >
+                      General Inquiry
+                    </option>
+                    <option value="demo" data-translate="contact.requestDemo">
+                      Request Demo
+                    </option>
+                    <option
+                      value="support"
+                      data-translate="contact.technicalSupport"
+                    >
+                      Technical Support
+                    </option>
+                    <option
+                      value="partnership"
+                      data-translate="contact.partnership"
+                    >
+                      Partnership
+                    </option>
+                    <option value="other" data-translate="contact.other">
+                      Other
+                    </option>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label for="message">Message *</label>
+                  <label for="message" data-translate="contact.message"
+                    >Message *</label
+                  >
                   <textarea
                     id="message"
                     name="message"
                     placeholder="Tell us how we can help you..."
+                    data-translate="contact.messagePlaceholder"
                     rows="5"
                     required
                   ></textarea>
                 </div>
 
-                <button type="submit" class="submit-btn">Submit</button>
+                <button
+                  type="submit"
+                  class="submit-btn"
+                  data-translate="contact.submit"
+                >
+                  Submit
+                </button>
               </form>
             </div>
           </div>
@@ -436,28 +574,40 @@
             <img src="assets/logo.png" alt="AIris Logo" class="footer-logo" />
             <div class="footer-brand-content">
               <h3>AIris</h3>
-              <p>AI-Powered Financial Document Processing</p>
+              <p data-translate="footer.tagline">
+                AI-Powered Financial Document Processing
+              </p>
             </div>
           </div>
 
           <div class="footer-links">
             <div class="footer-column">
-              <h4>Product</h4>
-              <a href="#features">Features</a>
-              <a href="#demo">Demo</a>
-              <a href="#contact">Contact</a>
+              <h4 data-translate="footer.product">Product</h4>
+              <a href="#features" data-translate="nav.features">Features</a>
+              <a href="#demo" data-translate="nav.demo">Demo</a>
+              <a href="#contact" data-translate="nav.contact">Contact</a>
             </div>
             <div class="footer-column">
-              <h4>Legal</h4>
-              <a href="privacy-policy.html">Privacy Policy</a>
-              <a href="terms-of-service.html">Terms of Service</a>
+              <h4 data-translate="footer.legal">Legal</h4>
+              <a
+                href="privacy-policy.html"
+                data-translate="footer.privacyPolicy"
+                >Privacy Policy</a
+              >
+              <a
+                href="terms-of-service.html"
+                data-translate="footer.termsOfService"
+                >Terms of Service</a
+              >
             </div>
           </div>
         </div>
 
         <div class="footer-bottom">
           <div class="footer-info">
-            <p>&copy; NebulAI Intelligence. All rights reserved.</p>
+            <p data-translate="footer.copyright">
+              &copy; NebulAI Intelligence. All rights reserved.
+            </p>
             <a href="mailto:nebulaicompany@gmail.com" class="footer-email">
               <i class="fas fa-envelope"></i>
               nebulaicompany@gmail.com
@@ -474,6 +624,7 @@
       </div>
     </footer>
 
+    <script src="scripts/language.js"></script>
     <script src="scripts/main.js"></script>
   </body>
 </html>
