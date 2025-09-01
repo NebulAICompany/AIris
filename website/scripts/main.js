@@ -65,9 +65,10 @@ class NebulaWebsite {
           if (
             targetId === "features" ||
             targetId === "demo" ||
-            targetId === "contact"
+            targetId === "contact" ||
+            targetId === "screenshots"
           ) {
-            extraPadding = -120; // Even more negative padding to go much lower
+            extraPadding = -60; // Half the negative padding for better positioning
           }
 
           const targetPosition =
@@ -217,7 +218,7 @@ class NebulaWebsite {
     if (featuresSection) {
       // Use the same navbar height calculation as the main navigation
       const navbarHeight = 80; // var(--navbar-height) = 80px
-      const targetPosition = featuresSection.offsetTop - navbarHeight - -120; // Even more negative padding to go much lower
+      const targetPosition = featuresSection.offsetTop - navbarHeight - -60; // Half the negative padding for better positioning
 
       window.scrollTo({
         top: targetPosition,
