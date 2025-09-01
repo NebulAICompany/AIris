@@ -2,11 +2,39 @@ import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
-from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.utils.parser import AzureParser, TxtParser, ImageParser
 from backend.pipeline.vector import PreEmbeddingProcess
 
 logger = get_logger("UPLOAD")
+
+
+async def parse_document(file_path: str) -> str:
+    """
+    Parse document and extract text based on file type.
+    Args:
+        file_path: Path to the file to parse
+    Returns:
+        Extracted text content
+    """
+    try:
+        file_extension = Path(file_path).suffix.lower()
+
+        if file_extension in (".pdf", ".docx", ".xlsx"):
+            extracted_text = await AzureParser(file_path)
+        elif file_extension == ".txt":
+            extracted_text = await TxtParser(file_path)
+        elif file_extension in (".jpg", ".jpeg", ".gif", ".bmp", ".png"):
+            extracted_text = await ImageParser(file_path)
+        else:
+            raise ValueError(f"Unsupported file type: {file_extension}")
+
+        return extracted_text if extracted_text else ""
+
+    except Exception as e:
+        logger.error(f"Document parsing failed: {str(e)}")
+        raise e
+
+
 async def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
     """
     Process an uploaded file synchronously.
@@ -19,17 +47,8 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     try:
-        file_extension = Path(file_path).suffix.lower()
-
-        extracted_text = ""
-        if file_extension in ('.pdf', '.docx', '.xlsx'):
-            extracted_text = await AzureParser(file_path)
-        elif file_extension == '.txt':
-            extracted_text = await TxtParser(file_path)
-        elif file_extension in ('.jpg', '.jpeg', '.gif', '.bmp', '.png'):
-            extracted_text = await ImageParser(file_path)
-        else:
-            raise ValueError(f"Unsupported file type: {file_extension}")
+        # Parse document using the new method
+        extracted_text = await parse_document(file_path)
 
         # Convert string to enum
         if pre_embedding_process.lower() == "cch":
@@ -49,8 +68,14 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
         return {
             "status": "success",
             "message": "File processed successfully",
-            "vector_store_path": VECTORSTORE_PATH_STR,
+            "file_name": original_stem,
+            "text_length": len(extracted_text),
         }
+
     except Exception as e:
-        logger.error(f"Error processing file: {str(e)}")
-        raise e
+        logger.error(f"File processing failed: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"File processing failed: {str(e)}",
+            "file_name": Path(file_path).name,
+        }

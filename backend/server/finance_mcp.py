@@ -18,6 +18,7 @@ from backend.shared.constants import (
     ALPHA_VANTAGE_API_KEY,
     ALPHA_VANTAGE_BASE_URL,
     CHARTS_DIR,
+    CHART_DATA_FILE,
 )
 
 # Setup logging for chart operations using loguru
@@ -26,9 +27,6 @@ from loguru import logger
 chart_logger = logger.bind(name="CHART_OPERATIONS")
 
 mcp = FastMCP("finance")
-
-# Chart data file path
-CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 
 
 async def make_request(params: Dict[str, Any]) -> Dict[str, Any]:
@@ -237,9 +235,6 @@ def get_chart_datas():
         with open(CHART_DATA_FILE, "r", encoding="utf-8") as f:
             chart_data = json.load(f)
 
-        chart_logger.info(
-            f"📊 get_chart_datas() called - Returning {len(chart_data)} charts from file"
-        )
         for i, chart in enumerate(chart_data):
             chart_logger.info(
                 f"  Chart {i+1}: {type(chart)} - Length: {len(str(chart)) if chart else 0}"
@@ -269,6 +264,25 @@ def set_chart_data(data):
         )
     except Exception as e:
         chart_logger.error(f"❌ Error saving chart data: {e}")
+
+
+def clear_chart_datas():
+    """Clear chart data from JSON file storage"""
+    try:
+        if CHART_DATA_FILE.exists():
+            # Clear the file by writing an empty list
+            with open(CHART_DATA_FILE, "w", encoding="utf-8") as f:
+                json.dump([], f, ensure_ascii=False, indent=2)
+
+            chart_logger.info(
+                f"📊 clear_chart_datas() called - Chart data cleared from file"
+            )
+        else:
+            chart_logger.info(
+                f"📊 clear_chart_datas() called - No chart data file found to clear"
+            )
+    except Exception as e:
+        chart_logger.error(f"❌ Error clearing chart data: {e}")
 
 
 @mcp.tool()
@@ -310,7 +324,7 @@ async def create_stock_chart(
         chart_logger.info(f"🚀 Starting chart creation for symbols: {symbols}")
 
         if len(symbols) > 6:
-            return {"error": "En fazla 6 hisse senedi analiz edilebilir"}
+            return {"error": "Maximum 6 stock symbols can be analyzed"}
 
         stock_data = {}
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
@@ -394,7 +408,7 @@ async def create_stock_chart(
                 continue
 
         if not stock_data:
-            return {"error": "Hiçbir sembol için veri alınamadı"}
+            return {"error": "No data could be retrieved for any symbol"}
 
         # Grafik oluşturma
         fig = None
@@ -862,7 +876,7 @@ async def create_stock_chart(
             )
 
         if fig is None:
-            return {"error": "Grafik oluşturulamadı"}
+            return {"error": "Chart could not be created"}
 
         # Ortak layout ayarları
         fig.update_xaxes(rangeslider_visible=False)
@@ -930,11 +944,11 @@ async def create_stock_chart(
 
         chart_logger.info(f"🎯 Chart operation completed - ID: {chart_id}")
         return {
-            "message": f"✅ {len(symbols_list)} hisse için {chart_type} grafiği oluşturuldu ({subplot_layout} layout)"
+            "message": f"✅ {len(symbols_list)} stock {chart_type} chart created successfully ({subplot_layout} layout). Chart is displayed above this response for your analysis."
         }
 
     except Exception as e:
-        return {"error": f"Stock chart oluşturma hatası: {str(e)}"}
+        return {"error": f"Stock chart creation error: {str(e)}"}
 
 
 if __name__ == "__main__":

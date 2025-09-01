@@ -1,5 +1,68 @@
 /* Components CSS - Specific UI Elements */
 
+/* File type specific colors for generated files in attachments */
+.excel-preview i {
+  color: #217346;
+}
+
+.word-preview i {
+  color: #2b579a;
+}
+
+.powerpoint-preview i {
+  color: #d24726;
+}
+
+.pdf-preview i {
+  color: #dc3545;
+}
+
+.default-preview i {
+  color: #6c757d;
+}
+
+.file-preview-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  color: var(--text-primary);
+}
+
+.file-preview-content i {
+  font-size: 1.2em;
+  margin-bottom: 0;
+}
+
+.file-preview-content .file-type {
+  font-size: 0.6em;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* Minimal attachments toggle animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+  }
+}
+
+.images-header:hover {
+  background: rgba(59, 130, 246, 0.02);
+}
+
+.toggle-icon {
+  transition: transform 0.2s ease;
+}
+
 /* Chart Display Styles */
 .message-charts {
   margin-top: 16px;
@@ -837,11 +900,8 @@ body.dark-theme .image-caption {
   font-weight: 500;
   margin-bottom: 4px;
   display: -webkit-box;
-  display: box;
   -webkit-line-clamp: 2;
-  line-clamp: 2;
   -webkit-box-orient: vertical;
-  box-orient: vertical;
   overflow: hidden;
   line-height: 1.4;
 }
@@ -2080,9 +2140,10 @@ body.dark-theme .progress-bar {
 .files-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
   overflow-y: auto;
+  padding: 8px;
 }
 
 .empty-state {
@@ -2105,19 +2166,43 @@ body.dark-theme .progress-bar {
 }
 
 .file-card {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+  border: 2px solid var(--border-color);
   border-radius: var(--border-radius-lg);
-  padding: 16px;
-  transition: var(--transition);
+  padding: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.file-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-primary),
+    var(--accent-secondary),
+    var(--accent-primary)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.file-card:hover::before {
+  opacity: 1;
 }
 
 .file-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   border-color: var(--accent-primary);
-  background-color: var(--bg-tertiary);
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
 }
 
 .file-card:active {
@@ -2178,15 +2263,43 @@ body.dark-theme .progress-bar {
 }
 
 .file-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--border-radius);
-  background-color: var(--accent-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-lg);
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 16px;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.file-card-icon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.1)
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.file-card:hover .file-card-icon::before {
+  opacity: 1;
 }
 
 .file-card-info {
@@ -2207,26 +2320,63 @@ body.dark-theme .progress-bar {
 /* File Preview Styles */
 .file-card-preview {
   margin-top: 12px;
-  padding: 12px;
-  background-color: var(--bg-tertiary);
+  padding: 4px;
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
-  min-height: 120px;
-  max-height: 250px;
+  height: 320px;
   overflow: hidden;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.file-card-preview::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-primary),
+    var(--accent-secondary),
+    var(--accent-primary)
+  );
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.file-card:hover .file-card-preview {
+  border-color: var(--accent-primary);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .preview-loading {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 120px;
+  gap: 12px;
+  height: 100%;
   color: var(--text-muted);
   font-size: 13px;
+  text-align: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border-radius: var(--border-radius);
+  border: 1px dashed var(--border-color);
 }
 
 .preview-loading i {
+  font-size: 22px;
+  color: var(--accent-primary);
   animation: spin 1s linear infinite;
 }
 
@@ -2242,17 +2392,46 @@ body.dark-theme .progress-bar {
 .preview-error,
 .preview-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 120px;
+  gap: 10px;
+  height: 100%;
   color: var(--text-muted);
   font-size: 13px;
   text-align: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border-radius: var(--border-radius);
+  border: 1px dashed var(--border-color);
+  padding: 12px;
 }
 
 .preview-error {
   color: var(--error);
+  border-color: var(--error);
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.1),
+    rgba(220, 53, 69, 0.05)
+  );
+}
+
+.preview-error i,
+.preview-info i {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.preview-error i {
+  color: var(--error);
+}
+
+.preview-info i {
+  color: var(--accent-primary);
 }
 
 .preview-image {
@@ -2260,66 +2439,275 @@ body.dark-theme .progress-bar {
   justify-content: center;
   align-items: center;
   height: 100%;
-  padding: 8px;
+  padding: 0;
+  position: relative;
+}
+
+.preview-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: var(--border-radius);
+  pointer-events: none;
 }
 
 .preview-image img {
-  max-width: 100%;
-  max-height: 220px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.preview-image img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  border-color: var(--accent-primary);
+}
+
+.preview-image-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.preview-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: var(--border-radius-lg);
+}
+
+.preview-image-wrapper:hover .preview-image-overlay {
+  opacity: 1;
+}
+
+.preview-image-overlay i {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: var(--accent-primary);
+}
+
+.preview-image-overlay span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
+  color: white;
+  border-radius: var(--border-radius);
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.preview-header i {
+  font-size: 14px;
+}
+
+.preview-content {
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.preview-content span {
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
 }
 
 .preview-text {
-  max-height: 220px;
-  overflow-y: auto;
+  height: 100%;
+  overflow: hidden;
   font-family: var(--font-mono, "Courier New", monospace);
+  padding: 4px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-text::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .preview-text pre {
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.6;
   color: var(--text-primary);
   margin: 0;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 100%;
 }
 
 .preview-excel {
-  max-height: 220px;
-  overflow: auto;
+  height: 100%;
+  overflow: hidden;
+  padding: 4px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-excel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .excel-summary {
   font-size: 12px;
   color: var(--text-secondary);
   margin-bottom: 8px;
-  padding-bottom: 8px;
+  padding: 8px;
   border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.excel-data {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .excel-data table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 12px;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
 .excel-data th,
 .excel-data td {
-  padding: 4px 8px;
+  padding: 6px 8px;
   border: 1px solid var(--border-color);
   text-align: left;
+  transition: background-color 0.2s ease;
 }
 
 .excel-data th {
-  background-color: var(--bg-secondary);
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
   font-weight: 600;
-  color: var(--text-primary);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .excel-data td {
   color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.excel-data tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
 }
 
 /* Dark theme adjustments */
@@ -2337,19 +2725,57 @@ body.dark-theme .excel-data th {
 }
 
 /* Responsive adjustments */
+@media (max-width: 1200px) {
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
+  .files-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 4px;
+  }
+
+  .file-card {
+    padding: 16px;
+  }
+
   .file-card-preview {
-    min-height: 100px;
-    max-height: 200px;
+    height: 280px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
   }
 
   .preview-image img {
-    max-height: 180px;
+    max-height: 200px;
   }
 
   .preview-text,
   .preview-excel {
-    max-height: 180px;
+    max-height: 220px;
+  }
+
+  .preview-header {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .files-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .file-card-preview {
+    height: 240px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -4284,4 +4710,549 @@ body.dark-theme .uploaded-file-preview {
 
 body.dark-theme .uploaded-file-preview:hover {
   background: var(--bg-primary);
+}
+
+/* ======================================
+   NEBULA THEME - MAGICAL COSMIC EXPERIENCE
+   ====================================== */
+
+/* Nebula theme support for charts */
+body.nebula-theme .message-charts {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.15)
+  ) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.25),
+    0 0 40px rgba(236, 72, 153, 0.1) !important;
+}
+
+body.nebula-theme .message-chart-wrapper {
+  background: rgba(13, 2, 33, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4),
+    0 0 20px rgba(236, 72, 153, 0.2) !important;
+}
+
+body.nebula-theme .message-chart-wrapper:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 12px 50px rgba(139, 92, 246, 0.5),
+    0 0 30px rgba(236, 72, 153, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+body.nebula-theme .chart-caption {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.25),
+    rgba(236, 72, 153, 0.15)
+  ) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Nebula theme for fullscreen modal */
+body.nebula-theme .chart-fullscreen-content {
+  background: linear-gradient(135deg, #0d0221, #1a0b2e) !important;
+  box-shadow: 0 25px 80px rgba(139, 92, 246, 0.4) !important;
+}
+
+body.nebula-theme .chart-fullscreen-header {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.1)
+  ) !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .chart-fullscreen-title {
+  color: var(--text-primary) !important;
+  text-shadow: 0 0 15px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme support for images */
+body.nebula-theme .message-images {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15),
+    rgba(236, 72, 153, 0.1)
+  ) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .message-image-wrapper {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .message-image-wrapper:hover {
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4),
+    0 0 20px rgba(236, 72, 153, 0.2) !important;
+}
+
+body.nebula-theme .image-caption {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.1)
+  ) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Nebula theme support for upload animation */
+body.nebula-theme .upload-animation .dots span {
+  background: linear-gradient(45deg, #8b5cf6, #ec4899) !important;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme adjustments for upload progress */
+body.nebula-theme .upload-progress {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .progress-bar {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme adjustments */
+body.nebula-theme .file-card-preview {
+  background: rgba(13, 2, 33, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .preview-image img {
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .excel-data th {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.1)
+  ) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Nebula theme code blocks */
+body.nebula-theme .message-text pre,
+body.nebula-theme .message-content pre,
+body.nebula-theme .markdown-content pre,
+body.nebula-theme div pre,
+body.nebula-theme pre.hljs,
+body.nebula-theme pre[class*="hljs"] {
+  background: rgba(13, 2, 33, 0.95) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2),
+    inset 0 0 20px rgba(236, 72, 153, 0.05) !important;
+}
+
+body.nebula-theme .message-text pre code,
+body.nebula-theme .message-text code {
+  color: var(--text-primary) !important;
+  text-shadow: 0 0 5px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Nebula theme toggle switches */
+body.nebula-theme .toggle-switch {
+  background: rgba(13, 2, 33, 0.8) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .toggle-switch:hover {
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+body.nebula-theme .slider {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.3),
+    rgba(236, 72, 153, 0.2)
+  ) !important;
+}
+
+body.nebula-theme .slider:before {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.5) !important;
+}
+
+body.nebula-theme .toggle-switch input:checked + .slider {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5) !important;
+}
+
+body.nebula-theme .toggle-switch input:checked + .slider:before {
+  background: #e8d5ff !important;
+  box-shadow: 0 0 15px rgba(232, 213, 255, 0.8) !important;
+}
+
+/* Nebula theme status badges */
+body.nebula-theme .status-badge.verified {
+  background: linear-gradient(135deg, #06d6a0, #059669) !important;
+  box-shadow: 0 0 15px rgba(6, 214, 160, 0.4) !important;
+}
+
+body.nebula-theme .status-badge.rejected {
+  background: linear-gradient(135deg, #ff006e, #dc2626) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 110, 0.4) !important;
+}
+
+body.nebula-theme .status-badge.review-required {
+  background: linear-gradient(135deg, #ffd60a, #f59e0b) !important;
+  box-shadow: 0 0 15px rgba(255, 214, 10, 0.4) !important;
+}
+
+body.nebula-theme .verification-issues {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(255, 0, 110, 0.3) !important;
+}
+
+/* Nebula theme file selection */
+body.nebula-theme .file-selection-content {
+  background: rgba(13, 2, 33, 0.95) !important;
+}
+
+body.nebula-theme .file-item-icon.pdf {
+  background: linear-gradient(135deg, #ff006e, #dc2626) !important;
+}
+
+body.nebula-theme .file-item-icon.docx {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+}
+
+body.nebula-theme .file-item-icon.xlsx {
+  background: linear-gradient(135deg, #06d6a0, #059669) !important;
+}
+
+body.nebula-theme .file-item-icon.txt {
+  background: linear-gradient(135deg, #64748b, #475569) !important;
+}
+
+body.nebula-theme .file-item-icon.jpg,
+body.nebula-theme .file-item-icon.png,
+body.nebula-theme .file-item-icon.jpeg {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
+}
+
+/* Nebula theme chat file upload */
+body.nebula-theme .chat-file-upload-area {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 2px dashed rgba(139, 92, 246, 0.4) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1) !important;
+}
+
+body.nebula-theme .chat-file-upload-area.drag-over {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-color: rgba(139, 92, 246, 0.7) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.3),
+    0 0 30px rgba(236, 72, 153, 0.2) !important;
+}
+
+body.nebula-theme .chat-file-item {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+body.nebula-theme .chat-file-item:hover {
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+body.nebula-theme .file-attachment-button,
+body.nebula-theme .file-selection-button,
+body.nebula-theme .web-search-button {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.1)
+  ) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: 0 2px 10px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .web-search-button.active {
+  background: linear-gradient(135deg, #06d6a0, #059669) !important;
+  border: 2px solid #059669 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.4),
+    0 8px 30px rgba(6, 214, 160, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
+body.nebula-theme .web-search-button.active::after {
+  background: conic-gradient(
+    from 0deg,
+    #06d6a0,
+    #8b5cf6,
+    #ec4899,
+    #06d6a0
+  ) !important;
+  opacity: 0.9 !important;
+}
+
+/* Nebula theme support for uploaded files preview */
+body.nebula-theme .uploaded-files-container {
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 2, 33, 0.95),
+    rgba(26, 11, 46, 0.9)
+  ) !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .uploaded-files-header {
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.25),
+    rgba(236, 72, 153, 0.15)
+  ) !important;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .uploaded-file-preview:hover {
+  background: rgba(139, 92, 246, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Nebula theme upload progress */
+body.nebula-theme .upload-progress-bar {
+  background: rgba(13, 2, 33, 0.8) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .upload-progress-fill {
+  background: linear-gradient(90deg, #8b5cf6, #ec4899) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.6) !important;
+}
+
+/* Nebula theme for large upload zone */
+body.nebula-theme .chat-file-upload-zone {
+  border: 2px dashed rgba(139, 92, 246, 0.4) !important;
+  background: rgba(13, 2, 33, 0.8) !important;
+}
+
+body.nebula-theme .chat-file-upload-zone:hover {
+  background: rgba(139, 92, 246, 0.05) !important;
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .chat-file-upload-zone.drag-over {
+  background: rgba(139, 92, 246, 0.15) !important;
+  border-color: rgba(139, 92, 246, 0.8) !important;
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Nebula theme for chat input drag over */
+body.nebula-theme .chat-input.drag-over {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-color: rgba(139, 92, 246, 0.6) !important;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Nebula theme for file status messages */
+body.nebula-theme .file-status-message {
+  background: rgba(13, 2, 33, 0.9) !important;
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+}
+
+body.nebula-theme .file-status-message.uploading {
+  background: rgba(139, 92, 246, 0.15) !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3) !important;
+}
+
+body.nebula-theme .file-status-message.success {
+  background: rgba(6, 214, 160, 0.15) !important;
+  box-shadow: 0 0 15px rgba(6, 214, 160, 0.3) !important;
+}
+
+body.nebula-theme .file-status-message.error {
+  background: rgba(255, 0, 110, 0.15) !important;
+  box-shadow: 0 0 15px rgba(255, 0, 110, 0.3) !important;
+}
+
+body.nebula-theme .uploaded-file-preview {
+  border: 1px solid rgba(139, 92, 246, 0.2) !important;
+  background: rgba(13, 2, 33, 0.5) !important;
+}
+
+body.nebula-theme .uploaded-file-preview:hover {
+  background: rgba(139, 92, 246, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* ===============================
+   NEBULA THEME – COMPONENT HUD LAYERS
+   Adds complex overlays to charts and modals to evoke a futuristic dashboard.
+   =============================== */
+
+/* Ensure containers can host overlays */
+body.nebula-theme .message-charts,
+body.nebula-theme .message-chart-wrapper,
+body.nebula-theme .chart-fullscreen-content {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fine grid overlay for charts */
+body.nebula-theme .message-charts::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+      rgba(139, 92, 246, 0.08) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px;
+  background-position: 0 0, 0 0;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  animation: hudGridPan 80s linear infinite;
+  z-index: 1;
+}
+
+/* Scanline + glow sweep overlay for charts */
+body.nebula-theme .message-charts::after {
+  content: "";
+  position: absolute;
+  inset: -20% 0 -20% 0;
+  pointer-events: none;
+  background:
+    /* horizontal scanlines */ repeating-linear-gradient(
+      0deg,
+      rgba(232, 213, 255, 0.06) 0 2px,
+      transparent 2px 6px
+    ),
+    /* vertical faint lines */
+      repeating-linear-gradient(
+        90deg,
+        rgba(139, 92, 246, 0.05) 0 1px,
+        transparent 1px 12px
+      ),
+    /* moving glow bar */
+      linear-gradient(
+        0deg,
+        transparent 0%,
+        rgba(139, 92, 246, 0.15) 48%,
+        rgba(236, 72, 153, 0.18) 50%,
+        rgba(139, 92, 246, 0.15) 52%,
+        transparent 100%
+      );
+  background-size: 100% 6px, 12px 100%, 100% 18%;
+  background-repeat: repeat, repeat, no-repeat;
+  background-position: 0 0, 0 0, 0 -60%;
+  animation: scanlinePan 16s linear infinite, glowSweep 9s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+/* Fullscreen chart content gets crisper HUD */
+body.nebula-theme .chart-fullscreen-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+      rgba(139, 92, 246, 0.1) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  z-index: 1;
+  animation: hudGridPan 60s linear infinite;
+}
+
+body.nebula-theme .chart-fullscreen-content::after {
+  content: "";
+  position: absolute;
+  inset: -15% -5%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+      0deg,
+      rgba(232, 213, 255, 0.07) 0 2px,
+      transparent 2px 6px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(139, 92, 246, 0.08),
+      rgba(236, 72, 153, 0.06),
+      rgba(6, 214, 160, 0.06)
+    );
+  background-size: 100% 6px, 400% 100%;
+  background-position: 0 0, 0 0;
+  animation: scanlinePan 14s linear infinite,
+    auroraSweep 22s ease-in-out infinite;
+  mix-blend-mode: screen;
+  z-index: 2;
+}
+
+/* Make image wrappers feel holographic */
+body.nebula-theme .message-image-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 80% at 50% 0%,
+    rgba(139, 92, 246, 0.15),
+    transparent 70%
+  );
+  mix-blend-mode: screen;
+  z-index: 1;
+}
+
+/* Slightly stronger glow on interactive nebula buttons */
+body.nebula-theme .file-attachment-button:hover,
+body.nebula-theme .file-selection-button:hover,
+body.nebula-theme .web-search-button:hover {
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25),
+    0 14px 34px rgba(236, 72, 153, 0.35) !important;
+}
+
+/* Keyframes used by HUD overlays */
+@keyframes hudGridPan {
+  to {
+    background-position: 600px 600px, 600px 600px;
+  }
+}
+@keyframes scanlinePan {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: 100%;
+  }
+}
+@keyframes glowSweep {
+  0%,
+  100% {
+    background-position: 0 -60%;
+  }
+  50% {
+    background-position: 0 120%;
+  }
+}
+@keyframes auroraSweep {
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 200% 0;
+  }
 }

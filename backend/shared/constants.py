@@ -62,8 +62,9 @@ DATABASE_DIR = BASE_DIR / "database"
 CHAT_HISTORY_DB_PATH = DATABASE_DIR / "chat_history.db"
 MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
 
-# Charts directory
-CHARTS_DIR = DATABASE_DIR / "charts"
+# Charts directory - Use absolute path to prevent backend/backend issue
+CHARTS_DIR = PROJECT_ROOT / "backend" / "database" / "charts"
+CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"

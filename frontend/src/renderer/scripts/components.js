@@ -39,7 +39,8 @@ class UIComponents {
 
   init() {
     this.setupEventListeners();
-    this.loadTheme();
+    // Theme loading moved to AIrisApp class to load before loading screen
+    // this.loadTheme();
     this.initializeComponents();
 
     // Set toggle state on load
@@ -293,18 +294,15 @@ class UIComponents {
         const deleteBtn = e.target.closest(".delete-btn");
         const fileName = deleteBtn.dataset.filename;
         if (fileName) {
-          this.deleteFile(fileName);
-        }
-      }
-
-      // Handle download button clicks for created documents
-      if (e.target.closest(".download-btn")) {
-        e.preventDefault();
-        e.stopPropagation();
-        const downloadBtn = e.target.closest(".download-btn");
-        const fileName = downloadBtn.dataset.filename;
-        if (fileName) {
-          this.openCreatedDocument(fileName);
+          // Check if this is a created document or regular file based on context
+          const fileCard = deleteBtn.closest(".file-card");
+          if (fileCard && fileCard.closest("#created-documents-grid")) {
+            // This is a created document
+            this.deleteCreatedDocument(fileName);
+          } else {
+            // This is a regular file
+            this.deleteFile(fileName);
+          }
         }
       }
 
@@ -542,13 +540,16 @@ class UIComponents {
             response.response || response.content || response.data?.response;
           const responseImages = response.images || response.data?.images || [];
           const responseCharts = response.charts || response.data?.charts || [];
+          const responseGeneratedFiles =
+            response.generatedFiles || response.data?.generatedFiles || [];
 
           if (responseContent) {
             this.addMessageToChat(
               "assistant",
               responseContent,
               responseImages,
-              responseCharts
+              responseCharts,
+              responseGeneratedFiles
             );
           } else {
             console.warn("Empty response received:", response);
@@ -669,7 +670,13 @@ class UIComponents {
     }
   }
 
-  addMessageToChat(type, content, images = [], charts = []) {
+  addMessageToChat(
+    type,
+    content,
+    images = [],
+    charts = [],
+    generatedFiles = []
+  ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
@@ -831,77 +838,151 @@ class UIComponents {
 
     chatMessages.appendChild(messageDiv);
 
-    // Add images if any (AFTER charts, so they appear below the response)
-    if (images && images.length > 0) {
-      console.log(`Adding ${images.length} images to message`);
+    // Add attachments (images and generated files) if any (AFTER charts, so they appear below the response)
+    if (
+      (images && images.length > 0) ||
+      (generatedFiles && generatedFiles.length > 0)
+    ) {
+      console.log(
+        `Adding ${(images || []).length} images and ${
+          (generatedFiles || []).length
+        } generated files to message`
+      );
 
-      const imagesContainer = document.createElement("div");
-      imagesContainer.className = "message-images";
+      const attachmentsContainer = document.createElement("div");
+      attachmentsContainer.className = "message-images"; // Keep existing class for styling
 
-      // Add a header for the images section
-      const imagesHeader = document.createElement("div");
-      imagesHeader.className = "images-header";
-      imagesHeader.innerHTML = `
-        <i class="fas fa-paperclip"></i>
-        <span>Attachments</span>
+      // Add a header for the attachments section with toggle functionality
+      // Add a minimal header for the attachments section with toggle functionality
+      const attachmentsHeader = document.createElement("div");
+      attachmentsHeader.className = "images-header";
+      attachmentsHeader.innerHTML = `
+        <i class="fas fa-paperclip" style="font-size: 0.9em; opacity: 0.7;"></i>
+        <span style="font-size: 1em; opacity: 0.9;">${
+          (images || []).length + (generatedFiles || []).length
+        } attachment</span>
+        <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
       `;
-      imagesHeader.style.cssText = `
+      attachmentsHeader.style.cssText = `
         grid-column: 1 / -1;
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 0.9em;
-        font-weight: 600;
-        color: var(--text-primary);
-        opacity: 0.8;
-        margin-bottom: 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        gap: 6px;
+        font-size: 0.75em;
+        color: var(--text-secondary);
+        margin: 8px 0 4px 0;
+        padding: 6px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s ease;
       `;
 
-      imagesContainer.appendChild(imagesHeader);
+      // Create minimal content container that will be toggleable
+      const attachmentsContent = document.createElement("div");
+      attachmentsContent.className = "attachments-content";
+      attachmentsContent.style.cssText = `
+        display: none;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+        padding: 4px 0;
+        animation: slideDown 0.2s ease-out;
+      `;
 
-      images.forEach((image, index) => {
-        const imageWrapper = document.createElement("div");
-        imageWrapper.className = "message-image-wrapper";
+      // Add toggle functionality
+      let isExpanded = false;
+      const toggleIcon = attachmentsHeader.querySelector(".toggle-icon");
 
-        const img = document.createElement("img");
-        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
-        img.alt = `Attached Image: ${image.filename}`;
-        img.className = "message-image";
-        img.style.cssText = `
-          max-width: 100%;
-          max-height: 300px;
-          object-fit: contain;
-          cursor: pointer;
-        `;
+      attachmentsHeader.addEventListener("click", () => {
+        isExpanded = !isExpanded;
 
-        // Add loading placeholder effect
-        img.addEventListener("load", () => {
-          img.style.opacity = "1";
-        });
-
-        img.style.opacity = "0";
-        img.style.transition = "opacity 0.3s ease";
-
-        // Click to expand functionality
-        img.addEventListener("click", () => {
-          this.showImageModal(image);
-        });
-
-        const caption = document.createElement("div");
-        caption.className = "image-caption";
-        caption.innerHTML = `${image.filename}`;
-
-        imageWrapper.appendChild(img);
-        imageWrapper.appendChild(caption);
-        imagesContainer.appendChild(imageWrapper);
+        if (isExpanded) {
+          attachmentsContent.style.display = "grid";
+          toggleIcon.style.transform = "rotate(180deg)";
+          toggleIcon.className = "fas fa-chevron-up toggle-icon";
+        } else {
+          attachmentsContent.style.display = "none";
+          toggleIcon.style.transform = "rotate(0deg)";
+          toggleIcon.className = "fas fa-chevron-down toggle-icon";
+        }
       });
 
-      // Images container'ını message content'in içine ekle
+      attachmentsContainer.appendChild(attachmentsHeader);
+      attachmentsContainer.appendChild(attachmentsContent);
+
+      // Add images first
+      if (images && images.length > 0) {
+        images.forEach((image, index) => {
+          const imageWrapper = document.createElement("div");
+          imageWrapper.className = "message-image-wrapper";
+
+          const img = document.createElement("img");
+          img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
+          img.alt = `Attached Image: ${image.filename}`;
+          img.className = "message-image";
+          img.style.cssText = `
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            cursor: pointer;
+          `;
+
+          // Add loading placeholder effect
+          img.addEventListener("load", () => {
+            img.style.opacity = "1";
+          });
+
+          img.style.opacity = "0";
+          img.style.transition = "opacity 0.3s ease";
+
+          // Click to expand functionality
+          img.addEventListener("click", () => {
+            this.showImageModal(image);
+          });
+
+          const caption = document.createElement("div");
+          caption.className = "image-caption";
+          caption.innerHTML = `${image.filename}`;
+
+          imageWrapper.appendChild(img);
+          imageWrapper.appendChild(caption);
+          attachmentsContent.appendChild(imageWrapper);
+        });
+      }
+
+      // Add generated files after images
+      if (generatedFiles && generatedFiles.length > 0) {
+        generatedFiles.forEach((file, index) => {
+          const fileWrapper = document.createElement("div");
+          fileWrapper.className = "message-image-wrapper"; // Use same class as images for consistent styling
+
+          // Create file preview based on file type
+          const filePreview = this.createFilePreview(file);
+
+          const caption = document.createElement("div");
+          caption.className = "image-caption"; // Use same class as images for consistent styling
+          caption.innerHTML = `${file.filename}`;
+          caption.style.cssText = `
+          font-size: 0.65em;
+          color: var(--text-secondary);
+          text-align: center;
+          max-width: 80px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          opacity: 0.8;
+        `;
+
+          fileWrapper.appendChild(filePreview);
+          fileWrapper.appendChild(caption);
+          attachmentsContent.appendChild(fileWrapper);
+        });
+      }
+
+      // Attachments container'ını message content'in içine ekle
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
-        messageContent.appendChild(imagesContainer);
+        messageContent.appendChild(attachmentsContainer);
       }
     }
 
@@ -1036,6 +1117,91 @@ class UIComponents {
     }
   }
 
+  // Create file preview based on file type
+  createFilePreview(file) {
+    const filePreview = document.createElement("div");
+    filePreview.className = "file-preview";
+
+    // Get file extension
+    const fileExtension = file.filename.split(".").pop().toLowerCase();
+
+    // Create icon based on file type
+    let iconClass = "fas fa-file";
+    let previewContent = "";
+
+    switch (fileExtension) {
+      case "xlsx":
+        iconClass = "fas fa-file-excel";
+        previewContent = `
+          <div class="file-preview-content excel-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">Excel</span>
+          </div>
+        `;
+        break;
+      case "docx":
+        iconClass = "fas fa-file-word";
+        previewContent = `
+          <div class="file-preview-content word-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">Word</span>
+          </div>
+        `;
+        break;
+      case "pptx":
+        iconClass = "fas fa-file-powerpoint";
+        previewContent = `
+          <div class="file-preview-content powerpoint-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">PowerPoint</span>
+          </div>
+        `;
+        break;
+      case "pdf":
+        iconClass = "fas fa-file-pdf";
+        previewContent = `
+          <div class="file-preview-content pdf-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">PDF</span>
+          </div>
+        `;
+        break;
+      default:
+        previewContent = `
+          <div class="file-preview-content default-preview">
+            <i class="${iconClass}"></i>
+            <span class="file-type">${fileExtension.toUpperCase()}</span>
+          </div>
+        `;
+    }
+
+    filePreview.innerHTML = previewContent;
+    filePreview.style.cssText = `
+      max-width: 100%;
+      max-height: 80px;
+      width: 60px;
+      height: 60px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      overflow: hidden;
+    `;
+
+    // No hover effects for minimal design
+
+    // Click to open file
+    filePreview.addEventListener("click", () => {
+      this.openGeneratedFile(file);
+    });
+
+    return filePreview;
+  }
+
   // Image modal for full-size viewing
   showImageModal(image) {
     // Remove existing modal if any
@@ -1153,6 +1319,37 @@ class UIComponents {
     document.addEventListener("keydown", handleEscape);
   }
 
+  // Open generated file
+  openGeneratedFile(file) {
+    try {
+      // Use Electron's shell to open the file with default application
+      if (window.airisAPI && window.airisAPI.openGeneratedFile) {
+        window.airisAPI
+          .openGeneratedFile(file.file_path)
+          .then((result) => {
+            if (!result.success) {
+              console.error("Error opening file:", result.error);
+              alert(`Error opening file: ${result.error}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error opening generated file:", error);
+            alert(`Error opening file: ${error.message}`);
+          });
+      } else {
+        // Fallback: try to open with system default application
+        console.log(`Opening file: ${file.file_path}`);
+        // You can implement additional logic here if needed
+        alert(
+          `File: ${file.filename}\nPath: ${file.file_path}\n\nThis file has been created successfully. You can find it in the specified directory.`
+        );
+      }
+    } catch (error) {
+      console.error("Error opening generated file:", error);
+      alert(`Error opening file: ${error.message}`);
+    }
+  }
+
   clearChat() {
     const chatMessages = document.getElementById("chat-messages");
     if (chatMessages) {
@@ -1208,19 +1405,24 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images and charts properly - they should be fresh for each message
+          // Extract images, charts, and generated files properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
+          const generatedFiles = msg.metadata?.generatedFiles || [];
 
-          // Ensure images and charts are not accumulated from previous sessions
+          // Ensure images, charts, and generated files are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
+          const cleanGeneratedFiles = Array.isArray(generatedFiles)
+            ? generatedFiles.slice()
+            : [];
 
           this.addMessageToChat(
             msg.role,
             msg.content,
             cleanImages,
-            cleanCharts
+            cleanCharts,
+            cleanGeneratedFiles
           );
 
           // Update local chat history
@@ -1237,6 +1439,8 @@ class UIComponents {
                 cleanImages;
               this.chatHistory[this.chatHistory.length - 1].charts =
                 cleanCharts;
+              this.chatHistory[this.chatHistory.length - 1].generatedFiles =
+                cleanGeneratedFiles;
             }
           }
         });
@@ -1245,16 +1449,16 @@ class UIComponents {
         this.updateChatSessionsUI();
 
         console.log("Loaded chat session:", sessionId);
-        this.showNotification("Chat session loaded", "success");
+        this.showNotification("Chat loaded", "success");
         return true;
       } else {
         console.error("Failed to load chat session:", response.error);
-        this.showNotification("Failed to load chat session", "error");
+        this.showNotification("Failed to load chat", "error");
         return false;
       }
     } catch (error) {
       console.error("Error loading chat session:", error);
-      this.showNotification("Error loading chat session", "error");
+      this.showNotification("Error loading chat", "error");
       return false;
     }
   }
@@ -1295,15 +1499,15 @@ class UIComponents {
         // Reload sessions list
         await this.loadChatSessions();
 
-        this.showNotification("Chat session deleted successfully", "success");
+        this.showNotification("Chat session deleted", "success");
         return true;
       } else {
-        this.showNotification("Failed to delete chat session", "error");
+        this.showNotification("Failed to delete chat", "error");
         return false;
       }
     } catch (error) {
       console.error("Error deleting chat session:", error);
-      this.showNotification("Error deleting chat session", "error");
+      this.showNotification("Error deleting chat", "error");
       return false;
     }
   }
@@ -1317,10 +1521,10 @@ class UIComponents {
 
     if (sessionId) {
       console.log("New chat session created:", sessionId);
-      this.showNotification("Started new chat session", "success");
+      this.showNotification("New chat started", "success");
     } else {
       console.error("Failed to create new chat session");
-      this.showNotification("Failed to create new chat session", "error");
+      this.showNotification("Failed to create new chat", "error");
     }
   }
 
@@ -1405,7 +1609,7 @@ class UIComponents {
       sessionsList.appendChild(sessionItem);
     });
 
-    console.log("Chat sessions UI updated successfully");
+    console.log("Chat sessions UI updated");
   }
 
   createChatSessionItem(session) {
@@ -1662,7 +1866,7 @@ class UIComponents {
         break;
       case "success":
         statusIcon = "✅";
-        statusText = `Uploaded successfully`;
+        statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
@@ -1701,7 +1905,7 @@ class UIComponents {
     switch (status) {
       case "success":
         statusIcon = "✅";
-        statusText = `Uploaded successfully`;
+        statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
@@ -1957,10 +2161,10 @@ class UIComponents {
               </div>
             </div>
             <div class="file-card-actions">
-              <button class="file-action-btn download-btn" data-filename="${Utils.escapeHtml(
+              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
                 file.name
-              )}" title="Download created document">
-                <i class="fas fa-download"></i>
+              )}" title="Delete file">
+                <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
@@ -1974,7 +2178,7 @@ class UIComponents {
           </div>
         `;
 
-        // Add click handler to open created document (but not on action buttons)
+        // Add click handler to open created document (but not on preview area or action buttons)
         fileItem.addEventListener("click", (e) => {
           // Don't open file if clicking on action buttons or preview area
           if (
@@ -2035,7 +2239,7 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Network error"
+            error.message || "Connection error"
           )}</span>
         </div>
       `;
@@ -2048,7 +2252,7 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview error: ${Utils.escapeHtml(
-            previewData.error || "Unknown error"
+            previewData.error || "Error occurred"
           )}</span>
         </div>
       `;
@@ -2061,7 +2265,14 @@ class UIComponents {
       case "image":
         previewElement.innerHTML = `
           <div class="preview-image">
-            <img src="${preview_data}" alt="Document preview" />
+            <div class="preview-image-wrapper">
+              <img src="${preview_data}" alt="Document preview" 
+                   onload="this.parentElement.classList.add('loaded')" />
+              <div class="preview-image-overlay">
+                <i class="fas fa-expand-alt"></i>
+                <span>Click to enlarge</span>
+              </div>
+            </div>
           </div>
         `;
         break;
@@ -2069,7 +2280,13 @@ class UIComponents {
       case "text":
         previewElement.innerHTML = `
           <div class="preview-text">
-            <pre>${Utils.escapeHtml(preview_data)}</pre>
+            <div class="preview-header">
+              <i class="fas fa-file-alt"></i>
+              <span>Text Preview</span>
+            </div>
+            <div class="preview-content">
+              <pre>${Utils.escapeHtml(preview_data)}</pre>
+            </div>
           </div>
         `;
         break;
@@ -2077,6 +2294,10 @@ class UIComponents {
       case "excel":
         previewElement.innerHTML = `
           <div class="preview-excel">
+            <div class="preview-header">
+              <i class="fas fa-table"></i>
+              <span>Spreadsheet Preview</span>
+            </div>
             <div class="excel-summary">
               <strong>${preview_data.columns.length} columns, ${preview_data.rows_shown} rows</strong>
             </div>
@@ -2088,8 +2309,13 @@ class UIComponents {
       case "info":
         previewElement.innerHTML = `
           <div class="preview-info">
-            <i class="fas fa-info-circle"></i>
-            <span>${Utils.escapeHtml(preview_data)}</span>
+            <div class="preview-header">
+              <i class="fas fa-info-circle"></i>
+              <span>Document Information</span>
+            </div>
+            <div class="preview-content">
+              <span>${Utils.escapeHtml(preview_data)}</span>
+            </div>
           </div>
         `;
         break;
@@ -2097,8 +2323,13 @@ class UIComponents {
       case "error":
         previewElement.innerHTML = `
           <div class="preview-error">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>${Utils.escapeHtml(preview_data)}</span>
+            <div class="preview-header">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Preview Error</span>
+            </div>
+            <div class="preview-content">
+              <span>${Utils.escapeHtml(preview_data)}</span>
+            </div>
           </div>
         `;
         break;
@@ -2106,8 +2337,13 @@ class UIComponents {
       default:
         previewElement.innerHTML = `
           <div class="preview-info">
-            <i class="fas fa-file"></i>
-            <span>Preview not available</span>
+            <div class="preview-header">
+              <i class="fas fa-file"></i>
+              <span>Preview Not Available</span>
+            </div>
+            <div class="preview-content">
+              <span>This file type does not support preview</span>
+            </div>
           </div>
         `;
     }
@@ -2146,7 +2382,7 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Network error"
+            error.message || "Connection error"
           )}</span>
         </div>
       `;
@@ -2214,7 +2450,21 @@ class UIComponents {
         ? window.languageService.t.bind(window.languageService)
         : (key) => key;
 
-      // Try to download the created document through the web API
+      // Try to open the file using Electron's API first
+      if (window.airisAPI && window.airisAPI.openFile) {
+        try {
+          await window.airisAPI.openFile(fileName);
+          this.showNotification(`${t("openedFile")} ${fileName}`, "success");
+          return;
+        } catch (electronError) {
+          console.warn(
+            "Electron API failed, trying web fallback:",
+            electronError
+          );
+        }
+      }
+
+      // Fallback: Try to download the file through the web API
       try {
         const downloadUrl = `http://localhost:8001/api/created-documents/${encodeURIComponent(
           fileName
@@ -2223,10 +2473,24 @@ class UIComponents {
         this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
-        this.showNotification(
-          `${t("failedToOpenFile")} ${fileName}. ${t("sorryEncounteredError")}`,
-          "error"
+
+        // Last resort: Try to get file info
+        const response = await fetch(
+          `http://localhost:8001/api/created-documents/${encodeURIComponent(
+            fileName
+          )}`
         );
+        if (response.ok) {
+          const fileInfo = await response.json();
+          this.showNotification(
+            `${fileName} (${Utils.formatFileSize(fileInfo.size || 0)}) - ${t(
+              "unableToOpenDirectly"
+            )}`,
+            "warning"
+          );
+        } else {
+          throw new Error("Unable to access file");
+        }
       }
     } catch (error) {
       console.error("Error opening created document:", error);
@@ -2244,7 +2508,7 @@ class UIComponents {
       // Show confirmation dialog
       console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
       const confirmed = confirm(
-        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the vector store.`
+        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file and all its data from the document archive.`
       );
 
       if (!confirmed) {
@@ -2280,13 +2544,8 @@ class UIComponents {
       console.log("📋 Frontend: API response received:", response);
 
       if (response.success) {
-        console.log(
-          "✅ Frontend: Deletion successful, showing success message"
-        );
-        this.showNotification(
-          `File "${fileName}" deleted successfully`,
-          "success"
-        );
+        console.log("✅ Frontend: Deletion completed, showing success message");
+        this.showNotification(`File "${fileName}" deleted`, "success");
         // Refresh the file list
         console.log("🔄 Frontend: Refreshing file list");
         this.loadFileLibrary();
@@ -2302,6 +2561,68 @@ class UIComponents {
       console.error("❌ Frontend: Error details:", error.message, error.stack);
       this.showNotification(
         "Failed to delete file. Please try again.",
+        "error"
+      );
+    }
+  }
+
+  async deleteCreatedDocument(fileName) {
+    console.log("🗑️ Frontend: deleteCreatedDocument called for:", fileName);
+
+    try {
+      // Show confirmation dialog
+      console.log("🤔 Frontend: Showing confirmation dialog for:", fileName);
+      const confirmed = confirm(
+        `Are you sure you want to delete "${fileName}"?\n\nThis will permanently remove the file from your local storage.`
+      );
+
+      if (!confirmed) {
+        console.log("❌ Frontend: User cancelled deletion for:", fileName);
+        return;
+      }
+
+      console.log("✅ Frontend: User confirmed deletion for:", fileName);
+
+      // Show loading state
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showNotification(t("deletingFile"), "info");
+
+      console.log(
+        "🚀 Frontend: Calling IPC to delete created document:",
+        fileName
+      );
+
+      // Request the IPC service to delete the created document
+      const result = await window.airisAPI.deleteCreatedDocument(fileName);
+
+      if (!result.success) {
+        throw new Error(`Failed to delete created document: ${result.error}`);
+      }
+
+      const response = { success: true, message: result.data.message };
+
+      console.log("📋 Frontend: API response received:", response);
+
+      if (response.success) {
+        console.log("✅ Frontend: Deletion completed, showing success message");
+        this.showNotification(`Document "${fileName}" deleted`, "success");
+        // Refresh the created documents list
+        console.log("🔄 Frontend: Refreshing created documents list");
+        this.loadCreatedDocumentsLibrary();
+      } else {
+        console.error("❌ Frontend: Deletion failed:", response.error);
+        this.showNotification(
+          `Failed to delete document: ${response.error}`,
+          "error"
+        );
+      }
+    } catch (error) {
+      console.error("❌ Frontend: Error deleting created document:", error);
+      console.error("❌ Frontend: Error details:", error.message, error.stack);
+      this.showNotification(
+        "Failed to delete document. Please try again.",
         "error"
       );
     }
@@ -2468,24 +2789,44 @@ class UIComponents {
   // Theme management
   loadTheme() {
     const savedTheme = localStorage.getItem("airis-theme") || "light";
-    this.isDarkMode = savedTheme === "dark";
+    this.currentTheme = savedTheme;
     this.applyTheme();
   }
 
   toggleTheme() {
-    this.isDarkMode = !this.isDarkMode;
+    // Cycle through themes: light -> dark -> nebula -> light
+    const themes = ["light", "dark", "nebula"];
+    const currentIndex = themes.indexOf(this.currentTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    this.currentTheme = themes[nextIndex];
     this.applyTheme();
-    localStorage.setItem("airis-theme", this.isDarkMode ? "dark" : "light");
+    localStorage.setItem("airis-theme", this.currentTheme);
   }
 
   applyTheme() {
-    document.body.classList.toggle("dark-theme", this.isDarkMode);
+    // Remove all theme classes
+    document.body.classList.remove("dark-theme", "nebula-theme");
+
+    // Apply current theme class
+    if (this.currentTheme === "dark") {
+      document.body.classList.add("dark-theme");
+    } else if (this.currentTheme === "nebula") {
+      document.body.classList.add("nebula-theme");
+    }
 
     const themeToggle = document.getElementById("theme-toggle");
     if (themeToggle) {
-      themeToggle.innerHTML = this.isDarkMode
-        ? '<i class="fas fa-sun"></i>'
-        : '<i class="fas fa-moon"></i>';
+      if (this.currentTheme === "light") {
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        themeToggle.setAttribute("title", "Switch to Dark Theme");
+      } else if (this.currentTheme === "dark") {
+        themeToggle.innerHTML =
+          '<i class="fas fa-cloud-moon" style="background: linear-gradient(45deg, #8B5CF6, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>';
+        themeToggle.setAttribute("title", "Switch to Nebula Theme");
+      } else if (this.currentTheme === "nebula") {
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        themeToggle.setAttribute("title", "Switch to Light Theme");
+      }
     }
   }
 
@@ -3801,7 +4142,7 @@ class UIComponents {
       ".chat-message:last-child .uploaded-files-header"
     );
     if (latestMessage) {
-      latestMessage.textContent = `📎 Uploaded Files (${uploadedCount})`;
+      latestMessage.textContent = `📎 Files (${uploadedCount})`;
     }
   }
 }

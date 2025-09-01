@@ -91,12 +91,12 @@ class LanguageService {
         // Analytics Section
         systemAnalytics: "System Analytics",
         monitorPerformance: "Monitor system performance and usage statistics",
-        apiRequests: "API Requests",
+        apiRequests: "Server Requests",
         totalRequests: "Total Requests",
         responseTime: "Response Time",
         average: "Average",
         documents: "Documents",
-        processed: "Processed",
+        processed: "Completed",
         systemHealth: "System Health",
         status: "Status",
         recentActivity: "Recent Activity",
@@ -109,9 +109,9 @@ class LanguageService {
         // Settings Section
         settingsTitle: "Settings",
         configureApp: "Configure your AIris desktop application",
-        backendConfiguration: "Backend Configuration",
-        apiBaseUrl: "API Base URL",
-        requestTimeout: "Request Timeout (ms)",
+        backendConfiguration: "Server Configuration",
+        apiBaseUrl: "Server Address",
+        requestTimeout: "Request Timeout (seconds)",
         interfacePreferences: "Interface Preferences",
         theme: "Theme",
         language: "Language",
@@ -134,7 +134,7 @@ class LanguageService {
         preparingFile: "Preparing file...",
         readingFile: "Reading file...",
         uploading: "Uploading...",
-        processingWithAI: "Processing with AI...",
+        processingWithAI: "Processing document...",
         uploadComplete: "Upload complete!",
         uploadFailed: "Upload failed",
         retry: "Retry",
@@ -151,8 +151,8 @@ class LanguageService {
         previewNotAvailable: "Preview not available",
 
         // Notifications
-        fileUploadedSuccessfully: "File uploaded successfully",
-        fileDeletedSuccessfully: "File deleted successfully",
+        fileUploadedSuccessfully: "File uploaded",
+        fileDeletedSuccessfully: "File deleted",
         failedToDeleteFile: "Failed to delete file",
         failedToUploadFile: "Failed to upload file",
         connectionLost: "Connection lost",
@@ -170,7 +170,7 @@ class LanguageService {
 
         // File deletion confirmation
         deleteConfirmation:
-          'Are you sure you want to delete "{filename}"?\\n\\nThis will permanently remove the file and all its data from the vector store.',
+          'Are you sure you want to delete "{filename}"?\\n\\nThis will permanently remove the file and all its data from the document archive.',
 
         // File size units
         bytes: "B",
@@ -196,7 +196,7 @@ class LanguageService {
           "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them.",
 
         // Settings messages
-        settingsSavedSuccessfully: "Settings saved successfully!",
+        settingsSavedSuccessfully: "Settings saved!",
 
         // News messages
         loadingLatestNews: "Loading latest finance news...",
@@ -273,13 +273,13 @@ class LanguageService {
         issuesFound: "Issues Found",
         downloadReport: "Download Report",
         verifyAnother: "Verify Another Document",
-        verificationCompleted: "Verification completed successfully",
+        verificationCompleted: "Verification completed",
         verificationFailed: "Document verification failed",
         pleaseSelectFile: "Please select a file to verify",
         unsupportedFileType: "Unsupported file type",
         noVerificationDataToDownload:
           "No verification data available to download",
-        reportDownloaded: "Verification report downloaded successfully",
+        reportDownloaded: "Verification report downloaded",
         wolframMathVerification: "Wolfram Alpha Mathematical Verification",
         wolframMathVerificationDesc:
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
@@ -380,12 +380,12 @@ class LanguageService {
         systemAnalytics: "Sistem Analitikleri",
         monitorPerformance:
           "Sistem performansını ve kullanım istatistiklerini izleyin",
-        apiRequests: "API İstekleri",
+        apiRequests: "Sunucu İstekleri",
         totalRequests: "Toplam İstek",
         responseTime: "Yanıt Süresi",
         average: "Ortalama",
         documents: "Belgeler",
-        processed: "İşlendi",
+        processed: "Tamamlandı",
         systemHealth: "Sistem Sağlığı",
         status: "Durum",
         recentActivity: "Son Aktiviteler",
@@ -398,9 +398,9 @@ class LanguageService {
         // Settings Section
         settingsTitle: "Ayarlar",
         configureApp: "AIris masaüstü uygulamanızı yapılandırın",
-        backendConfiguration: "Backend Yapılandırması",
-        apiBaseUrl: "API Temel URL",
-        requestTimeout: "İstek Zaman Aşımı (ms)",
+        backendConfiguration: "Sunucu Yapılandırması",
+        apiBaseUrl: "Sunucu Adresi",
+        requestTimeout: "İstek Zaman Aşımı (saniye)",
         interfacePreferences: "Arayüz Tercihleri",
         theme: "Tema",
         language: "Dil",
@@ -423,7 +423,7 @@ class LanguageService {
         preparingFile: "Dosya hazırlanıyor...",
         readingFile: "Dosya okunuyor...",
         uploading: "Yükleniyor...",
-        processingWithAI: "AI ile işleniyor...",
+        processingWithAI: "Belge işleniyor...",
         uploadComplete: "Yükleme tamamlandı!",
         uploadFailed: "Yükleme başarısız",
         retry: "Tekrar Dene",
@@ -440,8 +440,8 @@ class LanguageService {
         previewNotAvailable: "Önizleme mevcut değil",
 
         // Notifications
-        fileUploadedSuccessfully: "Dosya başarıyla yüklendi",
-        fileDeletedSuccessfully: "Dosya başarıyla silindi",
+        fileUploadedSuccessfully: "Dosya yüklendi",
+        fileDeletedSuccessfully: "Dosya silindi",
         failedToDeleteFile: "Dosya silinemedi",
         failedToUploadFile: "Dosya yüklenemedi",
         connectionLost: "Bağlantı kesildi",
@@ -459,7 +459,7 @@ class LanguageService {
 
         // File deletion confirmation
         deleteConfirmation:
-          '"{filename}" dosyasını silmek istediğinizden emin misiniz?\\n\\nBu işlem dosyayı ve tüm verilerini vektör deposundan kalıcı olarak kaldıracaktır.',
+          '"{filename}" dosyasını silmek istediğinizden emin misiniz?\\n\\nBu işlem dosyayı ve tüm verilerini belge arşivinden kalıcı olarak kaldıracaktır.',
 
         // File size units
         bytes: "B",
@@ -485,7 +485,7 @@ class LanguageService {
           "Merhaba! Ben sizin AI finansal belge asistanınızım. Belgelerinizi yükleyin ve onlar hakkında sorular sorun.",
 
         // Settings messages
-        settingsSavedSuccessfully: "Ayarlar başarıyla kaydedildi!",
+        settingsSavedSuccessfully: "Ayarlar kaydedildi!",
 
         // News messages
         loadingLatestNews: "En son finans haberleri yükleniyor...",
