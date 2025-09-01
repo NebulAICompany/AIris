@@ -8,6 +8,8 @@ class LanguageManager {
     this.currentLanguage = "en"; // Default to English as requested
     this.supportedLanguages = ["en", "tr"];
     this.translations = this.getTranslations();
+    this.isToggling = false; // Prevent rapid clicking
+    this.handleLanguageToggle = null; // Event handler reference
     this.init();
   }
 
@@ -47,12 +49,19 @@ class LanguageManager {
 
   // Switch language
   switchLanguage(languageCode) {
-    if (this.supportedLanguages.includes(languageCode)) {
-      this.currentLanguage = languageCode;
-      this.loadLanguage();
-      this.updatePageLanguage();
-      this.updateLanguageSwitcher();
+    if (!this.supportedLanguages.includes(languageCode)) {
+      console.warn(`Unsupported language code: ${languageCode}`);
+      return;
     }
+
+    if (this.currentLanguage === languageCode) {
+      return; // Already in the requested language
+    }
+
+    this.currentLanguage = languageCode;
+    this.loadLanguage();
+    this.updatePageLanguage();
+    this.updateLanguageSwitcher();
   }
 
   // Update HTML lang attribute for SEO
@@ -115,17 +124,40 @@ class LanguageManager {
   setupLanguageSwitcher() {
     const switcher = document.getElementById("language-switcher");
     if (switcher) {
-      switcher.addEventListener("click", (e) => {
+      // Remove existing event listeners to prevent duplicates
+      switcher.removeEventListener("click", this.handleLanguageToggle);
+
+      // Bind the handler to preserve 'this' context
+      this.handleLanguageToggle = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         this.toggleLanguage();
-      });
+      };
+
+      switcher.addEventListener("click", this.handleLanguageToggle);
     }
   }
 
   // Toggle between languages
   toggleLanguage() {
+    // Prevent rapid clicking
+    if (this.isToggling) {
+      return;
+    }
+
+    this.isToggling = true;
     const newLanguage = this.currentLanguage === "en" ? "tr" : "en";
-    this.switchLanguage(newLanguage);
+
+    try {
+      this.switchLanguage(newLanguage);
+    } catch (error) {
+      console.error("Language toggle error:", error);
+    } finally {
+      // Reset toggle lock after a short delay
+      setTimeout(() => {
+        this.isToggling = false;
+      }, 300);
+    }
   }
 
   // Update language switcher display
@@ -361,5 +393,21 @@ class LanguageManager {
 
 // Initialize language manager when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
-  window.languageManager = new LanguageManager();
+  // Ensure DOM is fully loaded before initializing
+  if (document.readyState === "loading") {
+    return;
+  }
+
+  // Prevent multiple initializations
+  if (window.languageManager) {
+    console.warn("Language manager already initialized");
+    return;
+  }
+
+  try {
+    window.languageManager = new LanguageManager();
+    console.log("Language manager initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize language manager:", error);
+  }
 });
