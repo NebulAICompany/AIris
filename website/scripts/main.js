@@ -63,11 +63,11 @@ class NebulaWebsite {
 
           // Different padding for different sections
           let extraPadding = 0; // Default padding
-          if (
-            targetId === "features" ||
-            targetId === "demo" ||
-            targetId === "screenshots"
-          ) {
+          if (targetId === "features") {
+            extraPadding = -120; // More negative padding to scroll further down
+          } else if (targetId === "demo") {
+            extraPadding = -100; // Negative padding for demo section
+          } else if (targetId === "screenshots") {
             extraPadding = -60; // Half the negative padding for better positioning
           } else if (targetId === "contact") {
             extraPadding = -150; // More negative padding for contact section
@@ -220,7 +220,7 @@ class NebulaWebsite {
     if (featuresSection) {
       // Use the same navbar height calculation as the main navigation
       const navbarHeight = 80; // var(--navbar-height) = 80px
-      const targetPosition = featuresSection.offsetTop - navbarHeight - -60; // Half the negative padding for better positioning
+      const targetPosition = featuresSection.offsetTop - navbarHeight - 120; // More negative padding to scroll further down
 
       window.scrollTo({
         top: targetPosition,
