@@ -57,8 +57,21 @@ class NebulaWebsite {
         const targetElement = document.getElementById(targetId);
 
         if (targetElement) {
-          const navbarHeight = this.navbar.offsetHeight;
-          const targetPosition = targetElement.offsetTop - navbarHeight;
+          // Use the CSS variable for navbar height for consistency
+          const navbarHeight = 80; // var(--navbar-height) = 80px
+
+          // Different padding for different sections
+          let extraPadding = 0; // Default padding
+          if (
+            targetId === "features" ||
+            targetId === "demo" ||
+            targetId === "contact"
+          ) {
+            extraPadding = -120; // Even more negative padding to go much lower
+          }
+
+          const targetPosition =
+            targetElement.offsetTop - navbarHeight - extraPadding;
 
           window.scrollTo({
             top: targetPosition,
@@ -202,8 +215,9 @@ class NebulaWebsite {
   scrollToNextSection() {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
-      const navbarHeight = this.navbar.offsetHeight;
-      const targetPosition = featuresSection.offsetTop - navbarHeight;
+      // Use the same navbar height calculation as the main navigation
+      const navbarHeight = 80; // var(--navbar-height) = 80px
+      const targetPosition = featuresSection.offsetTop - navbarHeight - -120; // Even more negative padding to go much lower
 
       window.scrollTo({
         top: targetPosition,
