@@ -198,6 +198,13 @@
           <a href="index.html#contact" class="nav-link">Contact</a>
         </div>
         <div class="nav-actions">
+          <button
+            class="language-switcher"
+            id="language-switcher"
+            aria-label="Switch language"
+          >
+            Türkçe
+          </button>
           <button class="mobile-menu-toggle" id="mobile-menu-toggle">
             <span></span>
             <span></span>
@@ -212,12 +219,14 @@
       <div class="legal-content">
         <a href="index.html" class="back-link">
           <i class="fas fa-arrow-left"></i>
-          Back to Home
+          <span data-translate="legal.backToHome">Back to Home</span>
         </a>
 
         <div class="legal-header">
-          <h1>Privacy Policy</h1>
-          <p>Last updated: September 1, 2025</p>
+          <h1 data-translate="legal.privacyPolicy">Privacy Policy</h1>
+          <p data-translate="legal.lastUpdated">
+            Last updated: September 1, 2025
+          </p>
         </div>
 
         <div class="legal-section">
@@ -379,30 +388,72 @@
             changes.
           </p>
         </div>
-
-        <div class="contact-info">
-          <h3>Contact Us</h3>
-          <p>
-            If you have any questions about this Privacy Policy, please contact
-            us:
-          </p>
-          <p>
-            <strong>Email:</strong>
-            <a href="mailto:privacy@nebulaiintelligence.com"
-              >privacy@nebulaiintelligence.com</a
-            >
-          </p>
-          <p>
-            <strong>General Support:</strong>
-            <a href="mailto:support@nebulaiintelligence.com"
-              >support@nebulaiintelligence.com</a
-            >
-          </p>
-          <p><strong>Address:</strong> San Francisco, CA, United States</p>
-        </div>
       </div>
     </section>
 
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <img src="assets/logo.png" alt="AIris Logo" class="footer-logo" />
+            <div class="footer-brand-content">
+              <h3>AIris</h3>
+              <p data-translate="footer.tagline">
+                AI-Powered Financial Document Processing
+              </p>
+            </div>
+          </div>
+
+          <div class="footer-links">
+            <div class="footer-column">
+              <h4 data-translate="footer.product">Product</h4>
+              <a href="index.html#features" data-translate="nav.features"
+                >Features</a
+              >
+              <a href="index.html#demo" data-translate="nav.demo">Demo</a>
+              <a href="index.html#contact" data-translate="nav.contact"
+                >Contact</a
+              >
+            </div>
+            <div class="footer-column">
+              <h4 data-translate="footer.legal">Legal</h4>
+              <a
+                href="privacy-policy.html"
+                data-translate="footer.privacyPolicy"
+                >Privacy Policy</a
+              >
+              <a
+                href="terms-of-service.html"
+                data-translate="footer.termsOfService"
+                >Terms of Service</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div class="footer-info">
+            <p data-translate="footer.copyright">
+              &copy; NebulAI Intelligence. All rights reserved.
+            </p>
+            <a href="mailto:nebulaicompany@gmail.com" class="footer-email">
+              <i class="fas fa-envelope"></i>
+              nebulaicompany@gmail.com
+            </a>
+          </div>
+          <div class="social-links">
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="LinkedIn"
+              ><i class="fab fa-linkedin"></i
+            ></a>
+            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="scripts/language.js"></script>
     <script src="scripts/main.js"></script>
   </body>
 </html>
