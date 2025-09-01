@@ -37,6 +37,9 @@
 
   /* Transitions */
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Performance optimized transitions for navbar */
+  --navbar-transition: backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Reset & Base Styles */
@@ -239,24 +242,43 @@ body {
   left: 0;
   right: 0;
   height: var(--navbar-height);
-  background: linear-gradient(
-    135deg,
-    rgba(13, 2, 33, 0.85),
-    rgba(26, 11, 46, 0.75)
-  );
-  backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  /* Completely transparent background - only blur effect */
+  background: transparent;
+  /* Pure blur effect only - no color modifications */
+  backdrop-filter: blur(25px);
+  /* Fallback for browsers that don't support backdrop-filter */
+  -webkit-backdrop-filter: blur(25px);
+  border-bottom: none;
   z-index: 1000;
-  transition: var(--transition);
+  transition: var(--navbar-transition);
+  /* Ensure proper stacking context */
+  isolation: isolate;
+  /* Performance optimization: will-change for smooth animations */
+  will-change: backdrop-filter;
+}
+
+/* Browser compatibility fallback for older browsers */
+@supports not (backdrop-filter: blur(25px)) {
+  .navbar {
+    /* Fallback background for browsers without backdrop-filter support */
+    background: rgba(13, 2, 33, 0.8);
+  }
+
+  .navbar.scrolled {
+    background: rgba(13, 2, 33, 0.9);
+  }
 }
 
 .navbar.scrolled {
-  background: linear-gradient(
-    135deg,
-    rgba(13, 2, 33, 0.95),
-    rgba(26, 11, 46, 0.85)
-  );
-  box-shadow: var(--shadow-lg);
+  /* Still completely transparent when scrolled - only blur effect */
+  background: transparent;
+  /* Enhanced blur when scrolled - no color modifications */
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  box-shadow: none;
+  border-bottom: none;
+  /* Performance optimization: will-change for smooth animations */
+  will-change: backdrop-filter;
 }
 
 .nav-container {
@@ -275,8 +297,11 @@ body {
   gap: 0.75rem;
   font-weight: 700;
   font-size: 1.5rem;
+  /* Enhanced text contrast for transparent background */
   color: var(--text-primary);
   text-decoration: none;
+  /* Add text shadow for better readability over transparent background */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .nav-logo {
@@ -308,11 +333,15 @@ body {
   font-weight: 500;
   transition: var(--transition);
   position: relative;
+  /* Enhanced text contrast for transparent background */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .nav-link:hover,
 .nav-link.active {
   color: var(--text-primary);
+  /* Enhanced text shadow on hover for better contrast */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .nav-link::after {
