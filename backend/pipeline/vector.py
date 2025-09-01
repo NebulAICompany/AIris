@@ -1,6 +1,6 @@
 from qdrant_client import QdrantClient, models
 from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 
@@ -34,11 +34,10 @@ class VectorStorePipeline:
         self, pre_embedding_process: PreEmbeddingProcess = PreEmbeddingProcess.NONE
     ):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        self.text_splitter = SemanticChunker(
-            self.embeddings,
-            breakpoint_threshold_type="percentile",
-            breakpoint_threshold_amount=80,
-
+        self.text_splitter = TokenTextSplitter(
+            chunk_size=1024,
+            chunk_overlap=150,
+            encoding_name="cl100k_base",  # OpenAI Embedding modellerini kapsıyor
         )
         self.pre_embedding_process = pre_embedding_process
 
