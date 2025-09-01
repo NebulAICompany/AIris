@@ -4,6 +4,7 @@ from typing import List
 from .tools.api import web_search_tool, wolfram_alpha_query
 from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 
 rag_agent_as_tools = [
     finance_agent_tool,
@@ -57,7 +58,7 @@ def create_rag_agent(
     agent = Agent(
         name="RAG_Assistant",
         instructions=agent_instructions,
-        model="gpt-4o",
+        model=ANTHROPIC_MODEL,
         tools=tools,
     )
 
