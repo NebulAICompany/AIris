@@ -296,7 +296,10 @@ class NebulaWebsite {
       case "subject":
         if (!value) {
           isValid = false;
-          errorMessage = "Please select a subject";
+          errorMessage = "Subject is required";
+        } else if (value.length < 3) {
+          isValid = false;
+          errorMessage = "Subject must be at least 3 characters";
         }
         break;
 
@@ -313,7 +316,7 @@ class NebulaWebsite {
 
     if (!isValid) {
       field.classList.add("error");
-      this.showFieldError(field, errorMessage);
+      // Error message display removed - only visual styling remains
     }
 
     return isValid;
@@ -360,7 +363,7 @@ class NebulaWebsite {
     });
 
     if (!isFormValid) {
-      this.showNotification("Please fix the errors in the form", "error");
+      // Form validation failed - errors are shown visually on fields
       return;
     }
 
