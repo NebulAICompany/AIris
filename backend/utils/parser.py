@@ -52,8 +52,9 @@ async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
 
     responses = await concurrent_client.create_many(
         messages_list=messages_list,
-        model=OPENAI_MODEL,
+        model="gpt-4o",
         max_tokens=700,
+        temperature=0.2,
     )
 
     descriptions = []
