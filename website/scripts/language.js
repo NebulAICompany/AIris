@@ -241,6 +241,13 @@ class LanguageManager {
           termsOfService: "Terms of Service",
           copyright: "NebulAI Intelligence. All rights reserved.",
         },
+        legal: {
+          backToHome: "Back to Home",
+          lastUpdated: "Last updated: September 1, 2025",
+          privacyPolicy: "Privacy Policy",
+          termsOfService: "Terms of Service",
+          contactUs: "Contact Us",
+        },
       },
       tr: {
         meta: {
@@ -339,6 +346,13 @@ class LanguageManager {
           privacyPolicy: "Gizlilik Politikası",
           termsOfService: "Hizmet Şartları",
           copyright: "NebulAI Intelligence. Tüm hakları saklıdır.",
+        },
+        legal: {
+          backToHome: "Ana Sayfaya Dön",
+          lastUpdated: "Son güncelleme: 1 Eylül 2025",
+          privacyPolicy: "Gizlilik Politikası",
+          termsOfService: "Hizmet Şartları",
+          contactUs: "İletişim",
         },
       },
     };
