@@ -28,7 +28,7 @@
   --navbar-height: 80px;
   --border-radius: 12px;
   --border-radius-lg: 20px;
-  --container-max-width: 1200px;
+  --container-max-width: 1400px;
 
   /* Shadows */
   --shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
@@ -289,6 +289,8 @@ body {
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 2rem;
+  gap: 2rem;
+  position: relative;
 }
 
 .nav-brand {
@@ -296,13 +298,15 @@ body {
   align-items: center;
   gap: 0.75rem;
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   /* Enhanced text contrast for transparent background */
   color: var(--text-primary);
   text-decoration: none;
   /* Add text shadow for better readability over transparent background */
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, text-shadow 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .nav-brand:hover {
@@ -311,7 +315,7 @@ body {
 }
 
 .nav-logo {
-  height: 40px;
+  height: 45px;
   width: auto;
   border-radius: 8px;
 }
@@ -330,13 +334,18 @@ body {
 .nav-menu {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 2.5rem;
+  flex-shrink: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .nav-link {
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
+  font-size: 1.1rem;
   transition: color 0.3s ease, text-shadow 0.3s ease;
   position: relative;
   /* Enhanced text contrast for transparent background */
@@ -1942,14 +1951,34 @@ body {
   }
 }
 
+@media (max-width: 1024px) {
+  .nav-menu {
+    gap: 2rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .nav-container {
+    gap: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .nav-menu {
     display: none;
+    position: static;
+    transform: none;
   }
 
   .mobile-menu-toggle {
     display: flex;
   }
+  
+  .nav-container {
+    gap: 1rem;
+  }
+}
 
   .hero-title {
     font-size: 2.5rem;

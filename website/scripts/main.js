@@ -601,6 +601,25 @@ class PerformanceMonitor {
   }
 }
 
+// Function to scroll to home section when logo is clicked
+function scrollToHome() {
+  const homeSection = document.getElementById("home");
+  if (homeSection) {
+    const navbarHeight = 80; // var(--navbar-height) = 80px
+    const targetPosition = homeSection.offsetTop - navbarHeight;
+
+    window.scrollTo({
+      top: targetPosition,
+      behavior: "smooth",
+    });
+
+    // Update active nav link
+    document.querySelectorAll(".nav-link").forEach((link) => {
+      link.classList.remove("active");
+    });
+  }
+}
+
 // Initialize everything when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   const website = new NebulaWebsite();
