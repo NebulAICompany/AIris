@@ -218,9 +218,11 @@ class NebulaWebsite {
   scrollToNextSection() {
     const featuresSection = document.getElementById("features");
     if (featuresSection) {
-      // Use the same navbar height calculation as the main navigation
+      // Use the exact same calculation as navbar Features link
       const navbarHeight = 80; // var(--navbar-height) = 80px
-      const targetPosition = featuresSection.offsetTop - navbarHeight - 120; // More negative padding to scroll further down
+      const extraPadding = -120; // Same as Features link
+      const targetPosition =
+        featuresSection.offsetTop - navbarHeight - extraPadding;
 
       window.scrollTo({
         top: targetPosition,
