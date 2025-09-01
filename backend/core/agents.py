@@ -58,7 +58,7 @@ def create_rag_agent(
     agent = Agent(
         name="RAG_Assistant",
         instructions=agent_instructions,
-        model=ANTHROPIC_MODEL,
+        model=OPENAI_MODEL,
         tools=tools,
     )
 
