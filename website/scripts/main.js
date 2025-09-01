@@ -235,6 +235,9 @@ class NebulaWebsite {
   setupContactForm() {
     const contactForm = document.getElementById("contact-form");
     if (contactForm) {
+      // Initialize EmailJS
+      this.initializeEmailJS();
+
       contactForm.addEventListener("submit", (e) => {
         e.preventDefault();
         this.handleContactFormSubmit(contactForm);
@@ -242,13 +245,32 @@ class NebulaWebsite {
 
       // Add real-time validation
       this.setupFormValidation(contactForm);
+
+      // Add spam protection
+      this.setupSpamProtection(contactForm);
     }
+  }
+
+  // Initialize EmailJS
+  initializeEmailJS() {
+    // EmailJS configuration - Your actual service details
+    emailjs.init("RCirv8j1Hdd5u3soI"); // Your EmailJS public key (corrected)
+
+    // Your service ID and template ID
+    this.emailConfig = {
+      serviceId: "service_m8yq9e8", // Your EmailJS service ID
+      templateId: "template_kc8bl1l", // Your EmailJS template ID
+      publicKey: "RCirv8j1Hdd5u3soI", // Your EmailJS public key (corrected)
+    };
   }
 
   setupFormValidation(form) {
     const inputs = form.querySelectorAll("input, select, textarea");
 
     inputs.forEach((input) => {
+      // Skip hidden spam protection field
+      if (input.name === "website") return;
+
       input.addEventListener("blur", () => {
         this.validateField(input);
       });
@@ -257,7 +279,45 @@ class NebulaWebsite {
         if (input.classList.contains("error")) {
           this.validateField(input);
         }
+        // Clear error on input
+        this.clearFieldError(input);
       });
+    });
+  }
+
+  // Setup spam protection
+  setupSpamProtection(form) {
+    // Honeypot field (already in HTML)
+    const honeypot = form.querySelector('input[name="website"]');
+
+    // Rate limiting
+    this.formSubmissionCount = 0;
+    this.lastSubmissionTime = 0;
+
+    // Add form submission tracking
+    form.addEventListener("submit", (e) => {
+      const now = Date.now();
+      const timeSinceLastSubmission = now - this.lastSubmissionTime;
+
+      // Allow max 3 submissions per minute
+      if (timeSinceLastSubmission < 60000 && this.formSubmissionCount >= 3) {
+        e.preventDefault();
+        this.showNotification(
+          "Too many submissions. Please wait a moment before trying again.",
+          "error"
+        );
+        return;
+      }
+
+      // Check honeypot
+      if (honeypot.value !== "") {
+        e.preventDefault();
+        console.log("Spam detected - honeypot field filled");
+        return;
+      }
+
+      this.formSubmissionCount++;
+      this.lastSubmissionTime = now;
     });
   }
 
@@ -269,7 +329,7 @@ class NebulaWebsite {
 
     // Remove existing error styling
     field.classList.remove("error");
-    this.removeFieldError(field);
+    this.clearFieldError(field);
 
     // Validation rules
     switch (fieldName) {
@@ -280,6 +340,12 @@ class NebulaWebsite {
         } else if (value.length < 2) {
           isValid = false;
           errorMessage = "Name must be at least 2 characters";
+        } else if (value.length > 50) {
+          isValid = false;
+          errorMessage = "Name must be less than 50 characters";
+        } else if (!/^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]+$/.test(value)) {
+          isValid = false;
+          errorMessage = "Name can only contain letters and spaces";
         }
         break;
 
@@ -290,6 +356,9 @@ class NebulaWebsite {
         } else if (!this.isValidEmail(value)) {
           isValid = false;
           errorMessage = "Please enter a valid email address";
+        } else if (value.length > 100) {
+          isValid = false;
+          errorMessage = "Email must be less than 100 characters";
         }
         break;
 
@@ -300,6 +369,9 @@ class NebulaWebsite {
         } else if (value.length < 3) {
           isValid = false;
           errorMessage = "Subject must be at least 3 characters";
+        } else if (value.length > 100) {
+          isValid = false;
+          errorMessage = "Subject must be less than 100 characters";
         }
         break;
 
@@ -310,13 +382,16 @@ class NebulaWebsite {
         } else if (value.length < 10) {
           isValid = false;
           errorMessage = "Message must be at least 10 characters";
+        } else if (value.length > 1000) {
+          isValid = false;
+          errorMessage = "Message must be less than 1000 characters";
         }
         break;
     }
 
     if (!isValid) {
       field.classList.add("error");
-      // Error message display removed - only visual styling remains
+      this.showFieldError(field, errorMessage);
     }
 
     return isValid;
@@ -328,23 +403,18 @@ class NebulaWebsite {
   }
 
   showFieldError(field, message) {
-    const errorElement = document.createElement("div");
-    errorElement.className = "field-error";
-    errorElement.textContent = message;
-    errorElement.style.cssText = `
-      color: var(--error);
-      font-size: 0.8rem;
-      margin-top: 0.25rem;
-      display: block;
-    `;
-
-    field.parentNode.appendChild(errorElement);
+    const errorElement = document.getElementById(`${field.name}-error`);
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.style.display = "block";
+    }
   }
 
-  removeFieldError(field) {
-    const existingError = field.parentNode.querySelector(".field-error");
-    if (existingError) {
-      existingError.remove();
+  clearFieldError(field) {
+    const errorElement = document.getElementById(`${field.name}-error`);
+    if (errorElement) {
+      errorElement.textContent = "";
+      errorElement.style.display = "none";
     }
   }
 
@@ -352,43 +422,136 @@ class NebulaWebsite {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    // Remove honeypot field from data
+    delete data.website;
+
     // Validate all fields
     const inputs = form.querySelectorAll("input, select, textarea");
     let isFormValid = true;
 
     inputs.forEach((input) => {
-      if (!this.validateField(input)) {
+      if (input.name !== "website" && !this.validateField(input)) {
         isFormValid = false;
       }
     });
 
     if (!isFormValid) {
       // Form validation failed - errors are shown visually on fields
+      this.showNotification(
+        "Please fix the errors above and try again.",
+        "error"
+      );
       return;
     }
 
     // Show loading state
-    const submitBtn = form.querySelector(".submit-btn");
-    const originalText = submitBtn.textContent;
-    submitBtn.textContent = "Sending...";
-    submitBtn.disabled = true;
+    this.setSubmitButtonLoading(true);
 
-    // Simulate form submission (replace with actual API call)
-    setTimeout(() => {
-      // Reset form
-      form.reset();
-      submitBtn.textContent = originalText;
+    // Send email using EmailJS
+    this.sendEmail(data)
+      .then(() => {
+        // Success
+        form.reset();
+        this.showNotification(
+          "Message sent successfully! We'll get back to you soon.",
+          "success"
+        );
+        console.log("Contact form submitted successfully:", data);
+      })
+      .catch((error) => {
+        // Error
+        console.error("Email sending failed:", error);
+        this.showNotification(
+          "Sorry, there was an error sending your message. Please try again or contact us directly.",
+          "error"
+        );
+      })
+      .finally(() => {
+        // Always reset button state
+        this.setSubmitButtonLoading(false);
+      });
+  }
+
+  // Set submit button loading state - Fixed with null checks
+  setSubmitButtonLoading(loading) {
+    const submitBtn = document.getElementById("submit-btn");
+    if (!submitBtn) {
+      console.error("Submit button not found");
+      return;
+    }
+
+    const btnText = submitBtn.querySelector(".btn-text");
+    const btnLoading = submitBtn.querySelector(".btn-loading");
+
+    if (!btnText || !btnLoading) {
+      // Fallback for simple button text
+      if (loading) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending...";
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit";
+      }
+      return;
+    }
+
+    if (loading) {
+      submitBtn.disabled = true;
+      btnText.style.display = "none";
+      btnLoading.style.display = "inline-flex";
+    } else {
       submitBtn.disabled = false;
+      btnText.style.display = "inline";
+      btnLoading.style.display = "none";
+    }
+  }
 
-      // Show success message
-      this.showNotification(
-        "Message sent successfully! We'll get back to you soon.",
-        "success"
+  // Send email using EmailJS
+  async sendEmail(data) {
+    // Check if EmailJS is available
+    if (typeof emailjs === "undefined") {
+      throw new Error("EmailJS is not loaded");
+    }
+
+    // Prepare template parameters - Updated for your template
+    const templateParams = {
+      name: data.name, // For {{name}} in template
+      from_name: data.name, // For {{from_name}} in template
+      from_email: data.email, // For {{from_email}} in template
+      subject: data.subject, // For {{subject}} in template
+      message: data.message, // For {{message}} in template
+      to_email: "nebulaicompany@gmail.com", // Your email address
+      reply_to: data.email, // For reply functionality
+    };
+
+    try {
+      // Send email using the correct EmailJS method
+      const response = await emailjs.send(
+        this.emailConfig.serviceId,
+        this.emailConfig.templateId,
+        templateParams
       );
 
-      // Log form data (in production, send to server)
-      console.log("Contact form submitted:", data);
-    }, 2000);
+      console.log("EmailJS Response:", response);
+      return response;
+    } catch (error) {
+      console.error("EmailJS Error Details:", error);
+
+      // More detailed error handling
+      if (error.status === 404) {
+        throw new Error(
+          "EmailJS service not found. Please check your Service ID and Template ID."
+        );
+      } else if (error.status === 401) {
+        throw new Error(
+          "EmailJS authentication failed. Please check your Public Key."
+        );
+      } else {
+        throw new Error(
+          `EmailJS error: ${error.text || error.message || "Unknown error"}`
+        );
+      }
+    }
   }
 
   handleDownload(platform) {
@@ -486,10 +649,14 @@ class NebulaWebsite {
   showNotification(message, type = "info") {
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
+
+    let iconClass = "info-circle";
+    if (type === "success") iconClass = "check-circle";
+    else if (type === "error") iconClass = "exclamation-circle";
+    else if (type === "warning") iconClass = "exclamation-triangle";
+
     notification.innerHTML = `
-      <i class="fas fa-${
-        type === "success" ? "check-circle" : "info-circle"
-      }"></i>
+      <i class="fas fa-${iconClass}"></i>
       <span>${message}</span>
     `;
 
@@ -502,9 +669,11 @@ class NebulaWebsite {
     setTimeout(() => {
       notification.classList.remove("show");
       setTimeout(() => {
-        document.body.removeChild(notification);
+        if (notification.parentNode) {
+          document.body.removeChild(notification);
+        }
       }, 300);
-    }, 3000);
+    }, 5000); // Show for 5 seconds
   }
 
   // Utility function for smooth animations
@@ -811,6 +980,14 @@ style.textContent = `
   
   .notification.success {
     background: linear-gradient(135deg, var(--success), var(--accent-tertiary));
+  }
+  
+  .notification.error {
+    background: linear-gradient(135deg, var(--error), #ff4757);
+  }
+  
+  .notification.warning {
+    background: linear-gradient(135deg, var(--warning), #ffa502);
   }
   
   /* Mobile menu styles */
