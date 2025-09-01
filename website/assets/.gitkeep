@@ -1,0 +1,28 @@
+# Assets Directory
+
+This directory should contain:
+
+## Required Assets:
+
+- `logo.png` - AIris logo (recommend 128x128px or higher)
+- `favicon.ico` - Website favicon
+- `og-image.jpg` - Open Graph image for social media sharing (1200x630px)
+
+## Screenshot Placeholders:
+
+- `screenshot-dashboard.png` - Main dashboard screenshot
+- `screenshot-charts.png` - Financial charts screenshot
+- `screenshot-verification.png` - Document verification screenshot
+
+## Additional Assets:
+
+- Product demo video
+- Feature highlight images
+- Company team photos
+- Any additional brand assets
+
+## Image Optimization:
+
+- Use WebP format for better compression when possible
+- Optimize all images for web delivery
+- Provide retina-ready versions (@2x) for high-DPI displays

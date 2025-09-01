@@ -2,20 +2,29 @@ from agents import Agent
 from backend.core.prompts import finance_agent_prompt, office_agent_prompt
 from backend.core.tools.mcp import finance_mcp_server
 from .office import *
+from backend.shared.constants import OPENAI_MODEL
 
-office_tools = [create_excel_file, create_word_document,
-                  create_powerpoint_presentation, add_powerpoint_slide, modify_word_content,
-                  modify_excel_cells, create_excel_charts]
+office_tools = [
+    create_excel_file,
+    create_word_document,
+    create_powerpoint_presentation,
+    add_powerpoint_slide,
+    modify_word_content,
+    modify_excel_cells,
+    create_excel_charts,
+]
 
 finance_agent = Agent(
     name="Finance Agent",
     instructions=finance_agent_prompt,
+    model=OPENAI_MODEL,
     mcp_servers=[finance_mcp_server],
 )
 
 office_agent = Agent(
     name="office_agent",
     instructions=office_agent_prompt,
+    model=OPENAI_MODEL,
     tools=[
         *office_tools,
     ],
