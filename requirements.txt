@@ -7,7 +7,11 @@ langchain-openai==0.3.24
 langchain-huggingface==0.3.0
 sentence-transformers==4.1.0
 faiss-cpu==1.11.0
-openai==1.98.0
+openai==1.102.0
+litellm==1.76.1
+fastuuid==0.12.0
+importlib-metadata==8.7.0
+zipp==3.23.0
 langdetect==1.0.9
 jpype1==1.5.2
 azure-cognitiveservices-vision-computervision==0.9.1
