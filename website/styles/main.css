@@ -1382,10 +1382,11 @@ body {
 }
 
 .contact-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: flex-start;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .contact-methods {
@@ -1631,8 +1632,7 @@ body {
 @media (max-width: 1400px) {
   .tech-content,
   .demo-container,
-  .about-content,
-  .contact-content {
+  .about-content {
     grid-template-columns: 1fr;
     gap: 3rem;
   }
