@@ -64,6 +64,12 @@
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
 
     <link rel="stylesheet" href="styles/main.css" />
+
+    <!-- EmailJS SDK -->
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+    ></script>
   </head>
   <body class="nebula-theme">
     <!-- Cosmic Background Layers -->
@@ -474,6 +480,15 @@
                 Send us a Message
               </h3>
               <form id="contact-form" class="message-form">
+                <!-- Spam Protection - Hidden field -->
+                <input
+                  type="text"
+                  name="website"
+                  style="display: none"
+                  tabindex="-1"
+                  autocomplete="off"
+                />
+
                 <div class="form-group">
                   <label for="name" data-translate="contact.name">Name *</label>
                   <input
@@ -483,7 +498,11 @@
                     placeholder="Your full name"
                     data-translate="contact.namePlaceholder"
                     required
+                    minlength="2"
+                    maxlength="50"
+                    autocomplete="name"
                   />
+                  <div class="field-error" id="name-error"></div>
                 </div>
 
                 <div class="form-group">
@@ -497,7 +516,10 @@
                     placeholder="your.email@example.com"
                     data-translate="contact.emailPlaceholder"
                     required
+                    maxlength="100"
+                    autocomplete="email"
                   />
+                  <div class="field-error" id="email-error"></div>
                 </div>
 
                 <div class="form-group">
@@ -511,7 +533,10 @@
                     placeholder="Enter your subject"
                     data-translate="contact.subjectPlaceholder"
                     required
+                    minlength="3"
+                    maxlength="100"
                   />
+                  <div class="field-error" id="subject-error"></div>
                 </div>
 
                 <div class="form-group">
@@ -525,15 +550,27 @@
                     data-translate="contact.messagePlaceholder"
                     rows="5"
                     required
+                    minlength="10"
+                    maxlength="1000"
                   ></textarea>
+                  <div class="field-error" id="message-error"></div>
+                </div>
+
+                <!-- reCAPTCHA placeholder -->
+                <div class="form-group">
+                  <div id="recaptcha-container"></div>
                 </div>
 
                 <button
                   type="submit"
                   class="submit-btn"
                   data-translate="contact.submit"
+                  id="submit-btn"
                 >
-                  Submit
+                  <span class="btn-text">Submit</span>
+                  <span class="btn-loading" style="display: none">
+                    <i class="fas fa-spinner fa-spin"></i> Sending...
+                  </span>
                 </button>
               </form>
             </div>
