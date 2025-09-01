@@ -1097,14 +1097,16 @@ body {
 
 /* Demo Section */
 .demo {
-  padding: 6rem 0;
+  padding: 8rem 0;
+  text-align: center;
 }
 
 .demo-container {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 4rem;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .demo-video {
@@ -1112,21 +1114,26 @@ body {
   border-radius: var(--border-radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 800px;
 }
 
 .video-placeholder {
   aspect-ratio: 16/9;
   background: linear-gradient(
     135deg,
-    rgba(26, 11, 46, 0.8),
-    rgba(45, 27, 78, 0.6)
+    rgba(26, 11, 46, 0.9),
+    rgba(45, 27, 78, 0.8),
+    rgba(26, 11, 46, 0.9)
   );
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   cursor: pointer;
   transition: var(--transition);
+  border: 2px solid rgba(139, 69, 255, 0.2);
 }
 
 .video-placeholder:hover {
@@ -1134,8 +1141,8 @@ body {
 }
 
 .play-button {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: linear-gradient(
     135deg,
@@ -1145,10 +1152,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 3rem;
   color: white;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
   transition: var(--transition);
+  box-shadow: 0 8px 32px rgba(139, 69, 255, 0.3);
 }
 
 .play-button:hover {
@@ -1161,13 +1169,15 @@ body {
 }
 
 .video-overlay h3 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 2rem;
+  margin-bottom: 1rem;
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .video-overlay p {
   color: var(--text-secondary);
+  font-size: 1.1rem;
 }
 
 .demo-features h3 {
@@ -1791,6 +1801,35 @@ body {
 
   .security-feature {
     padding: 1.5rem;
+  }
+
+  /* Demo Section Mobile */
+  .demo {
+    padding: 4rem 0;
+  }
+
+  .demo-container {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .demo-video {
+    max-width: 100%;
+  }
+
+  .play-button {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .video-overlay h3 {
+    font-size: 1.5rem;
+  }
+
+  .video-overlay p {
+    font-size: 1rem;
   }
 }
 
