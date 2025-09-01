@@ -22,8 +22,6 @@ from qdrant_client import models
 
 logger = get_logger("ROUTER")
 router = APIRouter()
-# Simple request counter
-request_counter = 0
 
 
 class QueryRequest(BaseModel):
@@ -45,9 +43,7 @@ async def handle_query(request: QueryRequest):
     Kullanıcının gönderdiği sorguyu alır,
     pipeline üzerinden işler ve LLM yanıtını döner.
     """
-    global request_counter
-    try:  # Increment simple counter
-        request_counter += 1
+    try:
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
@@ -83,10 +79,7 @@ async def handle_query(request: QueryRequest):
 
 @router.post("/upload")
 async def handle_upload(file: UploadFile = File(...)):
-    global request_counter
     try:
-        # Increment simple counter
-        request_counter += 1
 
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(UPLOADS_PATH)
@@ -286,70 +279,13 @@ def list_created_documents():
         )
 
 
-@router.get("/metrics")
-def get_metrics():
-    """
-    Returns system metrics and analytics data.
-    """
-    try:
-        # Get file count
-        uploads_dir = Path(UPLOADS_PATH)
-        file_count = (
-            len([f for f in uploads_dir.iterdir() if f.is_file()])
-            if uploads_dir.exists()
-            else 0
-        )
-
-        # Get vector store info
-        vectorstore_exists = Path(VECTORSTORE_PATH_STR).exists()
-
-        # Simple request counter - use module variable
-        global request_counter
-        total_requests = request_counter
-
-        return {
-            "totalQueries": int(total_requests),
-            "totalDocuments": file_count,
-            "avgResponseTime": "1.2s",
-            "systemHealth": "Healthy" if vectorstore_exists else "No Data",
-            "vectorStoreStatus": "Active" if vectorstore_exists else "Empty",
-            "lastUpdated": datetime.now().isoformat(),
-            "recentActivity": [
-                {
-                    "title": "Document processed",
-                    "time": "2 minutes ago",
-                    "icon": "fas fa-file-upload",
-                },
-                {
-                    "title": "Query answered",
-                    "time": "5 minutes ago",
-                    "icon": "fas fa-comment",
-                },
-                {
-                    "title": "System started",
-                    "time": "1 hour ago",
-                    "icon": "fas fa-power-off",
-                },
-            ],
-        }
-    except Exception as e:
-        error_message = str(e)
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching metrics: {error_message}"
-        )
-
-
 @router.delete("/files/{filename}")
 def delete_file(filename: str):
     """
     Delete a file from uploads directory and remove its chunks from vector store.
     """
-    global request_counter
     try:
         logger.info(f"Starting deletion for file '{filename}'")
-
-        # Increment simple counter
-        request_counter += 1
 
         # Check if file exists in uploads directory
         uploads_dir = Path(UPLOADS_PATH)
@@ -682,10 +618,7 @@ async def verify_document(
     """
     Verify a document using the LLM-based verification pipeline with Wolfram Alpha mathematical verification (always enabled)
     """
-    global request_counter
     try:
-        # Increment request counter
-        request_counter += 1
 
         logger.info(
             f"Starting document verification: {file.filename} (type: {verification_type})"

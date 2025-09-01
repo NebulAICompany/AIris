@@ -377,9 +377,7 @@ class UIComponents {
       case "created-documents":
         await this.loadCreatedDocumentsLibrary();
         break;
-      case "analytics":
-        await this.loadAnalytics();
-        break;
+
       case "news":
         await this.loadFinanceNews();
         break;
@@ -2678,114 +2676,6 @@ class UIComponents {
     }
   }
 
-  async loadAnalytics() {
-    try {
-      const metrics = await window.apiService.getSystemStats();
-      this.updateAnalyticsDashboard(metrics.stats);
-
-      // Set up auto-refresh every 30 seconds when on analytics tab
-      if (this.currentTab === "analytics") {
-        if (this.analyticsRefreshTimer) {
-          clearInterval(this.analyticsRefreshTimer);
-        }
-        this.analyticsRefreshTimer = setInterval(async () => {
-          if (this.currentTab === "analytics") {
-            try {
-              const updatedMetrics = await window.apiService.getSystemStats();
-              this.updateAnalyticsDashboard(updatedMetrics.stats);
-            } catch (error) {
-              console.error("Analytics refresh error:", error);
-            }
-          } else {
-            clearInterval(this.analyticsRefreshTimer);
-          }
-        }, 30000); // Refresh every 30 seconds
-      }
-    } catch (error) {
-      console.error("Analytics error:", error);
-      // Show fallback data
-      this.updateAnalyticsDashboard({
-        apiRequests: 0,
-        documentsProcessed: 0,
-        averageResponseTime: "N/A",
-        systemHealth: "Error",
-        recentActivity: [],
-      });
-    }
-  }
-
-  updateAnalyticsDashboard(metrics) {
-    // Update metric cards using the correct IDs from HTML
-    const apiRequests = document.getElementById("api-requests");
-    const responseTime = document.getElementById("response-time");
-    const documentCount = document.getElementById("document-count");
-    const systemHealth = document.getElementById("system-health");
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-
-    if (apiRequests) {
-      apiRequests.textContent = metrics.apiRequests || "0";
-    }
-    if (responseTime) {
-      responseTime.textContent =
-        metrics.averageResponseTime || t("notAvailable");
-    }
-    if (documentCount) {
-      documentCount.textContent = metrics.documentsProcessed || "0";
-    }
-    if (systemHealth) {
-      systemHealth.textContent = metrics.systemHealth || t("unknown");
-      // Color code the health status
-      systemHealth.style.color =
-        metrics.systemHealth === "healthy"
-          ? "var(--success)"
-          : metrics.systemHealth === "offline"
-          ? "var(--error)"
-          : "var(--text-secondary)";
-    }
-
-    // Update recent activity
-    this.updateRecentActivity(metrics.recentActivity || []);
-  }
-
-  updateRecentActivity(activities) {
-    const activityList = document.getElementById("recent-activity");
-    if (!activityList) return;
-
-    activityList.innerHTML = "";
-
-    if (activities.length === 0) {
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      activityList.innerHTML = `<div class="no-activity">${t(
-        "noActivity"
-      )}</div>`;
-      return;
-    }
-
-    activities.forEach((activity) => {
-      const activityItem = document.createElement("div");
-      activityItem.className = "activity-item";
-
-      activityItem.innerHTML = `
-                <div class="activity-icon">
-                    <i class="${activity.icon || "fas fa-circle"}"></i>
-                </div>
-                <div class="activity-details">
-                    <div class="activity-title">${Utils.escapeHtml(
-                      activity.title
-                    )}</div>
-                    <div class="activity-time">${activity.time}</div>
-                </div>
-            `;
-
-      activityList.appendChild(activityItem);
-    });
-  }
-
   // Theme management
   loadTheme() {
     const savedTheme = localStorage.getItem("airis-theme") || "light";
@@ -3174,23 +3064,11 @@ class UIComponents {
       )}`;
     }
 
-    // Update analytics metrics with translations
-    const responseTime = document.getElementById("response-time");
-    const systemHealth = document.getElementById("system-health");
-    if (responseTime && responseTime.textContent === "N/A") {
-      responseTime.textContent = t("notAvailable");
-    }
-    if (systemHealth && systemHealth.textContent === "Unknown") {
-      systemHealth.textContent = t("unknown");
-    }
-
     // Refresh current tab content with new language
     if (this.currentTab === "files") {
       this.loadFileLibrary();
     } else if (this.currentTab === "news") {
       this.loadFinanceNews();
-    } else if (this.currentTab === "analytics") {
-      this.loadAnalytics();
     }
   }
 
@@ -3209,14 +3087,6 @@ class UIComponents {
       if (heading) heading.textContent = t("noDocuments");
       if (paragraph) paragraph.textContent = t("uploadToGetStarted");
       if (button) button.textContent = t("uploadFilesBtn");
-    }
-
-    // Update no activity state
-    const noActivity = document.querySelector(".no-activity");
-    if (noActivity && noActivity.textContent.includes("Loading")) {
-      noActivity.textContent = t("loadingActivity");
-    } else if (noActivity && noActivity.textContent.includes("No recent")) {
-      noActivity.textContent = t("noActivity");
     }
   }
 

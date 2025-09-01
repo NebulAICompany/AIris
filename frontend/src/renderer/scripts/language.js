@@ -32,7 +32,7 @@ class LanguageService {
         myFiles: "My Files",
         createdDocuments: "Created Documents",
         financeNews: "Finance News",
-        analytics: "Analytics",
+
         settings: "Settings",
 
         // Chat Section
@@ -87,24 +87,6 @@ class LanguageService {
         loadingNews: "Loading latest finance news...",
         lastUpdated: "Last updated",
         readMore: "Read More",
-
-        // Analytics Section
-        systemAnalytics: "System Analytics",
-        monitorPerformance: "Monitor system performance and usage statistics",
-        apiRequests: "Server Requests",
-        totalRequests: "Total Requests",
-        responseTime: "Response Time",
-        average: "Average",
-        documents: "Documents",
-        processed: "Completed",
-        systemHealth: "System Health",
-        status: "Status",
-        recentActivity: "Recent Activity",
-        loadingActivity: "Loading activity...",
-        noActivity: "No recent activity",
-        healthy: "Healthy",
-        offline: "Offline",
-        idle: "Idle",
 
         // Settings Section
         settingsTitle: "Settings",
@@ -204,10 +186,6 @@ class LanguageService {
         unableToFetchNews: "Unable to fetch finance news. Please try again.",
         lastUpdatedAt: "Last updated:",
         failedToUpdate: "Failed to update",
-
-        // Analytics messages
-        notAvailable: "N/A",
-        unknown: "Unknown",
 
         // Time format
         minutesAgo: "m ago",
@@ -319,7 +297,7 @@ class LanguageService {
         myFiles: "Dosyalarım",
         createdDocuments: "Oluşturulan Belgeler",
         financeNews: "Finans Haberleri",
-        analytics: "Analitik",
+
         settings: "Ayarlar",
 
         // Chat Section
@@ -375,25 +353,6 @@ class LanguageService {
         loadingNews: "En son finans haberleri yükleniyor...",
         lastUpdated: "Son güncelleme",
         readMore: "Devamını Oku",
-
-        // Analytics Section
-        systemAnalytics: "Sistem Analitikleri",
-        monitorPerformance:
-          "Sistem performansını ve kullanım istatistiklerini izleyin",
-        apiRequests: "Sunucu İstekleri",
-        totalRequests: "Toplam İstek",
-        responseTime: "Yanıt Süresi",
-        average: "Ortalama",
-        documents: "Belgeler",
-        processed: "Tamamlandı",
-        systemHealth: "Sistem Sağlığı",
-        status: "Durum",
-        recentActivity: "Son Aktiviteler",
-        loadingActivity: "Aktiviteler yükleniyor...",
-        noActivity: "Son aktivite yok",
-        healthy: "Sağlıklı",
-        offline: "Çevrimdışı",
-        idle: "Boşta",
 
         // Settings Section
         settingsTitle: "Ayarlar",
@@ -493,10 +452,6 @@ class LanguageService {
         unableToFetchNews: "Finans haberleri alınamadı. Lütfen tekrar deneyin.",
         lastUpdatedAt: "Son güncelleme:",
         failedToUpdate: "Güncelleme başarısız",
-
-        // Analytics messages
-        notAvailable: "Yok",
-        unknown: "Bilinmeyen",
 
         // Time format
         minutesAgo: "dk önce",
