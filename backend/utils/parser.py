@@ -3,8 +3,17 @@ import io
 import base64
 import uuid
 import os
-from azure.ai.documentintelligence.models import AnalyzeResult, DocumentContentFormat, AnalyzeOutputOption
-from backend.shared.constants import document_intelligence_client, IMAGES_PATH_STR, concurrent_client
+from azure.ai.documentintelligence.models import (
+    AnalyzeResult,
+    DocumentContentFormat,
+    AnalyzeOutputOption,
+)
+from backend.shared.constants import (
+    document_intelligence_client,
+    IMAGES_PATH_STR,
+    concurrent_client,
+    OPENAI_MODEL,
+)
 from pathlib import Path
 
 from backend.shared.logger import get_logger
@@ -15,15 +24,25 @@ logger = get_logger("PARSER")
 async def build_messages_for_image(image_bytes: bytes):
     base64_image = base64.b64encode(image_bytes).decode("utf-8")
     return [
-        {"role": "system", "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla."},
+        {
+            "role": "system",
+            "content": "Sen uzman bir görüntü analizcisisin. Gönderilen görseli detaylı ve anlaşılır bir şekilde Türkçe olarak açıkla.",
+        },
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla."},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}},
+                {
+                    "type": "text",
+                    "text": "Lütfen bu görseli detaylı ve açıklayıcı bir şekilde Türkçe olarak açıkla.",
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{base64_image}"},
+                },
             ],
         },
     ]
+
 
 async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
     messages_list = []
@@ -49,7 +68,6 @@ async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
             descriptions.append(content)
     return descriptions
 
-        
 
 async def AzureParser(file_path: str):
     with open(file_path, "rb") as f:
@@ -135,14 +153,16 @@ async def ImageParser(file_path: str):
 
     image_filename = f"{image_id}.png"
     saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
-    image.save(saved_image_path, format='PNG')
+    image.save(saved_image_path, format="PNG")
 
     descriptions = await describe_images([image_bytes])
     description = descriptions[0] if descriptions else "Açıklama alınamadı."
 
     content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
 
-    logger.info(f"Image text extraction completed. Total length: {len(content)} characters")
+    logger.info(
+        f"Image text extraction completed. Total length: {len(content)} characters"
+    )
     return content
 
 

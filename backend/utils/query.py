@@ -1,5 +1,5 @@
 from backend.shared.logger import get_logger
-from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR
+from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR, OPENAI_MODEL
 from typing import List
 from typing import Optional
 
@@ -26,7 +26,6 @@ except ImportError as e:
     turkish_spell_checker = None
     ZEMBEREK_AVAILABLE = False
     logger.error(f"Zemberek library not found: {e}")
-
 
 
 def spell_check(query: str) -> str:
@@ -66,7 +65,10 @@ def spell_check(query: str) -> str:
 def detect_language(query: str) -> str:
     try:
         from backend.shared.constants import text_analytics_client
-        response = text_analytics_client.detect_language(documents=[query], country_hint='tr')[0]
+
+        response = text_analytics_client.detect_language(
+            documents=[query], country_hint="tr"
+        )[0]
         return response.primary_language.name
 
     except Exception as err:
@@ -97,6 +99,7 @@ def normalize_repeated_chars(word: str) -> str:
 
     return "".join(result)
 
+
 def filter_docs_by_selected_files(
     docs: List, selected_files: Optional[List[str]]
 ) -> List:
@@ -123,17 +126,17 @@ def filter_docs_by_selected_files(
     return filtered_docs
 
 
-
-
 def refine_query(user_query, lang: str = "Turkish") -> str:
     from backend.core.prompts import refinement_prompt
 
     response = openai_client.chat.completions.create(
-        model="gpt-4o",
+        model=OPENAI_MODEL,
         messages=[
-            {"role": "system", "content": f"{refinement_prompt} Give your answer in {lang} language."},
-            {"role": "user", "content": user_query}
+            {
+                "role": "system",
+                "content": f"{refinement_prompt} Give your answer in {lang} language.",
+            },
+            {"role": "user", "content": user_query},
         ],
-        temperature=0.0,
     )
     return response.choices[0].message.content

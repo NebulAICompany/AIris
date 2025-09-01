@@ -287,10 +287,10 @@ class AIrisApp {
         this.uiComponents.switchTab("upload");
       }
 
-      // Ctrl/Cmd + 1-5: Switch between tabs
-      if ((e.ctrlKey || e.metaKey) && e.key >= "1" && e.key <= "5") {
+      // Ctrl/Cmd + 1-4: Switch between tabs
+      if ((e.ctrlKey || e.metaKey) && e.key >= "1" && e.key <= "4") {
         e.preventDefault();
-        const tabs = ["chat", "upload", "files", "analytics", "settings"];
+        const tabs = ["chat", "upload", "files", "settings"];
         const tabIndex = parseInt(e.key) - 1;
         if (tabs[tabIndex]) {
           this.uiComponents.switchTab(tabs[tabIndex]);
