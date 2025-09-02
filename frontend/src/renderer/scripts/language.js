@@ -31,6 +31,7 @@ class LanguageService {
         uploadFiles: "Upload Files",
         myFiles: "My Files",
         createdDocuments: "Created Documents",
+        interestCalculator: "Interest Calculator",
         financeNews: "Finance News",
 
         settings: "Settings",
@@ -200,6 +201,25 @@ class LanguageService {
         lastUpdatedAt: "Last updated:",
         failedToUpdate: "Failed to update",
 
+
+        // Interest Calculator
+        calculateLoanPayments: "Calculate your loan payments and total costs",
+        loanAmount: "Loan Amount",
+        loanTerm: "Loan Term (Months)",
+        interestRate: "Interest Rate (%)",
+        calculate: "Calculate",
+        reset: "Reset",
+        calculationResults: "Calculation Results",
+        monthlyPayment: "Monthly Payment",
+        totalPayment: "Total Payment",
+        totalInterest: "Total Interest",
+        yearlyInterestCost: "Yearly Cost",
+        invalidInputs: "Please enter valid values",
+        
+        // Analytics messages
+        notAvailable: "N/A",
+        unknown: "Unknown",
+
         // Time format
         minutesAgo: "m ago",
         hoursAgo: "h ago",
@@ -275,6 +295,21 @@ class LanguageService {
         wolframMathVerificationDesc:
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
 
+        // Calculator Section
+        calculateLoanPayments: "Calculate your loan payments and total costs",
+        loanAmount: "Loan Amount",
+        loanTerm: "Loan Term (Months)",
+        interestRate: "Interest Rate (%) - Monthly Interest",
+        calculate: "Calculate",
+        reset: "Reset",
+        calculationResults: "Calculation Results",
+        monthlyPayment: "Monthly Payment",
+        totalPayment: "Total Payment",
+        totalInterest: "Total Interest",
+        yearlyInterestCost: "Yearly Cost",
+        enterValidValues: "Please enter valid values",
+        enterPositiveValues: "Please enter positive values",
+        
         // File Selection
         selectFiles: "Select Files",
         selectAll: "Select All",
@@ -309,10 +344,26 @@ class LanguageService {
         uploadFiles: "Dosya Yükle",
         myFiles: "Dosyalarım",
         createdDocuments: "Oluşturulan Belgeler",
+        interestCalculator: "Kredi Hesaplama",
         financeNews: "Finans Haberleri",
 
         settings: "Ayarlar",
 
+        // Calculator Section
+        calculateLoanPayments: "Kredi ödemelerinizi ve toplam maliyetleri hesaplayın",
+        loanAmount: "Kredi Tutarı",
+        loanTerm: "Kredi Vadesi (Ay)",
+        interestRate: "Faiz Oranı (%) - Aylık Faiz",
+        calculate: "Hesapla",
+        reset: "Sıfırla",
+        calculationResults: "Hesaplama Sonuçları",
+        monthlyPayment: "Aylık Ödeme",
+        totalPayment: "Toplam Ödeme",
+        totalInterest: "Toplam Faiz",
+        yearlyInterestCost: "Yıllık Maliyet",
+        enterValidValues: "Lütfen geçerli değerler giriniz",
+        enterPositiveValues: "Lütfen pozitif değerler giriniz",
+        
         // Chat Section
         aiFinancialAssistant: "AIris Finansal Asistan",
         askQuestions:
