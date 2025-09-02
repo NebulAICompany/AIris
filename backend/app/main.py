@@ -11,10 +11,14 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
 from backend.shared.logger import get_logger
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
-from backend.shared.constants import VECTORSTORE_PATH_STR, FRONTEND_RENDERER_DIR, FRONTEND_ASSETS_DIR
+from backend.shared.constants import (
+    VECTORSTORE_PATH_STR,
+    FRONTEND_RENDERER_DIR,
+    FRONTEND_ASSETS_DIR,
+)
 
 
 logger = get_logger("MAIN")
@@ -51,11 +55,19 @@ async def startup_event():
         # Connect MCP servers using best practices
         logger.info("Connecting MCP servers...")
         from backend.core.tools.mcp import connect_mcp_servers
+
         await connect_mcp_servers()
         logger.info("MCP servers connected successfully.")
 
+        # Start background news scheduler
+        logger.info("Starting background news scheduler...")
+        from backend.scheduler.news_scheduler import start_background_scheduler
+        start_background_scheduler()
+        logger.info("Background news scheduler started successfully.")
+
     except Exception as e:
         import traceback
+
         logger.error(f"Error during startup: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         # Depending on the desired behavior, you might want to raise the exception
@@ -69,8 +81,14 @@ async def shutdown_event():
     Uygulama kapanırken MCP sunucularından bağlantıyı kes.
     """
     try:
+        logger.info("Stopping background news scheduler...")
+        from backend.scheduler.news_scheduler import stop_background_scheduler
+        stop_background_scheduler()
+        logger.info("Background news scheduler stopped successfully.")
+        
         logger.info("Disconnecting MCP servers...")
         from backend.core.tools.mcp import disconnect_mcp_servers
+
         await disconnect_mcp_servers()
         logger.info("MCP servers disconnected successfully.")
     except Exception as e:
@@ -83,9 +101,7 @@ app.mount(
     StaticFiles(directory=str(FRONTEND_RENDERER_DIR)),
     name="static",
 )
-app.mount(
-    "/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets"
-)
+app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets")
 
 # expose_metrics()
 
@@ -100,19 +116,8 @@ app.add_middleware(
 
 
 @app.get("/")
-async def start_metrics_server():
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST,
-    )
-
-
-@app.get("/metrics")
-async def metrics():
-    return Response(
-        content=generate_latest(),
-        media_type=CONTENT_TYPE_LATEST,
-    )
+async def root():
+    return {"message": "AIris Backend API", "version": "0.1.0", "status": "running"}
 
 
 @app.get("/health")
