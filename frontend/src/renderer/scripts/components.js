@@ -330,6 +330,32 @@ class UIComponents {
         this.hideFileSelectionModal();
       }
     });
+
+    // Calculator functionality
+    const calculateBtn = document.getElementById("calculate-btn");
+    const resetCalcBtn = document.getElementById("reset-calc-btn");
+    const loanAmountInput = document.getElementById("loan-amount");
+    const loanTermInput = document.getElementById("loan-term");
+    const interestRateInput = document.getElementById("interest-rate");
+
+    if (calculateBtn) {
+      calculateBtn.addEventListener("click", () => this.calculateLoan());
+    }
+
+    if (resetCalcBtn) {
+      resetCalcBtn.addEventListener("click", () => this.resetCalculator());
+    }
+
+    // Add Enter key support for calculator inputs
+    [loanAmountInput, loanTermInput, interestRateInput].forEach(input => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateLoan();
+          }
+        });
+      }
+    });
   }
 
   handleNavigation(e) {
@@ -4144,6 +4170,183 @@ class UIComponents {
     if (latestMessage) {
       latestMessage.textContent = `📎 Files (${uploadedCount})`;
     }
+  }
+
+  // Credit Calculator Methods
+  calculateLoan() {
+    try {
+      // Get input values
+      const loanAmountInput = document.getElementById("loan-amount");
+      const loanTermInput = document.getElementById("loan-term");
+      const interestRateInput = document.getElementById("interest-rate");
+
+      if (!loanAmountInput || !loanTermInput || !interestRateInput) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      // Parse and validate inputs
+      let loanAmount = this.parseNumber(loanAmountInput.value);
+      let loanTerm = parseInt(loanTermInput.value);
+      let interestRate = this.parseNumber(interestRateInput.value);
+
+      // Validation with specific error messages
+      if (isNaN(loanAmount) || loanAmount <= 0) {
+        loanAmountInput.focus();
+        throw new Error("Kredi tutarı 0'dan büyük geçerli bir sayı olmalıdır");
+      }
+      if (loanAmount > 100000000) { // 100 million limit
+        loanAmountInput.focus();
+        throw new Error("Kredi tutarı çok yüksek (maksimum 100.000.000 TL)");
+      }
+      if (isNaN(loanTerm) || loanTerm <= 0) {
+        loanTermInput.focus();
+        throw new Error("Kredi vadesi 0'dan büyük geçerli bir sayı olmalıdır");
+      }
+      if (loanTerm > 360) { // 30 years max
+        loanTermInput.focus();
+        throw new Error("Kredi vadesi çok uzun (maksimum 360 ay)");
+      }
+      if (isNaN(interestRate) || interestRate < 0) {
+        interestRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif bir sayı olmalıdır");
+      }
+      if (interestRate > 100) {
+        interestRateInput.focus();
+        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+      }
+
+      // Convert annual interest rate to monthly rate
+      // r = Annual Rate / 12 / 100 (as shown in the formula image)
+      const r = interestRate / 100;
+
+      // Calculate monthly payment using the exact annuity formula from the image
+      // A = P × [r(1+r)^n] / [(1+r)^n - 1]
+      let monthlyPayment;
+      if (r === 0) {
+        // If no interest, simple division
+        monthlyPayment = loanAmount / loanTerm;
+      } else {
+        // Apply the exact annuity formula
+        const onePlusR = 1 + r;  // (1+r)
+        const powerTerm = Math.pow(onePlusR, loanTerm);  // (1+r)^n
+        const numerator = r * powerTerm;  // r(1+r)^n
+        const denominator = powerTerm - 1;  // (1+r)^n - 1
+        
+        monthlyPayment = loanAmount * (numerator / denominator);
+      }
+
+      // Calculate total payment
+      const totalPayment = monthlyPayment * loanTerm;
+
+      // Calculate total interest
+      const totalInterest = totalPayment - loanAmount;
+
+      // Display results
+      this.displayCalculationResults({
+        monthlyPayment,
+        totalPayment,
+        totalInterest,
+        principal: loanAmount,
+        termMonths: loanTerm,
+        annualRate: interestRate
+      });
+
+      // Show success notification
+      this.showNotification("Hesaplama başarıyla tamamlandı", "success");
+
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  displayCalculationResults(results) {
+    const resultsContainer = document.getElementById("calculator-results");
+    const monthlyPaymentEl = document.getElementById("monthly-payment");
+    const totalPaymentEl = document.getElementById("total-payment");
+    const totalInterestEl = document.getElementById("total-interest");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (monthlyPaymentEl) {
+      monthlyPaymentEl.textContent = this.formatCurrency(results.monthlyPayment);
+    }
+
+    if (totalPaymentEl) {
+      totalPaymentEl.textContent = this.formatCurrency(results.totalPayment);
+    }
+
+    if (totalInterestEl) {
+      totalInterestEl.textContent = this.formatCurrency(results.totalInterest);
+    }
+
+    // Smooth scroll to results within the calculator container
+    setTimeout(() => {
+      const calculatorContainer = document.querySelector('.calculator-container');
+      if (resultsContainer && calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop = calculatorContainer.scrollTop + (resultsRect.top - containerRect.top) - 20;
+        
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  }
+
+  resetCalculator() {
+    // Clear input fields
+    const loanAmountInput = document.getElementById("loan-amount");
+    const loanTermInput = document.getElementById("loan-term");
+    const interestRateInput = document.getElementById("interest-rate");
+
+    if (loanAmountInput) loanAmountInput.value = "";
+    if (loanTermInput) loanTermInput.value = "";
+    if (interestRateInput) interestRateInput.value = "";
+
+    // Hide results
+    const resultsContainer = document.getElementById("calculator-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  // Helper method to parse numbers with Turkish and English number formats
+  parseNumber(value) {
+    if (typeof value !== "string") {
+      return parseFloat(value) || 0;
+    }
+    
+    // Handle empty string
+    if (!value.trim()) {
+      return 0;
+    }
+    
+    // Remove spaces and handle both Turkish (,) and English (.) decimal separators
+    // If the string contains both . and ,, assume . is thousands separator and , is decimal
+    if (value.includes('.') && value.includes(',')) {
+      // Turkish format: 1.000.000,50
+      return parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0;
+    } else if (value.includes(',') && !value.includes('.')) {
+      // Only comma, treat as decimal separator: 1000,50
+      return parseFloat(value.replace(",", ".")) || 0;
+    } else {
+      // English format or integer: 1000000.50 or 1000000
+      return parseFloat(value.replace(/\s/g, "")) || 0;
+    }
+  }
+
+  // Helper method to format currency
+  formatCurrency(amount) {
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
   }
 }
 
