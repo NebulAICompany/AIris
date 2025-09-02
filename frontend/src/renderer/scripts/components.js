@@ -4923,6 +4923,7 @@ class UIComponents {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount);
+  }
 
   // News Chat Methods
   initializeNewsChat(article) {
@@ -5260,7 +5261,6 @@ class UIComponents {
       url: this.currentNewsArticle.url,
       cluster_data: clusterData || null
     };
-
   }
 }
 
