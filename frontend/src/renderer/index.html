@@ -21,17 +21,13 @@
     />
   </head>
   <body>
-    <div id="app" class="app-container">
+    <div id="app" class="app-container" style="display: none">
       <!-- Header -->
       <header class="header">
         <div class="header-content">
           <div class="header-left">
             <div class="logo">
-              <i class="fas fa-brain"></i>
-              <span class="logo-text" data-i18n="logoText">AIris</span>
-              <span class="logo-subtitle" data-i18n="logoSubtitle"
-                >Financial AI</span
-              >
+              <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
             </div>
           </div>
           <div class="header-center">
@@ -108,10 +104,7 @@
               <i class="fas fa-newspaper"></i>
               <span data-i18n="financeNews">Finance News</span>
             </button>
-            <button class="nav-item" data-tab="analytics">
-              <i class="fas fa-chart-bar"></i>
-              <span data-i18n="analytics">Analytics</span>
-            </button>
+
             <button class="nav-item" data-tab="settings">
               <i class="fas fa-cog"></i>
               <span data-i18n="settings">Settings</span>
@@ -685,78 +678,6 @@
             </div>
           </div>
 
-          <!-- Analytics Tab -->
-          <div id="analytics-tab" class="tab-content">
-            <div class="analytics-container">
-              <div class="analytics-header">
-                <h2 data-i18n="systemAnalytics">System Analytics</h2>
-                <p data-i18n="monitorPerformance">
-                  Monitor system performance and usage statistics
-                </p>
-              </div>
-
-              <div class="analytics-grid">
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="apiRequests">API Requests</h3>
-                    <i class="fas fa-exchange-alt"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="api-requests">-</div>
-                    <div class="metric-label" data-i18n="totalRequests">
-                      Total Requests
-                    </div>
-                  </div>
-                </div>
-
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="responseTime">Response Time</h3>
-                    <i class="fas fa-clock"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="response-time">-</div>
-                    <div class="metric-label" data-i18n="average">Average</div>
-                  </div>
-                </div>
-
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="documents">Documents</h3>
-                    <i class="fas fa-file-alt"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="document-count">-</div>
-                    <div class="metric-label" data-i18n="processed">
-                      Processed
-                    </div>
-                  </div>
-                </div>
-
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="systemHealth">System Health</h3>
-                    <i class="fas fa-heartbeat"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="system-health">-</div>
-                    <div class="metric-label" data-i18n="status">Status</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Recent Activity Section -->
-              <div class="recent-activity-section">
-                <h3 data-i18n="recentActivity">Recent Activity</h3>
-                <div class="activity-list" id="recent-activity">
-                  <div class="no-activity" data-i18n="loadingActivity">
-                    Loading activity...
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Settings Tab -->
           <div id="settings-tab" class="tab-content">
             <div class="settings-container">
@@ -843,8 +764,12 @@
       </main>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
+    <!-- Loading Overlay - Kept hidden to skip initial loading screen -->
+    <div
+      id="loading-overlay"
+      class="loading-overlay hidden"
+      style="display: none"
+    >
       <div class="loading-content">
         <div class="loading-spinner"></div>
         <div class="loading-text" data-i18n="loading">Processing...</div>

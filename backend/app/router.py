@@ -5,7 +5,14 @@ from backend.pipeline.query import run_orchestration, run_news_chat_orchestratio
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
-from backend.shared.constants import UPLOADS_PATH, VECTORSTORE_PATH_STR, VERIFICATION_UPLOADS_PATH, MASKED_MAP_JSON_PATH, CREATED_DOCUMENTS_PATH, DEFAULT_SEARCH_METHOD
+from backend.shared.constants import (
+    UPLOADS_PATH,
+    VECTORSTORE_PATH_STR,
+    VERIFICATION_UPLOADS_PATH,
+    MASKED_MAP_JSON_PATH,
+    CREATED_DOCUMENTS_PATH,
+    DEFAULT_SEARCH_METHOD,
+)
 import shutil
 from pathlib import Path
 from datetime import datetime
@@ -15,8 +22,7 @@ from qdrant_client import models
 
 logger = get_logger("ROUTER")
 router = APIRouter()
-# Simple request counter
-request_counter = 0
+
 
 class QueryRequest(BaseModel):
     query: str
@@ -31,6 +37,7 @@ class NewsChatRequest(BaseModel):
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
+
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
@@ -42,9 +49,7 @@ async def handle_query(request: QueryRequest):
     Kullanıcının gönderdiği sorguyu alır,
     pipeline üzerinden işler ve LLM yanıtını döner.
     """
-    global request_counter
-    try:  # Increment simple counter
-        request_counter += 1
+    try:
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
@@ -54,16 +59,6 @@ async def handle_query(request: QueryRequest):
         # Use system-level default search method
         search_method = DEFAULT_SEARCH_METHOD
 
-
-        logger.info(f"📝 API Router received:")
-        logger.info(f"   - Query: {query}")
-        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-        logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
-        logger.info(f"   - Search Method (from config): {search_method}")
-        logger.info(f"   - Session ID: {session_id}")
-        logger.info(f"   - Selected Files: {selected_files}")
-
-
         answer = await run_orchestration(
             query,
             web_search_enabled,
@@ -72,17 +67,16 @@ async def handle_query(request: QueryRequest):
             selected_files,
             search_method,
         )
-        logger.info(f"Processing query: {query[:100]}...")  # Log first 100 chars
         api_requests_total.labels(status="success").inc()
 
-        logger.info("Query processed successfully")
-        
         return {
-                "response": answer.get("response"),
-                "images": answer.get("images", []),
-                "sessionId": answer.get("session_id", session_id)
-            }
-    
+            "response": answer.get("response"),
+            "images": answer.get("images", []),
+            "charts": answer.get("charts", []),
+            "generatedFiles": answer.get("generatedFiles", []),
+            "sessionId": answer.get("session_id", session_id),
+        }
+
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
         api_requests_total.labels(status="error").inc()
@@ -137,12 +131,7 @@ async def handle_news_chat(request: NewsChatRequest):
 
 @router.post("/upload")
 async def handle_upload(file: UploadFile = File(...)):
-    global request_counter
     try:
-        # Increment simple counter
-        request_counter += 1
-
-        logger.info(f"Starting file upload: {file.filename} ({file.content_type})")
 
         # Ensure uploads directory exists (use absolute path)
         uploads_dir = Path(UPLOADS_PATH)
@@ -153,14 +142,14 @@ async def handle_upload(file: UploadFile = File(...)):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        logger.info(f"File saved to: {file_path}")
-
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
 
         pre_embedding_process = "pdr"
 
-        result = await process_file(str(file_path), pre_embedding_process=pre_embedding_process)
+        result = await process_file(
+            str(file_path), pre_embedding_process=pre_embedding_process
+        )
 
         logger.info(f"File processed successfully: {file.filename}")
 
@@ -178,7 +167,7 @@ async def handle_upload(file: UploadFile = File(...)):
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
         )
-    
+
 
 @router.get("/chat/sessions")
 def list_chat_sessions():
@@ -279,9 +268,16 @@ def list_files():
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
+        # Import the temporary file check function
+        from backend.utils.preview import PreviewGenerator
+
         files = []
         for file in uploads_dir.iterdir():
             if file.is_file():
+                # Skip temporary files
+                if PreviewGenerator._is_temporary_file(str(file)):
+                    continue
+
                 files.append(
                     {
                         "name": file.name,
@@ -335,70 +331,13 @@ def list_created_documents():
         )
 
 
-@router.get("/metrics")
-def get_metrics():
-    """
-    Returns system metrics and analytics data.
-    """
-    try:
-        # Get file count
-        uploads_dir = Path(UPLOADS_PATH)
-        file_count = (
-            len([f for f in uploads_dir.iterdir() if f.is_file()])
-            if uploads_dir.exists()
-            else 0
-        )
-
-        # Get vector store info
-        vectorstore_exists = Path(VECTORSTORE_PATH_STR).exists()
-
-        # Simple request counter - use module variable
-        global request_counter
-        total_requests = request_counter
-
-        return {
-            "totalQueries": int(total_requests),
-            "totalDocuments": file_count,
-            "avgResponseTime": "1.2s",
-            "systemHealth": "Healthy" if vectorstore_exists else "No Data",
-            "vectorStoreStatus": "Active" if vectorstore_exists else "Empty",
-            "lastUpdated": datetime.now().isoformat(),
-            "recentActivity": [
-                {
-                    "title": "Document processed",
-                    "time": "2 minutes ago",
-                    "icon": "fas fa-file-upload",
-                },
-                {
-                    "title": "Query answered",
-                    "time": "5 minutes ago",
-                    "icon": "fas fa-comment",
-                },
-                {
-                    "title": "System started",
-                    "time": "1 hour ago",
-                    "icon": "fas fa-power-off",
-                },
-            ],
-        }
-    except Exception as e:
-        error_message = str(e)
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching metrics: {error_message}"
-        )
-
-
 @router.delete("/files/{filename}")
 def delete_file(filename: str):
     """
     Delete a file from uploads directory and remove its chunks from vector store.
     """
-    global request_counter
     try:
         logger.info(f"Starting deletion for file '{filename}'")
-
-        # Increment simple counter
-        request_counter += 1
 
         # Check if file exists in uploads directory
         uploads_dir = Path(UPLOADS_PATH)
@@ -423,6 +362,7 @@ def delete_file(filename: str):
 
         # Load existing vector store
         import json
+
         # Stem file name
         base_filename = Path(filename).stem
 
@@ -432,7 +372,11 @@ def delete_file(filename: str):
             with open(pii_map_path, "r", encoding="utf-8") as f:
                 pii_maps = json.load(f)
             pii_delete_count = 0
-            chunk_ids_to_delete = [(chunk_id,chunk_map) for chunk_id,chunk_map in pii_maps.items() if base_filename in chunk_id]
+            chunk_ids_to_delete = [
+                (chunk_id, chunk_map)
+                for chunk_id, chunk_map in pii_maps.items()
+                if base_filename in chunk_id
+            ]
             for chunk_id, chunk_map in chunk_ids_to_delete:
                 pii_maps.pop(chunk_id, None)
                 pii_delete_count += len(chunk_map)
@@ -448,9 +392,14 @@ def delete_file(filename: str):
             client.delete(
                 collection_name="test_collection",
                 points_selector=models.Filter(
-                    must=[models.FieldCondition(key="metadata.file_name", match=models.MatchValue(value=base_filename))]
-                    )
-                )
+                    must=[
+                        models.FieldCondition(
+                            key="metadata.file_name",
+                            match=models.MatchValue(value=base_filename),
+                        )
+                    ]
+                ),
+            )
             client.close()
         except Exception as e:
             logger.error(f"Error deleting chunks from vector store: {e}")
@@ -458,15 +407,16 @@ def delete_file(filename: str):
         # Also remove documents from keyword search index
         try:
             from backend.retrieval.keyword_search import get_keyword_search
-            
-            logger.info(f"🔍 Removing documents from keyword search index for file: {base_filename}")
+
+            logger.info(
+                f"🔍 Removing documents from keyword search index for file: {base_filename}"
+            )
             keyword_search = get_keyword_search()
             keyword_search.remove_documents_by_file(base_filename)
             keyword_search.save_index()
             logger.info(f"✅ Documents removed from keyword search index")
         except Exception as e:
             logger.error(f"Error deleting documents from keyword search index: {e}")
-
 
         # Delete the actual file
         logger.info(f"🗑️ Deleting physical file: {file_path}")
@@ -488,6 +438,7 @@ def delete_file(filename: str):
     except Exception as e:
         logger.error(f"❌ Unexpected error deleting file '{filename}': {str(e)}")
         import traceback
+
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
 
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
@@ -512,6 +463,33 @@ def download_file(filename: str):
         logger.error(f"Error downloading file {filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Error downloading file: {error_message}"
+        )
+
+
+@router.get("/files/{filename}")
+def get_file_info(filename: str):
+    """
+    Get information about a specific file.
+    """
+    try:
+        file_path = Path(UPLOADS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        stats = file_path.stat()
+        return {
+            "name": filename,
+            "size": stats.st_size,
+            "created_at": datetime.fromtimestamp(stats.st_ctime).isoformat(),
+            "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting file info {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting file info: {error_message}",
         )
 
 
@@ -564,7 +542,35 @@ def download_created_document(filename: str):
         error_message = str(e)
         logger.error(f"Error downloading created document {filename}: {error_message}")
         raise HTTPException(
-            status_code=500, detail=f"Error downloading created document: {error_message}"
+            status_code=500,
+            detail=f"Error downloading created document: {error_message}",
+        )
+
+
+@router.get("/created-documents/{filename}")
+def get_created_document_info(filename: str):
+    """
+    Get information about a specific created document.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        stats = file_path.stat()
+        return {
+            "name": filename,
+            "size": stats.st_size,
+            "created_at": datetime.fromtimestamp(stats.st_ctime).isoformat(),
+            "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error getting created document info {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting created document info: {error_message}",
         )
 
 
@@ -593,9 +599,40 @@ def get_created_document_preview(filename: str):
         }
     except Exception as e:
         error_message = str(e)
-        logger.error(f"Error generating preview for created document {filename}: {error_message}")
+        logger.error(
+            f"Error generating preview for created document {filename}: {error_message}"
+        )
         raise HTTPException(
             status_code=500, detail=f"Error generating preview: {error_message}"
+        )
+
+
+@router.delete("/created-documents/{filename}")
+def delete_created_document(filename: str):
+    """
+    Delete a created document from local storage.
+    """
+    try:
+        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
+
+        # Delete the file
+        file_path.unlink()
+
+        logger.info(f"Created document deleted successfully: {filename}")
+
+        return {
+            "message": f"Created document '{filename}' deleted successfully",
+            "success": True,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error deleting created document {filename}: {error_message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting created document: {error_message}",
         )
 
 
@@ -735,12 +772,11 @@ async def verify_document(
     """
     Verify a document using the LLM-based verification pipeline with Wolfram Alpha mathematical verification (always enabled)
     """
-    global request_counter
     try:
-        # Increment request counter
-        request_counter += 1
 
-        logger.info(f"Starting document verification: {file.filename} (type: {verification_type})")
+        logger.info(
+            f"Starting document verification: {file.filename} (type: {verification_type})"
+        )
 
         # Check file type
         allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"]
@@ -763,13 +799,11 @@ async def verify_document(
 
         logger.info(f"File saved for verification: {temp_file_path}")
 
-        # Import and run verification pipeline
-        from backend.utils.verification import verification_pipeline
+        # Import and run verification function
+        from backend.utils.verification import verify_document
 
-        # Run verification with Wolfram Alpha (always enabled)
-        verification_result = verification_pipeline.verify_document(
-            str(temp_file_path), verification_type 
-        )
+        # Run verification
+        verification_result = await verify_document(str(temp_file_path))
 
         # Clean up temporary file
         try:
@@ -807,12 +841,21 @@ def get_verification_types():
     Get available document verification types
     """
     try:
-        from backend.utils.verification import verification_pipeline
-        verification_types = verification_pipeline.verification_types
+        verification_types = [
+            "invoice",
+            "receipt",
+            "bank_statement",
+            "payslip",
+            "contract",
+            "tax_declaration",
+            "expense_voucher",
+            "other",
+            "auto",
+        ]
 
         return {
             "verification_types": verification_types,
-            "supported_formats": verification_pipeline.supported_formats,
+            "supported_formats": [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
             "default_type": "auto",
         }
 
