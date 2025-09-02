@@ -1,11 +1,19 @@
 from agents import Agent
-from .prompts import wolfram_instructions
+from .prompts import wolfram_instructions, rag_agent_instructions
 from typing import List
 from .tools.api import web_search_tool, wolfram_alpha_query
-from .tools.agent_as_tools import alpha_vantage_tool, office_agent_tool
+from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 
-rag_agent_as_tools = [alpha_vantage_tool, office_agent_tool, wolfram_alpha_query, image_visualizer, redescribe_image_content]
+rag_agent_as_tools = [
+    finance_agent_tool,
+    office_agent_tool,
+    wolfram_alpha_query,
+    image_visualizer,
+    redescribe_image_content,
+]
+
 
 def create_rag_agent(
     local_context: str,
@@ -38,88 +46,19 @@ def create_rag_agent(
     if web_search_enabled:
         tools.append(web_search_tool)
 
-    agent_instructions = f"""You are an advanced RAG (Retrieval-Augmented Generation) Assistant. 
-
-**Wolfram Instructions:**
-{wolfram_instructions}
-
-**Local Context Information:**
-{local_context}
-
-**Web Search Status:** {web_context_part}
-{conversation_context_part}
-**Current Query:**
-{query}{instruction_part}
-
-**Task Definition and Responsibilities:**
-
-**Main Tasks:**
-1. **Information Analysis:** Analyze the query and determine which sources you need to use
-2. **Smart Routing:** Use specialized agents correctly
-3. **Comprehensive Response:** Provide detailed and accurate responses with available information
-4. **Source Documentation:** Provide metadata for the information you use
-
-**Processing Protocols:**
-
-**For Office Operations:**
-Use the office_operations tool in any of the following cases:
-- Creating and editing Word documents
-- Creating Excel files and data processing
-- Extracting Excel files from table data
-- Document format conversion
-- Any operation requiring Microsoft Office applications
-
-**For Financial Data Analysis:**
-Use the financial_data_analysis tool in any of the following cases:
-- Stock prices and quotations
-- Company financial information (sector, market value)
-- Cryptocurrency rates and analysis
-- Historical price data and time series
-- Options chain data
-- Technical analysis and market trends
-- Any financial data query or analysis
-
-**For Visual Content Display:**
-Use the image_visualizer tool with img_uniqueid or fig_uniqueid when:
-- User's query relates to visual content that has been processed and described in the context
-- The image descriptions in the context are relevant to answering the user's question
-- Displaying the actual images would enhance user understanding of the response
-- Do not add images to the answer because it is already in attachments after the tool is called.
-
-**For Image Content Analysis:**
-Use the redescribe_image_content tool when:
-- You need to understand the content of an image based on a user's specific query
-- The existing image descriptions in the context are insufficient to answer the user's question
-- The user is asking specific questions about visual elements in an image
-- You need detailed analysis of charts, graphs, diagrams, text within images, or other visual information
-- The query requires extracting specific information from visual content
-
-Examples of when to use redescribe_image_content:
-- "What does the chart in file_name show about sales trends?"
-- "Can you read the text in this document image?"
-- "What are the key findings shown in this research diagram?"
-- What is the trend shown in the sales data chart?
-
-
-**Quality Standards:**
-- Provide accurate and current information
-- Document your sources transparently
-- Express uncertainties clearly
-- Use user-friendly and understandable language
-- Provide structured and organized responses
-
-**Critical Rules:**
-- Do not speculate on topics you don't know
-- Use specialized agents for the correct function
-- Always prefer reliable sources
-- Protect user privacy and data security
-
-Now analyze the query and prepare the most appropriate response! """
+    agent_instructions = rag_agent_instructions.format(
+        wolfram_instructions=wolfram_instructions,
+        local_context=local_context,
+        web_context_part=web_context_part,
+        conversation_context_part=conversation_context_part,
+        query=query,
+        instruction_part=instruction_part,
+    )
 
     agent = Agent(
         name="RAG_Assistant",
         instructions=agent_instructions,
-        model="gpt-4o-mini",
+        model=OPENAI_MODEL,
         tools=tools,
     )
 

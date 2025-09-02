@@ -188,6 +188,7 @@ class APIService {
         data: response.data,
         response: response.data.response || response.data,
         images: response.data.images || [],
+        charts: response.data.charts || [],
         sessionId: response.data.sessionId,
       };
     } catch (error) {
@@ -229,6 +230,7 @@ class APIService {
         success: false,
         error: errorMessage,
         images: [], // Error durumunda empty images array
+        charts: [], // Error durumunda empty charts array
       };
     }
   }
@@ -423,46 +425,6 @@ class APIService {
     }
 
     return metrics;
-  }
-
-  // Get aggregated system stats from the proper analytics endpoint
-  async getSystemStats() {
-    try {
-      const response = await this.api.get("/api/metrics");
-
-      const data = response.data;
-
-      // Map the backend response to frontend expected format
-      const stats = {
-        apiRequests: data.totalQueries || 0,
-        averageResponseTime: data.avgResponseTime || "0ms",
-        documentsProcessed: data.totalDocuments || 0,
-        systemHealth:
-          data.systemHealth === "Healthy"
-            ? "healthy"
-            : data.systemHealth === "No Data"
-            ? "idle"
-            : "offline",
-        recentActivity: data.recentActivity || [],
-      };
-
-      return {
-        success: true,
-        stats,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        stats: {
-          apiRequests: 0,
-          averageResponseTime: "0ms",
-          documentsProcessed: 0,
-          systemHealth: "offline",
-          recentActivity: [],
-        },
-      };
-    }
   }
 
   // Determine system health based on metrics

@@ -32,11 +32,11 @@ class LanguageService {
         myFiles: "My Files",
         createdDocuments: "Created Documents",
         financeNews: "Finance News",
-        analytics: "Analytics",
+
         settings: "Settings",
 
         // Chat Section
-        aiFinancialAssistant: "AI Financial Assistant",
+        aiFinancialAssistant: "AIris Financial Assistant",
         askQuestions:
           "Ask questions about your financial documents and get AI-powered insights",
         history: "History",
@@ -46,7 +46,7 @@ class LanguageService {
         loadingChatHistory: "Loading chat history...",
         welcomeToAiris: "Welcome to AIris!",
         welcomeMessage:
-          "I'm your AI financial assistant. Upload some documents and start asking questions about your financial data.",
+          "I'm your AIris financial assistant. Upload some documents and start asking questions about your financial data.",
         suggestedQuestions: {
           latestReport: "What's in my latest report?",
           analyzeTrends: "Analyze financial trends",
@@ -101,30 +101,12 @@ class LanguageService {
         askQuestionPlaceholder: "Ask a question about this news...",
         followUpQuestionPlaceholder: "Ask a follow-up question...",
 
-        // Analytics Section
-        systemAnalytics: "System Analytics",
-        monitorPerformance: "Monitor system performance and usage statistics",
-        apiRequests: "API Requests",
-        totalRequests: "Total Requests",
-        responseTime: "Response Time",
-        average: "Average",
-        documents: "Documents",
-        processed: "Processed",
-        systemHealth: "System Health",
-        status: "Status",
-        recentActivity: "Recent Activity",
-        loadingActivity: "Loading activity...",
-        noActivity: "No recent activity",
-        healthy: "Healthy",
-        offline: "Offline",
-        idle: "Idle",
-
         // Settings Section
         settingsTitle: "Settings",
         configureApp: "Configure your AIris desktop application",
-        backendConfiguration: "Backend Configuration",
-        apiBaseUrl: "API Base URL",
-        requestTimeout: "Request Timeout (ms)",
+        backendConfiguration: "Server Configuration",
+        apiBaseUrl: "Server Address",
+        requestTimeout: "Request Timeout (seconds)",
         interfacePreferences: "Interface Preferences",
         theme: "Theme",
         language: "Language",
@@ -147,7 +129,7 @@ class LanguageService {
         preparingFile: "Preparing file...",
         readingFile: "Reading file...",
         uploading: "Uploading...",
-        processingWithAI: "Processing with AI...",
+        processingWithAI: "Processing document...",
         uploadComplete: "Upload complete!",
         uploadFailed: "Upload failed",
         retry: "Retry",
@@ -164,8 +146,8 @@ class LanguageService {
         previewNotAvailable: "Preview not available",
 
         // Notifications
-        fileUploadedSuccessfully: "File uploaded successfully",
-        fileDeletedSuccessfully: "File deleted successfully",
+        fileUploadedSuccessfully: "File uploaded",
+        fileDeletedSuccessfully: "File deleted",
         failedToDeleteFile: "Failed to delete file",
         failedToUploadFile: "Failed to upload file",
         connectionLost: "Connection lost",
@@ -183,7 +165,7 @@ class LanguageService {
 
         // File deletion confirmation
         deleteConfirmation:
-          'Are you sure you want to delete "{filename}"?\\n\\nThis will permanently remove the file and all its data from the vector store.',
+          'Are you sure you want to delete "{filename}"?\\n\\nThis will permanently remove the file and all its data from the document archive.',
 
         // File size units
         bytes: "B",
@@ -209,7 +191,7 @@ class LanguageService {
           "Hello! I'm your AI financial document assistant. Upload your documents and ask me questions about them.",
 
         // Settings messages
-        settingsSavedSuccessfully: "Settings saved successfully!",
+        settingsSavedSuccessfully: "Settings saved!",
 
         // News messages
         loadingLatestNews: "Loading latest finance news...",
@@ -217,10 +199,6 @@ class LanguageService {
         unableToFetchNews: "Unable to fetch finance news. Please try again.",
         lastUpdatedAt: "Last updated:",
         failedToUpdate: "Failed to update",
-
-        // Analytics messages
-        notAvailable: "N/A",
-        unknown: "Unknown",
 
         // Time format
         minutesAgo: "m ago",
@@ -286,13 +264,13 @@ class LanguageService {
         issuesFound: "Issues Found",
         downloadReport: "Download Report",
         verifyAnother: "Verify Another Document",
-        verificationCompleted: "Verification completed successfully",
+        verificationCompleted: "Verification completed",
         verificationFailed: "Document verification failed",
         pleaseSelectFile: "Please select a file to verify",
         unsupportedFileType: "Unsupported file type",
         noVerificationDataToDownload:
           "No verification data available to download",
-        reportDownloaded: "Verification report downloaded successfully",
+        reportDownloaded: "Verification report downloaded",
         wolframMathVerification: "Wolfram Alpha Mathematical Verification",
         wolframMathVerificationDesc:
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
@@ -332,11 +310,11 @@ class LanguageService {
         myFiles: "Dosyalarım",
         createdDocuments: "Oluşturulan Belgeler",
         financeNews: "Finans Haberleri",
-        analytics: "Analitik",
+
         settings: "Ayarlar",
 
         // Chat Section
-        aiFinancialAssistant: "AI Finansal Asistan",
+        aiFinancialAssistant: "AIris Finansal Asistan",
         askQuestions:
           "Finansal belgeleriniz hakkında sorular sorun ve AI destekli öngörüler alın",
         history: "Geçmiş",
@@ -346,7 +324,7 @@ class LanguageService {
         loadingChatHistory: "Sohbet geçmişi yükleniyor...",
         welcomeToAiris: "AIris'e Hoş Geldiniz!",
         welcomeMessage:
-          "Ben sizin AI finansal asistanınızım. Bazı belgeler yükleyin ve finansal verileriniz hakkında sorular sormaya başlayın.",
+          "Ben sizin AIris finansal asistanınızım. Bazı belgeler yükleyin ve finansal verileriniz hakkında sorular sormaya başlayın.",
         suggestedQuestions: {
           latestReport: "Son raporumda neler var?",
           analyzeTrends: "Finansal trendleri analiz et",
@@ -402,31 +380,12 @@ class LanguageService {
         askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
         followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
-        // Analytics Section
-        systemAnalytics: "Sistem Analitikleri",
-        monitorPerformance:
-          "Sistem performansını ve kullanım istatistiklerini izleyin",
-        apiRequests: "API İstekleri",
-        totalRequests: "Toplam İstek",
-        responseTime: "Yanıt Süresi",
-        average: "Ortalama",
-        documents: "Belgeler",
-        processed: "İşlendi",
-        systemHealth: "Sistem Sağlığı",
-        status: "Durum",
-        recentActivity: "Son Aktiviteler",
-        loadingActivity: "Aktiviteler yükleniyor...",
-        noActivity: "Son aktivite yok",
-        healthy: "Sağlıklı",
-        offline: "Çevrimdışı",
-        idle: "Boşta",
-
         // Settings Section
         settingsTitle: "Ayarlar",
         configureApp: "AIris masaüstü uygulamanızı yapılandırın",
-        backendConfiguration: "Backend Yapılandırması",
-        apiBaseUrl: "API Temel URL",
-        requestTimeout: "İstek Zaman Aşımı (ms)",
+        backendConfiguration: "Sunucu Yapılandırması",
+        apiBaseUrl: "Sunucu Adresi",
+        requestTimeout: "İstek Zaman Aşımı (saniye)",
         interfacePreferences: "Arayüz Tercihleri",
         theme: "Tema",
         language: "Dil",
@@ -449,7 +408,7 @@ class LanguageService {
         preparingFile: "Dosya hazırlanıyor...",
         readingFile: "Dosya okunuyor...",
         uploading: "Yükleniyor...",
-        processingWithAI: "AI ile işleniyor...",
+        processingWithAI: "Belge işleniyor...",
         uploadComplete: "Yükleme tamamlandı!",
         uploadFailed: "Yükleme başarısız",
         retry: "Tekrar Dene",
@@ -466,8 +425,8 @@ class LanguageService {
         previewNotAvailable: "Önizleme mevcut değil",
 
         // Notifications
-        fileUploadedSuccessfully: "Dosya başarıyla yüklendi",
-        fileDeletedSuccessfully: "Dosya başarıyla silindi",
+        fileUploadedSuccessfully: "Dosya yüklendi",
+        fileDeletedSuccessfully: "Dosya silindi",
         failedToDeleteFile: "Dosya silinemedi",
         failedToUploadFile: "Dosya yüklenemedi",
         connectionLost: "Bağlantı kesildi",
@@ -485,7 +444,7 @@ class LanguageService {
 
         // File deletion confirmation
         deleteConfirmation:
-          '"{filename}" dosyasını silmek istediğinizden emin misiniz?\\n\\nBu işlem dosyayı ve tüm verilerini vektör deposundan kalıcı olarak kaldıracaktır.',
+          '"{filename}" dosyasını silmek istediğinizden emin misiniz?\\n\\nBu işlem dosyayı ve tüm verilerini belge arşivinden kalıcı olarak kaldıracaktır.',
 
         // File size units
         bytes: "B",
@@ -511,7 +470,7 @@ class LanguageService {
           "Merhaba! Ben sizin AI finansal belge asistanınızım. Belgelerinizi yükleyin ve onlar hakkında sorular sorun.",
 
         // Settings messages
-        settingsSavedSuccessfully: "Ayarlar başarıyla kaydedildi!",
+        settingsSavedSuccessfully: "Ayarlar kaydedildi!",
 
         // News messages
         loadingLatestNews: "En son finans haberleri yükleniyor...",
@@ -519,10 +478,6 @@ class LanguageService {
         unableToFetchNews: "Finans haberleri alınamadı. Lütfen tekrar deneyin.",
         lastUpdatedAt: "Son güncelleme:",
         failedToUpdate: "Güncelleme başarısız",
-
-        // Analytics messages
-        notAvailable: "Yok",
-        unknown: "Bilinmeyen",
 
         // Time format
         minutesAgo: "dk önce",
