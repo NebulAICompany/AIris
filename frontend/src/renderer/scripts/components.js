@@ -171,7 +171,7 @@ class UIComponents {
     const refreshNewsButton = document.getElementById("refresh-news");
     if (refreshNewsButton) {
       refreshNewsButton.addEventListener("click", () =>
-        this.loadFinanceNews(true)
+        this.refreshFinanceNews()
       );
     }
 
@@ -254,6 +254,8 @@ class UIComponents {
       );
     }
 
+    // Removed keyboard shortcuts as requested by user
+
     // Event delegation for dynamic buttons
     document.addEventListener("click", (e) => {
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
@@ -309,9 +311,9 @@ class UIComponents {
       // Handle news article clicks
       if (e.target.closest(".news-item")) {
         const newsItem = e.target.closest(".news-item");
-        const link = newsItem.dataset.link;
-        if (link) {
-          window.open(link, "_blank");
+        const articleIndex = newsItem.dataset.articleIndex;
+        if (articleIndex !== undefined) {
+          this.showNewsDetail(parseInt(articleIndex));
         }
       }
 
@@ -403,9 +405,7 @@ class UIComponents {
       case "created-documents":
         await this.loadCreatedDocumentsLibrary();
         break;
-      case "analytics":
-        await this.loadAnalytics();
-        break;
+
       case "news":
         await this.loadFinanceNews();
         break;
@@ -2704,114 +2704,6 @@ class UIComponents {
     }
   }
 
-  async loadAnalytics() {
-    try {
-      const metrics = await window.apiService.getSystemStats();
-      this.updateAnalyticsDashboard(metrics.stats);
-
-      // Set up auto-refresh every 30 seconds when on analytics tab
-      if (this.currentTab === "analytics") {
-        if (this.analyticsRefreshTimer) {
-          clearInterval(this.analyticsRefreshTimer);
-        }
-        this.analyticsRefreshTimer = setInterval(async () => {
-          if (this.currentTab === "analytics") {
-            try {
-              const updatedMetrics = await window.apiService.getSystemStats();
-              this.updateAnalyticsDashboard(updatedMetrics.stats);
-            } catch (error) {
-              console.error("Analytics refresh error:", error);
-            }
-          } else {
-            clearInterval(this.analyticsRefreshTimer);
-          }
-        }, 30000); // Refresh every 30 seconds
-      }
-    } catch (error) {
-      console.error("Analytics error:", error);
-      // Show fallback data
-      this.updateAnalyticsDashboard({
-        apiRequests: 0,
-        documentsProcessed: 0,
-        averageResponseTime: "N/A",
-        systemHealth: "Error",
-        recentActivity: [],
-      });
-    }
-  }
-
-  updateAnalyticsDashboard(metrics) {
-    // Update metric cards using the correct IDs from HTML
-    const apiRequests = document.getElementById("api-requests");
-    const responseTime = document.getElementById("response-time");
-    const documentCount = document.getElementById("document-count");
-    const systemHealth = document.getElementById("system-health");
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-
-    if (apiRequests) {
-      apiRequests.textContent = metrics.apiRequests || "0";
-    }
-    if (responseTime) {
-      responseTime.textContent =
-        metrics.averageResponseTime || t("notAvailable");
-    }
-    if (documentCount) {
-      documentCount.textContent = metrics.documentsProcessed || "0";
-    }
-    if (systemHealth) {
-      systemHealth.textContent = metrics.systemHealth || t("unknown");
-      // Color code the health status
-      systemHealth.style.color =
-        metrics.systemHealth === "healthy"
-          ? "var(--success)"
-          : metrics.systemHealth === "offline"
-          ? "var(--error)"
-          : "var(--text-secondary)";
-    }
-
-    // Update recent activity
-    this.updateRecentActivity(metrics.recentActivity || []);
-  }
-
-  updateRecentActivity(activities) {
-    const activityList = document.getElementById("recent-activity");
-    if (!activityList) return;
-
-    activityList.innerHTML = "";
-
-    if (activities.length === 0) {
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      activityList.innerHTML = `<div class="no-activity">${t(
-        "noActivity"
-      )}</div>`;
-      return;
-    }
-
-    activities.forEach((activity) => {
-      const activityItem = document.createElement("div");
-      activityItem.className = "activity-item";
-
-      activityItem.innerHTML = `
-                <div class="activity-icon">
-                    <i class="${activity.icon || "fas fa-circle"}"></i>
-                </div>
-                <div class="activity-details">
-                    <div class="activity-title">${Utils.escapeHtml(
-                      activity.title
-                    )}</div>
-                    <div class="activity-time">${activity.time}</div>
-                </div>
-            `;
-
-      activityList.appendChild(activityItem);
-    });
-  }
-
   // Theme management
   loadTheme() {
     const savedTheme = localStorage.getItem("airis-theme") || "light";
@@ -2965,6 +2857,7 @@ class UIComponents {
         <div class="loading-state">
           <div class="loading-spinner"></div>
           <p>${t("loadingLatestNews")}</p>
+          <small style="color: #666; margin-top: 8px; display: block;">AI ile akıllı haber kümeleme yapılıyor...</small>
         </div>
       `;
 
@@ -2977,10 +2870,13 @@ class UIComponents {
     }
 
     try {
-      const result = await window.apiService.getFinanceNews();
+      // Load from database by default (no force refresh)
+      const result = await window.apiService.getFinanceNews(false);
 
-      if (result.success && result.articles.length > 0) {
-        this.renderFinanceNews(result.articles);
+      if (result.success) {
+        if (result.articles.length > 0) {
+          // We have articles - render them
+          this.renderFinanceNews(result.articles, result.data);
         this.lastNewsUpdate = new Date().toISOString();
 
         if (newsLastUpdated) {
@@ -2992,8 +2888,35 @@ class UIComponents {
           )} ${new Date().toLocaleTimeString()}`;
         }
 
-        // Set up auto-refresh interval (1 minute)
+          // Update scheduler status
+          this.updateSchedulerStatus();
+
+          // Set up auto-refresh interval
         this.startNewsAutoRefresh();
+        } else {
+          // Empty database - show empty state and try initial refresh
+          const t = window.languageService
+            ? window.languageService.t.bind(window.languageService)
+            : (key) => key;
+          
+          newsGrid.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-newspaper"></i>
+              <h3>No news available</h3>
+              <p>Database is empty. Let's fetch the latest financial news.</p>
+              <button class="btn btn-primary" onclick="window.uiComponents.refreshFinanceNews()">
+                <i class="fas fa-sync-alt"></i> Fetch Latest News
+              </button>
+            </div>
+          `;
+
+          if (newsLastUpdated) {
+            newsLastUpdated.textContent = t("noNewsAvailable") || "No news available";
+          }
+
+          // Still set up auto-refresh for future updates
+          this.startNewsAutoRefresh();
+        }
       } else {
         throw new Error(result.error || "Failed to load news");
       }
@@ -3029,9 +2952,12 @@ class UIComponents {
     }
   }
 
-  renderFinanceNews(articles) {
+  renderFinanceNews(articles, newsData = null) {
     const newsGrid = document.getElementById("news-grid");
     if (!newsGrid) return;
+
+    // Store full news data including clustered_articles
+    this.currentNewsData = newsData;
 
     // Sort articles by publication date (newest first) as a backup
     const sortedArticles = [...articles].sort((a, b) => {
@@ -3045,32 +2971,79 @@ class UIComponents {
       }
     });
 
-    newsGrid.innerHTML = sortedArticles
+    // Add indices to articles for detail view navigation
+    const articlesWithIndices = sortedArticles.map((article, index) => ({
+      ...article,
+      index: index
+    }));
+
+    // FIXED: Store the sorted articles with indices (not the original unsorted ones)
+    this.currentArticles = articlesWithIndices;
+
+    newsGrid.innerHTML = articlesWithIndices
       .map((article) => this.createNewsItem(article))
       .join("");
   }
 
   createNewsItem(article) {
+    // Handle article.published safely
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+      
+    let timeAgo = t("unknown");
+    try {
+      if (article.published) {
     const publishedDate = new Date(article.published);
-    const timeAgo = this.getTimeAgo(publishedDate);
+        timeAgo = this.getTimeAgo(publishedDate);
+      }
+    } catch (error) {
+      console.warn('Error processing article date:', error, article.published);
+      timeAgo = t("unknown");
+    }
 
     // Create image HTML if image URL is available
-    const imageHtml = article.image_url
-      ? `
+    let imageHtml = "";
+    let imageSrc = "";
+    let imageAlt = Utils.escapeHtml(article.title);
+    let imageWidth = "";
+    let imageHeight = "";
+
+    // First, try the direct image_url from the article
+    if (article.image_url) {
+      imageSrc = article.image_url;
+      imageWidth = article.image_width ? `width="${article.image_width}"` : "";
+      imageHeight = article.image_height ? `height="${article.image_height}"` : "";
+    }
+    // If no direct image, try available_images from cluster data
+    else if (article.available_images && article.available_images.length > 0) {
+      // Use the first image from available_images (or you can randomize)
+      const selectedImage = article.available_images[0]; // First image
+      // Or randomize: article.available_images[Math.floor(Math.random() * article.available_images.length)]
+
+      imageSrc = selectedImage.url;
+      imageAlt = `${Utils.escapeHtml(article.title)} - Image from ${Utils.escapeHtml(selectedImage.source)}`;
+      imageWidth = selectedImage.width ? `width="${selectedImage.width}"` : "";
+      imageHeight = selectedImage.height ? `height="${selectedImage.height}"` : "";
+    }
+
+    // Create image HTML if we have an image source
+    if (imageSrc) {
+      imageHtml = `
       <div class="news-image">
-        <img src="${Utils.escapeHtml(article.image_url)}" 
-             alt="${Utils.escapeHtml(article.title)}"
+        <img src="${Utils.escapeHtml(imageSrc)}"
+             alt="${imageAlt}"
              loading="lazy"
              onerror="this.style.display='none'"
-             ${article.image_width ? `width="${article.image_width}"` : ""}
-             ${article.image_height ? `height="${article.image_height}"` : ""}
+             ${imageWidth}
+             ${imageHeight}
         />
       </div>
-    `
-      : "";
+    `;
+    }
 
     return `
-      <div class="news-item" data-link="${article.link}">
+      <div class="news-item" data-article-index="${article.index || 0}">
         ${imageHtml}
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
@@ -3087,8 +3060,8 @@ class UIComponents {
           </div>
         </div>
         <div class="news-actions">
-          <button class="news-link-btn" title="Open article">
-            <i class="fas fa-external-link-alt"></i>
+          <button class="news-link-btn" title="Read full article">
+            <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
@@ -3097,21 +3070,69 @@ class UIComponents {
 
   getTimeAgo(date) {
     const now = new Date();
-    const diff = now - date;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
+    
+    // Handle different date formats and timezone issues
+    let articleDate;
+    try {
+      if (typeof date === 'string') {
+        // Parse the date string and convert to user's local time
+        articleDate = new Date(date);
+      } else {
+        articleDate = new Date(date);
+      }
+      
+      // Check if date is valid
+      if (isNaN(articleDate.getTime())) {
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
       : (key) => key;
+        return t("unknown");
+      }
+      
+      // Calculate difference in milliseconds
+      const diff = now.getTime() - articleDate.getTime();
+      
+      // If difference is negative (future date), it's probably a timezone issue
+      // Assume the article date should be treated as local time
+      let actualDiff = diff;
+      if (diff < 0) {
+        // Try adjusting for potential timezone offset issues
+        // If the date seems to be in the future, assume it's UTC and convert to local
+        const timezoneOffsetMs = now.getTimezoneOffset() * 60 * 1000;
+        actualDiff = diff + timezoneOffsetMs;
+        
+        // If still negative, just use absolute value but cap it
+        if (actualDiff < 0) {
+          actualDiff = Math.abs(diff);
+        }
+      }
+      
+      const minutes = Math.floor(actualDiff / 60000);
+      const hours = Math.floor(actualDiff / 3600000);
+      const days = Math.floor(actualDiff / 86400000);
 
-    if (minutes < 60) {
-      return `${minutes}${t("minutesAgo")}`;
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+
+      // Ensure we don't show negative values
+      if (minutes < 0) {
+        return t("justNow");
+      } else if (minutes < 1) {
+        return t("justNow");
+      } else if (minutes < 60) {
+        return `~${minutes}${t("minutesAgo")}`;
     } else if (hours < 24) {
-      return `${hours}${t("hoursAgo")}`;
+        return `~${hours}${t("hoursAgo")}`;
     } else {
-      return `${days}${t("daysAgo")}`;
+        return `~${days}${t("daysAgo")}`;
+      }
+    } catch (error) {
+      console.warn('Error calculating time ago:', error, 'for date:', date);
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      return t("unknown");
     }
   }
 
@@ -3126,13 +3147,587 @@ class UIComponents {
       if (this.currentTab === "news") {
         this.loadFinanceNews(true);
       }
-    }, 60000);
+    }, 300000);
   }
 
   stopNewsAutoRefresh() {
     if (this.newsRefreshInterval) {
       clearInterval(this.newsRefreshInterval);
       this.newsRefreshInterval = null;
+    }
+  }
+
+  async refreshFinanceNews() {
+    const refreshButton = document.getElementById("refresh-news");
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    try {
+      // Show loading state on button
+      if (refreshButton) {
+        const originalContent = refreshButton.innerHTML;
+        refreshButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t("loading")}...`;
+        refreshButton.disabled = true;
+      }
+
+      // Force refresh from sources and update database
+      const result = await window.apiService.getFinanceNews(true);
+
+      if (result.success) {
+        if (result.articles.length > 0) {
+          this.renderFinanceNews(result.articles, result.data);
+          this.lastNewsUpdate = new Date().toISOString();
+
+          const newsLastUpdated = document.getElementById("news-last-updated");
+          if (newsLastUpdated) {
+            newsLastUpdated.textContent = `${t("lastUpdated")} ${new Date().toLocaleTimeString()}`;
+          }
+          
+          // Update scheduler status hint
+          this.updateSchedulerStatus();
+
+          // Show success message briefly
+          if (refreshButton) {
+            refreshButton.innerHTML = `<i class="fas fa-check"></i> ${t("refresh")}`;
+            setTimeout(() => {
+              refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("refresh")}`;
+            }, 2000);
+          }
+
+        } else {
+          // No articles found even after refresh
+          const newsGrid = document.getElementById("news-grid");
+          if (newsGrid) {
+            newsGrid.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-newspaper"></i>
+                <h3>No news found</h3>
+                <p>Unable to fetch news from any sources at the moment. Please try again later.</p>
+                <button class="btn btn-primary" onclick="window.uiComponents.refreshFinanceNews()">
+                  <i class="fas fa-sync-alt"></i> Try Again
+                </button>
+              </div>
+            `;
+          }
+
+          if (refreshButton) {
+            refreshButton.innerHTML = `<i class="fas fa-info-circle"></i> No News Found`;
+            setTimeout(() => {
+              refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("refresh")}`;
+            }, 3000);
+          }
+        }
+      } else {
+        throw new Error(result.error || "Failed to refresh news");
+      }
+
+    } catch (error) {
+      console.error("Failed to refresh finance news:", error);
+      
+      if (refreshButton) {
+        refreshButton.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${t("retryAction")}`;
+        setTimeout(() => {
+          refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("refresh")}`;
+        }, 3000);
+      }
+
+      // Show error to user (could add toast notification here)
+      alert(t("failedToLoadNews") + ": " + (error.message || t("unableToFetchNews")));
+      
+    } finally {
+      // Re-enable button
+      if (refreshButton) {
+        refreshButton.disabled = false;
+      }
+    }
+  }
+
+  showNewsDetail(articleIndex) {
+    if (!this.currentArticles || !this.currentArticles[articleIndex]) {
+      console.error("Article not found:", articleIndex);
+      return;
+    }
+
+    const article = this.currentArticles[articleIndex];
+    const newsGrid = document.getElementById("news-grid");
+    const newsDetail = document.getElementById("news-detail");
+    
+    if (!newsGrid || !newsDetail) return;
+
+    // Hide news grid and show detail view
+    newsGrid.style.display = "none";
+    newsDetail.style.display = "flex";
+
+    // Populate detail view
+    this.populateNewsDetail(article);
+
+    // Set up back button handler
+    const backButton = document.getElementById("news-detail-back");
+    if (backButton) {
+      backButton.onclick = () => this.hideNewsDetail();
+    }
+
+    // Ensure chat input is fixed at the bottom while viewing details
+    const chatContainer = document.getElementById('news-chat-input-container');
+    const detail = document.getElementById('news-detail');
+    if (chatContainer && detail) {
+      chatContainer.classList.add('news-chat-fixed');
+      detail.classList.add('news-chat-fixed-active');
+    }
+  }
+
+  hideNewsDetail() {
+    const newsGrid = document.getElementById("news-grid");
+    const newsDetail = document.getElementById("news-detail");
+    
+    if (!newsGrid || !newsDetail) return;
+
+    // Check if we're in Q&A mode
+    if (this.newsQAStarted && this.currentNewsArticle) {
+      // If in Q&A mode, revert to original news article view
+      this.resetNewsDetailToOriginal();
+      return;
+    }
+
+    // Show news grid and hide detail view
+    newsDetail.style.display = "none";
+    newsGrid.style.display = "grid";
+    
+    // Clean up event listeners when hiding detail view
+    const sourcesListElement = document.getElementById("news-sources-list");
+    if (sourcesListElement && this.sourceLinkClickHandler) {
+      sourcesListElement.removeEventListener('click', this.sourceLinkClickHandler);
+      this.sourceLinkClickHandler = null;
+    }
+
+    // Remove fixed chat styling when leaving detail view
+    const chatContainer = document.getElementById('news-chat-input-container');
+    if (chatContainer) chatContainer.classList.remove('news-chat-fixed');
+    newsDetail.classList.remove('news-chat-fixed-active');
+  }
+
+  resetNewsDetailToOriginal() {
+    if (!this.currentNewsArticle) return;
+
+    // Reset the news detail view to the original article
+    this.populateNewsDetail(this.currentNewsArticle);
+    
+    // Reset Q&A mode state
+    this.newsQAStarted = false;
+    
+    // Remove Q&A mode styling
+    const newsDetail = document.getElementById("news-detail");
+    if (newsDetail) {
+      newsDetail.classList.remove('news-qa-mode');
+    }
+    
+    // Clear any Q&A container content
+    const newsDetailArticle = document.getElementById("news-detail-article");
+    if (newsDetailArticle) {
+      const qaContainer = newsDetailArticle.querySelector('#news-qa-container');
+      if (qaContainer) {
+        qaContainer.remove();
+      }
+    }
+    
+    // Reset chat interface
+    this.resetNewsChatInterface();
+    
+    // Update button text back to "Back to News"
+    this.updateNewsBackButtonText();
+  }
+
+  updateNewsBackButtonText() {
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    const backButton = document.querySelector('[data-i18n="backToNews"]');
+    if (backButton) {
+      if (this.newsQAStarted) {
+        // In Q&A mode, show "Go back"
+        backButton.textContent = t('goBack');
+      } else {
+        // In normal news view, show "Back to News"
+        backButton.textContent = t('backToNews');
+      }
+    }
+  }
+
+  populateNewsDetail(article) {
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    // Set title
+    const titleElement = document.getElementById("news-detail-title");
+    if (titleElement) {
+      titleElement.textContent = article.title;
+    }
+
+    // Set sources
+    const sourcesElement = document.getElementById("news-detail-sources");
+    if (sourcesElement) {
+      // Try to get sources from cluster data first
+      const clusterData = this.findClusterForArticle(article);
+      let sourceText = "";
+      
+      if (clusterData && clusterData.sources) {
+        // Use cluster sources
+        sourceText = Array.isArray(clusterData.sources) 
+          ? clusterData.sources.join(", ") 
+          : clusterData.sources;
+      } else if (article.sources) {
+        // Fallback to article sources
+        sourceText = Array.isArray(article.sources) 
+          ? article.sources.join(", ") 
+          : article.sources;
+      } else {
+        // Last fallback to article source
+        sourceText = article.source || "Unknown source";
+      }
+      
+      sourcesElement.textContent = sourceText;
+    }
+
+    // Set time
+    const timeElement = document.getElementById("news-detail-time");
+    if (timeElement) {
+      try {
+        if (article.published) {
+          const publishedDate = new Date(article.published);
+          const timeAgo = this.getTimeAgo(publishedDate);
+          timeElement.textContent = timeAgo;
+        }
+      } catch (error) {
+        timeElement.textContent = t("unknown");
+      }
+    }
+
+    // Process and set content
+    this.populateNewsContent(article);
+
+    // Populate sources list
+    this.populateSourcesList(article);
+
+    // Initialize news chat functionality
+    this.initializeNewsChat(article);
+    
+    // Update button text based on current state
+    this.updateNewsBackButtonText();
+  }
+
+  populateNewsContent(article) {
+    const contentElement = document.getElementById("news-detail-content");
+    if (!contentElement) return;
+
+    let content = article.summary || article.unified_description || "";
+    
+    // Try to get images from cluster data
+    const clusterData = this.findClusterForArticle(article);
+    const availableImages = (clusterData && clusterData.available_images) || article.available_images || [];
+
+    // Process image markers and replace with actual images
+    content = this.processImageMarkers(content, availableImages);
+
+    // Convert markdown-style formatting to HTML if needed
+    content = this.formatNewsContent(content);
+
+    contentElement.innerHTML = content;
+  }
+
+  processImageMarkers(content, availableImages) {
+    if (!availableImages || availableImages.length === 0) {
+      // Remove image markers if no images available
+      return content.replace(/\{\{IMAGE_\w+\}\}/g, '');
+    }
+
+    // Replace image markers with actual images
+    let imageIndex = 0;
+
+    // Lead image
+    if (content.includes('{{IMAGE_LEAD}}') && availableImages[imageIndex]) {
+      const img = availableImages[imageIndex];
+      const imageHtml = `
+        <div class="news-detail-image lead-image large">
+          <img src="${Utils.escapeHtml(img.url)}" 
+               alt="News image from ${Utils.escapeHtml(img.source)}"
+               loading="lazy"
+               onerror="this.style.display='none'" />
+          <div class="image-caption">Image from ${Utils.escapeHtml(img.source)}</div>
+        </div>
+      `;
+      content = content.replace('{{IMAGE_LEAD}}', imageHtml);
+      imageIndex++;
+    }
+
+    // Mid images
+    for (let i = 1; i <= 2; i++) {
+      const marker = `{{IMAGE_MID_${i}}}`;
+      if (content.includes(marker) && availableImages[imageIndex]) {
+        const img = availableImages[imageIndex];
+        const sizeClass = i === 1 ? 'medium' : 'small';
+        const imageHtml = `
+          <div class="news-detail-image ${sizeClass}">
+            <img src="${Utils.escapeHtml(img.url)}" 
+                 alt="News image from ${Utils.escapeHtml(img.source)}"
+                 loading="lazy"
+                 onerror="this.style.display='none'" />
+            <div class="image-caption">Image from ${Utils.escapeHtml(img.source)}</div>
+          </div>
+        `;
+        content = content.replace(marker, imageHtml);
+        imageIndex++;
+      }
+    }
+
+    // Remove any remaining markers
+    content = content.replace(/\{\{IMAGE_\w+\}\}/g, '');
+
+    return content;
+  }
+
+  formatNewsContent(content) {
+    // Convert markdown-style bold formatting to HTML
+    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Convert double line breaks to paragraphs
+    const paragraphs = content.split(/\n\s*\n/);
+
+    return paragraphs
+      .map(para => {
+        para = para.trim();
+        if (!para) return '';
+
+        // Check if it's an image div
+        if (para.includes('<div class="news-detail-image')) {
+          return para;
+        }
+
+        // Wrap in paragraph tags
+        return `<p>${para}</p>`;
+      })
+      .filter(para => para)
+      .join('\n');
+  }
+
+  populateSourcesList(article) {
+    const sourcesListElement = document.getElementById("news-sources-list");
+    if (!sourcesListElement) return;
+
+    let sources = [];
+    
+    // Try to find the corresponding cluster data for this article
+    const clusterData = this.findClusterForArticle(article);
+    
+    if (clusterData && clusterData.articles) {
+      // Use the full cluster data to get all sources
+      sources = clusterData.articles.map(art => ({
+        name: art.source,
+        url: art.link,
+        source: art.source
+      }));
+    } else if (article.articles && Array.isArray(article.articles)) {
+      // Fallback: if article has articles property directly
+      sources = article.articles.map(art => ({
+        name: art.source,
+        url: art.link,
+        source: art.source
+      }));
+    } else {
+      // Single article fallback
+      sources = [{
+        name: article.source,
+        url: article.link,
+        source: article.source
+      }];
+    }
+
+    // Remove duplicates based on URL
+    const uniqueSources = sources.filter((source, index, self) => 
+      index === self.findIndex(s => s.url === source.url)
+    );
+
+    if (uniqueSources.length === 0) {
+      sourcesListElement.innerHTML = '<p>No sources available</p>';
+      return;
+    }
+
+    const sourcesHtml = uniqueSources.map(source => {
+      const domain = this.extractDomain(source.url);
+      const icon = source.name.charAt(0).toUpperCase();
+      
+      return `
+        <a href="${Utils.escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer" class="news-source-link" 
+           data-source-name="${Utils.escapeHtml(source.name)}" data-source-url="${Utils.escapeHtml(source.url)}">
+          <div class="source-icon">${icon}</div>
+          <div class="source-info">
+            <div class="source-name">${Utils.escapeHtml(source.name)}</div>
+            <div class="source-url">${Utils.escapeHtml(domain)}</div>
+          </div>
+          <i class="fas fa-external-link-alt external-icon"></i>
+        </a>
+      `;
+    }).join('');
+
+    sourcesListElement.innerHTML = sourcesHtml;
+    
+    // Add event delegation for source link clicks with error handling
+    // Remove any existing listeners first to prevent duplicates
+    if (this.sourceLinkClickHandler) {
+      sourcesListElement.removeEventListener('click', this.sourceLinkClickHandler);
+    }
+    
+    // Create a bound handler and store reference for removal
+    this.sourceLinkClickHandler = this.handleSourceLinkClick.bind(this);
+    sourcesListElement.addEventListener('click', this.sourceLinkClickHandler);
+  }
+
+  async handleSourceLinkClick(event) {
+    const link = event.target.closest('.news-source-link');
+    if (!link) return;
+    
+    event.preventDefault();
+    
+    const url = link.dataset.sourceUrl;
+    const sourceName = link.dataset.sourceName;
+    
+    console.log(`🔗 Attempting to open source link: ${sourceName} -> ${url}`);
+    
+    // Check if we're in Electron environment
+    if (window.airisAPI && window.airisAPI.openExternalUrl) {
+      try {
+        const result = await window.airisAPI.openExternalUrl(url);
+        
+        if (result.success) {
+          console.log(`✅ Successfully opened ${sourceName} link in external browser`);
+        } else {
+          console.warn(`❌ Failed to open ${sourceName} link: ${result.error}`);
+          this.handleFailedLinkOpen(url, sourceName);
+        }
+      } catch (error) {
+        console.error(`❌ Error using Electron API for ${sourceName}:`, error);
+        this.handleFailedLinkOpen(url, sourceName);
+      }
+    } else {
+      // Fallback for non-Electron environments (web browser)
+      console.log(`🌐 Using fallback method for ${sourceName} (not in Electron)`);
+      try {
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        
+        // Immediate check for popup blocking
+        if (!newWindow) {
+          console.warn(`❌ Popup blocked for ${sourceName}, trying alternative method...`);
+          this.handleFailedLinkOpen(url, sourceName);
+          return;
+        }
+        
+        // Check if window was immediately closed (indicates failure)
+        if (newWindow.closed) {
+          console.warn(`❌ Window immediately closed for ${sourceName}, trying alternative method...`);
+          this.handleFailedLinkOpen(url, sourceName);
+          return;
+        }
+        
+        console.log(`✅ Successfully opened ${sourceName} link`);
+        
+      } catch (error) {
+        console.error(`❌ Error opening ${sourceName} link:`, error);
+        this.handleFailedLinkOpen(url, sourceName);
+      }
+    }
+  }
+
+  async handleFailedLinkOpen(url, sourceName) {
+    // Show user notification with options
+    const message = `Unable to open ${sourceName} link directly. Would you like to copy the URL to clipboard?`;
+    
+    if (confirm(message)) {
+      // Copy URL to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert(`✅ ${sourceName} URL copied to clipboard!\n\nURL: ${url}\n\nYou can now paste this in your browser.`);
+        }).catch(() => {
+          this.showManualCopyDialog(url, sourceName);
+        });
+      } else {
+        this.showManualCopyDialog(url, sourceName);
+      }
+    } else {
+      // Try using Electron API as alternative
+      if (window.airisAPI && window.airisAPI.openExternalUrl) {
+        if (confirm(`Try opening ${sourceName} using system browser?`)) {
+          try {
+            const result = await window.airisAPI.openExternalUrl(url);
+            if (result.success) {
+              console.log(`✅ Successfully opened ${sourceName} using system browser`);
+            } else {
+              alert(`Failed to open ${sourceName}: ${result.error}`);
+            }
+          } catch (error) {
+            console.error(`Error using system browser for ${sourceName}:`, error);
+            alert(`Failed to open ${sourceName} using system browser.`);
+          }
+        }
+      } else {
+        // Last resort: try opening in same tab (for web environments)
+        if (confirm(`Try opening ${sourceName} in the same tab?`)) {
+          window.location.href = url;
+        }
+      }
+    }
+  }
+
+  showManualCopyDialog(url, sourceName) {
+    // Fallback: show URL in a dialog for manual copying
+    const dialog = `${sourceName} URL:\n\n${url}\n\nPlease copy this URL manually and paste it in your browser.`;
+    alert(dialog);
+  }
+
+  findClusterForArticle(article) {
+    // Find the cluster that corresponds to this article
+    if (!this.currentNewsData || !this.currentNewsData.clustered_articles) {
+      return null;
+    }
+
+    // Try to match by title since that's what we're using as the unified title
+    return this.currentNewsData.clustered_articles.find(cluster => 
+      cluster.unified_title === article.title
+    );
+  }
+
+  extractDomain(url) {
+    try {
+      return new URL(url).hostname;
+    } catch (error) {
+      return url;
+    }
+  }
+
+  async updateSchedulerStatus() {
+    try {
+      const response = await window.apiService.api.get("/api/finance-news/scheduler/status");
+      if (response.data.status === "success") {
+        const scheduler = response.data.scheduler;
+        const hintElement = document.querySelector(".news-refresh-hint span");
+        
+        if (hintElement && scheduler.is_running && scheduler.next_fetch_in_minutes !== null) {
+          const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+          const nextUpdate = scheduler.next_fetch_in_minutes;
+          
+          if (nextUpdate <= 0) {
+            hintElement.textContent = t("autoUpdateInfo").replace("45 minutes", "updating now");
+          } else if (nextUpdate < 60) {
+            hintElement.textContent = t("autoUpdateInfo").replace("45 minutes", `${nextUpdate} minutes`);
+          } else {
+            hintElement.textContent = t("autoUpdateInfo");
+          }
+        }
+      }
+    } catch (error) {
+      // Silently fail - not critical
+      console.debug("Could not fetch scheduler status:", error.message);
     }
   }
 
@@ -3200,23 +3795,11 @@ class UIComponents {
       )}`;
     }
 
-    // Update analytics metrics with translations
-    const responseTime = document.getElementById("response-time");
-    const systemHealth = document.getElementById("system-health");
-    if (responseTime && responseTime.textContent === "N/A") {
-      responseTime.textContent = t("notAvailable");
-    }
-    if (systemHealth && systemHealth.textContent === "Unknown") {
-      systemHealth.textContent = t("unknown");
-    }
-
     // Refresh current tab content with new language
     if (this.currentTab === "files") {
       this.loadFileLibrary();
     } else if (this.currentTab === "news") {
       this.loadFinanceNews();
-    } else if (this.currentTab === "analytics") {
-      this.loadAnalytics();
     }
   }
 
@@ -3235,14 +3818,6 @@ class UIComponents {
       if (heading) heading.textContent = t("noDocuments");
       if (paragraph) paragraph.textContent = t("uploadToGetStarted");
       if (button) button.textContent = t("uploadFilesBtn");
-    }
-
-    // Update no activity state
-    const noActivity = document.querySelector(".no-activity");
-    if (noActivity && noActivity.textContent.includes("Loading")) {
-      noActivity.textContent = t("loadingActivity");
-    } else if (noActivity && noActivity.textContent.includes("No recent")) {
-      noActivity.textContent = t("noActivity");
     }
   }
 
@@ -4172,6 +4747,7 @@ class UIComponents {
     }
   }
 
+
   // Credit Calculator Methods
   calculateLoan() {
     try {
@@ -4347,6 +4923,344 @@ class UIComponents {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount);
+
+  // News Chat Methods
+  initializeNewsChat(article) {
+    this.currentNewsArticle = article;
+    this.newsChatHistory = [];
+    
+    // Initialize chat input handlers
+    this.initializeNewsChatInputs();
+    
+    // Reset chat interface
+    this.resetNewsChatInterface();
+  }
+
+  initializeNewsChatInputs() {
+    const chatInput = document.getElementById('news-chat-input');
+    const chatSendBtn = document.getElementById('news-chat-send');
+    const chatInputMessages = document.getElementById('news-chat-input-messages');
+    const chatSendBtnMessages = document.getElementById('news-chat-send-messages');
+
+    if (chatInput && chatSendBtn) {
+      chatInput.addEventListener('input', () => {
+        chatSendBtn.disabled = !chatInput.value.trim();
+      });
+
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && chatInput.value.trim()) {
+          e.preventDefault();
+          this.sendNewsChatMessage(chatInput.value.trim());
+        }
+      });
+
+      chatSendBtn.addEventListener('click', () => {
+        if (chatInput.value.trim()) {
+          this.sendNewsChatMessage(chatInput.value.trim());
+        }
+      });
+    }
+
+    if (chatInputMessages && chatSendBtnMessages) {
+      chatInputMessages.addEventListener('input', () => {
+        chatSendBtnMessages.disabled = !chatInputMessages.value.trim();
+      });
+
+      chatInputMessages.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey && chatInputMessages.value.trim()) {
+          e.preventDefault();
+          this.sendNewsChatMessage(chatInputMessages.value.trim());
+        }
+      });
+
+      chatSendBtnMessages.addEventListener('click', () => {
+        if (chatInputMessages.value.trim()) {
+          this.sendNewsChatMessage(chatInputMessages.value.trim());
+        }
+      });
+    }
+  }
+
+  resetNewsChatInterface() {
+    const inputContainer = document.getElementById('news-chat-input-container');
+    const messagesContainer = document.getElementById('news-chat-messages');
+    const messagesList = document.getElementById('news-chat-messages-container');
+
+    if (inputContainer) inputContainer.style.display = 'block';
+    if (messagesContainer) messagesContainer.style.display = 'none';
+    if (messagesList) messagesList.innerHTML = '';
+
+    // Reset Q&A mode state
+    this.newsQAStarted = false;
+  }
+
+  async sendNewsChatMessage(message) {
+    // Clear input
+    const chatInput = document.getElementById('news-chat-input');
+    const chatInputMessages = document.getElementById('news-chat-input-messages');
+    
+    if (chatInput) chatInput.value = '';
+    if (chatInputMessages) chatInputMessages.value = '';
+    
+    // Disable send buttons
+    const chatSendBtn = document.getElementById('news-chat-send');
+    const chatSendBtnMessages = document.getElementById('news-chat-send-messages');
+    
+    if (chatSendBtn) chatSendBtn.disabled = true;
+    if (chatSendBtnMessages) chatSendBtnMessages.disabled = true;
+
+    const isFirst = !this.newsQAStarted;
+    // Show chat interface if this is the first message
+    if (isFirst) {
+      this.showNewsChatInterface();
+      // Turn the user's first query into the article title immediately
+      const titleElement = document.getElementById('news-detail-title');
+      if (titleElement) {
+        titleElement.textContent = message;
+      }
+      // Indicate that the page is now in Q&A mode
+      const contentElement = document.getElementById('news-detail-content');
+      if (contentElement) {
+        contentElement.innerHTML = '';
+      }
+      // Hide sources section in Q&A mode
+      const sourcesSection = document.querySelector('.news-detail-sources-section');
+      if (sourcesSection) {
+        sourcesSection.style.display = 'none';
+      }
+      // Add a body class to trim chat UI in Q&A mode
+      const detail = document.getElementById('news-detail');
+      if (detail) detail.classList.add('news-qa-mode');
+
+      // Create a container for subsequent Q&A blocks
+      const qaContainerId = 'news-qa-container';
+      let qaContainer = document.getElementById(qaContainerId);
+      if (!qaContainer) {
+        qaContainer = document.createElement('div');
+        qaContainer.id = qaContainerId;
+        const article = document.querySelector('.news-detail-article');
+        if (article) article.appendChild(qaContainer);
+      }
+
+      // Mark Q&A mode started so next messages append
+      this.newsQAStarted = true;
+      
+      // Update button text to "Go back"
+      this.updateNewsBackButtonText();
+    }
+
+    // Add user message to chat unless it's the first (Q&A) prompt
+    if (!isFirst) {
+      this.addNewsChatMessage('user', message);
+    }
+
+    // Show typing indicator
+    this.showNewsChatTyping();
+
+    // Build placeholder for thinking with title for follow-ups
+    let qaContentId = null;
+    if (!isFirst) {
+      const mount = document.getElementById('news-qa-container') || document.querySelector('.news-detail-article');
+      if (mount) {
+        qaContentId = `news-qa-content-${Date.now()}`;
+        const block = document.createElement('section');
+        block.className = 'news-qa-block';
+        block.innerHTML = `
+          <hr class="news-qa-divider" />
+          <h1 class="news-detail-title">${Utils.escapeHtml(message)}</h1>
+          <div class="news-detail-content" id="${qaContentId}"></div>
+        `;
+        mount.appendChild(block);
+        const contentEl = document.getElementById(qaContentId);
+        if (contentEl) {
+          const thinking = document.createElement('div');
+          thinking.className = 'news-qa-thinking';
+          thinking.innerHTML = `
+            <span>AI is thinking</span>
+            <div class="typing-dots">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          `;
+          contentEl.appendChild(thinking);
+        }
+      }
+    } else {
+      const contentElement = document.getElementById('news-detail-content');
+      if (contentElement) {
+        const thinking = document.createElement('div');
+        thinking.className = 'news-qa-thinking';
+        thinking.innerHTML = `
+          <span>AI is thinking</span>
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+        contentElement.appendChild(thinking);
+      }
+    }
+
+    try {
+      // Send to backend
+      const response = await this.sendNewsQuery(message);
+
+      if (response && response.response) {
+        if (!isFirst) {
+          this.addNewsChatMessage('assistant', response.response);
+        }
+        // Replace the entire article content with the generated answer on first query
+        if (isFirst) {
+          const contentElement = document.getElementById('news-detail-content');
+          if (contentElement) {
+            contentElement.innerHTML = `<div class="news-ai-answer">${this.formatNewsChatMessage(response.response)}</div>`;
+          }
+        } else if (qaContentId) {
+          const contentEl = document.getElementById(qaContentId);
+          if (contentEl) {
+            contentEl.innerHTML = `<div class=\"news-ai-answer\">${this.formatNewsChatMessage(response.response)}</div>`;
+          }
+        }
+      } else {
+        this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
+      }
+    } catch (error) {
+      console.error('News chat error:', error);
+      this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
+    } finally {
+      this.hideNewsChatTyping();
+      // Remove all thinking indicators
+      document.querySelectorAll('.news-qa-thinking').forEach(el => el.remove());
+    }
+  }
+
+  showNewsChatInterface() {
+    const inputContainer = document.getElementById('news-chat-input-container');
+    const messagesContainer = document.getElementById('news-chat-messages');
+
+    // Keep input visible persistently; messages panel may be hidden in Q&A mode
+    if (inputContainer) inputContainer.style.display = 'block';
+    if (messagesContainer) messagesContainer.style.display = 'block';
+  }
+
+  addNewsChatMessage(role, content) {
+    const messagesContainer = document.getElementById('news-chat-messages-container');
+    if (!messagesContainer) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `news-chat-message ${role}`;
+    
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.innerHTML = `
+      <div class="message-content">${this.formatNewsChatMessage(content)}</div>
+      <div class="message-time">${time}</div>
+    `;
+
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Add to history
+    this.newsChatHistory.push({ role, content, timestamp: new Date() });
+  }
+
+  formatNewsChatMessage(content) {
+    // Enhanced markdown formatting
+    let formatted = content;
+    
+    // Convert bold text (**text**)
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert italic text (*text*)
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // Convert headers (# Header) - must be done before line break conversion
+    formatted = formatted.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+    formatted = formatted.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+    formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+    
+    // Convert numbered lists (1. item)
+    formatted = formatted.replace(/^(\d+)\.\s+(.*$)/gm, '<li>$2</li>');
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+    
+    // Convert bullet lists (- item or * item)
+    formatted = formatted.replace(/^[-*]\s+(.*$)/gm, '<li>$1</li>');
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+    
+    // Convert links
+    formatted = formatted.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    
+    // Convert line breaks last (after all other formatting)
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    return formatted;
+  }
+
+  showNewsChatTyping() {
+    const messagesContainer = document.getElementById('news-chat-messages-container');
+    if (!messagesContainer) return;
+
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'news-chat-typing';
+    typingDiv.id = 'news-chat-typing';
+    
+    typingDiv.innerHTML = `
+      <span>AI is thinking</span>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    `;
+
+    messagesContainer.appendChild(typingDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+
+  hideNewsChatTyping() {
+    const typingDiv = document.getElementById('news-chat-typing');
+    if (typingDiv) {
+      typingDiv.remove();
+    }
+  }
+
+  async sendNewsQuery(message) {
+    try {
+      const apiService = window.apiService;
+      if (!apiService) {
+        throw new Error('API service not available');
+      }
+
+      // Prepare news context
+      const newsContext = this.prepareNewsContext();
+
+      // Send query to backend
+      const response = await apiService.sendNewsChatQuery(message, newsContext);
+      return response;
+    } catch (error) {
+      console.error('Error sending news query:', error);
+      throw error;
+    }
+  }
+
+  prepareNewsContext() {
+    if (!this.currentNewsArticle) return {};
+
+    const clusterData = this.findClusterForArticle(this.currentNewsArticle);
+    
+    return {
+      title: this.currentNewsArticle.title,
+      summary: this.currentNewsArticle.summary || this.currentNewsArticle.unified_description || '',
+      content: this.currentNewsArticle.content || '',
+      source: this.currentNewsArticle.source,
+      sources: clusterData?.sources || this.currentNewsArticle.sources || [],
+      published: this.currentNewsArticle.published,
+      url: this.currentNewsArticle.url,
+      cluster_data: clusterData || null
+    };
+
   }
 }
 
