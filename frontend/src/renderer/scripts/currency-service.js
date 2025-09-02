@@ -70,6 +70,10 @@ class CurrencyService {
     };
     
     this.dailyCycleOffset = 0;
+    
+    // Conversion constants
+    this.OUNCE_TO_GRAM = 28.34952; // 1 troy ounce = 28.34952 grams
+    
     this.initializeDailyCycle();
   }
   
@@ -511,6 +515,36 @@ class CurrencyService {
     return this.goldCache.data;
   }
   
+  /**
+   * Calculate gold price in TRY per gram
+   * @param {Object} currencyData - Currency exchange rates
+   * @param {Object} goldData - Gold price data in USD per ounce
+   * @returns {Object} Gold price in TRY per gram
+   */
+  calculateGoldPriceInTRYPerGram(currencyData, goldData) {
+    if (!currencyData || !goldData || !currencyData.USD_TRY || !goldData.price) {
+      return {
+        price: null,
+        currency: 'TRY',
+        unit: 'g',
+        timestamp: Date.now(),
+        isOffline: currencyData?.isOffline || goldData?.isOffline || false
+      };
+    }
+    
+    // Convert USD per ounce to TRY per gram
+    // Formula: (USD/oz) * (TRY/USD) / (g/oz) = TRY/g
+    const priceInTRYPerGram = (goldData.price * currencyData.USD_TRY) / this.OUNCE_TO_GRAM;
+    
+    return {
+      price: priceInTRYPerGram,
+      currency: 'TRY',
+      unit: 'g',
+      timestamp: Date.now(),
+      isOffline: currencyData.isOffline || goldData.isOffline
+    };
+  }
+  
   updateDisplay() {
     const currencyTicker = document.getElementById('currency-ticker');
     if (!currencyTicker) return;
@@ -521,6 +555,9 @@ class CurrencyService {
       const isOffline = currencyData.isOffline || goldData?.isOffline;
       const status = isOffline ? 'Offline' : 'Live';
       const statusClass = isOffline ? 'status-offline' : 'status-live';
+      
+      // Calculate gold price in TRY per gram
+      const goldTRYPerGram = this.calculateGoldPriceInTRYPerGram(currencyData, goldData);
       
       const html = `
         <div class="currency-item">
@@ -536,8 +573,12 @@ class CurrencyService {
           <span class="currency-value">${currencyData.USD_EUR?.toFixed(4) || 'N/A'}</span>
         </div>
         <div class="currency-item">
-          <span class="currency-label">Gold:</span>
+          <span class="currency-label">Gold (USD/oz):</span>
           <span class="currency-value">$${goldData?.price?.toFixed(2) || 'N/A'}</span>
+        </div>
+        <div class="currency-item">
+          <span class="currency-label">Gold (₺/g):</span>
+          <span class="currency-value">₺${goldTRYPerGram?.price?.toFixed(2) || 'N/A'}</span>
         </div>
         <div class="currency-status ${statusClass}">${status}</div>
       `;
