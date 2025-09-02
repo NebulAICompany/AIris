@@ -100,6 +100,12 @@
                 >Document Verification</span
               >
             </button>
+            <button class="nav-item" data-tab="calculator">
+              <i class="fas fa-calculator"></i>
+              <span data-i18n="interestCalculator"
+                >Interest Calculator</span
+              >
+            </button>
             <button class="nav-item" data-tab="news">
               <i class="fas fa-newspaper"></i>
               <span data-i18n="financeNews">Finance News</span>
@@ -567,6 +573,69 @@
                       >Verify Another Document</span
                     >
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interest Calculator Tab -->
+          <div id="calculator-tab" class="tab-content">
+            <div class="calculator-container">
+              <div class="calculator-header">
+                <h2 data-i18n="interestCalculator">Interest Calculator</h2>
+                <p data-i18n="calculateLoanPayments">Calculate your loan payments and total costs</p>
+              </div>
+              
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="loan-amount" data-i18n="loanAmount">Kredi Tutarı</label>
+                      <input type="number" id="loan-amount" class="form-input" placeholder="1000000" min="0" step="0.01">
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="loan-term" data-i18n="loanTerm">Kredi Vadesi (Ay)</label>
+                      <input type="number" id="loan-term" class="form-input" placeholder="120" min="1" max="360">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="interest-rate" data-i18n="interestRate">Faiz Oranı (%) - Aylık Faiz</label>
+                      <input type="number" id="interest-rate" class="form-input" placeholder="2.7" min="0" max="100" step="0.01">
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button id="calculate-btn" class="btn btn-primary" data-i18n="calculate">Hesapla</button>
+                      <button id="reset-calc-btn" class="btn btn-secondary" data-i18n="reset">Sıfırla</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="calculator-results" id="calculator-results" style="display: none;">
+                <div class="result-header">
+                  <h3 data-i18n="calculationResults">Hesaplama Sonuçları</h3>
+                </div>
+                
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="monthlyPayment">Aylık Ödeme</div>
+                    <div class="result-value" id="monthly-payment">281.509,04 TL</div>
+                  </div>
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="totalPayment">Toplam Ödeme</div>
+                    <div class="result-value" id="total-payment">33.781.084,80 TL</div>
+                  </div>
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="totalInterest">Toplam Faiz</div>
+                    <div class="result-value" id="total-interest">23.781.084,80 TL</div>
+                  </div>
                 </div>
               </div>
             </div>

@@ -454,6 +454,12 @@ input:checked + .slider:before {
   margin: 0;
 }
 
+/* Specific handling for calculator tab to prevent double scrolling */
+#calculator-tab {
+  padding: 0;
+  overflow: hidden;
+}
+
 .tab-content.active {
   display: block;
 }
