@@ -81,37 +81,42 @@
       <main class="main-content">
         <!-- Sidebar -->
         <aside class="sidebar">
+          <div class="sidebar-toggle">
+            <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Sidebar">
+              <i class="fas fa-bars"></i>
+            </button>
+          </div>
           <nav class="sidebar-nav">
-            <button class="nav-item active" data-tab="chat">
+            <button class="nav-item active" data-tab="chat" data-tooltip="Chat">
               <i class="fas fa-comments"></i>
               <span data-i18n="chat">Chat</span>
             </button>
-            <button class="nav-item" data-tab="files">
+            <button class="nav-item" data-tab="files" data-tooltip="My Files">
               <i class="fas fa-file-alt"></i>
               <span data-i18n="myFiles">My Files</span>
             </button>
-            <button class="nav-item" data-tab="created-documents">
+            <button class="nav-item" data-tab="created-documents" data-tooltip="Created Documents">
               <i class="fas fa-file-invoice"></i>
               <span data-i18n="createdDocuments">Created Documents</span>
             </button>
-            <button class="nav-item" data-tab="verification">
+            <button class="nav-item" data-tab="verification" data-tooltip="Document Verification">
               <i class="fas fa-shield-alt"></i>
               <span data-i18n="documentVerification"
                 >Document Verification</span
               >
             </button>
-            <button class="nav-item" data-tab="calculator">
+            <button class="nav-item" data-tab="calculator" data-tooltip="Interest Calculator">
               <i class="fas fa-calculator"></i>
               <span data-i18n="interestCalculator"
                 >Interest Calculator</span
               >
             </button>
-            <button class="nav-item" data-tab="news">
+            <button class="nav-item" data-tab="news" data-tooltip="Finance News">
               <i class="fas fa-newspaper"></i>
               <span data-i18n="financeNews">Finance News</span>
             </button>
 
-            <button class="nav-item" data-tab="settings">
+            <button class="nav-item" data-tab="settings" data-tooltip="Settings">
               <i class="fas fa-cog"></i>
               <span data-i18n="settings">Settings</span>
             </button>
