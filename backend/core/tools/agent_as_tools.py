@@ -1,5 +1,5 @@
 from agents import Agent
-from backend.core.prompts import finance_agent_prompt, office_agent_prompt
+from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news_summarization_prompt
 from backend.core.tools.mcp import finance_mcp_server
 from .office import *
 from backend.shared.constants import OPENAI_MODEL
@@ -30,6 +30,12 @@ office_agent = Agent(
     ],
 )
 
+news_summarization_agent = Agent(
+    name="Financial News Summarization Agent",
+    instructions=news_summarization_prompt,
+    tools=[],  # This agent uses only LLM capabilities, no external tools
+)
+
 office_agent_tool = office_agent.as_tool(
     tool_name="office_operations",
     tool_description="""Use this tool for Microsoft Office operations including:
@@ -50,4 +56,15 @@ finance_agent_tool = finance_agent.as_tool(
     - Market trend analysis and volatility assessment
     - Alpha Vantage API integration for market data
     - Any financial data query requiring data retrieval or visualization""",
+)
+
+news_summarization_tool = news_summarization_agent.as_tool(
+    tool_name="financial_news_summarization",
+    tool_description="""Use this tool for creating unified summaries from multiple financial news articles covering the same story:
+    - Combine titles and descriptions from multiple news sources
+    - Create concise, unified titles for clustered news stories
+    - Generate comprehensive summaries that synthesize information from all sources
+    - Maintain objectivity and financial accuracy
+    - Format output as JSON with unified_title and unified_description fields
+    - Best used when you have 2+ articles about the same financial event/story""",
 )

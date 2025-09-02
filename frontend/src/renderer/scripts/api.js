@@ -34,7 +34,16 @@ class APIService {
   }
 
   async makeRequest(url, method = "GET", data = null, config = {}) {
-    const fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+    let fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
+    
+    // Handle query parameters
+    if (config.params) {
+      const urlObj = new URL(fullUrl);
+      Object.keys(config.params).forEach(key => {
+        urlObj.searchParams.set(key, config.params[key]);
+      });
+      fullUrl = urlObj.toString();
+    }
 
     console.log(`[API] ${method.toUpperCase()} ${fullUrl}`);
 
@@ -532,21 +541,58 @@ class APIService {
   }
 
   // Get finance news
-  async getFinanceNews() {
+  async getFinanceNews(forceRefresh = false) {
     try {
-      const response = await this.api.get("/api/finance-news");
+      // Use much longer timeout for finance news (5 minutes) since we now do comprehensive AI summarization
+      const params = forceRefresh ? { force_refresh: true } : {};
+      const response = await this.api.get("/api/finance-news", { 
+        timeout: 300000,
+        params: params
+      });
 
       return {
         success: response.data.status === "success",
         data: response.data,
         articles: response.data.articles || [],
         lastUpdated: response.data.last_updated,
+        totalClusters: response.data.total_clusters || 0,
+        totalArticles: response.data.total_articles || 0,
+        sourcesCount: response.data.sources_count || 0,
+        feature: response.data.feature || "single_source",
       };
     } catch (error) {
+      console.error("[API] Finance news error:", error);
       return {
         success: false,
-        error: error.message,
+        error: error.message.includes("aborted") ? "İstek zaman aşımına uğradı - lütfen tekrar deneyın" : error.message,
         articles: [],
+      };
+    }
+  }
+
+  // News Chat API method
+  async sendNewsChatQuery(message, newsContext) {
+    try {
+      const response = await this.api.post("/api/news-chat", {
+        query: message,
+        news_context: newsContext,
+        web_search_enabled: true
+      }, {
+        timeout: 120000 // 2 minutes timeout for news chat
+      });
+
+      return {
+        success: response.data.status === "success",
+        response: response.data.response,
+        images: response.data.images || [],
+        sessionId: response.data.sessionId
+      };
+    } catch (error) {
+      console.error("[API] News chat error:", error);
+      return {
+        success: false,
+        error: error.message.includes("aborted") ? "Request timed out - please try again" : error.message,
+        response: null
       };
     }
   }

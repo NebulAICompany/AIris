@@ -87,6 +87,19 @@ class LanguageService {
         loadingNews: "Loading latest finance news...",
         lastUpdated: "Last updated",
         readMore: "Read More",
+        backToNews: "Back to News",
+        goBack: "Go back",
+        sourcesTitle: "Sources",
+        noNewsAvailable: "No news available",
+        fetchLatestNews: "Fetch Latest News",
+        getLatestNews: "Get Latest News",
+        autoUpdateInfo: "Auto-updates every 45 minutes",
+        
+        // News Chat Section
+        askAboutNews: "Ask about this news",
+        chatDescription: "Ask questions about this news article and get AI-powered insights",
+        askQuestionPlaceholder: "Ask a question about this news...",
+        followUpQuestionPlaceholder: "Ask a follow-up question...",
 
         // Settings Section
         settingsTitle: "Settings",
@@ -353,6 +366,19 @@ class LanguageService {
         loadingNews: "En son finans haberleri yükleniyor...",
         lastUpdated: "Son güncelleme",
         readMore: "Devamını Oku",
+        backToNews: "Haberlere Geri Dön",
+        goBack: "Geri dön",
+        sourcesTitle: "Kaynaklar",
+        noNewsAvailable: "Haber bulunmuyor",
+        fetchLatestNews: "Son Haberleri Getir",
+        getLatestNews: "Son Haberleri Getir",
+        autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
+        
+        // News Chat Section
+        askAboutNews: "Bu haber hakkında soru sor",
+        chatDescription: "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
+        askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
+        followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
         // Settings Section
         settingsTitle: "Ayarlar",
@@ -455,8 +481,9 @@ class LanguageService {
 
         // Time format
         minutesAgo: "dk önce",
-        hoursAgo: "sa önce",
+        hoursAgo: "sa önce", 
         daysAgo: "gün önce",
+        justNow: "Şimdi",
 
         // Action buttons
         retryAction: "Tekrar Dene",
