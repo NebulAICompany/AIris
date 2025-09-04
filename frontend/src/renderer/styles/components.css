@@ -3998,20 +3998,17 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 
 /* Q&A thinking indicator */
 .news-qa-thinking {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 10px 12px;
+  gap: 8px;
   color: var(--text-secondary);
-  margin: 12px 0;
+  font-style: italic;
 }
 
 .news-qa-thinking .typing-dots {
   display: inline-flex;
-  gap: 6px;
+  gap: 4px;
+  margin-left: 8px;
 }
 
 .news-qa-thinking .typing-dot {
@@ -5908,14 +5905,6 @@ body.nebula-theme .web-search-button:hover {
 [data-theme="dark"] .news-ai-error {
   background: rgba(127, 29, 29, 0.3);
   border-color: rgba(239, 68, 68, 0.3);
-}
-
-.news-qa-thinking {
-  color: var(--text-secondary) !important;
-  font-style: italic !important;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .typing-dots {
