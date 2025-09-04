@@ -935,32 +935,6 @@ input:checked + .slider:before {
   opacity: 1;
 }
 
-/* Connection Status */
-.connection-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 2rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.connection-status.connected {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success);
-}
-
-.connection-status.disconnected {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--error);
-}
-
-.connection-status i {
-  font-size: 0.5rem;
-}
-
 /* Notifications */
 .notification {
   position: fixed;

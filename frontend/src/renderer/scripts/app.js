@@ -74,9 +74,6 @@ class AIrisApp {
 
       this.isInitialized = true;
       logger.info("AIris App initialized successfully", "APP");
-
-      // Show connection status
-      this.updateConnectionStatus(this.backendConnected);
     } catch (error) {
       logger.error(`Failed to start app: ${error.message}`, "APP");
       this.showErrorScreen(error);
@@ -224,18 +221,6 @@ class AIrisApp {
     }, 15000);
   }
 
-  updateConnectionStatus(connected) {
-    const statusIndicator = document.getElementById("connection-status");
-    if (statusIndicator) {
-      statusIndicator.className = `connection-status ${
-        connected ? "connected" : "disconnected"
-      }`;
-      statusIndicator.innerHTML = connected
-        ? '<i class="fas fa-circle"></i> Connected'
-        : '<i class="fas fa-circle"></i> Disconnected';
-    }
-  }
-
   setupErrorHandling() {
     // Global error handler
     window.addEventListener("error", (event) => {
@@ -327,7 +312,6 @@ class AIrisApp {
   async reconnectBackend() {
     try {
       await this.checkBackendConnection();
-      this.updateConnectionStatus(this.backendConnected);
 
       if (this.backendConnected && this.uiComponents) {
         this.uiComponents.showNotification("Connection restored!", "success");
@@ -361,9 +345,7 @@ class AIrisApp {
   onWindowFocus() {
     // Check backend connection when window regains focus
     if (this.isInitialized) {
-      this.checkBackendConnection().then(() => {
-        this.updateConnectionStatus(this.backendConnected);
-      });
+      this.checkBackendConnection();
     }
   }
 
