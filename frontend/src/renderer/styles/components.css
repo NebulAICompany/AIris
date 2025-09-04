@@ -3744,6 +3744,13 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   border: none !important;
 }
 
+/* Haber detayları sayfasında news-chat-section'ın arka planını düzelt */
+.news-detail .news-chat-section {
+  background: var(--bg-primary) !important; /* Ana içerik ile aynı arka plan */
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .news-chat-header {
   display: none;
 }
