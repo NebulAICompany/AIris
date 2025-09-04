@@ -98,6 +98,9 @@ class CurrencyService {
     // Initial fetch
     await this.fetchCurrencyData();
 
+    // Update display immediately after first fetch
+    this.updateDisplay();
+
     // Set up intervals
     this.updateInterval = setInterval(() => {
       this.fetchCurrencyData();
@@ -253,6 +256,7 @@ class CurrencyService {
             EUR_TRY: data.rates.TRY / data.rates.EUR,
             USD_EUR: data.rates.EUR,
             timestamp: new Date(data.date).getTime(),
+            isOffline: false,
           };
 
         case "exchangerate-api":
@@ -261,6 +265,7 @@ class CurrencyService {
             EUR_TRY: data.rates.TRY / data.rates.EUR,
             USD_EUR: data.rates.EUR,
             timestamp: new Date(data.date).getTime(),
+            isOffline: false,
           };
 
         case "currencyapi":
@@ -269,6 +274,7 @@ class CurrencyService {
             EUR_TRY: data.data.TRY.value / data.data.EUR.value,
             USD_EUR: data.data.EUR.value,
             timestamp: Date.now(),
+            isOffline: false,
           };
 
         default:
@@ -627,10 +633,7 @@ class CurrencyService {
           }
         }
 
-        // Update language for the elements
-        if (window.languageService) {
-          window.languageService.updatePageTexts();
-        }
+        // Note: Not calling updatePageTexts() here to avoid overriding status text
       })
       .catch((error) => {
         logger.error(
