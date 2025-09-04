@@ -349,7 +349,7 @@ class UIComponents {
     }
 
     // Add Enter key support for calculator inputs
-    [loanAmountInput, loanTermInput, interestRateInput].forEach(input => {
+    [loanAmountInput, loanTermInput, interestRateInput].forEach((input) => {
       if (input) {
         input.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
@@ -2877,28 +2877,28 @@ class UIComponents {
         if (result.articles.length > 0) {
           // We have articles - render them
           this.renderFinanceNews(result.articles, result.data);
-        this.lastNewsUpdate = new Date().toISOString();
+          this.lastNewsUpdate = new Date().toISOString();
 
-        if (newsLastUpdated) {
-          const t = window.languageService
-            ? window.languageService.t.bind(window.languageService)
-            : (key) => key;
-          newsLastUpdated.textContent = `${t(
-            "lastUpdatedAt"
-          )} ${new Date().toLocaleTimeString()}`;
-        }
+          if (newsLastUpdated) {
+            const t = window.languageService
+              ? window.languageService.t.bind(window.languageService)
+              : (key) => key;
+            newsLastUpdated.textContent = `${t(
+              "lastUpdatedAt"
+            )} ${new Date().toLocaleTimeString()}`;
+          }
 
           // Update scheduler status
           this.updateSchedulerStatus();
 
           // Set up auto-refresh interval
-        this.startNewsAutoRefresh();
+          this.startNewsAutoRefresh();
         } else {
           // Empty database - show empty state and try initial refresh
           const t = window.languageService
             ? window.languageService.t.bind(window.languageService)
             : (key) => key;
-          
+
           newsGrid.innerHTML = `
             <div class="empty-state">
               <i class="fas fa-newspaper"></i>
@@ -2911,7 +2911,8 @@ class UIComponents {
           `;
 
           if (newsLastUpdated) {
-            newsLastUpdated.textContent = t("noNewsAvailable") || "No news available";
+            newsLastUpdated.textContent =
+              t("noNewsAvailable") || "No news available";
           }
 
           // Still set up auto-refresh for future updates
@@ -2974,7 +2975,7 @@ class UIComponents {
     // Add indices to articles for detail view navigation
     const articlesWithIndices = sortedArticles.map((article, index) => ({
       ...article,
-      index: index
+      index: index,
     }));
 
     // FIXED: Store the sorted articles with indices (not the original unsorted ones)
@@ -2990,15 +2991,15 @@ class UIComponents {
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
       : (key) => key;
-      
+
     let timeAgo = t("unknown");
     try {
       if (article.published) {
-    const publishedDate = new Date(article.published);
+        const publishedDate = new Date(article.published);
         timeAgo = this.getTimeAgo(publishedDate);
       }
     } catch (error) {
-      console.warn('Error processing article date:', error, article.published);
+      console.warn("Error processing article date:", error, article.published);
       timeAgo = t("unknown");
     }
 
@@ -3013,7 +3014,9 @@ class UIComponents {
     if (article.image_url) {
       imageSrc = article.image_url;
       imageWidth = article.image_width ? `width="${article.image_width}"` : "";
-      imageHeight = article.image_height ? `height="${article.image_height}"` : "";
+      imageHeight = article.image_height
+        ? `height="${article.image_height}"`
+        : "";
     }
     // If no direct image, try available_images from cluster data
     else if (article.available_images && article.available_images.length > 0) {
@@ -3022,9 +3025,13 @@ class UIComponents {
       // Or randomize: article.available_images[Math.floor(Math.random() * article.available_images.length)]
 
       imageSrc = selectedImage.url;
-      imageAlt = `${Utils.escapeHtml(article.title)} - Image from ${Utils.escapeHtml(selectedImage.source)}`;
+      imageAlt = `${Utils.escapeHtml(
+        article.title
+      )} - Image from ${Utils.escapeHtml(selectedImage.source)}`;
       imageWidth = selectedImage.width ? `width="${selectedImage.width}"` : "";
-      imageHeight = selectedImage.height ? `height="${selectedImage.height}"` : "";
+      imageHeight = selectedImage.height
+        ? `height="${selectedImage.height}"`
+        : "";
     }
 
     // Create image HTML if we have an image source
@@ -3070,28 +3077,28 @@ class UIComponents {
 
   getTimeAgo(date) {
     const now = new Date();
-    
+
     // Handle different date formats and timezone issues
     let articleDate;
     try {
-      if (typeof date === 'string') {
+      if (typeof date === "string") {
         // Parse the date string and convert to user's local time
         articleDate = new Date(date);
       } else {
         articleDate = new Date(date);
       }
-      
+
       // Check if date is valid
       if (isNaN(articleDate.getTime())) {
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
         return t("unknown");
       }
-      
+
       // Calculate difference in milliseconds
       const diff = now.getTime() - articleDate.getTime();
-      
+
       // If difference is negative (future date), it's probably a timezone issue
       // Assume the article date should be treated as local time
       let actualDiff = diff;
@@ -3100,13 +3107,13 @@ class UIComponents {
         // If the date seems to be in the future, assume it's UTC and convert to local
         const timezoneOffsetMs = now.getTimezoneOffset() * 60 * 1000;
         actualDiff = diff + timezoneOffsetMs;
-        
+
         // If still negative, just use absolute value but cap it
         if (actualDiff < 0) {
           actualDiff = Math.abs(diff);
         }
       }
-      
+
       const minutes = Math.floor(actualDiff / 60000);
       const hours = Math.floor(actualDiff / 3600000);
       const days = Math.floor(actualDiff / 86400000);
@@ -3122,13 +3129,13 @@ class UIComponents {
         return t("justNow");
       } else if (minutes < 60) {
         return `~${minutes}${t("minutesAgo")}`;
-    } else if (hours < 24) {
+      } else if (hours < 24) {
         return `~${hours}${t("hoursAgo")}`;
-    } else {
+      } else {
         return `~${days}${t("daysAgo")}`;
       }
     } catch (error) {
-      console.warn('Error calculating time ago:', error, 'for date:', date);
+      console.warn("Error calculating time ago:", error, "for date:", date);
       const t = window.languageService
         ? window.languageService.t.bind(window.languageService)
         : (key) => key;
@@ -3167,7 +3174,9 @@ class UIComponents {
       // Show loading state on button
       if (refreshButton) {
         const originalContent = refreshButton.innerHTML;
-        refreshButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t("loading")}...`;
+        refreshButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t(
+          "loading"
+        )}...`;
         refreshButton.disabled = true;
       }
 
@@ -3181,20 +3190,25 @@ class UIComponents {
 
           const newsLastUpdated = document.getElementById("news-last-updated");
           if (newsLastUpdated) {
-            newsLastUpdated.textContent = `${t("lastUpdated")} ${new Date().toLocaleTimeString()}`;
+            newsLastUpdated.textContent = `${t(
+              "lastUpdated"
+            )} ${new Date().toLocaleTimeString()}`;
           }
-          
+
           // Update scheduler status hint
           this.updateSchedulerStatus();
 
           // Show success message briefly
           if (refreshButton) {
-            refreshButton.innerHTML = `<i class="fas fa-check"></i> ${t("refresh")}`;
+            refreshButton.innerHTML = `<i class="fas fa-check"></i> ${t(
+              "refresh"
+            )}`;
             setTimeout(() => {
-              refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("refresh")}`;
+              refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t(
+                "refresh"
+              )}`;
             }, 2000);
           }
-
         } else {
           // No articles found even after refresh
           const newsGrid = document.getElementById("news-grid");
@@ -3214,27 +3228,33 @@ class UIComponents {
           if (refreshButton) {
             refreshButton.innerHTML = `<i class="fas fa-info-circle"></i> No News Found`;
             setTimeout(() => {
-              refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("refresh")}`;
+              refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t(
+                "refresh"
+              )}`;
             }, 3000);
           }
         }
       } else {
         throw new Error(result.error || "Failed to refresh news");
       }
-
     } catch (error) {
       console.error("Failed to refresh finance news:", error);
-      
+
       if (refreshButton) {
-        refreshButton.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${t("retryAction")}`;
+        refreshButton.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${t(
+          "retryAction"
+        )}`;
         setTimeout(() => {
-          refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("refresh")}`;
+          refreshButton.innerHTML = `<i class="fas fa-sync-alt"></i> ${t(
+            "refresh"
+          )}`;
         }, 3000);
       }
 
       // Show error to user (could add toast notification here)
-      alert(t("failedToLoadNews") + ": " + (error.message || t("unableToFetchNews")));
-      
+      alert(
+        t("failedToLoadNews") + ": " + (error.message || t("unableToFetchNews"))
+      );
     } finally {
       // Re-enable button
       if (refreshButton) {
@@ -3252,7 +3272,7 @@ class UIComponents {
     const article = this.currentArticles[articleIndex];
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
-    
+
     if (!newsGrid || !newsDetail) return;
 
     // Hide news grid and show detail view
@@ -3269,18 +3289,18 @@ class UIComponents {
     }
 
     // Ensure chat input is fixed at the bottom while viewing details
-    const chatContainer = document.getElementById('news-chat-input-container');
-    const detail = document.getElementById('news-detail');
+    const chatContainer = document.getElementById("news-chat-input-container");
+    const detail = document.getElementById("news-detail");
     if (chatContainer && detail) {
-      chatContainer.classList.add('news-chat-fixed');
-      detail.classList.add('news-chat-fixed-active');
+      chatContainer.classList.add("news-chat-fixed");
+      detail.classList.add("news-chat-fixed-active");
     }
   }
 
   hideNewsDetail() {
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
-    
+
     if (!newsGrid || !newsDetail) return;
 
     // Check if we're in Q&A mode
@@ -3293,18 +3313,21 @@ class UIComponents {
     // Show news grid and hide detail view
     newsDetail.style.display = "none";
     newsGrid.style.display = "grid";
-    
+
     // Clean up event listeners when hiding detail view
     const sourcesListElement = document.getElementById("news-sources-list");
     if (sourcesListElement && this.sourceLinkClickHandler) {
-      sourcesListElement.removeEventListener('click', this.sourceLinkClickHandler);
+      sourcesListElement.removeEventListener(
+        "click",
+        this.sourceLinkClickHandler
+      );
       this.sourceLinkClickHandler = null;
     }
 
     // Remove fixed chat styling when leaving detail view
-    const chatContainer = document.getElementById('news-chat-input-container');
-    if (chatContainer) chatContainer.classList.remove('news-chat-fixed');
-    newsDetail.classList.remove('news-chat-fixed-active');
+    const chatContainer = document.getElementById("news-chat-input-container");
+    if (chatContainer) chatContainer.classList.remove("news-chat-fixed");
+    newsDetail.classList.remove("news-chat-fixed-active");
   }
 
   resetNewsDetailToOriginal() {
@@ -3312,28 +3335,28 @@ class UIComponents {
 
     // Reset the news detail view to the original article
     this.populateNewsDetail(this.currentNewsArticle);
-    
+
     // Reset Q&A mode state
     this.newsQAStarted = false;
-    
+
     // Remove Q&A mode styling
     const newsDetail = document.getElementById("news-detail");
     if (newsDetail) {
-      newsDetail.classList.remove('news-qa-mode');
+      newsDetail.classList.remove("news-qa-mode");
     }
-    
+
     // Clear any Q&A container content
     const newsDetailArticle = document.getElementById("news-detail-article");
     if (newsDetailArticle) {
-      const qaContainer = newsDetailArticle.querySelector('#news-qa-container');
+      const qaContainer = newsDetailArticle.querySelector("#news-qa-container");
       if (qaContainer) {
         qaContainer.remove();
       }
     }
-    
+
     // Reset chat interface
     this.resetNewsChatInterface();
-    
+
     // Update button text back to "Back to News"
     this.updateNewsBackButtonText();
   }
@@ -3347,10 +3370,10 @@ class UIComponents {
     if (backButton) {
       if (this.newsQAStarted) {
         // In Q&A mode, show "Go back"
-        backButton.textContent = t('goBack');
+        backButton.textContent = t("goBack");
       } else {
         // In normal news view, show "Back to News"
-        backButton.textContent = t('backToNews');
+        backButton.textContent = t("backToNews");
       }
     }
   }
@@ -3372,22 +3395,22 @@ class UIComponents {
       // Try to get sources from cluster data first
       const clusterData = this.findClusterForArticle(article);
       let sourceText = "";
-      
+
       if (clusterData && clusterData.sources) {
         // Use cluster sources
-        sourceText = Array.isArray(clusterData.sources) 
-          ? clusterData.sources.join(", ") 
+        sourceText = Array.isArray(clusterData.sources)
+          ? clusterData.sources.join(", ")
           : clusterData.sources;
       } else if (article.sources) {
         // Fallback to article sources
-        sourceText = Array.isArray(article.sources) 
-          ? article.sources.join(", ") 
+        sourceText = Array.isArray(article.sources)
+          ? article.sources.join(", ")
           : article.sources;
       } else {
         // Last fallback to article source
         sourceText = article.source || "Unknown source";
       }
-      
+
       sourcesElement.textContent = sourceText;
     }
 
@@ -3413,7 +3436,7 @@ class UIComponents {
 
     // Initialize news chat functionality
     this.initializeNewsChat(article);
-    
+
     // Update button text based on current state
     this.updateNewsBackButtonText();
   }
@@ -3423,10 +3446,13 @@ class UIComponents {
     if (!contentElement) return;
 
     let content = article.summary || article.unified_description || "";
-    
+
     // Try to get images from cluster data
     const clusterData = this.findClusterForArticle(article);
-    const availableImages = (clusterData && clusterData.available_images) || article.available_images || [];
+    const availableImages =
+      (clusterData && clusterData.available_images) ||
+      article.available_images ||
+      [];
 
     // Process image markers and replace with actual images
     content = this.processImageMarkers(content, availableImages);
@@ -3440,14 +3466,14 @@ class UIComponents {
   processImageMarkers(content, availableImages) {
     if (!availableImages || availableImages.length === 0) {
       // Remove image markers if no images available
-      return content.replace(/\{\{IMAGE_\w+\}\}/g, '');
+      return content.replace(/\{\{IMAGE_\w+\}\}/g, "");
     }
 
     // Replace image markers with actual images
     let imageIndex = 0;
 
     // Lead image
-    if (content.includes('{{IMAGE_LEAD}}') && availableImages[imageIndex]) {
+    if (content.includes("{{IMAGE_LEAD}}") && availableImages[imageIndex]) {
       const img = availableImages[imageIndex];
       const imageHtml = `
         <div class="news-detail-image lead-image large">
@@ -3455,10 +3481,12 @@ class UIComponents {
                alt="News image from ${Utils.escapeHtml(img.source)}"
                loading="lazy"
                onerror="this.style.display='none'" />
-          <div class="image-caption">Image from ${Utils.escapeHtml(img.source)}</div>
+          <div class="image-caption">Image from ${Utils.escapeHtml(
+            img.source
+          )}</div>
         </div>
       `;
-      content = content.replace('{{IMAGE_LEAD}}', imageHtml);
+      content = content.replace("{{IMAGE_LEAD}}", imageHtml);
       imageIndex++;
     }
 
@@ -3467,14 +3495,16 @@ class UIComponents {
       const marker = `{{IMAGE_MID_${i}}}`;
       if (content.includes(marker) && availableImages[imageIndex]) {
         const img = availableImages[imageIndex];
-        const sizeClass = i === 1 ? 'medium' : 'small';
+        const sizeClass = i === 1 ? "medium" : "small";
         const imageHtml = `
           <div class="news-detail-image ${sizeClass}">
             <img src="${Utils.escapeHtml(img.url)}" 
                  alt="News image from ${Utils.escapeHtml(img.source)}"
                  loading="lazy"
                  onerror="this.style.display='none'" />
-            <div class="image-caption">Image from ${Utils.escapeHtml(img.source)}</div>
+            <div class="image-caption">Image from ${Utils.escapeHtml(
+              img.source
+            )}</div>
           </div>
         `;
         content = content.replace(marker, imageHtml);
@@ -3483,22 +3513,22 @@ class UIComponents {
     }
 
     // Remove any remaining markers
-    content = content.replace(/\{\{IMAGE_\w+\}\}/g, '');
+    content = content.replace(/\{\{IMAGE_\w+\}\}/g, "");
 
     return content;
   }
 
   formatNewsContent(content) {
     // Convert markdown-style bold formatting to HTML
-    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    content = content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
     // Convert double line breaks to paragraphs
     const paragraphs = content.split(/\n\s*\n/);
 
     return paragraphs
-      .map(para => {
+      .map((para) => {
         para = para.trim();
-        if (!para) return '';
+        if (!para) return "";
 
         // Check if it's an image div
         if (para.includes('<div class="news-detail-image')) {
@@ -3508,8 +3538,8 @@ class UIComponents {
         // Wrap in paragraph tags
         return `<p>${para}</p>`;
       })
-      .filter(para => para)
-      .join('\n');
+      .filter((para) => para)
+      .join("\n");
   }
 
   populateSourcesList(article) {
@@ -3517,50 +3547,58 @@ class UIComponents {
     if (!sourcesListElement) return;
 
     let sources = [];
-    
+
     // Try to find the corresponding cluster data for this article
     const clusterData = this.findClusterForArticle(article);
-    
+
     if (clusterData && clusterData.articles) {
       // Use the full cluster data to get all sources
-      sources = clusterData.articles.map(art => ({
+      sources = clusterData.articles.map((art) => ({
         name: art.source,
         url: art.link,
-        source: art.source
+        source: art.source,
       }));
     } else if (article.articles && Array.isArray(article.articles)) {
       // Fallback: if article has articles property directly
-      sources = article.articles.map(art => ({
+      sources = article.articles.map((art) => ({
         name: art.source,
         url: art.link,
-        source: art.source
+        source: art.source,
       }));
     } else {
       // Single article fallback
-      sources = [{
-        name: article.source,
-        url: article.link,
-        source: article.source
-      }];
+      sources = [
+        {
+          name: article.source,
+          url: article.link,
+          source: article.source,
+        },
+      ];
     }
 
     // Remove duplicates based on URL
-    const uniqueSources = sources.filter((source, index, self) => 
-      index === self.findIndex(s => s.url === source.url)
+    const uniqueSources = sources.filter(
+      (source, index, self) =>
+        index === self.findIndex((s) => s.url === source.url)
     );
 
     if (uniqueSources.length === 0) {
-      sourcesListElement.innerHTML = '<p>No sources available</p>';
+      sourcesListElement.innerHTML = "<p>No sources available</p>";
       return;
     }
 
-    const sourcesHtml = uniqueSources.map(source => {
-      const domain = this.extractDomain(source.url);
-      const icon = source.name.charAt(0).toUpperCase();
-      
-      return `
-        <a href="${Utils.escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer" class="news-source-link" 
-           data-source-name="${Utils.escapeHtml(source.name)}" data-source-url="${Utils.escapeHtml(source.url)}">
+    const sourcesHtml = uniqueSources
+      .map((source) => {
+        const domain = this.extractDomain(source.url);
+        const icon = source.name.charAt(0).toUpperCase();
+
+        return `
+        <a href="${Utils.escapeHtml(
+          source.url
+        )}" target="_blank" rel="noopener noreferrer" class="news-source-link" 
+           data-source-name="${Utils.escapeHtml(
+             source.name
+           )}" data-source-url="${Utils.escapeHtml(source.url)}">
           <div class="source-icon">${icon}</div>
           <div class="source-info">
             <div class="source-name">${Utils.escapeHtml(source.name)}</div>
@@ -3569,39 +3607,45 @@ class UIComponents {
           <i class="fas fa-external-link-alt external-icon"></i>
         </a>
       `;
-    }).join('');
+      })
+      .join("");
 
     sourcesListElement.innerHTML = sourcesHtml;
-    
+
     // Add event delegation for source link clicks with error handling
     // Remove any existing listeners first to prevent duplicates
     if (this.sourceLinkClickHandler) {
-      sourcesListElement.removeEventListener('click', this.sourceLinkClickHandler);
+      sourcesListElement.removeEventListener(
+        "click",
+        this.sourceLinkClickHandler
+      );
     }
-    
+
     // Create a bound handler and store reference for removal
     this.sourceLinkClickHandler = this.handleSourceLinkClick.bind(this);
-    sourcesListElement.addEventListener('click', this.sourceLinkClickHandler);
+    sourcesListElement.addEventListener("click", this.sourceLinkClickHandler);
   }
 
   async handleSourceLinkClick(event) {
-    const link = event.target.closest('.news-source-link');
+    const link = event.target.closest(".news-source-link");
     if (!link) return;
-    
+
     event.preventDefault();
-    
+
     const url = link.dataset.sourceUrl;
     const sourceName = link.dataset.sourceName;
-    
+
     console.log(`🔗 Attempting to open source link: ${sourceName} -> ${url}`);
-    
+
     // Check if we're in Electron environment
     if (window.airisAPI && window.airisAPI.openExternalUrl) {
       try {
         const result = await window.airisAPI.openExternalUrl(url);
-        
+
         if (result.success) {
-          console.log(`✅ Successfully opened ${sourceName} link in external browser`);
+          console.log(
+            `✅ Successfully opened ${sourceName} link in external browser`
+          );
         } else {
           console.warn(`❌ Failed to open ${sourceName} link: ${result.error}`);
           this.handleFailedLinkOpen(url, sourceName);
@@ -3612,26 +3656,31 @@ class UIComponents {
       }
     } else {
       // Fallback for non-Electron environments (web browser)
-      console.log(`🌐 Using fallback method for ${sourceName} (not in Electron)`);
+      console.log(
+        `🌐 Using fallback method for ${sourceName} (not in Electron)`
+      );
       try {
-        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-        
+        const newWindow = window.open(url, "_blank", "noopener,noreferrer");
+
         // Immediate check for popup blocking
         if (!newWindow) {
-          console.warn(`❌ Popup blocked for ${sourceName}, trying alternative method...`);
+          console.warn(
+            `❌ Popup blocked for ${sourceName}, trying alternative method...`
+          );
           this.handleFailedLinkOpen(url, sourceName);
           return;
         }
-        
+
         // Check if window was immediately closed (indicates failure)
         if (newWindow.closed) {
-          console.warn(`❌ Window immediately closed for ${sourceName}, trying alternative method...`);
+          console.warn(
+            `❌ Window immediately closed for ${sourceName}, trying alternative method...`
+          );
           this.handleFailedLinkOpen(url, sourceName);
           return;
         }
-        
+
         console.log(`✅ Successfully opened ${sourceName} link`);
-        
       } catch (error) {
         console.error(`❌ Error opening ${sourceName} link:`, error);
         this.handleFailedLinkOpen(url, sourceName);
@@ -3642,15 +3691,20 @@ class UIComponents {
   async handleFailedLinkOpen(url, sourceName) {
     // Show user notification with options
     const message = `Unable to open ${sourceName} link directly. Would you like to copy the URL to clipboard?`;
-    
+
     if (confirm(message)) {
       // Copy URL to clipboard
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          alert(`✅ ${sourceName} URL copied to clipboard!\n\nURL: ${url}\n\nYou can now paste this in your browser.`);
-        }).catch(() => {
-          this.showManualCopyDialog(url, sourceName);
-        });
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            alert(
+              `✅ ${sourceName} URL copied to clipboard!\n\nURL: ${url}\n\nYou can now paste this in your browser.`
+            );
+          })
+          .catch(() => {
+            this.showManualCopyDialog(url, sourceName);
+          });
       } else {
         this.showManualCopyDialog(url, sourceName);
       }
@@ -3661,12 +3715,17 @@ class UIComponents {
           try {
             const result = await window.airisAPI.openExternalUrl(url);
             if (result.success) {
-              console.log(`✅ Successfully opened ${sourceName} using system browser`);
+              console.log(
+                `✅ Successfully opened ${sourceName} using system browser`
+              );
             } else {
               alert(`Failed to open ${sourceName}: ${result.error}`);
             }
           } catch (error) {
-            console.error(`Error using system browser for ${sourceName}:`, error);
+            console.error(
+              `Error using system browser for ${sourceName}:`,
+              error
+            );
             alert(`Failed to open ${sourceName} using system browser.`);
           }
         }
@@ -3692,8 +3751,8 @@ class UIComponents {
     }
 
     // Try to match by title since that's what we're using as the unified title
-    return this.currentNewsData.clustered_articles.find(cluster => 
-      cluster.unified_title === article.title
+    return this.currentNewsData.clustered_articles.find(
+      (cluster) => cluster.unified_title === article.title
     );
   }
 
@@ -3707,19 +3766,33 @@ class UIComponents {
 
   async updateSchedulerStatus() {
     try {
-      const response = await window.apiService.api.get("/api/finance-news/scheduler/status");
+      const response = await window.apiService.api.get(
+        "/api/finance-news/scheduler/status"
+      );
       if (response.data.status === "success") {
         const scheduler = response.data.scheduler;
         const hintElement = document.querySelector(".news-refresh-hint span");
-        
-        if (hintElement && scheduler.is_running && scheduler.next_fetch_in_minutes !== null) {
-          const t = window.languageService ? window.languageService.t.bind(window.languageService) : (key) => key;
+
+        if (
+          hintElement &&
+          scheduler.is_running &&
+          scheduler.next_fetch_in_minutes !== null
+        ) {
+          const t = window.languageService
+            ? window.languageService.t.bind(window.languageService)
+            : (key) => key;
           const nextUpdate = scheduler.next_fetch_in_minutes;
-          
+
           if (nextUpdate <= 0) {
-            hintElement.textContent = t("autoUpdateInfo").replace("45 minutes", "updating now");
+            hintElement.textContent = t("autoUpdateInfo").replace(
+              "45 minutes",
+              "updating now"
+            );
           } else if (nextUpdate < 60) {
-            hintElement.textContent = t("autoUpdateInfo").replace("45 minutes", `${nextUpdate} minutes`);
+            hintElement.textContent = t("autoUpdateInfo").replace(
+              "45 minutes",
+              `${nextUpdate} minutes`
+            );
           } else {
             hintElement.textContent = t("autoUpdateInfo");
           }
@@ -4747,7 +4820,6 @@ class UIComponents {
     }
   }
 
-
   // Credit Calculator Methods
   calculateLoan() {
     try {
@@ -4770,7 +4842,8 @@ class UIComponents {
         loanAmountInput.focus();
         throw new Error("Kredi tutarı 0'dan büyük geçerli bir sayı olmalıdır");
       }
-      if (loanAmount > 100000000) { // 100 million limit
+      if (loanAmount > 100000000) {
+        // 100 million limit
         loanAmountInput.focus();
         throw new Error("Kredi tutarı çok yüksek (maksimum 100.000.000 TL)");
       }
@@ -4778,7 +4851,8 @@ class UIComponents {
         loanTermInput.focus();
         throw new Error("Kredi vadesi 0'dan büyük geçerli bir sayı olmalıdır");
       }
-      if (loanTerm > 360) { // 30 years max
+      if (loanTerm > 360) {
+        // 30 years max
         loanTermInput.focus();
         throw new Error("Kredi vadesi çok uzun (maksimum 360 ay)");
       }
@@ -4803,11 +4877,11 @@ class UIComponents {
         monthlyPayment = loanAmount / loanTerm;
       } else {
         // Apply the exact annuity formula
-        const onePlusR = 1 + r;  // (1+r)
-        const powerTerm = Math.pow(onePlusR, loanTerm);  // (1+r)^n
-        const numerator = r * powerTerm;  // r(1+r)^n
-        const denominator = powerTerm - 1;  // (1+r)^n - 1
-        
+        const onePlusR = 1 + r; // (1+r)
+        const powerTerm = Math.pow(onePlusR, loanTerm); // (1+r)^n
+        const numerator = r * powerTerm; // r(1+r)^n
+        const denominator = powerTerm - 1; // (1+r)^n - 1
+
         monthlyPayment = loanAmount * (numerator / denominator);
       }
 
@@ -4824,12 +4898,11 @@ class UIComponents {
         totalInterest,
         principal: loanAmount,
         termMonths: loanTerm,
-        annualRate: interestRate
+        annualRate: interestRate,
       });
 
       // Show success notification
       this.showNotification("Hesaplama başarıyla tamamlandı", "success");
-
     } catch (error) {
       this.showNotification(error.message, "error");
     }
@@ -4846,7 +4919,9 @@ class UIComponents {
     }
 
     if (monthlyPaymentEl) {
-      monthlyPaymentEl.textContent = this.formatCurrency(results.monthlyPayment);
+      monthlyPaymentEl.textContent = this.formatCurrency(
+        results.monthlyPayment
+      );
     }
 
     if (totalPaymentEl) {
@@ -4859,15 +4934,20 @@ class UIComponents {
 
     // Smooth scroll to results within the calculator container
     setTimeout(() => {
-      const calculatorContainer = document.querySelector('.calculator-container');
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
       if (resultsContainer && calculatorContainer) {
         const containerRect = calculatorContainer.getBoundingClientRect();
         const resultsRect = resultsContainer.getBoundingClientRect();
-        const scrollTop = calculatorContainer.scrollTop + (resultsRect.top - containerRect.top) - 20;
-        
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
         calculatorContainer.scrollTo({
           top: scrollTop,
-          behavior: 'smooth'
+          behavior: "smooth",
         });
       }
     }, 100);
@@ -4895,18 +4975,18 @@ class UIComponents {
     if (typeof value !== "string") {
       return parseFloat(value) || 0;
     }
-    
+
     // Handle empty string
     if (!value.trim()) {
       return 0;
     }
-    
+
     // Remove spaces and handle both Turkish (,) and English (.) decimal separators
     // If the string contains both . and ,, assume . is thousands separator and , is decimal
-    if (value.includes('.') && value.includes(',')) {
+    if (value.includes(".") && value.includes(",")) {
       // Turkish format: 1.000.000,50
       return parseFloat(value.replace(/\./g, "").replace(",", ".")) || 0;
-    } else if (value.includes(',') && !value.includes('.')) {
+    } else if (value.includes(",") && !value.includes(".")) {
       // Only comma, treat as decimal separator: 1000,50
       return parseFloat(value.replace(",", ".")) || 0;
     } else {
@@ -4921,7 +5001,7 @@ class UIComponents {
       style: "currency",
       currency: "TRY",
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(amount);
   }
 
@@ -4929,33 +5009,37 @@ class UIComponents {
   initializeNewsChat(article) {
     this.currentNewsArticle = article;
     this.newsChatHistory = [];
-    
+
     // Initialize chat input handlers
     this.initializeNewsChatInputs();
-    
+
     // Reset chat interface
     this.resetNewsChatInterface();
   }
 
   initializeNewsChatInputs() {
-    const chatInput = document.getElementById('news-chat-input');
-    const chatSendBtn = document.getElementById('news-chat-send');
-    const chatInputMessages = document.getElementById('news-chat-input-messages');
-    const chatSendBtnMessages = document.getElementById('news-chat-send-messages');
+    const chatInput = document.getElementById("news-chat-input");
+    const chatSendBtn = document.getElementById("news-chat-send");
+    const chatInputMessages = document.getElementById(
+      "news-chat-input-messages"
+    );
+    const chatSendBtnMessages = document.getElementById(
+      "news-chat-send-messages"
+    );
 
     if (chatInput && chatSendBtn) {
-      chatInput.addEventListener('input', () => {
+      chatInput.addEventListener("input", () => {
         chatSendBtn.disabled = !chatInput.value.trim();
       });
 
-      chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey && chatInput.value.trim()) {
+      chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey && chatInput.value.trim()) {
           e.preventDefault();
           this.sendNewsChatMessage(chatInput.value.trim());
         }
       });
 
-      chatSendBtn.addEventListener('click', () => {
+      chatSendBtn.addEventListener("click", () => {
         if (chatInput.value.trim()) {
           this.sendNewsChatMessage(chatInput.value.trim());
         }
@@ -4963,18 +5047,22 @@ class UIComponents {
     }
 
     if (chatInputMessages && chatSendBtnMessages) {
-      chatInputMessages.addEventListener('input', () => {
+      chatInputMessages.addEventListener("input", () => {
         chatSendBtnMessages.disabled = !chatInputMessages.value.trim();
       });
 
-      chatInputMessages.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey && chatInputMessages.value.trim()) {
+      chatInputMessages.addEventListener("keypress", (e) => {
+        if (
+          e.key === "Enter" &&
+          !e.shiftKey &&
+          chatInputMessages.value.trim()
+        ) {
           e.preventDefault();
           this.sendNewsChatMessage(chatInputMessages.value.trim());
         }
       });
 
-      chatSendBtnMessages.addEventListener('click', () => {
+      chatSendBtnMessages.addEventListener("click", () => {
         if (chatInputMessages.value.trim()) {
           this.sendNewsChatMessage(chatInputMessages.value.trim());
         }
@@ -4983,13 +5071,15 @@ class UIComponents {
   }
 
   resetNewsChatInterface() {
-    const inputContainer = document.getElementById('news-chat-input-container');
-    const messagesContainer = document.getElementById('news-chat-messages');
-    const messagesList = document.getElementById('news-chat-messages-container');
+    const inputContainer = document.getElementById("news-chat-input-container");
+    const messagesContainer = document.getElementById("news-chat-messages");
+    const messagesList = document.getElementById(
+      "news-chat-messages-container"
+    );
 
-    if (inputContainer) inputContainer.style.display = 'block';
-    if (messagesContainer) messagesContainer.style.display = 'none';
-    if (messagesList) messagesList.innerHTML = '';
+    if (inputContainer) inputContainer.style.display = "block";
+    if (messagesContainer) messagesContainer.style.display = "none";
+    if (messagesList) messagesList.innerHTML = "";
 
     // Reset Q&A mode state
     this.newsQAStarted = false;
@@ -4997,16 +5087,20 @@ class UIComponents {
 
   async sendNewsChatMessage(message) {
     // Clear input
-    const chatInput = document.getElementById('news-chat-input');
-    const chatInputMessages = document.getElementById('news-chat-input-messages');
-    
-    if (chatInput) chatInput.value = '';
-    if (chatInputMessages) chatInputMessages.value = '';
-    
+    const chatInput = document.getElementById("news-chat-input");
+    const chatInputMessages = document.getElementById(
+      "news-chat-input-messages"
+    );
+
+    if (chatInput) chatInput.value = "";
+    if (chatInputMessages) chatInputMessages.value = "";
+
     // Disable send buttons
-    const chatSendBtn = document.getElementById('news-chat-send');
-    const chatSendBtnMessages = document.getElementById('news-chat-send-messages');
-    
+    const chatSendBtn = document.getElementById("news-chat-send");
+    const chatSendBtnMessages = document.getElementById(
+      "news-chat-send-messages"
+    );
+
     if (chatSendBtn) chatSendBtn.disabled = true;
     if (chatSendBtnMessages) chatSendBtnMessages.disabled = true;
 
@@ -5015,44 +5109,46 @@ class UIComponents {
     if (isFirst) {
       this.showNewsChatInterface();
       // Turn the user's first query into the article title immediately
-      const titleElement = document.getElementById('news-detail-title');
+      const titleElement = document.getElementById("news-detail-title");
       if (titleElement) {
         titleElement.textContent = message;
       }
       // Indicate that the page is now in Q&A mode
-      const contentElement = document.getElementById('news-detail-content');
+      const contentElement = document.getElementById("news-detail-content");
       if (contentElement) {
-        contentElement.innerHTML = '';
+        contentElement.innerHTML = "";
       }
       // Hide sources section in Q&A mode
-      const sourcesSection = document.querySelector('.news-detail-sources-section');
+      const sourcesSection = document.querySelector(
+        ".news-detail-sources-section"
+      );
       if (sourcesSection) {
-        sourcesSection.style.display = 'none';
+        sourcesSection.style.display = "none";
       }
       // Add a body class to trim chat UI in Q&A mode
-      const detail = document.getElementById('news-detail');
-      if (detail) detail.classList.add('news-qa-mode');
+      const detail = document.getElementById("news-detail");
+      if (detail) detail.classList.add("news-qa-mode");
 
       // Create a container for subsequent Q&A blocks
-      const qaContainerId = 'news-qa-container';
+      const qaContainerId = "news-qa-container";
       let qaContainer = document.getElementById(qaContainerId);
       if (!qaContainer) {
-        qaContainer = document.createElement('div');
+        qaContainer = document.createElement("div");
         qaContainer.id = qaContainerId;
-        const article = document.querySelector('.news-detail-article');
+        const article = document.querySelector(".news-detail-article");
         if (article) article.appendChild(qaContainer);
       }
 
       // Mark Q&A mode started so next messages append
       this.newsQAStarted = true;
-      
+
       // Update button text to "Go back"
       this.updateNewsBackButtonText();
     }
 
     // Add user message to chat unless it's the first (Q&A) prompt
     if (!isFirst) {
-      this.addNewsChatMessage('user', message);
+      this.addNewsChatMessage("user", message);
     }
 
     // Show typing indicator
@@ -5061,11 +5157,13 @@ class UIComponents {
     // Build placeholder for thinking with title for follow-ups
     let qaContentId = null;
     if (!isFirst) {
-      const mount = document.getElementById('news-qa-container') || document.querySelector('.news-detail-article');
+      const mount =
+        document.getElementById("news-qa-container") ||
+        document.querySelector(".news-detail-article");
       if (mount) {
         qaContentId = `news-qa-content-${Date.now()}`;
-        const block = document.createElement('section');
-        block.className = 'news-qa-block';
+        const block = document.createElement("section");
+        block.className = "news-qa-block";
         block.innerHTML = `
           <hr class="news-qa-divider" />
           <h1 class="news-detail-title">${Utils.escapeHtml(message)}</h1>
@@ -5074,8 +5172,8 @@ class UIComponents {
         mount.appendChild(block);
         const contentEl = document.getElementById(qaContentId);
         if (contentEl) {
-          const thinking = document.createElement('div');
-          thinking.className = 'news-qa-thinking';
+          const thinking = document.createElement("div");
+          thinking.className = "news-qa-thinking";
           thinking.innerHTML = `
             <span>AI is thinking</span>
             <div class="typing-dots">
@@ -5088,10 +5186,10 @@ class UIComponents {
         }
       }
     } else {
-      const contentElement = document.getElementById('news-detail-content');
+      const contentElement = document.getElementById("news-detail-content");
       if (contentElement) {
-        const thinking = document.createElement('div');
-        thinking.className = 'news-qa-thinking';
+        const thinking = document.createElement("div");
+        thinking.className = "news-qa-thinking";
         thinking.innerHTML = `
           <span>AI is thinking</span>
           <div class="typing-dots">
@@ -5110,51 +5208,68 @@ class UIComponents {
 
       if (response && response.response) {
         if (!isFirst) {
-          this.addNewsChatMessage('assistant', response.response);
+          this.addNewsChatMessage("assistant", response.response);
         }
         // Replace the entire article content with the generated answer on first query
         if (isFirst) {
-          const contentElement = document.getElementById('news-detail-content');
+          const contentElement = document.getElementById("news-detail-content");
           if (contentElement) {
-            contentElement.innerHTML = `<div class="news-ai-answer">${this.formatNewsChatMessage(response.response)}</div>`;
+            contentElement.innerHTML = `<div class="news-ai-answer">${this.formatNewsChatMessage(
+              response.response
+            )}</div>`;
           }
         } else if (qaContentId) {
           const contentEl = document.getElementById(qaContentId);
           if (contentEl) {
-            contentEl.innerHTML = `<div class=\"news-ai-answer\">${this.formatNewsChatMessage(response.response)}</div>`;
+            contentEl.innerHTML = `<div class=\"news-ai-answer\">${this.formatNewsChatMessage(
+              response.response
+            )}</div>`;
           }
         }
       } else {
-        this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
+        this.addNewsChatMessage(
+          "error",
+          "Sorry, there was an error processing your request. Please try again."
+        );
       }
     } catch (error) {
-      console.error('News chat error:', error);
-      this.addNewsChatMessage('error', 'Sorry, there was an error processing your request. Please try again.');
+      console.error("News chat error:", error);
+      this.addNewsChatMessage(
+        "error",
+        "Sorry, there was an error processing your request. Please try again."
+      );
     } finally {
       this.hideNewsChatTyping();
       // Remove all thinking indicators
-      document.querySelectorAll('.news-qa-thinking').forEach(el => el.remove());
+      document
+        .querySelectorAll(".news-qa-thinking")
+        .forEach((el) => el.remove());
     }
   }
 
   showNewsChatInterface() {
-    const inputContainer = document.getElementById('news-chat-input-container');
-    const messagesContainer = document.getElementById('news-chat-messages');
+    const inputContainer = document.getElementById("news-chat-input-container");
+    const messagesContainer = document.getElementById("news-chat-messages");
 
     // Keep input visible persistently; messages panel may be hidden in Q&A mode
-    if (inputContainer) inputContainer.style.display = 'block';
-    if (messagesContainer) messagesContainer.style.display = 'block';
+    if (inputContainer) inputContainer.style.display = "block";
+    if (messagesContainer) messagesContainer.style.display = "block";
   }
 
   addNewsChatMessage(role, content) {
-    const messagesContainer = document.getElementById('news-chat-messages-container');
+    const messagesContainer = document.getElementById(
+      "news-chat-messages-container"
+    );
     if (!messagesContainer) return;
 
-    const messageDiv = document.createElement('div');
+    const messageDiv = document.createElement("div");
     messageDiv.className = `news-chat-message ${role}`;
-    
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
+    const time = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
     messageDiv.innerHTML = `
       <div class="message-content">${this.formatNewsChatMessage(content)}</div>
       <div class="message-time">${time}</div>
@@ -5170,43 +5285,48 @@ class UIComponents {
   formatNewsChatMessage(content) {
     // Enhanced markdown formatting
     let formatted = content;
-    
+
     // Convert bold text (**text**)
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
     // Convert italic text (*text*)
-    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    
+    formatted = formatted.replace(/\*(.*?)\*/g, "<em>$1</em>");
+
     // Convert headers (# Header) - must be done before line break conversion
-    formatted = formatted.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-    formatted = formatted.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-    formatted = formatted.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-    
+    formatted = formatted.replace(/^### (.*$)/gm, "<h3>$1</h3>");
+    formatted = formatted.replace(/^## (.*$)/gm, "<h2>$1</h2>");
+    formatted = formatted.replace(/^# (.*$)/gm, "<h1>$1</h1>");
+
     // Convert numbered lists (1. item)
-    formatted = formatted.replace(/^(\d+)\.\s+(.*$)/gm, '<li>$2</li>');
-    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
-    
+    formatted = formatted.replace(/^(\d+)\.\s+(.*$)/gm, "<li>$2</li>");
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, "<ol>$1</ol>");
+
     // Convert bullet lists (- item or * item)
-    formatted = formatted.replace(/^[-*]\s+(.*$)/gm, '<li>$1</li>');
-    formatted = formatted.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-    
+    formatted = formatted.replace(/^[-*]\s+(.*$)/gm, "<li>$1</li>");
+    formatted = formatted.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+
     // Convert links
-    formatted = formatted.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-    
+    formatted = formatted.replace(
+      /(https?:\/\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
     // Convert line breaks last (after all other formatting)
-    formatted = formatted.replace(/\n/g, '<br>');
-    
+    formatted = formatted.replace(/\n/g, "<br>");
+
     return formatted;
   }
 
   showNewsChatTyping() {
-    const messagesContainer = document.getElementById('news-chat-messages-container');
+    const messagesContainer = document.getElementById(
+      "news-chat-messages-container"
+    );
     if (!messagesContainer) return;
 
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'news-chat-typing';
-    typingDiv.id = 'news-chat-typing';
-    
+    const typingDiv = document.createElement("div");
+    typingDiv.className = "news-chat-typing";
+    typingDiv.id = "news-chat-typing";
+
     typingDiv.innerHTML = `
       <span>AI is thinking</span>
       <div class="typing-dots">
@@ -5221,7 +5341,7 @@ class UIComponents {
   }
 
   hideNewsChatTyping() {
-    const typingDiv = document.getElementById('news-chat-typing');
+    const typingDiv = document.getElementById("news-chat-typing");
     if (typingDiv) {
       typingDiv.remove();
     }
@@ -5231,7 +5351,7 @@ class UIComponents {
     try {
       const apiService = window.apiService;
       if (!apiService) {
-        throw new Error('API service not available');
+        throw new Error("API service not available");
       }
 
       // Prepare news context
@@ -5241,7 +5361,7 @@ class UIComponents {
       const response = await apiService.sendNewsChatQuery(message, newsContext);
       return response;
     } catch (error) {
-      console.error('Error sending news query:', error);
+      console.error("Error sending news query:", error);
       throw error;
     }
   }
@@ -5250,16 +5370,19 @@ class UIComponents {
     if (!this.currentNewsArticle) return {};
 
     const clusterData = this.findClusterForArticle(this.currentNewsArticle);
-    
+
     return {
       title: this.currentNewsArticle.title,
-      summary: this.currentNewsArticle.summary || this.currentNewsArticle.unified_description || '',
-      content: this.currentNewsArticle.content || '',
+      summary:
+        this.currentNewsArticle.summary ||
+        this.currentNewsArticle.unified_description ||
+        "",
+      content: this.currentNewsArticle.content || "",
       source: this.currentNewsArticle.source,
       sources: clusterData?.sources || this.currentNewsArticle.sources || [],
       published: this.currentNewsArticle.published,
       url: this.currentNewsArticle.url,
-      cluster_data: clusterData || null
+      cluster_data: clusterData || null,
     };
   }
 }
