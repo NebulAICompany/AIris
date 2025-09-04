@@ -3305,9 +3305,9 @@ class UIComponents {
 
     // Check if we're in Q&A mode
     if (this.newsQAStarted && this.currentNewsArticle) {
-      // If in Q&A mode, revert to original news article view
+      // If in Q&A mode, reset to original article view first, then hide detail
       this.resetNewsDetailToOriginal();
-      return;
+      // Continue to hide the detail view after reset
     }
 
     // Show news grid and hide detail view
