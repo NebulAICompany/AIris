@@ -415,10 +415,12 @@ class AIrisApp {
 
         if (isStale) {
           statusElement.className = "currency-status stale";
-          statusText.textContent = "Cached";
+          statusText.textContent =
+            window.languageService?.get("cached") || "Cached";
         } else {
           statusElement.className = "currency-status live";
-          statusText.textContent = "Live";
+          statusText.textContent =
+            window.languageService?.get("live") || "Live";
         }
       }
 
@@ -435,7 +437,8 @@ class AIrisApp {
         statusElement.className = "currency-status error";
         const statusText = statusElement.querySelector(".status-text");
         if (statusText) {
-          statusText.textContent = "Error";
+          statusText.textContent =
+            window.languageService?.get("error") || "Error";
         }
       }
     }

@@ -581,7 +581,9 @@ class CurrencyService {
         if (!currencyData) return;
 
         const isOffline = currencyData.isOffline || goldData?.isOffline;
-        const status = isOffline ? "Offline" : "Live";
+        const status = isOffline
+          ? window.languageService?.get("offline") || "Offline"
+          : window.languageService?.get("live") || "Live";
         const statusClass = isOffline ? "status-offline" : "status-live";
 
         // Calculate gold price in TRY per gram
@@ -590,41 +592,45 @@ class CurrencyService {
           goldData
         );
 
-        const html = `
-        <div class="currency-item">
-          <span class="currency-label">USD/TRY:</span>
-          <span class="currency-value">${
-            currencyData.USD_TRY?.toFixed(4) || "N/A"
-          }</span>
-        </div>
-        <div class="currency-item">
-          <span class="currency-label">EUR/TRY:</span>
-          <span class="currency-value">${
-            currencyData.EUR_TRY?.toFixed(4) || "N/A"
-          }</span>
-        </div>
-        <div class="currency-item">
-          <span class="currency-label">USD/EUR:</span>
-          <span class="currency-value">${
-            currencyData.USD_EUR?.toFixed(4) || "N/A"
-          }</span>
-        </div>
-        <div class="currency-item">
-          <span class="currency-label">Gold (USD/oz):</span>
-          <span class="currency-value">$${
-            goldData?.price?.toFixed(2) || "N/A"
-          }</span>
-        </div>
-        <div class="currency-item">
-          <span class="currency-label">Gold (₺/g):</span>
-          <span class="currency-value">₺${
-            goldTRYPerGram?.price?.toFixed(2) || "N/A"
-          }</span>
-        </div>
-        <div class="currency-status ${statusClass}">${status}</div>
-      `;
+        // Update individual currency values instead of replacing entire HTML
+        const usdTryElement = document.getElementById("usd-try");
+        const eurTryElement = document.getElementById("eur-try");
+        const usdEurElement = document.getElementById("usd-eur");
+        const goldUsdElement = document.getElementById("gold-usd");
+        const goldTryElement = document.getElementById("gold-try");
+        const statusElement = document.getElementById("currency-status");
 
-        currencyTicker.innerHTML = html;
+        if (usdTryElement) {
+          usdTryElement.textContent = currencyData.USD_TRY?.toFixed(4) || "N/A";
+        }
+        if (eurTryElement) {
+          eurTryElement.textContent = currencyData.EUR_TRY?.toFixed(4) || "N/A";
+        }
+        if (usdEurElement) {
+          usdEurElement.textContent = currencyData.USD_EUR?.toFixed(4) || "N/A";
+        }
+        if (goldUsdElement) {
+          goldUsdElement.textContent = `$${
+            goldData?.price?.toFixed(2) || "N/A"
+          }`;
+        }
+        if (goldTryElement) {
+          goldTryElement.textContent = `₺${
+            goldTRYPerGram?.price?.toFixed(2) || "N/A"
+          }`;
+        }
+        if (statusElement) {
+          statusElement.className = `currency-status ${statusClass}`;
+          const statusText = statusElement.querySelector(".status-text");
+          if (statusText) {
+            statusText.textContent = status;
+          }
+        }
+
+        // Update language for the elements
+        if (window.languageService) {
+          window.languageService.updatePageTexts();
+        }
       })
       .catch((error) => {
         logger.error(
