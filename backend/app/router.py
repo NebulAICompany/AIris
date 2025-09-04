@@ -30,6 +30,7 @@ class QueryRequest(BaseModel):
     preEmbeddingProcess: str = "pdr"
     sessionId: Optional[str] = None
 
+
 class NewsChatRequest(BaseModel):
     query: str
     news_context: dict
@@ -88,10 +89,7 @@ async def handle_news_chat(request: NewsChatRequest):
     """
     Handle news-specific chat queries with news context and web search capabilities.
     """
-    global request_counter
     try:
-        request_counter += 1
-
         query = request.query
         news_context = request.news_context
         web_search_enabled = request.web_search_enabled
@@ -105,10 +103,7 @@ async def handle_news_chat(request: NewsChatRequest):
 
         # Process news chat query
         answer = await run_news_chat_orchestration(
-            query,
-            news_context,
-            web_search_enabled,
-            session_id
+            query, news_context, web_search_enabled, session_id
         )
 
         logger.info("News chat query processed successfully")
@@ -118,7 +113,7 @@ async def handle_news_chat(request: NewsChatRequest):
             "status": "success",
             "response": answer.get("response"),
             "images": answer.get("images", []),
-            "sessionId": answer.get("session_id", session_id)
+            "sessionId": answer.get("session_id", session_id),
         }
 
     except Exception as e:
@@ -641,7 +636,7 @@ async def get_finance_news(force_refresh: bool = False):
     """
     Fetch aggregated financial news from multiple Turkish sources with intelligent clustering.
     This endpoint provides Perplexity.ai-style news discovery with multi-source story detection.
-    
+
     Args:
         force_refresh: If True, fetch new articles and update database. If False, load from database.
     """
@@ -649,42 +644,59 @@ async def get_finance_news(force_refresh: bool = False):
         # Use the enhanced multi-source aggregation system
         news_response = await get_aggregated_financial_news(force_refresh=force_refresh)
 
-        logger.info(f"Successfully fetched aggregated financial news: {news_response.total_articles} total articles, {news_response.total_clusters} clusters")
+        logger.info(
+            f"Successfully fetched aggregated financial news: {news_response.total_articles} total articles, {news_response.total_clusters} clusters"
+        )
 
         # Create backward-compatible articles array for existing frontend
         # TEMPORARILY: Show only clustered articles (multi-source stories)
         all_articles = []
-        
+
         # Add ALL clustered articles (remove limit to see all multi-source stories)
-        for cluster in news_response.clustered_articles:  # Show all clusters, not just top 10
+        for (
+            cluster
+        ) in news_response.clustered_articles:  # Show all clusters, not just top 10
             # Take the first article from each cluster as representative
             if cluster.articles:
                 # CREATE A COPY to avoid modifying the original article in cluster data
                 from copy import deepcopy
+
                 representative_article = deepcopy(cluster.articles[0])
-                
+
                 # Add cluster info to the article
                 representative_article.title = cluster.unified_title
                 representative_article.summary = cluster.unified_description
 
                 # Add available images from the cluster for frontend display
-                if hasattr(cluster, 'available_images') and cluster.available_images:
+                if hasattr(cluster, "available_images") and cluster.available_images:
                     representative_article.available_images = cluster.available_images
 
                 # Use the earliest publication date from all sources in the cluster
-                representative_article.published = cluster.published_earliest if cluster.published_earliest else representative_article.published
-                
+                representative_article.published = (
+                    cluster.published_earliest
+                    if cluster.published_earliest
+                    else representative_article.published
+                )
+
                 # Show multiple sources (up to 3, then add ...)
-                sources = cluster.sources if hasattr(cluster, 'sources') else [article.source for article in cluster.articles]
-                unique_sources = list(dict.fromkeys(sources))  # Remove duplicates while preserving order
-                
+                sources = (
+                    cluster.sources
+                    if hasattr(cluster, "sources")
+                    else [article.source for article in cluster.articles]
+                )
+                unique_sources = list(
+                    dict.fromkeys(sources)
+                )  # Remove duplicates while preserving order
+
                 if len(unique_sources) <= 3:
                     representative_article.source = ", ".join(unique_sources)
                 else:
-                    representative_article.source = ", ".join(unique_sources[:3]) + "..."
-                
+                    representative_article.source = (
+                        ", ".join(unique_sources[:3]) + "..."
+                    )
+
                 all_articles.append(representative_article)
-        
+
         # TEMPORARILY: Skip single articles to focus on multi-source clustering
         # remaining_slots = 20 - len(all_articles)
         # all_articles.extend(news_response.single_articles[:remaining_slots])
@@ -720,12 +732,10 @@ async def get_finance_news_scheduler_status():
     """
     try:
         from backend.scheduler.news_scheduler import get_news_scheduler
+
         scheduler = get_news_scheduler()
-        
-        return {
-            "status": "success",
-            "scheduler": scheduler.get_status()
-        }
+
+        return {"status": "success", "scheduler": scheduler.get_status()}
     except Exception as e:
         logger.error(f"Error getting scheduler status: {str(e)}")
         raise HTTPException(
@@ -740,22 +750,20 @@ async def get_finance_news_sources():
     """
     try:
         from backend.utils.news import FINANCIAL_NEWS_SOURCES
-        
+
         sources_info = []
         for source in FINANCIAL_NEWS_SOURCES:
-            sources_info.append({
-                "name": source.name,
-                "language": source.language,
-                "active": True
-            })
-        
+            sources_info.append(
+                {"name": source.name, "language": source.language, "active": True}
+            )
+
         return {
             "status": "success",
             "total_sources": len(FINANCIAL_NEWS_SOURCES),
             "sources": sources_info,
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Error fetching news sources info: {str(e)}")
         raise HTTPException(
