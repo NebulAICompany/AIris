@@ -3305,9 +3305,9 @@ class UIComponents {
 
     // Check if we're in Q&A mode
     if (this.newsQAStarted && this.currentNewsArticle) {
-      // If in Q&A mode, revert to original news article view
+      // If in Q&A mode, reset to original article view first, then hide detail
       this.resetNewsDetailToOriginal();
-      return;
+      // Continue to hide the detail view after reset
     }
 
     // Show news grid and hide detail view
@@ -3850,8 +3850,6 @@ class UIComponents {
     statusTexts.forEach((status) => {
       if (status.textContent.includes("Loading")) {
         status.textContent = t("loading");
-      } else if (status.textContent.includes("Connected")) {
-        status.textContent = t("connected");
       } else if (status.textContent.includes("Connecting")) {
         status.textContent = t("connecting");
       }
@@ -4222,7 +4220,8 @@ class UIComponents {
     // Update status badge
     const statusBadge = document.getElementById("verification-status-badge");
     if (statusBadge) {
-      statusBadge.textContent = result.status || "Unknown";
+      statusBadge.textContent =
+        result.status || window.languageService?.get("unknown") || "Unknown";
       statusBadge.className = `status-badge ${result.status || "processing"}`;
     }
 
@@ -4268,11 +4267,15 @@ class UIComponents {
     const fraudRisk = document.getElementById("fraud-risk-level");
 
     if (detectedType) {
-      detectedType.textContent = result.verification_type || "Unknown";
+      detectedType.textContent =
+        result.verification_type ||
+        window.languageService?.get("unknown") ||
+        "Unknown";
     }
 
     if (finalStatus) {
-      finalStatus.textContent = result.status || "Unknown";
+      finalStatus.textContent =
+        result.status || window.languageService?.get("unknown") || "Unknown";
       finalStatus.className = `detail-value ${result.status}`;
     }
 
@@ -4798,7 +4801,9 @@ class UIComponents {
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--accent-success, #10b981)";
       } else {
-        uploadStatus.textContent = `❌ ${errorMessage || "Failed"}`;
+        uploadStatus.textContent = `❌ ${
+          errorMessage || window.languageService?.get("failed") || "Failed"
+        }`;
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--error-color, #ef4444)";
       }
@@ -5081,6 +5086,27 @@ class UIComponents {
     if (messagesContainer) messagesContainer.style.display = "none";
     if (messagesList) messagesList.innerHTML = "";
 
+    // Clear Q&A container and blocks
+    const qaContainer = document.getElementById("news-qa-container");
+    if (qaContainer) {
+      qaContainer.remove();
+    }
+
+    // Restore fixed positioning when Q&A container is removed
+    const chatContainer = document.getElementById("news-chat-input-container");
+    const detail = document.getElementById("news-detail");
+    const articleElement = document.querySelector(".news-detail-article");
+
+    if (chatContainer && detail) {
+      chatContainer.classList.add("news-chat-fixed");
+      detail.classList.add("news-chat-fixed-active");
+    }
+
+    // Restore padding for fixed input
+    if (articleElement) {
+      articleElement.style.paddingBottom = "";
+    }
+
     // Reset Q&A mode state
     this.newsQAStarted = false;
   }
@@ -5105,101 +5131,119 @@ class UIComponents {
     if (chatSendBtnMessages) chatSendBtnMessages.disabled = true;
 
     const isFirst = !this.newsQAStarted;
+
     // Show chat interface if this is the first message
     if (isFirst) {
       this.showNewsChatInterface();
-      // Turn the user's first query into the article title immediately
-      const titleElement = document.getElementById("news-detail-title");
-      if (titleElement) {
-        titleElement.textContent = message;
-      }
-      // Indicate that the page is now in Q&A mode
-      const contentElement = document.getElementById("news-detail-content");
-      if (contentElement) {
-        contentElement.innerHTML = "";
-      }
-      // Hide sources section in Q&A mode
-      const sourcesSection = document.querySelector(
-        ".news-detail-sources-section"
-      );
-      if (sourcesSection) {
-        sourcesSection.style.display = "none";
-      }
-      // Add a body class to trim chat UI in Q&A mode
-      const detail = document.getElementById("news-detail");
-      if (detail) detail.classList.add("news-qa-mode");
 
-      // Create a container for subsequent Q&A blocks
+      // Mark Q&A mode started so next messages append
+      this.newsQAStarted = true;
+
+      // Create a container for Q&A blocks after the original article content
       const qaContainerId = "news-qa-container";
       let qaContainer = document.getElementById(qaContainerId);
       if (!qaContainer) {
         qaContainer = document.createElement("div");
         qaContainer.id = qaContainerId;
+        qaContainer.className = "news-qa-container";
+
+        // Add a divider and header before Q&A section
+        qaContainer.innerHTML = `
+          <hr class="news-qa-divider" />
+          <div class="news-qa-header">
+            <h3>
+              <i class="fas fa-comments"></i>
+              Haberle İlgili Sorular
+            </h3>
+            <p>AI ile haber hakkında soru sorabilir ve detaylı bilgi alabilirsiniz</p>
+          </div>
+        `;
+
+        // Insert after the sources section or at the end of the article
+        const sourcesSection = document.querySelector(
+          ".news-detail-sources-section"
+        );
         const article = document.querySelector(".news-detail-article");
-        if (article) article.appendChild(qaContainer);
+
+        if (sourcesSection && article) {
+          // Insert after sources section
+          sourcesSection.parentNode.insertBefore(
+            qaContainer,
+            sourcesSection.nextSibling
+          );
+        } else if (article) {
+          // Insert at the end of article
+          article.appendChild(qaContainer);
+        }
+
+        // Remove fixed positioning from chat input when Q&A container is created
+        const chatContainer = document.getElementById(
+          "news-chat-input-container"
+        );
+        const detail = document.getElementById("news-detail");
+        const articleElement = document.querySelector(".news-detail-article");
+
+        if (chatContainer && detail) {
+          chatContainer.classList.remove("news-chat-fixed");
+          detail.classList.remove("news-chat-fixed-active");
+        }
+
+        // Remove extra padding from article when Q&A is active
+        if (articleElement) {
+          articleElement.style.paddingBottom = "0";
+        }
       }
-
-      // Mark Q&A mode started so next messages append
-      this.newsQAStarted = true;
-
-      // Update button text to "Go back"
-      this.updateNewsBackButtonText();
-    }
-
-    // Add user message to chat unless it's the first (Q&A) prompt
-    if (!isFirst) {
-      this.addNewsChatMessage("user", message);
     }
 
     // Show typing indicator
     this.showNewsChatTyping();
 
-    // Build placeholder for thinking with title for follow-ups
+    // Create Q&A block for this conversation
     let qaContentId = null;
-    if (!isFirst) {
-      const mount =
-        document.getElementById("news-qa-container") ||
-        document.querySelector(".news-detail-article");
-      if (mount) {
-        qaContentId = `news-qa-content-${Date.now()}`;
-        const block = document.createElement("section");
-        block.className = "news-qa-block";
-        block.innerHTML = `
-          <hr class="news-qa-divider" />
-          <h1 class="news-detail-title">${Utils.escapeHtml(message)}</h1>
-          <div class="news-detail-content" id="${qaContentId}"></div>
-        `;
-        mount.appendChild(block);
-        const contentEl = document.getElementById(qaContentId);
-        if (contentEl) {
-          const thinking = document.createElement("div");
-          thinking.className = "news-qa-thinking";
-          thinking.innerHTML = `
-            <span>AI is thinking</span>
-            <div class="typing-dots">
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-            </div>
-          `;
-          contentEl.appendChild(thinking);
-        }
-      }
-    } else {
-      const contentElement = document.getElementById("news-detail-content");
-      if (contentElement) {
-        const thinking = document.createElement("div");
-        thinking.className = "news-qa-thinking";
-        thinking.innerHTML = `
-          <span>AI is thinking</span>
-          <div class="typing-dots">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
+    const mount = document.getElementById("news-qa-container");
+    if (mount) {
+      qaContentId = `news-qa-content-${Date.now()}`;
+      const block = document.createElement("div");
+      block.className = "news-qa-block";
+
+      block.innerHTML = `
+        <div class="message user-message">
+          <div class="message-avatar">
+            <i class="fas fa-user"></i>
           </div>
-        `;
-        contentElement.appendChild(thinking);
-      }
+          <div class="message-content">
+            <div class="message-text">${Utils.escapeHtml(message)}</div>
+            <div class="message-time">${new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}</div>
+          </div>
+        </div>
+        <div class="message assistant-message">
+          <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div class="message-content">
+            <div class="message-text" id="${qaContentId}">
+              <div class="news-qa-thinking">
+                <span>AI yanıt hazırlıyor...</span>
+                <div class="typing-dots">
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                </div>
+              </div>
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}</div>
+          </div>
+        </div>
+      `;
+      mount.appendChild(block);
+
+      // No automatic scrolling - let user control scroll position
     }
 
     try {
@@ -5207,43 +5251,43 @@ class UIComponents {
       const response = await this.sendNewsQuery(message);
 
       if (response && response.response) {
-        if (!isFirst) {
-          this.addNewsChatMessage("assistant", response.response);
-        }
-        // Replace the entire article content with the generated answer on first query
-        if (isFirst) {
-          const contentElement = document.getElementById("news-detail-content");
-          if (contentElement) {
-            contentElement.innerHTML = `<div class="news-ai-answer">${this.formatNewsChatMessage(
-              response.response
-            )}</div>`;
-          }
-        } else if (qaContentId) {
+        // Update the Q&A block with the response
+        if (qaContentId) {
           const contentEl = document.getElementById(qaContentId);
           if (contentEl) {
-            contentEl.innerHTML = `<div class=\"news-ai-answer\">${this.formatNewsChatMessage(
-              response.response
-            )}</div>`;
+            contentEl.innerHTML = this.formatNewsChatMessage(response.response);
           }
         }
       } else {
-        this.addNewsChatMessage(
-          "error",
-          "Sorry, there was an error processing your request. Please try again."
-        );
+        // Update Q&A block with error
+        if (qaContentId) {
+          const contentEl = document.getElementById(qaContentId);
+          if (contentEl) {
+            contentEl.innerHTML = `Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.`;
+          }
+        }
       }
     } catch (error) {
       console.error("News chat error:", error);
-      this.addNewsChatMessage(
-        "error",
-        "Sorry, there was an error processing your request. Please try again."
-      );
+
+      // Update Q&A block with error
+      if (qaContentId) {
+        const contentEl = document.getElementById(qaContentId);
+        if (contentEl) {
+          contentEl.innerHTML = `Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.`;
+        }
+      }
     } finally {
       this.hideNewsChatTyping();
+
       // Remove all thinking indicators
       document
         .querySelectorAll(".news-qa-thinking")
         .forEach((el) => el.remove());
+
+      // Re-enable send buttons
+      if (chatSendBtn) chatSendBtn.disabled = false;
+      if (chatSendBtnMessages) chatSendBtnMessages.disabled = false;
     }
   }
 
@@ -5251,9 +5295,9 @@ class UIComponents {
     const inputContainer = document.getElementById("news-chat-input-container");
     const messagesContainer = document.getElementById("news-chat-messages");
 
-    // Keep input visible persistently; messages panel may be hidden in Q&A mode
+    // Keep input visible persistently; hide old messages container since we use Q&A blocks
     if (inputContainer) inputContainer.style.display = "block";
-    if (messagesContainer) messagesContainer.style.display = "block";
+    if (messagesContainer) messagesContainer.style.display = "none";
   }
 
   addNewsChatMessage(role, content) {
@@ -5263,17 +5307,34 @@ class UIComponents {
     if (!messagesContainer) return;
 
     const messageDiv = document.createElement("div");
-    messageDiv.className = `news-chat-message ${role}`;
+    messageDiv.className = `message ${role}-message`;
 
     const time = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
 
-    messageDiv.innerHTML = `
-      <div class="message-content">${this.formatNewsChatMessage(content)}</div>
-      <div class="message-time">${time}</div>
-    `;
+    if (role === "user") {
+      messageDiv.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">${this.formatNewsChatMessage(content)}</div>
+          <div class="message-time">${time}</div>
+        </div>
+      `;
+    } else if (role === "assistant") {
+      messageDiv.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">${this.formatNewsChatMessage(content)}</div>
+          <div class="message-time">${time}</div>
+        </div>
+      `;
+    }
 
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -5324,15 +5385,22 @@ class UIComponents {
     if (!messagesContainer) return;
 
     const typingDiv = document.createElement("div");
-    typingDiv.className = "news-chat-typing";
+    typingDiv.className = "message assistant-message";
     typingDiv.id = "news-chat-typing";
 
     typingDiv.innerHTML = `
-      <span>AI is thinking</span>
-      <div class="typing-dots">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <div class="message-avatar">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="message-content">
+        <div class="message-text">
+          <span>AI is thinking</span>
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
       </div>
     `;
 

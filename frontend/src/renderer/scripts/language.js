@@ -23,7 +23,6 @@ class LanguageService {
         connecting: "Connecting...",
         connected: "Connected",
         disconnected: "Disconnected",
-        live: "LIVE",
         loading: "Loading...",
 
         // Navigation
@@ -95,10 +94,11 @@ class LanguageService {
         fetchLatestNews: "Fetch Latest News",
         getLatestNews: "Get Latest News",
         autoUpdateInfo: "Auto-updates every 45 minutes",
-        
+
         // News Chat Section
         askAboutNews: "Ask about this news",
-        chatDescription: "Ask questions about this news article and get AI-powered insights",
+        chatDescription:
+          "Ask questions about this news article and get AI-powered insights",
         askQuestionPlaceholder: "Ask a question about this news...",
         followUpQuestionPlaceholder: "Ask a follow-up question...",
 
@@ -201,7 +201,6 @@ class LanguageService {
         lastUpdatedAt: "Last updated:",
         failedToUpdate: "Failed to update",
 
-
         // Interest Calculator
         calculateLoanPayments: "Calculate your loan payments and total costs",
         loanAmount: "Loan Amount",
@@ -215,7 +214,7 @@ class LanguageService {
         totalInterest: "Total Interest",
         yearlyInterestCost: "Yearly Cost",
         invalidInputs: "Please enter valid values",
-        
+
         // Analytics messages
         notAvailable: "N/A",
         unknown: "Unknown",
@@ -309,7 +308,7 @@ class LanguageService {
         yearlyInterestCost: "Yearly Cost",
         enterValidValues: "Please enter valid values",
         enterPositiveValues: "Please enter positive values",
-        
+
         // File Selection
         selectFiles: "Select Files",
         selectAll: "Select All",
@@ -321,6 +320,26 @@ class LanguageService {
         noFilesAvailable: "No files available. Upload some files first.",
         filesSelected: "files selected",
         allFilesSelected: "All files selected",
+
+        // Currency labels
+        gold: "Gold",
+        goldUsdPerOz: "Gold (USD/oz)",
+        goldTryPerGram: "Gold (₺/g)",
+        usdTry: "USD/TRY",
+        eurTry: "EUR/TRY",
+        usdEur: "USD/EUR",
+
+        // Status labels
+        cached: "Cached",
+        live: "Live",
+        error: "Error",
+        offline: "Offline",
+        processing: "Processing...",
+        unknown: "Unknown",
+        failed: "Failed",
+
+        // Navigation
+        goToChat: "Go to Chat",
       },
 
       tr: {
@@ -336,7 +355,6 @@ class LanguageService {
         connecting: "Bağlanıyor...",
         connected: "Bağlandı",
         disconnected: "Bağlantı kesildi",
-        live: "CANLI",
         loading: "Yükleniyor...",
 
         // Navigation
@@ -350,7 +368,8 @@ class LanguageService {
         settings: "Ayarlar",
 
         // Calculator Section
-        calculateLoanPayments: "Kredi ödemelerinizi ve toplam maliyetleri hesaplayın",
+        calculateLoanPayments:
+          "Kredi ödemelerinizi ve toplam maliyetleri hesaplayın",
         loanAmount: "Kredi Tutarı",
         loanTerm: "Kredi Vadesi (Ay)",
         interestRate: "Faiz Oranı (%) - Aylık Faiz",
@@ -363,7 +382,7 @@ class LanguageService {
         yearlyInterestCost: "Yıllık Maliyet",
         enterValidValues: "Lütfen geçerli değerler giriniz",
         enterPositiveValues: "Lütfen pozitif değerler giriniz",
-        
+
         // Chat Section
         aiFinancialAssistant: "AIris Finansal Asistan",
         askQuestions:
@@ -424,10 +443,11 @@ class LanguageService {
         fetchLatestNews: "Son Haberleri Getir",
         getLatestNews: "Son Haberleri Getir",
         autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
-        
+
         // News Chat Section
         askAboutNews: "Bu haber hakkında soru sor",
-        chatDescription: "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
+        chatDescription:
+          "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
         askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
         followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
@@ -532,7 +552,7 @@ class LanguageService {
 
         // Time format
         minutesAgo: "dk önce",
-        hoursAgo: "sa önce", 
+        hoursAgo: "sa önce",
         daysAgo: "gün önce",
         justNow: "Şimdi",
 
@@ -617,6 +637,26 @@ class LanguageService {
         noFilesAvailable: "Dosya mevcut değil. Önce bazı dosyalar yükleyin.",
         filesSelected: "dosya seçildi",
         allFilesSelected: "Tüm dosyalar seçildi",
+
+        // Currency labels
+        gold: "Altın",
+        goldUsdPerOz: "Altın (USD/ons)",
+        goldTryPerGram: "Altın (₺/gram)",
+        usdTry: "USD/TRY",
+        eurTry: "EUR/TRY",
+        usdEur: "USD/EUR",
+
+        // Status labels
+        cached: "Önbellekte",
+        live: "Canlı",
+        error: "Hata",
+        offline: "Çevrimdışı",
+        processing: "İşleniyor...",
+        unknown: "Bilinmeyen",
+        failed: "Başarısız",
+
+        // Navigation
+        goToChat: "Sohbete Git",
       },
     };
   }
