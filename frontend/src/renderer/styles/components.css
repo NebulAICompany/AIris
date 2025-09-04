@@ -2127,7 +2127,7 @@ body.dark-theme .progress-bar {
 }
 
 .files-header h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 8px;
   color: var(--text-primary);
@@ -2135,6 +2135,7 @@ body.dark-theme .progress-bar {
 
 .files-header p {
   color: var(--text-secondary);
+  font-size: 11px;
 }
 
 .files-grid {
@@ -2789,7 +2790,7 @@ body.dark-theme .excel-data th {
 }
 
 .settings-header h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 8px;
   color: var(--text-primary);
@@ -2797,6 +2798,7 @@ body.dark-theme .excel-data th {
 
 .settings-header p {
   color: var(--text-secondary);
+  font-size: 11px;
 }
 
 .settings-sections {
@@ -3230,7 +3232,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 }
 
 .news-header h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 8px;
@@ -3238,7 +3240,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 
 .news-header p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 11px;
   margin-bottom: 16px;
 }
 
@@ -4052,7 +4054,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 }
 
 .verification-header h2 {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 8px;
@@ -4071,7 +4073,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 
 .verification-header p {
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: 11px;
   max-width: 600px;
   margin: 0 auto;
 }
@@ -5738,7 +5740,7 @@ body.nebula-theme .web-search-button:hover {
 }
 
 .calculator-header h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-primary);
@@ -5746,7 +5748,7 @@ body.nebula-theme .web-search-button:hover {
 
 .calculator-header p {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 11px;
 }
 
 .calculator-form {
