@@ -2058,7 +2058,7 @@ class UIComponents {
           <i class="fas fa-folder-open"></i>
           <h3>${t("noDocuments")}</h3>
           <p>${t("uploadToGetStarted")}</p>
-          <button class="cta-button" data-tab="upload">${t(
+          <button class="cta-button" data-tab="chat">${t(
             "uploadFilesBtn"
           )}</button>
         </div>`;
