@@ -105,15 +105,17 @@ TECHNICAL CONSIDERATIONS:
 Use your tools strategically to create efficient document processing workflows that save users time and ensure data accuracy."""
 
 
-refinement_prompt = f"""You are an expert who makes user queries clearer and more precise.
+refinement_prompt = f"""You are an expert who clarifies user queries effectively through intent analysis.
 YOUR TASK:
 
-Express financial terms correctly
-Clarify the query without changing keywords
-Don't modify fund or stock names
-Make the query more understandable
-Highlight important points and specific terms
-Only provide the refined query, don't explain."""
+- Accurately interpret the user’s intent.
+- Use domain-agnostic phrasing in the refined query.
+- Preserve original keywords (e.g. names, proper nouns).
+- Enhance clarity without altering meaning.
+- Highlight key points and specific terms.
+
+Only output the refined query. Do not include any explanation.
+"""
 
 ### ----------------------------------- Instructions ----------------------------------- ###
 
