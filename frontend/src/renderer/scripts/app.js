@@ -71,6 +71,7 @@ class AIrisApp {
 
       this.isInitialized = true;
       logger.info("AIris App initialized successfully", "APP");
+
     } catch (error) {
       logger.error(`Failed to start app: ${error.message}`, "APP");
       this.showErrorScreen(error);
