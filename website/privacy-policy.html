@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy - AIris | Nebula Intelligence</title>
+    <meta
+      name="description"
+      content="Privacy Policy for AIris - AI-Powered Financial Document Processing by Nebula Intelligence. Learn how we protect your data and privacy."
+    />
+    <meta name="author" content="Nebula Intelligence" />
+
+    <!-- Fonts - Optimized for performance and Turkish character support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="shortcut icon" type="image/png" href="assets/logo.png" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
+
+    <link rel="stylesheet" href="styles/main.css" />
+    <style>
+      .legal-page {
+        padding: 8rem 0 4rem;
+        min-height: 100vh;
+      }
+
+      .legal-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .legal-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .legal-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(
+          135deg,
+          var(--text-primary),
+          var(--accent-primary)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .legal-header p {
+        color: var(--text-secondary);
+        font-size: 1.125rem;
+      }
+
+      .legal-section {
+        margin-bottom: 2.5rem;
+      }
+
+      .legal-section h2 {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        padding-bottom: 0.5rem;
+      }
+
+      .legal-section h3 {
+        color: var(--accent-primary);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 1.5rem 0 0.75rem;
+      }
+
+      .legal-section p {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+      }
+
+      .legal-section ul {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+      }
+
+      .legal-section li {
+        margin-bottom: 0.5rem;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--accent-primary);
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        transition: var(--transition);
+      }
+
+      .back-link:hover {
+        color: var(--accent-secondary);
+        transform: translateX(-4px);
+      }
+
+      .highlight-box {
+        background: linear-gradient(
+          135deg,
+          rgba(139, 92, 246, 0.1),
+          rgba(168, 85, 247, 0.1)
+        );
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+      }
+
+      .highlight-box h4 {
+        color: var(--accent-primary);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+
+      .highlight-box p {
+        margin-bottom: 0;
+      }
+
+      .contact-info {
+        background: linear-gradient(
+          135deg,
+          rgba(26, 11, 46, 0.6),
+          rgba(45, 27, 78, 0.4)
+        );
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: var(--border-radius-lg);
+        padding: 2rem;
+        margin-top: 3rem;
+      }
+
+      .contact-info h3 {
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+      }
+
+      .contact-info p {
+        margin-bottom: 0.5rem;
+      }
+
+      .contact-info a {
+        color: var(--accent-primary);
+        text-decoration: none;
+      }
+
+      .contact-info a:hover {
+        color: var(--accent-secondary);
+      }
+    </style>
+  </head>
+  <body class="nebula-theme">
+    <!-- Cosmic Background Layers -->
+    <div class="cosmic-background"></div>
+    <div class="star-field"></div>
+    <div class="nebula-overlay"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+      <div class="nav-container">
+        <div class="nav-brand" onclick="scrollToHome()">
+          <img src="assets/logo.png" alt="AIris Logo" class="nav-logo" />
+          <span class="brand-text">AIris</span>
+        </div>
+        <div class="nav-menu" id="nav-menu">
+          <a href="index.html" class="nav-link" data-translate="nav.home"
+            >Home</a
+          >
+          <a
+            href="index.html#features"
+            class="nav-link"
+            data-translate="nav.features"
+            >Features</a
+          >
+          <a href="index.html#demo" class="nav-link" data-translate="nav.demo"
+            >Demo</a
+          >
+          <a
+            href="index.html#screenshots"
+            class="nav-link"
+            data-translate="nav.gallery"
+            >Gallery</a
+          >
+          <a
+            href="index.html#contact"
+            class="nav-link"
+            data-translate="nav.contact"
+            >Contact</a
+          >
+        </div>
+        <div class="nav-actions">
+          <button
+            class="language-switcher"
+            id="language-switcher"
+            aria-label="Switch language"
+          >
+            Türkçe
+          </button>
+          <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Legal Page Content -->
+    <section class="legal-page">
+      <div class="legal-content">
+        <a href="index.html" class="back-link">
+          <i class="fas fa-arrow-left"></i>
+          <span data-translate="legal.backToHome">Back to Home</span>
+        </a>
+
+        <div class="legal-header">
+          <h1 data-translate="legal.privacyPolicy">Privacy Policy</h1>
+          <p data-translate="legal.lastUpdated">
+            Last updated: September 1, 2025
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section1.title">1. Introduction</h2>
+          <p data-translate="legal.privacy.section1.para1">
+            Nebula Intelligence ("we," "our," or "us") operates the AIris
+            website and desktop application. This Privacy Policy explains how we
+            collect, use, disclose, and safeguard your information when you
+            visit our website or use our AIris application.
+          </p>
+          <p data-translate="legal.privacy.section1.para2">
+            Please read this Privacy Policy carefully. If you do not agree with
+            the terms of this Privacy Policy, please do not access the site or
+            use our services.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section2.title">
+            2. Information We Collect
+          </h2>
+
+          <h3 data-translate="legal.privacy.section2.subsection1.title">
+            2.1 Website Usage Information
+          </h3>
+          <p data-translate="legal.privacy.section2.subsection1.text">
+            When you visit our website, we may collect:
+          </p>
+          <ul>
+            <li data-translate="legal.privacy.section2.subsection1.list1">
+              IP address and browser information
+            </li>
+            <li data-translate="legal.privacy.section2.subsection1.list2">
+              Pages visited and time spent on our site
+            </li>
+            <li data-translate="legal.privacy.section2.subsection1.list3">
+              Referring website information
+            </li>
+            <li data-translate="legal.privacy.section2.subsection1.list4">
+              Device and operating system information
+            </li>
+          </ul>
+
+          <h3 data-translate="legal.privacy.section2.subsection2.title">
+            2.2 Contact Information
+          </h3>
+          <p data-translate="legal.privacy.section2.subsection2.text">
+            If you contact us through our website, we may collect:
+          </p>
+          <ul>
+            <li data-translate="legal.privacy.section2.subsection2.list1">
+              Name and email address
+            </li>
+            <li data-translate="legal.privacy.section2.subsection2.list2">
+              Company information (if provided)
+            </li>
+            <li data-translate="legal.privacy.section2.subsection2.list3">
+              Message content
+            </li>
+          </ul>
+
+          <h3 data-translate="legal.privacy.section2.subsection3.title">
+            2.3 Application Data
+          </h3>
+          <p data-translate="legal.privacy.section2.subsection3.text">
+            <strong>Important:</strong> AIris is designed with privacy-first
+            principles. The application processes your financial documents
+            locally on your device. We do not collect, store, or transmit your
+            financial data or documents to our servers.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section3.title">
+            3. How We Use Your Information
+          </h2>
+          <p data-translate="legal.privacy.section3.text">
+            We use the information we collect to:
+          </p>
+          <ul>
+            <li data-translate="legal.privacy.section3.list1">
+              Provide and maintain our website and services
+            </li>
+            <li data-translate="legal.privacy.section3.list2">
+              Respond to your inquiries and provide customer support
+            </li>
+            <li data-translate="legal.privacy.section3.list3">
+              Improve our website and application
+            </li>
+            <li data-translate="legal.privacy.section3.list4">
+              Send you updates about our services (with your consent)
+            </li>
+            <li data-translate="legal.privacy.section3.list5">
+              Comply with legal obligations
+            </li>
+          </ul>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section4.title">
+            4. Data Security and Privacy
+          </h2>
+
+          <div class="highlight-box">
+            <h4 data-translate="legal.privacy.section4.highlightTitle">
+              🔒 Local Processing Guarantee
+            </h4>
+            <p data-translate="legal.privacy.section4.highlightText">
+              AIris processes all financial documents locally on your device.
+              Your sensitive financial data never leaves your computer and is
+              never transmitted to our servers or third parties.
+            </p>
+          </div>
+
+          <h3 data-translate="legal.privacy.section4.subsection1.title">
+            4.1 Security Measures
+          </h3>
+          <p data-translate="legal.privacy.section4.subsection1.text">
+            We implement appropriate security measures to protect your
+            information:
+          </p>
+          <ul>
+            <li data-translate="legal.privacy.section4.subsection1.list1">
+              End-to-end encryption for any data transmission
+            </li>
+            <li data-translate="legal.privacy.section4.subsection1.list2">
+              Secure data storage practices
+            </li>
+            <li data-translate="legal.privacy.section4.subsection1.list3">
+              Regular security audits and updates
+            </li>
+            <li data-translate="legal.privacy.section4.subsection1.list4">
+              Access controls and authentication
+            </li>
+          </ul>
+
+          <h3 data-translate="legal.privacy.section4.subsection2.title">
+            4.2 Data Retention
+          </h3>
+          <p data-translate="legal.privacy.section4.subsection2.text">
+            We retain website usage data for analytical purposes for up to 24
+            months. Contact information is retained only as long as necessary to
+            respond to your inquiry or provide ongoing support.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section5.title">
+            5. Cookies and Tracking
+          </h2>
+          <p data-translate="legal.privacy.section5.para1">
+            Our website may use cookies and similar tracking technologies to
+            enhance your browsing experience. You can control cookie settings
+            through your browser preferences.
+          </p>
+          <p data-translate="legal.privacy.section5.para2">
+            We do not use cookies for advertising or tracking across other
+            websites.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section6.title">
+            6. Third-Party Services
+          </h2>
+          <p data-translate="legal.privacy.section6.text">
+            We may use third-party services for website analytics and
+            functionality. These services have their own privacy policies and
+            data practices. We do not share your personal information with third
+            parties except as described in this policy.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section7.title">7. Your Rights</h2>
+          <p data-translate="legal.privacy.section7.text">
+            Depending on your location, you may have the following rights:
+          </p>
+          <ul>
+            <li data-translate="legal.privacy.section7.list1">
+              Access to your personal information
+            </li>
+            <li data-translate="legal.privacy.section7.list2">
+              Correction of inaccurate information
+            </li>
+            <li data-translate="legal.privacy.section7.list3">
+              Deletion of your personal information
+            </li>
+            <li data-translate="legal.privacy.section7.list4">
+              Data portability
+            </li>
+            <li data-translate="legal.privacy.section7.list5">
+              Objection to processing
+            </li>
+            <li data-translate="legal.privacy.section7.list6">
+              Withdrawal of consent
+            </li>
+          </ul>
+          <p data-translate="legal.privacy.section7.note">
+            To exercise these rights, please contact us using the information
+            provided below.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section8.title">
+            8. Children's Privacy
+          </h2>
+          <p data-translate="legal.privacy.section8.text">
+            Our services are not intended for children under 13 years of age. We
+            do not knowingly collect personal information from children under
+            13. If you are a parent or guardian and believe your child has
+            provided us with personal information, please contact us.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section9.title">
+            9. International Data Transfers
+          </h2>
+          <p data-translate="legal.privacy.section9.text">
+            If you are accessing our services from outside the United States,
+            please be aware that your information may be transferred to, stored,
+            and processed in the United States where our servers are located.
+          </p>
+        </div>
+
+        <div class="legal-section">
+          <h2 data-translate="legal.privacy.section10.title">
+            10. Changes to This Privacy Policy
+          </h2>
+          <p data-translate="legal.privacy.section10.para1">
+            We may update this Privacy Policy from time to time. We will notify
+            you of any changes by posting the new Privacy Policy on this page
+            and updating the "Last updated" date.
+          </p>
+          <p data-translate="legal.privacy.section10.para2">
+            You are advised to review this Privacy Policy periodically for any
+            changes.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <img src="assets/logo.png" alt="AIris Logo" class="footer-logo" />
+            <div class="footer-brand-content">
+              <h3>AIris</h3>
+              <p data-translate="footer.tagline">
+                AI-Powered Financial Document Processing
+              </p>
+            </div>
+          </div>
+
+          <div class="footer-links">
+            <div class="footer-column">
+              <h4 data-translate="footer.product">Product</h4>
+              <a href="index.html#features" data-translate="nav.features"
+                >Features</a
+              >
+              <a href="index.html#demo" data-translate="nav.demo">Demo</a>
+              <a href="index.html#contact" data-translate="nav.contact"
+                >Contact</a
+              >
+            </div>
+            <div class="footer-column">
+              <h4 data-translate="footer.legal">Legal</h4>
+              <a
+                href="privacy-policy.html"
+                data-translate="footer.privacyPolicy"
+                >Privacy Policy</a
+              >
+              <a
+                href="terms-of-service.html"
+                data-translate="footer.termsOfService"
+                >Terms of Service</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div class="footer-info">
+            <p data-translate="footer.copyright">
+              &copy; NebulAI Intelligence. All rights reserved.
+            </p>
+            <a href="mailto:nebulaicompany@gmail.com" class="footer-email">
+              <i class="fas fa-envelope"></i>
+              nebulaicompany@gmail.com
+            </a>
+          </div>
+          <div class="social-links">
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="LinkedIn"
+              ><i class="fab fa-linkedin"></i
+            ></a>
+            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="scripts/language.js"></script>
+    <script src="scripts/main.js"></script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent
+from backend.core.agents import create_rag_agent, create_news_chat_agent
 from backend.retrieval.retriever import (
     retrieve_top_k,
     retrieve_with_keyword_search,
@@ -309,3 +309,117 @@ async def run_orchestration(
         "charts": charts,
         "generatedFiles": generated_files,
     }
+
+
+async def run_news_chat_orchestration(
+    query: str,
+    news_context: dict,
+    web_search_enabled: bool,
+    session_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Specialized orchestration for news chat queries with news context and web search.
+    """
+    logger.info(f"📰 News Chat Orchestrator started:")
+    logger.info(f"   - Query: {query}")
+    logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
+    logger.info(f"   - Web Search Enabled: {web_search_enabled}")
+    logger.info(f"   - Session ID: {session_id}")
+
+    # Handle chat history and session management
+    if session_id:
+        # Add user message to chat history
+        chat_history_manager.add_message(session_id, MessageRole.USER, query)
+        
+        # Get conversation context
+        conversation_context = chat_history_manager.get_conversation_context(
+            session_id, max_messages=10
+        )
+        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
+        
+        # Reduce history if too long
+        session = chat_history_manager.get_session(session_id)
+        if session and len(session.messages) > 30:
+            logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
+            chat_history_manager.reduce_history(session, target_messages=20)
+    else:
+        conversation_context = []
+        logger.debug(f"   - No session ID provided, processing as standalone query")
+
+    # Preprocess query
+    preprocessed_query, lang = preprocess_query(query)
+    logger.info(f"   - Preprocessed Query: {preprocessed_query}")
+
+    # Create news context string
+    news_context_str = format_news_context(news_context)
+    logger.debug(f"   - News Context: {news_context_str}")
+
+    # Create specialized news agent
+    agent = create_news_chat_agent(
+        news_context=news_context_str,
+        web_search_enabled=web_search_enabled,
+        query=preprocessed_query,
+        conversation_history=conversation_context,
+    )
+
+    # Generate answer
+    answer = await generate_answer(prompt=preprocessed_query, agent=agent)
+    logger.debug(f"🧠 News Chat Answer: {answer}")
+
+    # Get images
+    images = get_image_datas()
+
+    # Add assistant response to chat history
+    if session_id:
+        metadata = {"images": images} if images else None
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, answer, metadata
+        )
+
+    return {
+        "response": answer,
+        "images": images,
+        "session_id": session_id
+    }
+
+
+def format_news_context(news_context: dict) -> str:
+    """
+    Format news context into a structured string for the agent.
+    """
+    context_parts = []
+    
+    # Basic news information
+    if news_context.get('title'):
+        context_parts.append(f"News Title: {news_context['title']}")
+    
+    if news_context.get('summary'):
+        context_parts.append(f"News Summary: {news_context['summary']}")
+    
+    if news_context.get('content'):
+        context_parts.append(f"News Content: {news_context['content']}")
+    
+    if news_context.get('source'):
+        context_parts.append(f"News Source: {news_context['source']}")
+    
+    if news_context.get('sources') and isinstance(news_context['sources'], list):
+        sources_str = ", ".join(news_context['sources'])
+        context_parts.append(f"News Sources: {sources_str}")
+    
+    if news_context.get('published'):
+        context_parts.append(f"Published: {news_context['published']}")
+    
+    if news_context.get('url'):
+        context_parts.append(f"News URL: {news_context['url']}")
+    
+    # Cluster data if available
+    if news_context.get('cluster_data'):
+        cluster = news_context['cluster_data']
+        if cluster.get('unified_title'):
+            context_parts.append(f"Cluster Title: {cluster['unified_title']}")
+        if cluster.get('unified_description'):
+            context_parts.append(f"Cluster Description: {cluster['unified_description']}")
+        if cluster.get('articles') and len(cluster['articles']) > 1:
+            context_parts.append(f"Related Articles: {len(cluster['articles'])} articles in this cluster")
+    
+    return "\n\n".join(context_parts)

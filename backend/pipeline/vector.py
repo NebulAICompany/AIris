@@ -3,16 +3,15 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-
-from backend.security.pii import mask_text
-from typing import List
-import time
-import asyncio
-from enum import Enum
 from backend.retrieval.autocontext import apply_autocontext
 from backend.retrieval.keyword_search import get_keyword_search
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
+from backend.security.pii import mask_text
+from typing import List
+from enum import Enum
+import time
+import asyncio
 
 logger = get_logger("VECTOR_PIPELINE")
 
@@ -35,8 +34,8 @@ class VectorStorePipeline:
     ):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         self.text_splitter = TokenTextSplitter(
-            chunk_size=1024,
-            chunk_overlap=150,
+            chunk_size=768, #middle 512 and 1024 to prevent too large chunks
+            chunk_overlap=115, # 15% of chunk size
             encoding_name="cl100k_base",  # OpenAI Embedding modellerini kapsıyor
         )
         self.pre_embedding_process = pre_embedding_process
@@ -48,7 +47,7 @@ class VectorStorePipeline:
         Create parent-child documents 
         """
         parent_child_docs = []
-        recursive_text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
+        recursive_text_splitter = RecursiveCharacterTextSplitter(chunk_size=350, chunk_overlap=50)
         for doc in original_docs:
             parent_child_docs.append(doc)
             chunks = recursive_text_splitter.split_text(doc.page_content)

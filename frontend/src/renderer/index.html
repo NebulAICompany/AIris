@@ -33,24 +33,32 @@
           <div class="header-center">
             <div class="currency-ticker" id="currency-ticker">
               <div class="currency-item">
-                <span class="currency-label">USD/TRY</span>
+                <span class="currency-label" data-i18n="usdTry">USD/TRY</span>
                 <span class="currency-value" id="usd-try">--</span>
               </div>
               <div class="currency-item">
-                <span class="currency-label">EUR/TRY</span>
+                <span class="currency-label" data-i18n="eurTry">EUR/TRY</span>
                 <span class="currency-value" id="eur-try">--</span>
               </div>
               <div class="currency-item">
-                <span class="currency-label">USD/EUR</span>
+                <span class="currency-label" data-i18n="usdEur">USD/EUR</span>
                 <span class="currency-value" id="usd-eur">--</span>
               </div>
               <div class="currency-item">
-                <span class="currency-label">Gold</span>
-                <span class="currency-value" id="gold-price">--</span>
+                <span class="currency-label" data-i18n="goldUsdPerOz"
+                  >Gold (USD/oz)</span
+                >
+                <span class="currency-value" id="gold-usd">--</span>
+              </div>
+              <div class="currency-item">
+                <span class="currency-label" data-i18n="goldTryPerGram"
+                  >Gold (₺/g)</span
+                >
+                <span class="currency-value" id="gold-try">--</span>
               </div>
               <div class="currency-status" id="currency-status">
                 <i class="fas fa-circle"></i>
-                <span class="status-text" data-i18n="loading">Loading...</span>
+                <span class="status-text">YÜKLENİYOR...</span>
               </div>
             </div>
           </div>
@@ -63,10 +71,6 @@
               >
                 <i class="fas fa-moon"></i>
               </button>
-              <div class="connection-status" id="connection-status">
-                <div class="status-indicator offline"></div>
-                <span data-i18n="connecting">Connecting...</span>
-              </div>
             </div>
           </div>
 
@@ -82,33 +86,54 @@
         <!-- Sidebar -->
         <aside class="sidebar">
           <nav class="sidebar-nav">
-            <button class="nav-item active" data-tab="chat">
+            <button class="nav-item active" data-tab="chat" data-tooltip="Chat">
               <i class="fas fa-comments"></i>
               <span data-i18n="chat">Chat</span>
             </button>
-            <button class="nav-item" data-tab="files">
+            <button class="nav-item" data-tab="files" data-tooltip="My Files">
               <i class="fas fa-file-alt"></i>
               <span data-i18n="myFiles">My Files</span>
             </button>
-            <button class="nav-item" data-tab="created-documents">
+            <button
+              class="nav-item"
+              data-tab="created-documents"
+              data-tooltip="Created Documents"
+            >
               <i class="fas fa-file-invoice"></i>
               <span data-i18n="createdDocuments">Created Documents</span>
             </button>
-            <button class="nav-item" data-tab="verification">
+            <button
+              class="nav-item"
+              data-tab="verification"
+              data-tooltip="Document Verification"
+            >
               <i class="fas fa-shield-alt"></i>
               <span data-i18n="documentVerification"
                 >Document Verification</span
               >
             </button>
-            <button class="nav-item" data-tab="news">
+            <button
+              class="nav-item"
+              data-tab="calculator"
+              data-tooltip="Interest Calculator"
+            >
+              <i class="fas fa-calculator"></i>
+              <span data-i18n="interestCalculator">Interest Calculator</span>
+            </button>
+            <button
+              class="nav-item"
+              data-tab="news"
+              data-tooltip="Finance News"
+            >
               <i class="fas fa-newspaper"></i>
               <span data-i18n="financeNews">Finance News</span>
             </button>
-            <button class="nav-item" data-tab="analytics">
-              <i class="fas fa-chart-bar"></i>
-              <span data-i18n="analytics">Analytics</span>
-            </button>
-            <button class="nav-item" data-tab="settings">
+
+            <button
+              class="nav-item"
+              data-tab="settings"
+              data-tooltip="Settings"
+            >
               <i class="fas fa-cog"></i>
               <span data-i18n="settings">Settings</span>
             </button>
@@ -496,7 +521,10 @@
                 <div class="verification-results-header">
                   <h3 data-i18n="verificationResults">Verification Results</h3>
                   <div class="verification-status" id="verification-status">
-                    <span class="status-badge" id="verification-status-badge"
+                    <span
+                      class="status-badge"
+                      id="verification-status-badge"
+                      data-i18n="processing"
                       >Processing...</span
                     >
                   </div>
@@ -572,6 +600,127 @@
             </div>
           </div>
 
+          <!-- Interest Calculator Tab -->
+          <div id="calculator-tab" class="tab-content">
+            <div class="calculator-container">
+              <div class="calculator-header">
+                <h2 data-i18n="interestCalculator">Interest Calculator</h2>
+                <p data-i18n="calculateLoanPayments">
+                  Calculate your loan payments and total costs
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="loan-amount" data-i18n="loanAmount"
+                        >Kredi Tutarı</label
+                      >
+                      <input
+                        type="number"
+                        id="loan-amount"
+                        class="form-input"
+                        placeholder="1000000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="loan-term" data-i18n="loanTerm"
+                        >Kredi Vadesi (Ay)</label
+                      >
+                      <input
+                        type="number"
+                        id="loan-term"
+                        class="form-input"
+                        placeholder="120"
+                        min="1"
+                        max="360"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="interest-rate" data-i18n="interestRate"
+                        >Faiz Oranı (%) - Aylık Faiz</label
+                      >
+                      <input
+                        type="number"
+                        id="interest-rate"
+                        class="form-input"
+                        placeholder="2.7"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="reset-calc-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="calculator-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="calculationResults">Hesaplama Sonuçları</h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="monthlyPayment">
+                      Aylık Ödeme
+                    </div>
+                    <div class="result-value" id="monthly-payment">
+                      281.509,04 TL
+                    </div>
+                  </div>
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="totalPayment">
+                      Toplam Ödeme
+                    </div>
+                    <div class="result-value" id="total-payment">
+                      33.781.084,80 TL
+                    </div>
+                  </div>
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="totalInterest">
+                      Toplam Faiz
+                    </div>
+                    <div class="result-value" id="total-interest">
+                      23.781.084,80 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Finance News Tab -->
           <div id="news-tab" class="tab-content">
             <div class="news-container">
@@ -581,10 +730,18 @@
                   Latest financial news and market updates
                 </p>
                 <div class="news-controls">
-                  <button id="refresh-news" class="btn btn-secondary">
-                    <i class="fas fa-sync-alt"></i>
-                    <span data-i18n="refresh">Refresh</span>
-                  </button>
+                  <div class="news-refresh-group">
+                    <button id="refresh-news" class="btn btn-primary">
+                      <i class="fas fa-sync-alt"></i>
+                      <span data-i18n="getLatestNews">Get Latest News</span>
+                    </button>
+                    <div class="news-refresh-hint">
+                      <i class="fas fa-info-circle"></i>
+                      <span data-i18n="autoUpdateInfo"
+                        >Auto-updates every 45 minutes</span
+                      >
+                    </div>
+                  </div>
                   <div class="news-status">
                     <span id="news-last-updated" data-i18n="loading"
                       >Loading...</span
@@ -599,75 +756,103 @@
                   <p data-i18n="loadingNews">Loading latest finance news...</p>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Analytics Tab -->
-          <div id="analytics-tab" class="tab-content">
-            <div class="analytics-container">
-              <div class="analytics-header">
-                <h2 data-i18n="systemAnalytics">System Analytics</h2>
-                <p data-i18n="monitorPerformance">
-                  Monitor system performance and usage statistics
-                </p>
-              </div>
-
-              <div class="analytics-grid">
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="apiRequests">API Requests</h3>
-                    <i class="fas fa-exchange-alt"></i>
+              <!-- News Detail View -->
+              <div class="news-detail" id="news-detail" style="display: none">
+                <div class="news-detail-header">
+                  <button
+                    class="btn btn-secondary news-detail-back"
+                    id="news-detail-back"
+                  >
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-i18n="backToNews">Back to News</span>
+                  </button>
+                  <div class="news-detail-meta">
+                    <span
+                      class="news-detail-sources"
+                      id="news-detail-sources"
+                    ></span>
+                    <span class="news-detail-time" id="news-detail-time"></span>
                   </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="api-requests">-</div>
-                    <div class="metric-label" data-i18n="totalRequests">
-                      Total Requests
+                </div>
+
+                <article class="news-detail-article">
+                  <h1 class="news-detail-title" id="news-detail-title"></h1>
+
+                  <div class="news-detail-content" id="news-detail-content">
+                    <!-- AI-generated comprehensive content with images will be inserted here -->
+                  </div>
+
+                  <div class="news-detail-sources-section">
+                    <h3 data-i18n="sourcesTitle">Sources</h3>
+                    <div class="news-sources-list" id="news-sources-list">
+                      <!-- Source links will be inserted here -->
                     </div>
                   </div>
-                </div>
+                </article>
 
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="responseTime">Response Time</h3>
-                    <i class="fas fa-clock"></i>
+                <!-- News Chat Section -->
+                <div class="news-chat-section" id="news-chat-section">
+                  <div class="news-chat-header">
+                    <h3 data-i18n="askAboutNews">Ask about this news</h3>
+                    <p data-i18n="chatDescription">
+                      Ask questions about this news article and get AI-powered
+                      insights
+                    </p>
                   </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="response-time">-</div>
-                    <div class="metric-label" data-i18n="average">Average</div>
-                  </div>
-                </div>
 
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="documents">Documents</h3>
-                    <i class="fas fa-file-alt"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="document-count">-</div>
-                    <div class="metric-label" data-i18n="processed">
-                      Processed
+                  <!-- Chat Input (Initially visible) -->
+                  <div
+                    class="news-chat-input-container"
+                    id="news-chat-input-container"
+                  >
+                    <div class="news-chat-input-wrapper">
+                      <input
+                        type="text"
+                        id="news-chat-input"
+                        class="news-chat-input"
+                        placeholder="Ask a question about this news..."
+                        data-i18n-placeholder="askQuestionPlaceholder"
+                      />
+                      <button
+                        id="news-chat-send"
+                        class="news-chat-send-btn"
+                        disabled
+                      >
+                        <i class="fas fa-paper-plane"></i>
+                      </button>
                     </div>
                   </div>
-                </div>
 
-                <div class="analytics-card">
-                  <div class="card-header">
-                    <h3 data-i18n="systemHealth">System Health</h3>
-                    <i class="fas fa-heartbeat"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="metric-value" id="system-health">-</div>
-                    <div class="metric-label" data-i18n="status">Status</div>
-                  </div>
-                </div>
-              </div>
+                  <!-- Chat Messages (Initially hidden) -->
+                  <div
+                    class="news-chat-messages"
+                    id="news-chat-messages"
+                    style="display: none"
+                  >
+                    <div
+                      class="news-chat-messages-container"
+                      id="news-chat-messages-container"
+                    >
+                      <!-- Chat messages will be inserted here -->
+                    </div>
 
-              <!-- Recent Activity Section -->
-              <div class="recent-activity-section">
-                <h3 data-i18n="recentActivity">Recent Activity</h3>
-                <div class="activity-list" id="recent-activity">
-                  <div class="no-activity" data-i18n="loadingActivity">
-                    Loading activity...
+                    <div class="news-chat-input-wrapper">
+                      <input
+                        type="text"
+                        id="news-chat-input-messages"
+                        class="news-chat-input"
+                        placeholder="Ask a follow-up question..."
+                        data-i18n-placeholder="followUpQuestionPlaceholder"
+                      />
+                      <button
+                        id="news-chat-send-messages"
+                        class="news-chat-send-btn"
+                        disabled
+                      >
+                        <i class="fas fa-paper-plane"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
