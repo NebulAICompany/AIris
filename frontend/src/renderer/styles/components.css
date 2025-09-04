@@ -3798,8 +3798,10 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 
 .news-chat-input-container {
   transition: var(--transition);
-  position: sticky;
-  bottom: 0;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: var(--sidebar-collapsed-width) !important;
+  right: 0 !important;
   z-index: 5;
   background: var(--bg-primary); /* Ana içerik ile aynı arka plan */
   padding: 12px 24px;
@@ -3835,10 +3837,28 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   left: var(--sidebar-collapsed-width);
 }
 
+/* Adjust news chat input when sidebar is expanded or hovered */
+.sidebar.expanded ~ .content-area .news-chat-input-container,
+.sidebar:hover ~ .content-area .news-chat-input-container {
+  left: var(--sidebar-width) !important;
+}
+
+/* Ensure proper positioning when sidebar is collapsed */
+.sidebar.collapsed ~ .content-area .news-chat-input-container {
+  left: var(--sidebar-collapsed-width) !important;
+}
+
+/* Add padding to news content to prevent overlap with fixed input */
+.news-detail-article {
+  padding-bottom: 80px; /* Space for fixed input */
+}
+
 /* Responsive adjustments for news chat input */
 @media (max-width: 768px) {
   .news-chat-input-container {
     padding: 8px 16px;
+    left: 0 !important; /* Full width on mobile */
+    right: 0 !important; /* Full width on mobile */
   }
 
   .news-chat-fixed {
