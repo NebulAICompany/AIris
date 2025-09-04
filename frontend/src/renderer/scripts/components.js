@@ -5207,31 +5207,37 @@ class UIComponents {
       block.className = "news-qa-block";
 
       block.innerHTML = `
-        <div class="qa-question">
-          <div>
-            <div class="qa-user-avatar">
-              <i class="fas fa-user"></i>
-            </div>
-            <strong>Soru:</strong>
+        <div class="message user-message">
+          <div class="message-avatar">
+            <i class="fas fa-user"></i>
           </div>
-          <div>${Utils.escapeHtml(message)}</div>
+          <div class="message-content">
+            <div class="message-text">${Utils.escapeHtml(message)}</div>
+            <div class="message-time">${new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}</div>
+          </div>
         </div>
-        <div class="qa-answer">
-          <div>
-            <div class="qa-ai-avatar">
-              <i class="fas fa-robot"></i>
-            </div>
-            <strong>AI Yanıtı:</strong>
+        <div class="message assistant-message">
+          <div class="message-avatar">
+            <i class="fas fa-robot"></i>
           </div>
-          <div class="news-detail-content" id="${qaContentId}">
-            <div class="news-qa-thinking">
-              <span>AI yanıt hazırlıyor...</span>
-              <div class="typing-dots">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
+          <div class="message-content">
+            <div class="message-text" id="${qaContentId}">
+              <div class="news-qa-thinking">
+                <span>AI yanıt hazırlıyor...</span>
+                <div class="typing-dots">
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                </div>
               </div>
             </div>
+            <div class="message-time">${new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}</div>
           </div>
         </div>
       `;
@@ -5249,9 +5255,7 @@ class UIComponents {
         if (qaContentId) {
           const contentEl = document.getElementById(qaContentId);
           if (contentEl) {
-            contentEl.innerHTML = `<div class="news-ai-answer">${this.formatNewsChatMessage(
-              response.response
-            )}</div>`;
+            contentEl.innerHTML = this.formatNewsChatMessage(response.response);
           }
         }
       } else {
@@ -5259,7 +5263,7 @@ class UIComponents {
         if (qaContentId) {
           const contentEl = document.getElementById(qaContentId);
           if (contentEl) {
-            contentEl.innerHTML = `<div class="news-ai-error">Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.</div>`;
+            contentEl.innerHTML = `Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.`;
           }
         }
       }
@@ -5270,7 +5274,7 @@ class UIComponents {
       if (qaContentId) {
         const contentEl = document.getElementById(qaContentId);
         if (contentEl) {
-          contentEl.innerHTML = `<div class="news-ai-error">Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.</div>`;
+          contentEl.innerHTML = `Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.`;
         }
       }
     } finally {
@@ -5303,17 +5307,34 @@ class UIComponents {
     if (!messagesContainer) return;
 
     const messageDiv = document.createElement("div");
-    messageDiv.className = `news-chat-message ${role}`;
+    messageDiv.className = `message ${role}-message`;
 
     const time = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
 
-    messageDiv.innerHTML = `
-      <div class="message-content">${this.formatNewsChatMessage(content)}</div>
-      <div class="message-time">${time}</div>
-    `;
+    if (role === "user") {
+      messageDiv.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">${this.formatNewsChatMessage(content)}</div>
+          <div class="message-time">${time}</div>
+        </div>
+      `;
+    } else if (role === "assistant") {
+      messageDiv.innerHTML = `
+        <div class="message-avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">${this.formatNewsChatMessage(content)}</div>
+          <div class="message-time">${time}</div>
+        </div>
+      `;
+    }
 
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -5364,15 +5385,22 @@ class UIComponents {
     if (!messagesContainer) return;
 
     const typingDiv = document.createElement("div");
-    typingDiv.className = "news-chat-typing";
+    typingDiv.className = "message assistant-message";
     typingDiv.id = "news-chat-typing";
 
     typingDiv.innerHTML = `
-      <span>AI is thinking</span>
-      <div class="typing-dots">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+      <div class="message-avatar">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="message-content">
+        <div class="message-text">
+          <span>AI is thinking</span>
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
       </div>
     `;
 

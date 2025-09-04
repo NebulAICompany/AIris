@@ -3932,62 +3932,16 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   max-height: 400px;
   overflow-y: auto;
   margin-bottom: 16px;
-  padding: 16px;
+  padding: 16px 24px;
   background-color: var(--bg-primary);
   border-radius: var(--border-radius);
   border: 1px solid var(--border-color);
 }
 
-.news-chat-message {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border-radius: var(--border-radius);
-  max-width: 85%;
-  word-wrap: break-word;
-}
-
-.news-chat-message.user {
-  background-color: var(--accent-primary);
-  color: white;
-  margin-left: auto;
-  border-bottom-right-radius: 4px;
-}
-
-.news-chat-message.assistant {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-bottom-left-radius: 4px;
-}
-
-.news-chat-message.error {
-  background-color: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  margin: 0 auto;
-}
-
-.news-chat-message .message-time {
-  font-size: 11px;
-  opacity: 0.7;
-  margin-top: 4px;
-}
-
-.news-chat-typing {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  max-width: 85%;
-  border-bottom-left-radius: 4px;
-}
-
 .news-chat-typing .typing-dots {
   display: flex;
   gap: 4px;
+  margin-left: 8px;
 }
 
 .news-chat-typing .typing-dot {
@@ -5926,116 +5880,20 @@ body.nebula-theme .web-search-button:hover {
 }
 
 .news-qa-block {
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  background: var(--bg-secondary);
-  border-radius: 12px;
-  border-left: 4px solid #667eea;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  animation: slideInFromBottom 0.4s ease-out;
+  margin-bottom: 16px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: none;
 }
 
-[data-theme="dark"] .news-qa-block {
-  background: rgba(31, 41, 55, 0.8);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.news-qa-block .message {
+  margin-bottom: 16px;
 }
 
-.news-qa-block:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-[data-theme="dark"] .news-qa-block:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.qa-question {
-  margin-bottom: 1rem;
-}
-
-.qa-question .qa-user-avatar,
-.qa-answer .qa-ai-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.75rem;
-  flex-shrink: 0;
-}
-
-.qa-question .qa-user-avatar {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-.qa-answer .qa-ai-avatar {
-  background: linear-gradient(135deg, #48bb78, #38a169);
-}
-
-.qa-question .qa-user-avatar i,
-.qa-answer .qa-ai-avatar i {
-  color: white;
-  font-size: 13px;
-}
-
-.qa-question > div:first-child,
-.qa-answer > div:first-child {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.7rem;
-}
-
-.qa-question strong,
-.qa-answer strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.qa-question > div:last-child,
-.qa-answer > div:last-child {
-  margin-left: 2.2rem;
-  color: var(--text-primary);
-  line-height: 1.6;
-}
-
-.qa-answer {
-  margin-top: 1.2rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.5);
-}
-
-[data-theme="dark"] .qa-answer {
-  border-top-color: rgba(75, 85, 99, 0.5);
-}
-
-.news-ai-answer {
-  color: var(--text-primary) !important;
-  line-height: 1.6 !important;
-}
-
-.news-ai-answer p {
-  margin-bottom: 1rem;
-}
-
-.news-ai-answer p:last-child {
+.news-qa-block .message:last-child {
   margin-bottom: 0;
-}
-
-.news-ai-answer ul,
-.news-ai-answer ol {
-  margin: 1rem 0;
-  padding-left: 1.5rem;
-}
-
-.news-ai-answer li {
-  margin-bottom: 0.5rem;
-}
-
-.news-ai-answer strong {
-  color: var(--text-primary);
-  font-weight: 600;
 }
 
 .news-ai-error {
@@ -6108,19 +5966,7 @@ body.nebula-theme .web-search-button:hover {
 /* Responsive adjustments for Q&A blocks */
 @media (max-width: 768px) {
   .news-qa-block {
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .qa-question > div:last-child,
-  .qa-answer > div:last-child {
-    margin-left: 1.8rem;
-  }
-
-  .qa-question .qa-user-avatar,
-  .qa-answer .qa-ai-avatar {
-    width: 24px;
-    height: 24px;
+    margin-bottom: 16px;
   }
 
   .news-qa-container {
