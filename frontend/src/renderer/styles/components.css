@@ -3510,6 +3510,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   flex-direction: column;
   overflow-y: auto;
   max-height: 100%;
+  padding: 16px 24px; /* Ana chat ile aynı global padding */
 }
 
 .news-detail-header {
@@ -3793,12 +3794,13 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   position: sticky;
   bottom: 0;
   z-index: 5;
-  background: var(--bg-secondary);
+  background: var(--bg-primary); /* Ana içerik ile aynı arka plan */
   padding: 12px 24px;
   /* subtle top shadow to separate from content */
   box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.04);
   margin-left: 0;
   margin-right: 0;
+  border-top: 1px solid var(--border-color); /* Hafif ayırıcı çizgi */
 }
 
 /* Fixed chat bar for news detail page */
@@ -3808,7 +3810,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   right: 0;
   bottom: 0;
   padding: 12px 24px;
-  background: var(--bg-secondary);
+  background: var(--bg-primary); /* Ana içerik ile aynı arka plan */
   box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.06);
   border-top: 1px solid var(--border-color);
   z-index: 20;
