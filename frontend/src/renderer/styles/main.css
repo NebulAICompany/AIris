@@ -345,14 +345,6 @@ input:checked + .slider:before {
   color: var(--text-primary);
 }
 
-.connection-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
 .status-indicator {
   width: 8px;
   height: 8px;
@@ -413,28 +405,6 @@ input:checked + .slider:before {
 
 .sidebar.collapsed:hover {
   width: var(--sidebar-width);
-}
-
-.sidebar-toggle {
-  padding: 12px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.sidebar-toggle-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  color: var(--text-muted);
-  font-size: 16px;
-  border-radius: var(--border-radius);
-  cursor: default;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 8px;
-  pointer-events: none;
 }
 
 .sidebar-nav {
@@ -1690,10 +1660,6 @@ body.nebula-theme::after {
   .theme-toggle {
     padding: 6px;
     font-size: 14px;
-  }
-
-  .connection-status span {
-    display: none;
   }
 }
 
