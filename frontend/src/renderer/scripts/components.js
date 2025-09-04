@@ -4220,7 +4220,8 @@ class UIComponents {
     // Update status badge
     const statusBadge = document.getElementById("verification-status-badge");
     if (statusBadge) {
-      statusBadge.textContent = result.status || "Unknown";
+      statusBadge.textContent =
+        result.status || window.languageService?.get("unknown") || "Unknown";
       statusBadge.className = `status-badge ${result.status || "processing"}`;
     }
 
@@ -4266,11 +4267,15 @@ class UIComponents {
     const fraudRisk = document.getElementById("fraud-risk-level");
 
     if (detectedType) {
-      detectedType.textContent = result.verification_type || "Unknown";
+      detectedType.textContent =
+        result.verification_type ||
+        window.languageService?.get("unknown") ||
+        "Unknown";
     }
 
     if (finalStatus) {
-      finalStatus.textContent = result.status || "Unknown";
+      finalStatus.textContent =
+        result.status || window.languageService?.get("unknown") || "Unknown";
       finalStatus.className = `detail-value ${result.status}`;
     }
 
@@ -4796,7 +4801,9 @@ class UIComponents {
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--accent-success, #10b981)";
       } else {
-        uploadStatus.textContent = `❌ ${errorMessage || "Failed"}`;
+        uploadStatus.textContent = `❌ ${
+          errorMessage || window.languageService?.get("failed") || "Failed"
+        }`;
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--error-color, #ef4444)";
       }
