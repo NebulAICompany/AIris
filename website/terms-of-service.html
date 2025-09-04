@@ -10,9 +10,11 @@
     />
     <meta name="author" content="Nebula Intelligence" />
 
-    <!-- Fonts -->
+    <!-- Fonts - Optimized for performance and Turkish character support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link
@@ -21,7 +23,9 @@
     />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="shortcut icon" type="image/png" href="assets/logo.png" />
+    <link rel="apple-touch-icon" href="assets/logo.png" />
 
     <link rel="stylesheet" href="styles/main.css" />
     <style>
@@ -194,26 +198,35 @@
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
       <div class="nav-container">
-        <div class="nav-brand">
-          <a
-            href="index.html"
-            style="
-              display: flex;
-              align-items: center;
-              gap: 0.75rem;
-              text-decoration: none;
-            "
-          >
-            <img src="assets/logo.png" alt="AIris Logo" class="nav-logo" />
-            <span class="brand-text">AIris</span>
-          </a>
+        <div class="nav-brand" onclick="scrollToHome()">
+          <img src="assets/logo.png" alt="AIris Logo" class="nav-logo" />
+          <span class="brand-text">AIris</span>
         </div>
         <div class="nav-menu" id="nav-menu">
-          <a href="index.html" class="nav-link">Home</a>
-          <a href="index.html#features" class="nav-link">Features</a>
-          <a href="index.html#screenshots" class="nav-link">Screenshots</a>
-          <a href="index.html#demo" class="nav-link">Demo</a>
-          <a href="index.html#contact" class="nav-link">Contact</a>
+          <a href="index.html" class="nav-link" data-translate="nav.home"
+            >Home</a
+          >
+          <a
+            href="index.html#features"
+            class="nav-link"
+            data-translate="nav.features"
+            >Features</a
+          >
+          <a href="index.html#demo" class="nav-link" data-translate="nav.demo"
+            >Demo</a
+          >
+          <a
+            href="index.html#screenshots"
+            class="nav-link"
+            data-translate="nav.gallery"
+            >Gallery</a
+          >
+          <a
+            href="index.html#contact"
+            class="nav-link"
+            data-translate="nav.contact"
+            >Contact</a
+          >
         </div>
         <div class="nav-actions">
           <button
@@ -248,21 +261,25 @@
         </div>
 
         <div class="legal-section">
-          <h2>1. Acceptance of Terms</h2>
-          <p>
+          <h2 data-translate="legal.terms.section1.title">
+            1. Acceptance of Terms
+          </h2>
+          <p data-translate="legal.terms.section1.para1">
             These Terms of Service ("Terms") govern your use of the AIris
             website and desktop application operated by Nebula Intelligence
             ("Company," "we," "our," or "us"). By accessing or using our
             services, you agree to be bound by these Terms.
           </p>
-          <p>
+          <p data-translate="legal.terms.section1.para2">
             If you do not agree to these Terms, please do not use our services.
           </p>
         </div>
 
         <div class="legal-section">
-          <h2>2. Description of Service</h2>
-          <p>
+          <h2 data-translate="legal.terms.section2.title">
+            2. Description of Service
+          </h2>
+          <p data-translate="legal.terms.section2.para1">
             AIris is an AI-powered desktop application designed for financial
             document processing, verification, and analysis. The application
             processes documents locally on your device and provides insights and
@@ -270,8 +287,10 @@
           </p>
 
           <div class="highlight-box">
-            <h4>🔒 Local Processing</h4>
-            <p>
+            <h4 data-translate="legal.terms.section2.highlightTitle">
+              🔒 Local Processing
+            </h4>
+            <p data-translate="legal.terms.section2.highlightText">
               AIris processes all data locally on your device. Your financial
               documents and data are never transmitted to our servers or third
               parties.
@@ -280,59 +299,93 @@
         </div>
 
         <div class="legal-section">
-          <h2>3. License and Usage Rights</h2>
+          <h2 data-translate="legal.terms.section3.title">
+            3. License and Usage Rights
+          </h2>
 
-          <h3>3.1 License Grant</h3>
-          <p>
+          <h3 data-translate="legal.terms.section3.subsection1.title">
+            3.1 License Grant
+          </h3>
+          <p data-translate="legal.terms.section3.subsection1.text">
             Subject to these Terms, we grant you a limited, non-exclusive,
             non-transferable license to use AIris for your personal or business
             purposes.
           </p>
 
-          <h3>3.2 Permitted Uses</h3>
-          <p>You may use AIris to:</p>
+          <h3 data-translate="legal.terms.section3.subsection2.title">
+            3.2 Permitted Uses
+          </h3>
+          <p data-translate="legal.terms.section3.subsection2.text">
+            You may use AIris to:
+          </p>
           <ul>
-            <li>Process and analyze your own financial documents</li>
-            <li>Verify document authenticity</li>
-            <li>Generate financial insights and reports</li>
-            <li>Detect potential fraud or inconsistencies</li>
+            <li data-translate="legal.terms.section3.subsection2.list1">
+              Process and analyze your own financial documents
+            </li>
+            <li data-translate="legal.terms.section3.subsection2.list2">
+              Verify document authenticity
+            </li>
+            <li data-translate="legal.terms.section3.subsection2.list3">
+              Generate financial insights and reports
+            </li>
+            <li data-translate="legal.terms.section3.subsection2.list4">
+              Detect potential fraud or inconsistencies
+            </li>
           </ul>
 
-          <h3>3.3 Prohibited Uses</h3>
-          <p>You may not:</p>
+          <h3 data-translate="legal.terms.section3.subsection3.title">
+            3.3 Prohibited Uses
+          </h3>
+          <p data-translate="legal.terms.section3.subsection3.text">
+            You may not:
+          </p>
           <ul>
-            <li>Use AIris for any illegal or unauthorized purpose</li>
-            <li>
+            <li data-translate="legal.terms.section3.subsection3.list1">
+              Use AIris for any illegal or unauthorized purpose
+            </li>
+            <li data-translate="legal.terms.section3.subsection3.list2">
               Attempt to reverse engineer, decompile, or disassemble the
               software
             </li>
-            <li>Distribute, sublicense, or resell the application</li>
-            <li>
+            <li data-translate="legal.terms.section3.subsection3.list3">
+              Distribute, sublicense, or resell the application
+            </li>
+            <li data-translate="legal.terms.section3.subsection3.list4">
               Use AIris to process documents you do not have the right to access
             </li>
-            <li>Interfere with or disrupt the application's functionality</li>
+            <li data-translate="legal.terms.section3.subsection3.list5">
+              Interfere with or disrupt the application's functionality
+            </li>
           </ul>
         </div>
 
         <div class="legal-section">
-          <h2>4. User Responsibilities</h2>
+          <h2 data-translate="legal.terms.section4.title">
+            4. User Responsibilities
+          </h2>
 
-          <h3>4.1 Data Accuracy</h3>
-          <p>
+          <h3 data-translate="legal.terms.section4.subsection1.title">
+            4.1 Data Accuracy
+          </h3>
+          <p data-translate="legal.terms.section4.subsection1.text">
             You are responsible for ensuring the accuracy and completeness of
             the data you input into AIris. We are not liable for decisions made
             based on inaccurate or incomplete data.
           </p>
 
-          <h3>4.2 Compliance</h3>
-          <p>
+          <h3 data-translate="legal.terms.section4.subsection2.title">
+            4.2 Compliance
+          </h3>
+          <p data-translate="legal.terms.section4.subsection2.text">
             You must comply with all applicable laws and regulations when using
             AIris, including but not limited to data protection, privacy, and
             financial regulations.
           </p>
 
-          <h3>4.3 Security</h3>
-          <p>
+          <h3 data-translate="legal.terms.section4.subsection3.title">
+            4.3 Security
+          </h3>
+          <p data-translate="legal.terms.section4.subsection3.text">
             You are responsible for maintaining the security of your device and
             ensuring that unauthorized users cannot access AIris or your
             processed data.
@@ -340,48 +393,60 @@
         </div>
 
         <div class="legal-section">
-          <h2>5. Intellectual Property</h2>
-          <p>
+          <h2 data-translate="legal.terms.section5.title">
+            5. Intellectual Property
+          </h2>
+          <p data-translate="legal.terms.section5.para1">
             AIris and all related intellectual property rights are owned by
             Nebula Intelligence. The application, including its design,
             functionality, and algorithms, is protected by copyright, trademark,
             and other intellectual property laws.
           </p>
-          <p>
+          <p data-translate="legal.terms.section5.para2">
             You retain ownership of your data and documents. We do not claim any
             rights to your financial information or processed documents.
           </p>
         </div>
 
         <div class="legal-section">
-          <h2>6. Disclaimers and Limitations</h2>
+          <h2 data-translate="legal.terms.section6.title">
+            6. Disclaimers and Limitations
+          </h2>
 
           <div class="warning-box">
-            <h4>⚠️ Important Disclaimers</h4>
-            <p>
+            <h4 data-translate="legal.terms.section6.warningTitle">
+              ⚠️ Important Disclaimers
+            </h4>
+            <p data-translate="legal.terms.section6.warningText">
               AIris is provided "as is" without warranties of any kind. While we
               strive for accuracy, AI analysis may not be 100% accurate and
               should not be the sole basis for important decisions.
             </p>
           </div>
 
-          <h3>6.1 No Warranties</h3>
-          <p>
+          <h3 data-translate="legal.terms.section6.subsection1.title">
+            6.1 No Warranties
+          </h3>
+          <p data-translate="legal.terms.section6.subsection1.text">
             We disclaim all warranties, express or implied, including but not
             limited to warranties of merchantability, fitness for a particular
             purpose, and non-infringement.
           </p>
 
-          <h3>6.2 Limitation of Liability</h3>
-          <p>
+          <h3 data-translate="legal.terms.section6.subsection2.title">
+            6.2 Limitation of Liability
+          </h3>
+          <p data-translate="legal.terms.section6.subsection2.text">
             To the maximum extent permitted by law, Nebula Intelligence shall
             not be liable for any indirect, incidental, special, consequential,
             or punitive damages, including but not limited to loss of profits,
             data, or business opportunities.
           </p>
 
-          <h3>6.3 Accuracy Disclaimer</h3>
-          <p>
+          <h3 data-translate="legal.terms.section6.subsection3.title">
+            6.3 Accuracy Disclaimer
+          </h3>
+          <p data-translate="legal.terms.section6.subsection3.text">
             While AIris uses advanced AI technology, the accuracy of analysis
             and verification cannot be guaranteed. Users should verify important
             findings through additional means.
@@ -389,8 +454,10 @@
         </div>
 
         <div class="legal-section">
-          <h2>7. Privacy and Data Protection</h2>
-          <p>
+          <h2 data-translate="legal.terms.section7.title">
+            7. Privacy and Data Protection
+          </h2>
+          <p data-translate="legal.terms.section7.text">
             Your privacy is important to us. Please review our Privacy Policy to
             understand how we collect, use, and protect your information. AIris
             is designed with privacy-first principles, processing all data
@@ -399,8 +466,10 @@
         </div>
 
         <div class="legal-section">
-          <h2>8. Updates and Modifications</h2>
-          <p>
+          <h2 data-translate="legal.terms.section8.title">
+            8. Updates and Modifications
+          </h2>
+          <p data-translate="legal.terms.section8.text">
             We may update AIris and these Terms from time to time. We will
             notify you of significant changes through the application or our
             website. Continued use of AIris after changes constitutes acceptance
@@ -409,21 +478,23 @@
         </div>
 
         <div class="legal-section">
-          <h2>9. Termination</h2>
-          <p>
+          <h2 data-translate="legal.terms.section9.title">9. Termination</h2>
+          <p data-translate="legal.terms.section9.para1">
             We may terminate or suspend your access to AIris at any time, with
             or without notice, for violation of these Terms or for any other
             reason at our sole discretion.
           </p>
-          <p>
+          <p data-translate="legal.terms.section9.para2">
             Upon termination, your right to use AIris ceases immediately. You
             may delete the application and any associated data from your device.
           </p>
         </div>
 
         <div class="legal-section">
-          <h2>10. Governing Law</h2>
-          <p>
+          <h2 data-translate="legal.terms.section10.title">
+            10. Governing Law
+          </h2>
+          <p data-translate="legal.terms.section10.text">
             These Terms shall be governed by and construed in accordance with
             the laws of the State of California, United States, without regard
             to conflict of law principles.
@@ -431,8 +502,10 @@
         </div>
 
         <div class="legal-section">
-          <h2>11. Dispute Resolution</h2>
-          <p>
+          <h2 data-translate="legal.terms.section11.title">
+            11. Dispute Resolution
+          </h2>
+          <p data-translate="legal.terms.section11.text">
             Any disputes arising from these Terms or your use of AIris shall be
             resolved through binding arbitration in accordance with the rules of
             the American Arbitration Association.
@@ -440,8 +513,8 @@
         </div>
 
         <div class="legal-section">
-          <h2>12. Severability</h2>
-          <p>
+          <h2 data-translate="legal.terms.section12.title">12. Severability</h2>
+          <p data-translate="legal.terms.section12.text">
             If any provision of these Terms is found to be unenforceable or
             invalid, the remaining provisions shall remain in full force and
             effect.
@@ -449,8 +522,10 @@
         </div>
 
         <div class="legal-section">
-          <h2>13. Entire Agreement</h2>
-          <p>
+          <h2 data-translate="legal.terms.section13.title">
+            13. Entire Agreement
+          </h2>
+          <p data-translate="legal.terms.section13.text">
             These Terms, together with our Privacy Policy, constitute the entire
             agreement between you and Nebula Intelligence regarding the use of
             AIris.
