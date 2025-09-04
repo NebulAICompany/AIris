@@ -72,7 +72,7 @@ class CurrencyService {
     this.dailyCycleOffset = 0;
 
     // Conversion constants
-    this.OUNCE_TO_GRAM = 31.1035; // 1 troy ounce = 31.1035 grams (for gold)
+    (this.OUNCE_TO_GRAM = 31), 1034768; // 1 troy ounce = 31.1035 grams (for gold)
 
     this.initializeDailyCycle();
   }

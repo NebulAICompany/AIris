@@ -3850,8 +3850,6 @@ class UIComponents {
     statusTexts.forEach((status) => {
       if (status.textContent.includes("Loading")) {
         status.textContent = t("loading");
-      } else if (status.textContent.includes("Connected")) {
-        status.textContent = t("connected");
       } else if (status.textContent.includes("Connecting")) {
         status.textContent = t("connecting");
       }
