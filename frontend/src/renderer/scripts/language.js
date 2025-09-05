@@ -94,6 +94,7 @@ class LanguageService {
         fetchLatestNews: "Fetch Latest News",
         getLatestNews: "Get Latest News",
         manualUpdateInfo: "Click refresh to get latest news",
+        marketOutlook: "Market Outlook",
 
         // News Chat Section
         askAboutNews: "Ask about this news",
@@ -443,6 +444,7 @@ class LanguageService {
         fetchLatestNews: "Son Haberleri Getir",
         getLatestNews: "Son Haberleri Getir",
         manualUpdateInfo: "Yenile butonuna tıklayarak en son haberleri alın",
+        marketOutlook: "Piyasa Görünümü",
 
         // News Chat Section
         askAboutNews: "Bu haber hakkında soru sor",

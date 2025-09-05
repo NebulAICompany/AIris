@@ -25,7 +25,7 @@ ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 MARKETSTACK_EOD_API_KEY = os.getenv("MARKETSTACK_EOD_API_KEY")
 MARKETSTACK_EOD_URL = os.getenv(
     "MARKETSTACK_EOD_URL",
-    f"http://api.marketstack.com/v2/eod?access_key={MARKETSTACK_EOD_API_KEY}",
+    f"http://api.marketstack.com/v2/eod",
 )
 AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
 WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")

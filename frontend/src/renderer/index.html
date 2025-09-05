@@ -726,16 +726,6 @@
             <div class="news-container">
               <div class="news-header">
                 <h2 data-i18n="financeNewsTitle">Finance News</h2>
-                <div id="market-eod" style="margin:12px 0">
-                  <div style="margin-bottom: 8px;">
-                    <label for="chart-days" style="font-size: 12px; color: #667085;">Chart Period: </label>
-                    <select id="chart-days" style="font-size: 12px; padding: 2px 4px; border: 1px solid #e7e7e9; border-radius: 4px;">
-                      <option value="7">7 days</option>
-                      <option value="15">15 days</option>
-                      <option value="30" selected>30 days</option>
-                    </select>
-                  </div>
-                </div>
                 <div class="news-controls">
                   <div class="news-refresh-group">
                     <button id="refresh-news" class="btn btn-primary">
@@ -751,10 +741,30 @@
                 </div>
               </div>
 
-              <div class="news-grid" id="news-grid">
-                <div class="loading-state">
-                  <div class="loading-spinner"></div>
-                  <p data-i18n="loadingNews">Loading latest finance news...</p>
+              <!-- Two-column layout: News on left, Market charts on right -->
+              <div class="news-layout">
+                <!-- Left column: News articles -->
+                <div class="news-column">
+                  <div class="news-grid" id="news-grid">
+                    <div class="loading-state">
+                      <div class="loading-spinner"></div>
+                      <p data-i18n="loadingNews">Loading latest finance news...</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right column: Market charts -->
+                <div class="market-column">
+                  <div class="market-outlook">
+                    <div class="market-outlook-header">
+                      <h3 data-i18n="marketOutlook">Market Outlook</h3>
+                      <button id="refresh-market-data" class="market-refresh-btn" title="Refresh market data">
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
+                    </div>
+                    <div id="market-eod" class="market-charts-container">
+                    </div>
+                  </div>
                 </div>
               </div>
 
