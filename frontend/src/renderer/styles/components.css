@@ -3898,35 +3898,43 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   display: flex;
   gap: 12px;
   align-items: center;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
+  background-color: transparent;
+  border: none;
   border-radius: var(--border-radius);
-  padding: 8px;
+  padding: 0;
   transition: var(--transition);
 }
 
 /* Reduce padding when Q&A container is active */
 .news-qa-container ~ .news-chat-section .news-chat-input-wrapper {
-  padding: 4px;
-}
-
-.news-chat-input-wrapper:focus-within {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  padding: 0;
 }
 
 .news-chat-input {
   flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 12px 16px;
+  font-family: var(--font-primary);
   font-size: 14px;
+  line-height: 1.4;
+  background-color: var(--bg-primary);
   color: var(--text-primary);
-  padding: 0;
+  resize: none;
+  min-height: 44px;
+  max-height: 120px;
+  transition: all 0.3s ease;
+  outline: none;
 }
 
 .news-chat-input::placeholder {
   color: var(--text-tertiary);
+}
+
+.news-chat-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .news-chat-send-btn {
