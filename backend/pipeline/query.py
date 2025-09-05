@@ -85,6 +85,15 @@ async def run_orchestration(
 
     client = load_vectorstore(VECTORSTORE_PATH_STR)
 
+    # 0. Selected files control
+    if not selected_files or len(selected_files) == 0:
+        return {
+            "response": "Lütfen dosya seçiniz.",
+            "images": [],
+            "charts": [],
+            "generatedFiles": [],
+        }
+
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
     logger.info(f"   - Preprocessed Query before refinement: {preprocessed_query}")
