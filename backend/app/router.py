@@ -725,24 +725,6 @@ async def get_finance_news(force_refresh: bool = False):
         )
 
 
-@router.get("/finance-news/scheduler/status")
-async def get_finance_news_scheduler_status():
-    """
-    Get status information about the background news scheduler.
-    """
-    try:
-        from backend.scheduler.news_scheduler import get_news_scheduler
-
-        scheduler = get_news_scheduler()
-
-        return {"status": "success", "scheduler": scheduler.get_status()}
-    except Exception as e:
-        logger.error(f"Error getting scheduler status: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting scheduler status: {str(e)}"
-        )
-
-
 @router.get("/finance-news/sources")
 async def get_finance_news_sources():
     """
