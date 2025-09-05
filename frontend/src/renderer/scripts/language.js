@@ -23,7 +23,6 @@ class LanguageService {
         connecting: "Connecting...",
         connected: "Connected",
         disconnected: "Disconnected",
-        live: "LIVE",
         loading: "Loading...",
 
         // Navigation
@@ -31,6 +30,7 @@ class LanguageService {
         uploadFiles: "Upload Files",
         myFiles: "My Files",
         createdDocuments: "Created Documents",
+        interestCalculator: "Interest Calculator",
         financeNews: "Finance News",
 
         settings: "Settings",
@@ -93,12 +93,13 @@ class LanguageService {
         noNewsAvailable: "No news available",
         fetchLatestNews: "Fetch Latest News",
         getLatestNews: "Get Latest News",
-        autoUpdateInfo: "Auto-updates every 45 minutes",
-        
+        manualUpdateInfo: "Click refresh to get latest news",
+
         // News Chat Section
         askAboutNews: "Ask about this news",
-        chatDescription: "Ask questions about this news article and get AI-powered insights",
-        askQuestionPlaceholder: "Ask a question about this news...",
+        chatDescription:
+          "Ask questions about this news article and get AI-powered insights",
+        askQuestionPlaceholder: "Ask follow up about this news...",
         followUpQuestionPlaceholder: "Ask a follow-up question...",
 
         // Settings Section
@@ -200,6 +201,24 @@ class LanguageService {
         lastUpdatedAt: "Last updated:",
         failedToUpdate: "Failed to update",
 
+        // Interest Calculator
+        calculateLoanPayments: "Calculate your loan payments and total costs",
+        loanAmount: "Loan Amount",
+        loanTerm: "Loan Term (Months)",
+        interestRate: "Interest Rate (%)",
+        calculate: "Calculate",
+        reset: "Reset",
+        calculationResults: "Calculation Results",
+        monthlyPayment: "Monthly Payment",
+        totalPayment: "Total Payment",
+        totalInterest: "Total Interest",
+        yearlyInterestCost: "Yearly Cost",
+        invalidInputs: "Please enter valid values",
+
+        // Analytics messages
+        notAvailable: "N/A",
+        unknown: "Unknown",
+
         // Time format
         minutesAgo: "m ago",
         hoursAgo: "h ago",
@@ -275,6 +294,21 @@ class LanguageService {
         wolframMathVerificationDesc:
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
 
+        // Calculator Section
+        calculateLoanPayments: "Calculate your loan payments and total costs",
+        loanAmount: "Loan Amount",
+        loanTerm: "Loan Term (Months)",
+        interestRate: "Interest Rate (%) - Monthly Interest",
+        calculate: "Calculate",
+        reset: "Reset",
+        calculationResults: "Calculation Results",
+        monthlyPayment: "Monthly Payment",
+        totalPayment: "Total Payment",
+        totalInterest: "Total Interest",
+        yearlyInterestCost: "Yearly Cost",
+        enterValidValues: "Please enter valid values",
+        enterPositiveValues: "Please enter positive values",
+
         // File Selection
         selectFiles: "Select Files",
         selectAll: "Select All",
@@ -286,6 +320,26 @@ class LanguageService {
         noFilesAvailable: "No files available. Upload some files first.",
         filesSelected: "files selected",
         allFilesSelected: "All files selected",
+
+        // Currency labels
+        gold: "Gold",
+        goldUsdPerOz: "Gold (USD/oz)",
+        goldTryPerGram: "Gold (₺/g)",
+        usdTry: "USD/TRY",
+        eurTry: "EUR/TRY",
+        usdEur: "USD/EUR",
+
+        // Status labels
+        cached: "Cached",
+        live: "Live",
+        error: "Error",
+        offline: "Offline",
+        processing: "Processing...",
+        unknown: "Unknown",
+        failed: "Failed",
+
+        // Navigation
+        goToChat: "Go to Chat",
       },
 
       tr: {
@@ -301,7 +355,6 @@ class LanguageService {
         connecting: "Bağlanıyor...",
         connected: "Bağlandı",
         disconnected: "Bağlantı kesildi",
-        live: "CANLI",
         loading: "Yükleniyor...",
 
         // Navigation
@@ -309,9 +362,26 @@ class LanguageService {
         uploadFiles: "Dosya Yükle",
         myFiles: "Dosyalarım",
         createdDocuments: "Oluşturulan Belgeler",
+        interestCalculator: "Kredi Hesaplama",
         financeNews: "Finans Haberleri",
 
         settings: "Ayarlar",
+
+        // Calculator Section
+        calculateLoanPayments:
+          "Kredi ödemelerinizi ve toplam maliyetleri hesaplayın",
+        loanAmount: "Kredi Tutarı",
+        loanTerm: "Kredi Vadesi (Ay)",
+        interestRate: "Faiz Oranı (%) - Aylık Faiz",
+        calculate: "Hesapla",
+        reset: "Sıfırla",
+        calculationResults: "Hesaplama Sonuçları",
+        monthlyPayment: "Aylık Ödeme",
+        totalPayment: "Toplam Ödeme",
+        totalInterest: "Toplam Faiz",
+        yearlyInterestCost: "Yıllık Maliyet",
+        enterValidValues: "Lütfen geçerli değerler giriniz",
+        enterPositiveValues: "Lütfen pozitif değerler giriniz",
 
         // Chat Section
         aiFinancialAssistant: "AIris Finansal Asistan",
@@ -372,12 +442,13 @@ class LanguageService {
         noNewsAvailable: "Haber bulunmuyor",
         fetchLatestNews: "Son Haberleri Getir",
         getLatestNews: "Son Haberleri Getir",
-        autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
-        
+        manualUpdateInfo: "Yenile butonuna tıklayarak en son haberleri alın",
+
         // News Chat Section
         askAboutNews: "Bu haber hakkında soru sor",
-        chatDescription: "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
-        askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
+        chatDescription:
+          "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
+        askQuestionPlaceholder: "Bu haber hakkında sorular sorun...",
         followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
         // Settings Section
@@ -481,7 +552,7 @@ class LanguageService {
 
         // Time format
         minutesAgo: "dk önce",
-        hoursAgo: "sa önce", 
+        hoursAgo: "sa önce",
         daysAgo: "gün önce",
         justNow: "Şimdi",
 
@@ -566,6 +637,26 @@ class LanguageService {
         noFilesAvailable: "Dosya mevcut değil. Önce bazı dosyalar yükleyin.",
         filesSelected: "dosya seçildi",
         allFilesSelected: "Tüm dosyalar seçildi",
+
+        // Currency labels
+        gold: "Altın",
+        goldUsdPerOz: "Altın (USD/ons)",
+        goldTryPerGram: "Altın (₺/gram)",
+        usdTry: "USD/TRY",
+        eurTry: "EUR/TRY",
+        usdEur: "USD/EUR",
+
+        // Status labels
+        cached: "Önbellekte",
+        live: "Canlı",
+        error: "Hata",
+        offline: "Çevrimdışı",
+        processing: "İşleniyor...",
+        unknown: "Bilinmeyen",
+        failed: "Başarısız",
+
+        // Navigation
+        goToChat: "Sohbete Git",
       },
     };
   }
@@ -684,6 +775,13 @@ class LanguageService {
       } else {
         element.textContent = text;
       }
+    });
+
+    // Update elements with data-i18n-placeholder attribute
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-placeholder");
+      const text = this.get(key);
+      element.placeholder = text;
     });
 
     // Update title

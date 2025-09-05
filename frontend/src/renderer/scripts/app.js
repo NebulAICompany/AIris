@@ -66,9 +66,6 @@ class AIrisApp {
       // Setup app-level shortcuts
       this.setupKeyboardShortcuts();
 
-      // Initialize currency service
-      this.initializeCurrencyService();
-
       // Hide loading screen and show app
       this.hideLoadingScreen();
 
@@ -371,18 +368,6 @@ class AIrisApp {
     }, 15000);
   }
 
-  updateConnectionStatus(connected) {
-    const statusIndicator = document.getElementById("connection-status");
-    if (statusIndicator) {
-      statusIndicator.className = `connection-status ${
-        connected ? "connected" : "disconnected"
-      }`;
-      statusIndicator.innerHTML = connected
-        ? '<i class="fas fa-circle"></i> Connected'
-        : '<i class="fas fa-circle"></i> Disconnected';
-    }
-  }
-
   setupErrorHandling() {
     // Global error handler
     window.addEventListener("error", (event) => {
@@ -474,7 +459,6 @@ class AIrisApp {
   async reconnectBackend() {
     try {
       await this.checkBackendConnection();
-      this.updateConnectionStatus(this.backendConnected);
 
       if (this.backendConnected && this.uiComponents) {
         this.uiComponents.showNotification("Connection restored!", "success");
@@ -508,101 +492,7 @@ class AIrisApp {
   onWindowFocus() {
     // Check backend connection when window regains focus
     if (this.isInitialized) {
-      this.checkBackendConnection().then(() => {
-        this.updateConnectionStatus(this.backendConnected);
-      });
-    }
-  }
-
-  initializeCurrencyService() {
-    logger.info("Initializing currency service", "APP");
-
-    // Start the currency service with update callback
-    window.currencyService.start((data) => {
-      this.updateCurrencyDisplay(data);
-    });
-
-    // Handle app cleanup
-    window.addEventListener("beforeunload", () => {
-      window.currencyService.stop();
-    });
-  }
-
-  updateCurrencyDisplay(data) {
-    try {
-      const { currencies, gold, lastUpdate, isStale } = data;
-
-      if (currencies) {
-        // Update USD/TRY
-        const usdTryElement = document.getElementById("usd-try");
-        if (usdTryElement) {
-          usdTryElement.textContent = window.currencyService.formatNumber(
-            currencies.usdTry,
-            2
-          );
-        }
-
-        // Update EUR/TRY
-        const eurTryElement = document.getElementById("eur-try");
-        if (eurTryElement) {
-          eurTryElement.textContent = window.currencyService.formatNumber(
-            currencies.eurTry,
-            2
-          );
-        }
-
-        // Update USD/EUR
-        const usdEurElement = document.getElementById("usd-eur");
-        if (usdEurElement) {
-          usdEurElement.textContent = window.currencyService.formatNumber(
-            currencies.usdEur,
-            4
-          );
-        }
-      }
-
-      if (gold) {
-        // Update Gold price
-        const goldElement = document.getElementById("gold-price");
-        if (goldElement) {
-          goldElement.textContent = `$${window.currencyService.formatNumber(
-            gold.price,
-            0
-          )}`;
-        }
-      }
-
-      // Update status indicator
-      const statusElement = document.getElementById("currency-status");
-      if (statusElement) {
-        const statusIcon = statusElement.querySelector("i");
-        const statusText = statusElement.querySelector(".status-text");
-
-        if (isStale) {
-          statusElement.className = "currency-status stale";
-          statusText.textContent = "Cached";
-        } else {
-          statusElement.className = "currency-status live";
-          statusText.textContent = "Live";
-        }
-      }
-
-      logger.debug("Currency display updated", "APP");
-    } catch (error) {
-      logger.error(
-        `Failed to update currency display: ${error.message}`,
-        "APP"
-      );
-
-      // Show error state
-      const statusElement = document.getElementById("currency-status");
-      if (statusElement) {
-        statusElement.className = "currency-status error";
-        const statusText = statusElement.querySelector(".status-text");
-        if (statusText) {
-          statusText.textContent = "Error";
-        }
-      }
+      this.checkBackendConnection();
     }
   }
 
