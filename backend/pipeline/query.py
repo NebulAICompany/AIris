@@ -99,6 +99,7 @@ async def run_orchestration(
             "response": f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}",
             "images": [],
             "charts": [],
+            "generatedFiles": [],
         }
 
     # 3. Hassas bilgileri maskele
@@ -108,8 +109,11 @@ async def run_orchestration(
 
     ENABLED_RAG_TECHNIQUES = []
 
+    # 4. Enhanced Retrieval with different techniques
+    reranked_docs = None
+
     if "rag_fusion" in ENABLED_RAG_TECHNIQUES:
-        # 4. Enhanced Retrieval with RAG Fusion (Multiple Query Generation + RRF)
+        # RAG Fusion (Multiple Query Generation + RRF)
         from backend.retrieval.rag_fusion import retrieve_with_fusion
 
         fusion_docs, fusion_metadata = await retrieve_with_fusion(
@@ -122,73 +126,26 @@ async def run_orchestration(
             excessive_k=60,
         )
 
-        if not fusion_docs:
-            return {
-                "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                "images": [],
-                "charts": [],
-            }
+        if fusion_docs:
+            logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
+            # Filter fusion docs by selected files
+            reranked_docs = filter_docs_by_selected_files(fusion_docs, selected_files)
 
-        logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
-
-        # Filter fusion docs by selected files
-        filtered_fusion_docs = filter_docs_by_selected_files(
-            fusion_docs, selected_files
-        )
-
-        if not filtered_fusion_docs:
-            if selected_files:
-                return {
-                    "response": f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım.",
-                    "images": [],
-                    "charts": [],
-                }
-            else:
-                return {
-                    "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                    "images": [],
-                    "charts": [],
-                }
-
-        # Use filtered fusion docs directly (they're already optimized and reranked)
-        reranked_docs = filtered_fusion_docs
     elif "rse" in ENABLED_RAG_TECHNIQUES:
-        # 4. Enhanced Retrieval with RSE (Relevant Segment Extraction)
+        # RSE (Relevant Segment Extraction)
         from backend.retrieval.rse import retrieve_with_rse
 
         rse_chunks, rse_scores = retrieve_with_rse(
             client=client, query=preprocessed_query, k=15
         )
 
-        if not rse_chunks:
-            return {
-                "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                "images": [],
-                "charts": [],
-            }
-        # logger.debug(f"RSE Chunks: {rse_chunks[0]}\n RSE Scores: {rse_scores[0]}")
-
-        # Filter RSE chunks by selected files
-        filtered_rse_chunks = filter_docs_by_selected_files(rse_chunks, selected_files)
-
-        if not filtered_rse_chunks:
-            if selected_files:
-                return {
-                    "response": f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadı.",
-                    "images": [],
-                    "charts": [],
-                }
-            else:
-                return {
-                    "response": "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım.",
-                    "images": [],
-                    "charts": [],
-                }
-
-        # Use filtered RSE-enhanced chunks directly (they're already optimized)
-        reranked_docs = filtered_rse_chunks[:5]  # Take top 5 RSE segments
+        if rse_chunks:
+            # Filter RSE chunks by selected files
+            reranked_docs = filter_docs_by_selected_files(rse_chunks, selected_files)
+            if reranked_docs:
+                reranked_docs = reranked_docs[:5]  # Take top 5 RSE segments
     else:
-        # 4. Enhanced Retrieval + Reranking
+        # Standard retrieval methods
         if search_method == "keyword":
             logger.info("🔍 Using keyword search (BM25)")
             retrieved_docs = retrieve_with_keyword_search(
@@ -217,24 +174,32 @@ async def run_orchestration(
                 query=preprocessed_query,
                 k=15,
                 selected_files=selected_files,
-            )  # Get more docs for better reranking
+            )
 
-        if not retrieved_docs:
-            logger.warning("No retrieved docs")
-            return {
-                "response": "Üzgünüm, sorgunızla ilgili belgede bilgi bulamadı.",
-                "images": [],
-                "charts": [],
-            }
+        if retrieved_docs:
+            # Extract only the content from the retrieved docs before reranking
+            doc_contents = [
+                {"content": doc["content"], "metadata": doc["metadata"]}
+                for doc in retrieved_docs
+            ]
+            reranked_docs = rerank(
+                preprocessed_query, doc_contents, with_score=False, top_n=5
+            )
 
-        # Extract only the content from the retrieved docs before reranking
-        doc_contents = [
-            {"content": doc["content"], "metadata": doc["metadata"]}
-            for doc in retrieved_docs
-        ]
-        reranked_docs = rerank(
-            preprocessed_query, doc_contents, with_score=False, top_n=5
+    # Check if no documents were found
+    if not reranked_docs:
+        logger.warning("No retrieved docs")
+        error_message = (
+            f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+            if selected_files
+            else "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
         )
+        return {
+            "response": error_message,
+            "images": [],
+            "charts": [],
+            "generatedFiles": [],
+        }
 
     context_entries = []
 
@@ -330,17 +295,19 @@ async def run_news_chat_orchestration(
     if session_id:
         # Add user message to chat history
         chat_history_manager.add_message(session_id, MessageRole.USER, query)
-        
+
         # Get conversation context
         conversation_context = chat_history_manager.get_conversation_context(
             session_id, max_messages=10
         )
         logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
-        
+
         # Reduce history if too long
         session = chat_history_manager.get_session(session_id)
         if session and len(session.messages) > 30:
-            logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
+            logger.info(
+                f"   - Reducing chat history from {len(session.messages)} messages"
+            )
             chat_history_manager.reduce_history(session, target_messages=20)
     else:
         conversation_context = []
@@ -376,11 +343,7 @@ async def run_news_chat_orchestration(
             session_id, MessageRole.ASSISTANT, answer, metadata
         )
 
-    return {
-        "response": answer,
-        "images": images,
-        "session_id": session_id
-    }
+    return {"response": answer, "images": images, "session_id": session_id}
 
 
 def format_news_context(news_context: dict) -> str:
@@ -388,38 +351,42 @@ def format_news_context(news_context: dict) -> str:
     Format news context into a structured string for the agent.
     """
     context_parts = []
-    
+
     # Basic news information
-    if news_context.get('title'):
+    if news_context.get("title"):
         context_parts.append(f"News Title: {news_context['title']}")
-    
-    if news_context.get('summary'):
+
+    if news_context.get("summary"):
         context_parts.append(f"News Summary: {news_context['summary']}")
-    
-    if news_context.get('content'):
+
+    if news_context.get("content"):
         context_parts.append(f"News Content: {news_context['content']}")
-    
-    if news_context.get('source'):
+
+    if news_context.get("source"):
         context_parts.append(f"News Source: {news_context['source']}")
-    
-    if news_context.get('sources') and isinstance(news_context['sources'], list):
-        sources_str = ", ".join(news_context['sources'])
+
+    if news_context.get("sources") and isinstance(news_context["sources"], list):
+        sources_str = ", ".join(news_context["sources"])
         context_parts.append(f"News Sources: {sources_str}")
-    
-    if news_context.get('published'):
+
+    if news_context.get("published"):
         context_parts.append(f"Published: {news_context['published']}")
-    
-    if news_context.get('url'):
+
+    if news_context.get("url"):
         context_parts.append(f"News URL: {news_context['url']}")
-    
+
     # Cluster data if available
-    if news_context.get('cluster_data'):
-        cluster = news_context['cluster_data']
-        if cluster.get('unified_title'):
+    if news_context.get("cluster_data"):
+        cluster = news_context["cluster_data"]
+        if cluster.get("unified_title"):
             context_parts.append(f"Cluster Title: {cluster['unified_title']}")
-        if cluster.get('unified_description'):
-            context_parts.append(f"Cluster Description: {cluster['unified_description']}")
-        if cluster.get('articles') and len(cluster['articles']) > 1:
-            context_parts.append(f"Related Articles: {len(cluster['articles'])} articles in this cluster")
-    
+        if cluster.get("unified_description"):
+            context_parts.append(
+                f"Cluster Description: {cluster['unified_description']}"
+            )
+        if cluster.get("articles") and len(cluster["articles"]) > 1:
+            context_parts.append(
+                f"Related Articles: {len(cluster['articles'])} articles in this cluster"
+            )
+
     return "\n\n".join(context_parts)
