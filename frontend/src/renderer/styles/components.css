@@ -1,55 +1,59 @@
 /* Market EOD tiles */
-.market-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.market-tile { 
-  background: #ffffff; 
-  border: 1px solid #e7e7e9; 
-  border-radius: 6px; 
-  padding: 4px; 
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.market-tile {
+  background: #ffffff;
+  border: 1px solid #e7e7e9;
+  border-radius: 6px;
+  padding: 4px;
   position: relative;
   min-height: 25px;
   display: flex;
   flex-direction: column;
 }
-.market-tile-header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: flex-start; 
-  margin-bottom: 1px; 
+.market-tile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1px;
 }
-.market-title { 
-  font-weight: 600; 
-  color: #364152; 
+.market-title {
+  font-weight: 600;
+  color: #364152;
   font-size: 10px;
 }
-.market-change-indicator { 
-  padding: 1px 3px; 
-  border-radius: 3px; 
-  font-size: 7px; 
+.market-change-indicator {
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-size: 7px;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 1px;
 }
-.change-symbol { 
-  font-size: 6px; 
+.change-symbol {
+  font-size: 6px;
 }
-.change-percent { 
-  font-size: 7px; 
+.change-percent {
+  font-size: 7px;
 }
-.market-change-absolute { 
-  font-size: 8px; 
-  font-weight: 600; 
-  margin-bottom: 1px; 
+.market-change-absolute {
+  font-size: 8px;
+  font-weight: 600;
+  margin-bottom: 1px;
 }
-.market-price { 
-  font-size: 10px; 
-  font-weight: 600; 
+.market-price {
+  font-size: 10px;
+  font-weight: 600;
   color: #364152;
   margin-top: auto;
 }
-.market-sub { 
-  color: #667085; 
-  font-size: 12px; 
+.market-sub {
+  color: #667085;
+  font-size: 12px;
 }
 .market-chart-container {
   display: flex;
@@ -58,12 +62,12 @@
   height: 12px;
   width: 100%;
 }
-.market-chart { 
+.market-chart {
   width: 100%;
   height: 12px;
 }
-.market-chart svg { 
-  display: block; 
+.market-chart svg {
+  display: block;
   width: 100%;
   height: 12px;
 }
@@ -4969,16 +4973,41 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   position: absolute;
   top: -6px;
   right: -6px;
-  background-color: var(--error);
+  background-color: var(--accent-primary);
   color: white;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Special styling for when all files are selected */
+.file-selection-button.all-selected {
+  background-color: var(--success);
+  border-color: var(--success);
+  position: relative;
+}
+
+.file-selection-button.all-selected::before {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.file-selection-button.all-selected::after {
+  background-color: var(--success);
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* File Selection Modal */

@@ -4767,14 +4767,17 @@ class UIComponents {
 
     if (selectedCount === 0) {
       button.classList.remove("has-selection");
+      button.classList.remove("all-selected");
       button.removeAttribute("data-count");
       button.title = "Select files to include";
     } else if (selectedCount === totalCount) {
       button.classList.add("has-selection");
-      button.setAttribute("data-count", "All");
+      button.classList.add("all-selected");
+      button.setAttribute("data-count", totalCount);
       button.title = `All ${totalCount} files selected`;
     } else {
       button.classList.add("has-selection");
+      button.classList.remove("all-selected");
       button.setAttribute("data-count", selectedCount);
       button.title = `${selectedCount} of ${totalCount} files selected`;
     }
