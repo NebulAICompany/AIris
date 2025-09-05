@@ -262,8 +262,10 @@ class UIComponents {
         this.switchTab(e.target.dataset.tab);
       }
 
-      // Handle news item clicks (both hero and regular items)
-      const newsItem = e.target.closest(".news-item, .news-hero");
+      // Handle news item clicks (hero variants and regular items)
+      const newsItem = e.target.closest(
+        ".news-item, .news-hero, .news-hero-left, .news-hero-right"
+      );
       if (newsItem && newsItem.dataset.articleIndex !== undefined) {
         const articleIndex = parseInt(newsItem.dataset.articleIndex);
         this.showNewsDetail(articleIndex);
@@ -2972,28 +2974,40 @@ class UIComponents {
     // FIXED: Store the sorted articles with indices (not the original unsorted ones)
     this.currentArticles = articlesWithIndices;
 
-    // Create Perplexity-style layout: Hero + Secondary grid
-    const heroArticle = articlesWithIndices[0]; // First article as hero
-    const secondaryArticles = articlesWithIndices.slice(1); // Rest as secondary
+    // Create Perplexity-style alternating layout
+    // Pattern: Hero Right -> 3 items -> Hero Left -> Hero Right -> 3 items -> ...
+    let html = "";
+    let articleIndex = 0;
+    let isHeroRight = true; // Start with right
 
-    let heroHtml = "";
-    if (heroArticle) {
-      heroHtml = this.createHeroNewsItem(heroArticle);
+    while (articleIndex < articlesWithIndices.length) {
+      // Add a hero item
+      const heroArticle = articlesWithIndices[articleIndex];
+      if (heroArticle) {
+        const heroType = isHeroRight ? "right" : "left";
+        html += this.createHeroNewsItem(heroArticle, heroType);
+        articleIndex++;
+        isHeroRight = !isHeroRight; // Alternate for next hero
+      }
+
+      // Add 3 secondary items if available
+      const secondaryArticles = articlesWithIndices.slice(
+        articleIndex,
+        articleIndex + 3
+      );
+      if (secondaryArticles.length > 0) {
+        const secondaryHtml = secondaryArticles
+          .map((article) => this.createNewsItem(article))
+          .join("");
+        html += `<div class="news-secondary">${secondaryHtml}</div>`;
+        articleIndex += secondaryArticles.length;
+      }
     }
 
-    const secondaryHtml = secondaryArticles
-      .map((article) => this.createNewsItem(article))
-      .join("");
-
-    newsGrid.innerHTML = `
-      ${heroHtml}
-      <div class="news-secondary">
-        ${secondaryHtml}
-      </div>
-    `;
+    newsGrid.innerHTML = html;
   }
 
-  createHeroNewsItem(article) {
+  createHeroNewsItem(article, heroType = "right") {
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
       : (key) => key;
@@ -3034,8 +3048,10 @@ class UIComponents {
       `;
     }
 
+    const heroClass = `news-hero news-hero-${heroType}`;
+
     return `
-      <div class="news-hero" data-article-index="${article.index || 0}">
+      <div class="${heroClass}" data-article-index="${article.index || 0}">
         ${imageHtml}
         <div class="news-hero-content">
           <h2 class="news-hero-title">${Utils.escapeHtml(article.title)}</h2>
