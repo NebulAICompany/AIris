@@ -62,33 +62,43 @@ async def run_orchestration(
     logger.info("✅ Previous attachments cleared")
 
     # Handle chat history and session management
-    if session_id:
-        # Add user message to chat history
-        chat_history_manager.add_message(session_id, MessageRole.USER, query)
-
-        # Get conversation context
-        conversation_context = chat_history_manager.get_conversation_context(
-            session_id, max_messages=10
-        )
-        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
-
-        # Reduce history if too long
-        session = chat_history_manager.get_session(session_id)
-        if session and len(session.messages) > 30:
-            logger.info(
-                f"   - Reducing chat history from {len(session.messages)} messages"
-            )
-            chat_history_manager.reduce_history(session, target_messages=20)
-    else:
-        conversation_context = []
+    if not session_id:
         logger.debug(f"   - No session ID provided, processing as standalone query")
+        return {
+            "response": "Session ID gerekli. Lütfen geçerli bir session ile tekrar deneyin.",
+            "images": [],
+            "charts": [],
+            "generatedFiles": [],
+        }
+
+    # Add user message to chat history
+    chat_history_manager.add_message(session_id, MessageRole.USER, query)
+
+    # Get conversation context
+    conversation_context = chat_history_manager.get_conversation_context(
+        session_id, max_messages=10
+    )
+    logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
+
+    # Reduce history if too long
+    session = chat_history_manager.get_session(session_id)
+    if session and len(session.messages) > 30:
+        logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
+        chat_history_manager.reduce_history(session, target_messages=20)
 
     client = load_vectorstore(VECTORSTORE_PATH_STR)
 
     # 0. Selected files control
     if not selected_files or len(selected_files) == 0:
+        response_message = "Lütfen dosya seçiniz."
+
+        # Add assistant response to chat history
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, response_message
+        )
+
         return {
-            "response": "Lütfen dosya seçiniz.",
+            "response": response_message,
             "images": [],
             "charts": [],
             "generatedFiles": [],
@@ -105,8 +115,17 @@ async def run_orchestration(
     input_moderation = check_openai_moderation(preprocessed_query)
     if input_moderation["flagged"]:
         logger.warning("moderation error")
+        response_message = (
+            f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
+        )
+
+        # Add assistant response to chat history
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, response_message
+        )
+
         return {
-            "response": f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}",
+            "response": response_message,
             "images": [],
             "charts": [],
             "generatedFiles": [],
@@ -204,6 +223,12 @@ async def run_orchestration(
             if selected_files
             else "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
         )
+
+        # Add assistant response to chat history
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, error_message
+        )
+
         return {
             "response": error_message,
             "images": [],
@@ -264,19 +289,18 @@ async def run_orchestration(
     charts = get_chart_datas()
     generated_files = get_generated_files()
 
-    if session_id:
-        metadata = {}
-        if images:
-            metadata["images"] = images
-        if charts:
-            metadata["charts"] = charts
-        if generated_files:
-            metadata["generatedFiles"] = generated_files
+    metadata = {}
+    if images:
+        metadata["images"] = images
+    if charts:
+        metadata["charts"] = charts
+    if generated_files:
+        metadata["generatedFiles"] = generated_files
 
-        metadata = metadata if metadata else None
-        chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, final_answer, metadata
-        )
+    metadata = metadata if metadata else None
+    chat_history_manager.add_message(
+        session_id, MessageRole.ASSISTANT, final_answer, metadata
+    )
 
     return {
         "response": final_answer,
@@ -302,26 +326,28 @@ async def run_news_chat_orchestration(
     logger.info(f"   - Session ID: {session_id}")
 
     # Handle chat history and session management
-    if session_id:
-        # Add user message to chat history
-        chat_history_manager.add_message(session_id, MessageRole.USER, query)
-
-        # Get conversation context
-        conversation_context = chat_history_manager.get_conversation_context(
-            session_id, max_messages=10
-        )
-        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
-
-        # Reduce history if too long
-        session = chat_history_manager.get_session(session_id)
-        if session and len(session.messages) > 30:
-            logger.info(
-                f"   - Reducing chat history from {len(session.messages)} messages"
-            )
-            chat_history_manager.reduce_history(session, target_messages=20)
-    else:
-        conversation_context = []
+    if not session_id:
         logger.debug(f"   - No session ID provided, processing as standalone query")
+        return {
+            "response": "Session ID gerekli. Lütfen geçerli bir session ile tekrar deneyin.",
+            "images": [],
+            "session_id": session_id,
+        }
+
+    # Add user message to chat history
+    chat_history_manager.add_message(session_id, MessageRole.USER, query)
+
+    # Get conversation context
+    conversation_context = chat_history_manager.get_conversation_context(
+        session_id, max_messages=10
+    )
+    logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
+
+    # Reduce history if too long
+    session = chat_history_manager.get_session(session_id)
+    if session and len(session.messages) > 30:
+        logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
+        chat_history_manager.reduce_history(session, target_messages=20)
 
     # Preprocess query
     preprocessed_query, lang = preprocess_query(query)
@@ -347,10 +373,9 @@ async def run_news_chat_orchestration(
     images = get_image_datas()
 
     # Add assistant response to chat history
-    if session_id:
-        metadata = {"images": images} if images else None
-        chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, answer, metadata
-        )
+    metadata = {"images": images} if images else None
+    chat_history_manager.add_message(
+        session_id, MessageRole.ASSISTANT, answer, metadata
+    )
 
     return {"response": answer, "images": images, "session_id": session_id}
