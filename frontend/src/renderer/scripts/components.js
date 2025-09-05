@@ -3383,6 +3383,7 @@ class UIComponents {
   hideNewsDetail() {
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
+    const stockDetail = document.getElementById("stock-detail");
     const marketColumn = document.querySelector(".market-column");
 
     if (!newsGrid || !newsDetail) return;
@@ -3394,8 +3395,9 @@ class UIComponents {
       // Continue to hide the detail view after reset
     }
 
-    // Show news grid and market column, hide detail view
+    // Show news grid and market column, hide detail views
     newsDetail.style.display = "none";
+    if (stockDetail) stockDetail.style.display = "none";
     newsGrid.style.display = "grid";
     if (marketColumn) {
       marketColumn.style.display = "block";
@@ -5545,6 +5547,385 @@ class UIComponents {
       url: this.currentNewsArticle.url,
       cluster_data: clusterData || null,
     };
+  }
+
+  // Stock Detail functionality
+  async showStockDetail(symbol) {
+    const newsGrid = document.getElementById("news-grid");
+    const stockDetail = document.getElementById("stock-detail");
+    const marketColumn = document.querySelector(".market-column");
+
+    if (!newsGrid || !stockDetail) return;
+
+    // Hide news grid and market column, show stock detail
+    newsGrid.style.display = "none";
+    if (marketColumn) {
+      marketColumn.style.display = "none";
+    }
+    stockDetail.style.display = "flex";
+
+    // Scroll to top of the news tab container when showing stock details
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+    }
+
+    // Set up back button handler
+    const backButton = document.getElementById("stock-detail-back");
+    if (backButton) {
+      backButton.onclick = () => this.hideStockDetail();
+    }
+
+    // Load stock data and populate the detail view
+    await this.loadStockDetailData(symbol);
+  }
+
+  hideStockDetail() {
+    const newsGrid = document.getElementById("news-grid");
+    const stockDetail = document.getElementById("stock-detail");
+    const marketColumn = document.querySelector(".market-column");
+
+    if (!newsGrid || !stockDetail) return;
+
+    // Show news grid and market column, hide stock detail
+    stockDetail.style.display = "none";
+    newsGrid.style.display = "grid";
+    if (marketColumn) {
+      marketColumn.style.display = "block";
+    }
+
+    // Scroll to top of the news tab container when returning to news feed
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }
+
+  async loadStockDetailData(symbol) {
+    try {
+      // Show loading state
+      this.showStockLoadingState();
+
+      // Get stock data from API
+      const api = new APIService();
+      const response = await api.getMarketEod(symbol, 30);
+      
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        const stockData = response.data.data;
+        this.populateStockDetail(symbol, stockData);
+      } else {
+        this.showStockErrorState(symbol);
+      }
+    } catch (error) {
+      console.error("Error loading stock detail:", error);
+      this.showStockErrorState(symbol);
+    }
+  }
+
+  showStockLoadingState() {
+    const companyName = document.getElementById("stock-company-name");
+    const symbol = document.getElementById("stock-symbol");
+    const currentPrice = document.getElementById("stock-current-price");
+    const priceChange = document.getElementById("stock-price-change");
+    const priceTime = document.getElementById("stock-price-time");
+    const chart = document.getElementById("stock-chart");
+
+    if (companyName) companyName.textContent = "Loading...";
+    if (symbol) symbol.textContent = "";
+    if (currentPrice) currentPrice.textContent = "--";
+    if (priceChange) priceChange.textContent = "";
+    if (priceTime) priceTime.textContent = "";
+    if (chart) {
+      chart.innerHTML = `
+        <div class="chart-loading">
+          <div class="loading-spinner"></div>
+          <p>Loading chart...</p>
+        </div>
+      `;
+    }
+  }
+
+  showStockErrorState(symbol) {
+    const companyName = document.getElementById("stock-company-name");
+    const symbolEl = document.getElementById("stock-symbol");
+    const currentPrice = document.getElementById("stock-current-price");
+    const priceChange = document.getElementById("stock-price-change");
+    const priceTime = document.getElementById("stock-price-time");
+    const chart = document.getElementById("stock-chart");
+
+    if (companyName) companyName.textContent = "Error loading data";
+    if (symbolEl) symbolEl.textContent = symbol;
+    if (currentPrice) currentPrice.textContent = "--";
+    if (priceChange) priceChange.textContent = "";
+    if (priceTime) priceTime.textContent = "";
+    if (chart) {
+      chart.innerHTML = `
+        <div class="chart-loading">
+          <p>Error loading chart data</p>
+        </div>
+      `;
+    }
+  }
+
+  populateStockDetail(symbol, stockData) {
+    // Sort data by date (newest first)
+    const sortedData = [...stockData].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const latest = sortedData[0];
+    const previous = sortedData[1];
+
+    // Calculate change
+    const change = latest.close - (previous ? previous.close : latest.close);
+    const changePercent = previous ? ((change / previous.close) * 100) : 0;
+    const isPositive = change >= 0;
+
+    // Populate header information
+    const companyName = document.getElementById("stock-company-name");
+    const symbolEl = document.getElementById("stock-symbol");
+    const currentPrice = document.getElementById("stock-current-price");
+    const priceChange = document.getElementById("stock-price-change");
+    const priceTime = document.getElementById("stock-price-time");
+
+    if (companyName) companyName.textContent = this.getCompanyName(symbol);
+    if (symbolEl) symbolEl.textContent = symbol;
+    if (currentPrice) currentPrice.textContent = `₺${latest.close?.toLocaleString("tr-TR")}`;
+    if (priceChange) {
+      priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(2)} (${isPositive ? "+" : ""}${changePercent.toFixed(2)}%)`;
+      priceChange.className = `stock-price-change ${isPositive ? "positive" : "negative"}`;
+    }
+    if (priceTime) {
+      const date = new Date(latest.date);
+      priceTime.textContent = `At close: ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", timeZoneName: "short" })}`;
+    }
+
+    // Populate financial metrics
+    this.populateFinancialMetrics(latest, previous);
+
+    // Populate company details
+    this.populateCompanyDetails(symbol);
+
+    // Create and display chart
+    this.createStockChart(sortedData);
+
+    // Populate market movers
+    this.populateMarketMovers();
+
+    // Set up interval buttons
+    this.setupIntervalButtons();
+
+    // Set up market mover tabs
+    this.setupMarketMoverTabs();
+  }
+
+  getCompanyName(symbol) {
+    const companyNames = {
+      "TUPRS.IS": "Türkiye Petrol Rafinerileri A.Ş.",
+      "AKBNK.IS": "Akbank T.A.Ş.",
+      "GARAN.IS": "Garanti BBVA",
+      "ISCTR.IS": "Türkiye İş Bankası A.Ş.",
+      "THYAO.IS": "Türk Hava Yolları A.O.",
+      "BIMAS.IS": "BİM Birleşik Mağazalar A.Ş.",
+      "EREGL.IS": "Ereğli Demir ve Çelik Fabrikaları T.A.Ş.",
+      "FROTO.IS": "Ford Otomotiv Sanayi A.Ş.",
+      "KCHOL.IS": "Koç Holding A.Ş.",
+      "SAHOL.IS": "Hacı Ömer Sabancı Holding A.Ş.",
+      "XU030.IS": "BIST 30",
+      "XU100.IS": "BIST 100"
+    };
+    return companyNames[symbol] || symbol;
+  }
+
+  populateFinancialMetrics(latest, previous) {
+    const metricsContainer = document.getElementById("financial-metrics");
+    if (!metricsContainer) return;
+
+    const prevClose = previous ? previous.close : latest.close;
+    const dayRange = `${Math.min(latest.low, latest.high).toFixed(2)} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
+    const volume = latest.volume ? latest.volume.toLocaleString("tr-TR") : "--";
+
+    metricsContainer.innerHTML = `
+      <div class="financial-metric">
+        <span class="financial-metric-label">Prev Close</span>
+        <span class="financial-metric-value">₺${prevClose.toFixed(2)}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">52W Range</span>
+        <span class="financial-metric-value">₺-- - ₺--</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">Open</span>
+        <span class="financial-metric-value">₺${latest.open?.toFixed(2) || "--"}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">P/E Ratio</span>
+        <span class="financial-metric-value">--</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">Day Range</span>
+        <span class="financial-metric-value">₺${dayRange}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">Volume</span>
+        <span class="financial-metric-value">${volume}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">Market Cap</span>
+        <span class="financial-metric-value">₺--</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">Dividend Yield</span>
+        <span class="financial-metric-value">--</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">EPS</span>
+        <span class="financial-metric-value">₺--</span>
+      </div>
+    `;
+  }
+
+  populateCompanyDetails(symbol) {
+    const detailsContainer = document.getElementById("company-details");
+    if (!detailsContainer) return;
+
+    detailsContainer.innerHTML = `
+      <div class="company-detail">
+        <span class="company-detail-label">Symbol</span>
+        <span class="company-detail-value">${symbol}</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">Market Cap</span>
+        <span class="company-detail-value">₺--</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">IPO Date</span>
+        <span class="company-detail-value">--</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">CEO</span>
+        <span class="company-detail-value">--</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">Fulltime Employees</span>
+        <span class="company-detail-value">--</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">Sector</span>
+        <span class="company-detail-value">--</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">Industry</span>
+        <span class="company-detail-value">--</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">Country</span>
+        <span class="company-detail-value">TR</span>
+      </div>
+      <div class="company-detail">
+        <span class="company-detail-label">Exchange</span>
+        <span class="company-detail-value">Istanbul Stock Exchange</span>
+      </div>
+    `;
+  }
+
+  createStockChart(data) {
+    const chartContainer = document.getElementById("stock-chart");
+    if (!chartContainer) return;
+
+    // Create a simple line chart using SVG
+    const width = 800;
+    const height = 400;
+    const padding = 40;
+
+    // Sort data by date (oldest first for chart)
+    const sortedData = [...data].reverse();
+    const prices = sortedData.map(d => d.close);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRange = maxPrice - minPrice;
+
+    // Create points for the line
+    const points = sortedData.map((d, i) => {
+      const x = padding + (i / (sortedData.length - 1)) * (width - 2 * padding);
+      const y = padding + ((maxPrice - d.close) / priceRange) * (height - 2 * padding);
+      return { x, y };
+    });
+
+    // Create path data
+    let pathData = `M ${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      pathData += ` L ${points[i].x},${points[i].y}`;
+    }
+
+    // Determine color based on trend
+    const firstPrice = prices[0];
+    const lastPrice = prices[prices.length - 1];
+    const isPositive = lastPrice >= firstPrice;
+    const color = isPositive ? "#10b981" : "#ef4444";
+
+    chartContainer.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
+        <defs>
+          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:${color};stop-opacity:0.3" />
+            <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
+          </linearGradient>
+        </defs>
+        <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${pathData} L ${points[points.length-1].x},${height-padding} L ${points[0].x},${height-padding} Z" fill="url(#chartGradient)"/>
+      </svg>
+    `;
+  }
+
+  populateMarketMovers() {
+    const moversContainer = document.getElementById("market-movers-content");
+    if (!moversContainer) return;
+
+    // Sample data - in a real app, this would come from an API
+    const sampleMovers = [
+      { symbol: "OLEMA", price: "$8.11", change: "+27.72%", positive: true },
+      { symbol: "NVDA", price: "$166.34", change: "-3.1%", positive: false },
+      { symbol: "MSFT", price: "$496.89", change: "-2.18%", positive: false },
+      { symbol: "AAPL", price: "$238.75", change: "-0.43%", positive: false },
+      { symbol: "TSLA", price: "$347.60", change: "+2.68%", positive: true }
+    ];
+
+    moversContainer.innerHTML = sampleMovers.map(mover => `
+      <div class="mover-item">
+        <span class="mover-symbol">${mover.symbol}</span>
+        <span class="mover-price">${mover.price}</span>
+        <span class="mover-change ${mover.positive ? 'positive' : 'negative'}">${mover.change}</span>
+      </div>
+    `).join('');
+  }
+
+  setupIntervalButtons() {
+    const intervalButtons = document.querySelectorAll('.interval-btn');
+    intervalButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Remove active class from all buttons
+        intervalButtons.forEach(b => b.classList.remove('active'));
+        // Add active class to clicked button
+        e.target.classList.add('active');
+        
+        // Here you would typically reload the chart with new data
+        // For now, we'll just log the interval
+        console.log('Selected interval:', e.target.dataset.interval);
+      });
+    });
+  }
+
+  setupMarketMoverTabs() {
+    const moverTabs = document.querySelectorAll('.mover-tab');
+    moverTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        // Remove active class from all tabs
+        moverTabs.forEach(t => t.classList.remove('active'));
+        // Add active class to clicked tab
+        e.target.classList.add('active');
+        
+        // Here you would typically load different market mover data
+        console.log('Selected tab:', e.target.dataset.tab);
+      });
+    });
   }
 }
 
