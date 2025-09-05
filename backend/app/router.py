@@ -30,6 +30,7 @@ class QueryRequest(BaseModel):
     webSearchEnabled: bool = False
     preEmbeddingProcess: str = "pdr"
     sessionId: Optional[str] = None
+    selectedFiles: Optional[List[str]] = None
 
 
 class NewsChatRequest(BaseModel):
