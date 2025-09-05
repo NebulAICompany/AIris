@@ -570,16 +570,27 @@ class APIService {
     }
   }
 
-  async getMarketEod(symbol = "TUPRS.IS", limit = 10) {
+  async getMarketEod(symbol = "TUPRS.IS", limit = 7) {
     console.log(`[API] Getting market EOD for ${symbol} with limit ${limit}`);
     return this.makeRequest(`/api/market/eod`, "GET", null, {
       params: { symbol, limit },
     });
   }
 
-  async refreshMarketEod() {
+  async refreshMarketEod(symbols = "TUPRS.IS", limit = 7) {
     console.log(`[API] Refreshing market EOD`);
-    return this.makeRequest(`/api/market/eod/refresh`, "POST");
+    return this.makeRequest(`/api/market/eod/refresh`, "POST", null, {
+      params: { symbols, limit },
+    });
+  }
+
+  async getMostChangedQuotes(symbols, limit = 30, chart_num = 8) {
+    console.log(`[API] Getting most changed quotes for ${symbols.length} symbols`);
+    return this.makeRequest(`/api/market/most-changed`, "POST", {
+      symbols,
+      limit,
+      chart_num
+    });
   }
 
   // News Chat API method
