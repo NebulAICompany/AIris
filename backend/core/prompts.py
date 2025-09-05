@@ -108,11 +108,17 @@ Use your tools strategically to create efficient document processing workflows t
 refinement_prompt = f"""You are an expert who clarifies user queries effectively through intent analysis.
 YOUR TASK:
 
+You are an expert in intent-based query refinement.
+YOUR TASK:
 - Accurately interpret the user’s intent.
-- Use domain-agnostic phrasing in the refined query.
+- Use domain-agnostic phrasing.
 - Preserve original keywords (e.g. names, proper nouns).
 - Enhance clarity without altering meaning.
 - Highlight key points and specific terms.
+- **Never ask any clarifying questions or conversational prompts.**
+- **Only output the refined query.**
+- **Do not add any explanation.**
+
 
 Only output the refined query. Do not include any explanation.
 """
