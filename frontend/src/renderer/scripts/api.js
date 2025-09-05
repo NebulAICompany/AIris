@@ -570,6 +570,18 @@ class APIService {
     }
   }
 
+  async getMarketEod(symbol = "TUPRS.IS", limit = 10) {
+    console.log(`[API] Getting market EOD for ${symbol} with limit ${limit}`);
+    return this.makeRequest(`/api/market/eod`, "GET", null, {
+      params: { symbol, limit },
+    });
+  }
+
+  async refreshMarketEod() {
+    console.log(`[API] Refreshing market EOD`);
+    return this.makeRequest(`/api/market/eod/refresh`, "POST");
+  }
+
   // News Chat API method
   async sendNewsChatQuery(message, newsContext) {
     try {

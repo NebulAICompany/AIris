@@ -574,19 +574,22 @@
             <div class="news-container">
               <div class="news-header">
                 <h2 data-i18n="financeNewsTitle">Finance News</h2>
-                <p data-i18n="latestFinancialNews">
-                  Latest financial news and market updates
-                </p>
+                <div id="market-eod" style="margin:12px 0">
+                  <div style="margin-bottom: 8px;">
+                    <label for="chart-days" style="font-size: 12px; color: #667085;">Chart Period: </label>
+                    <select id="chart-days" style="font-size: 12px; padding: 2px 4px; border: 1px solid #e7e7e9; border-radius: 4px;">
+                      <option value="7">7 days</option>
+                      <option value="15">15 days</option>
+                      <option value="30" selected>30 days</option>
+                    </select>
+                  </div>
+                </div>
                 <div class="news-controls">
                   <div class="news-refresh-group">
                     <button id="refresh-news" class="btn btn-primary">
                       <i class="fas fa-sync-alt"></i>
                       <span data-i18n="getLatestNews">Get Latest News</span>
                     </button>
-                    <div class="news-refresh-hint">
-                      <i class="fas fa-info-circle"></i>
-                      <span data-i18n="autoUpdateInfo">Auto-updates every 45 minutes</span>
-                    </div>
                   </div>
                   <div class="news-status">
                     <span id="news-last-updated" data-i18n="loading"
