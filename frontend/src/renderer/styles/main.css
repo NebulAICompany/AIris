@@ -73,7 +73,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar Styles */
+/* Scrollbar Styles - Best Practices */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -81,15 +81,26 @@ body {
 
 ::-webkit-scrollbar-track {
   background: var(--bg-secondary);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--text-muted);
   border-radius: 4px;
+  border: 1px solid var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-secondary);
+}
+
+/* Ensure scrollbars are always positioned at the right edge */
+* {
+  scrollbar-gutter: stable;
 }
 
 /* App Container */
@@ -568,6 +579,13 @@ input:checked + .slider:before {
 #chat-tab {
   padding: 0;
   overflow: hidden;
+  margin: 0;
+}
+
+/* Special layout for news tab - full page scrolling */
+#news-tab {
+  padding: 24px 0;
+  overflow-y: auto;
   margin: 0;
 }
 
