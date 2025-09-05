@@ -3370,12 +3370,22 @@ class UIComponents {
     const article = this.currentArticles[articleIndex];
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
+    const marketColumn = document.querySelector(".market-column");
 
     if (!newsGrid || !newsDetail) return;
 
-    // Hide news grid and show detail view
+    // Hide news grid and market column, show detail view
     newsGrid.style.display = "none";
+    if (marketColumn) {
+      marketColumn.style.display = "none";
+    }
     newsDetail.style.display = "flex";
+
+    // Scroll to top of the news tab container when showing news details
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+    }
 
     // Populate detail view
     this.populateNewsDetail(article);
@@ -3398,6 +3408,7 @@ class UIComponents {
   hideNewsDetail() {
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
+    const marketColumn = document.querySelector(".market-column");
 
     if (!newsGrid || !newsDetail) return;
 
@@ -3408,9 +3419,18 @@ class UIComponents {
       // Continue to hide the detail view after reset
     }
 
-    // Show news grid and hide detail view
+    // Show news grid and market column, hide detail view
     newsDetail.style.display = "none";
     newsGrid.style.display = "grid";
+    if (marketColumn) {
+      marketColumn.style.display = "block";
+    }
+
+    // Scroll to top of the news tab container when returning to news feed
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+    }
 
     // Clean up event listeners when hiding detail view
     const sourcesListElement = document.getElementById("news-sources-list");

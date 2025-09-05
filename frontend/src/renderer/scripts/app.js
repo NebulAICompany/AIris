@@ -73,96 +73,227 @@ class AIrisApp {
       logger.info("AIris App initialized successfully", "APP");
 
       // Render market EOD tiles on news tab
-      this.renderMarketTiles();
+      this.renderMarketTiles(30);
 
-      // Setup chart period selector
-      this.setupChartPeriodSelector();
     } catch (error) {
       logger.error(`Failed to start app: ${error.message}`, "APP");
       this.showErrorScreen(error);
     }
   }
 
-  async renderMarketTiles(days = 7) {
+  async renderMarketTiles(days = 30) {
     try {
       const api = new APIService();
-      let response = await api.getMarketEod("TUPRS.IS", days);
-      let data = response.data?.data || [];
+      const symbols = [
+        "AEFES.IS", "AKBNK.IS", "ASELS.IS", "ASTOR.IS", "BIMAS.IS", "CIMSA.IS", 
+        "EKGYO.IS", "ENKAI.IS", "EREGL.IS", "FROTO.IS", "GARAN.IS", "GUBRF.IS", 
+        "ISCTR.IS", "KCHOL.IS", "KOZAL.IS", "KRDMD.IS", "MGROS.IS", "PETKM.IS", 
+        "PGSUS.IS", "SAHOL.IS", "SASA.IS", "SISE.IS", "TAVHL.IS", "TCELL.IS", 
+        "THYAO.IS", "TOASO.IS", "TTKOM.IS", "TUPRS.IS", "ULKER.IS", "YKBNK.IS"
+      ];
+      const indexSymbols = ["XU030.IS", "XU100.IS"];
+      const allSymbols = [...indexSymbols, ...symbols];
+      const symbolsString = allSymbols.join(",");
 
       const container = document.querySelector("#market-eod");
       if (!container) return;
 
-      let latest = data?.[0];
-      // If no cached data yet, force refresh once
-      if (!latest) {
+      // Check if we have data for any symbol, if not refresh all at once
+      let hasAnyData = false;
+      for (const symbol of allSymbols) {
         try {
-          await api.refreshMarketEod();
-          response = await api.getMarketEod("TUPRS.IS", days);
-          data = response.data?.data || [];
-          latest = data?.[0];
+          const response = await api.getMarketEod(symbol, days);
+          if (response.data?.data && response.data.data.length > 0) {
+            hasAnyData = true;
+            break;
+          }
         } catch {}
       }
 
-      if (!latest) {
-        container.innerHTML = `
-          <div class="market-grid">
-            <div class="market-tile">
-              <div class="market-title">TUPRS.IS</div>
-              <div class="market-sub">No data yet. Click refresh above.</div>
-            </div>
-          </div>`;
-        return;
+      // If no data exists, refresh all symbols at once
+      if (!hasAnyData) {
+        try {
+          await api.refreshMarketEod(symbolsString, days);
+        } catch (error) {
+          console.error("Error refreshing market data:", error);
+        }
       }
 
-      // Create mini chart SVG
-      const chartSvg = this.createMiniChart(data);
+      // Get the most changed quotes using the new function (excluding indexes)
+      let topPerformers = [];
+      try {
+        const response = await api.getMostChangedQuotes(symbols, days, 8);
+        topPerformers = response.data?.data || [];
+      } catch (error) {
+        console.error("Error fetching most changed quotes:", error);
+      }
 
-      // Calculate change from first data point (oldest) to latest
-      const firstDataPoint = data[data.length - 1]; // Last in array is oldest
-      const change = latest.close - firstDataPoint.close;
-      const changePercent = (change / firstDataPoint.close) * 100;
-      const isPositive = change >= 0;
-      const changeColor = isPositive ? "#10b981" : "#ef4444";
-      const changeSymbol = isPositive ? "↑" : "↓";
-
-      // Create 8 market tiles
+      // Create tiles array starting with index tiles
       const tiles = [];
-      for (let i = 0; i < 8; i++) {
-        const isFirstTile = i === 0;
-        tiles.push(`
-          <div class="market-tile" data-tile-index="${i}">
-            <div class="market-tile-header">
-              <div class="market-title">${
-                isFirstTile ? "TUPRS.IS" : "STOCK" + (i + 1)
-              }</div>
-              <div class="market-change-indicator" style="background-color: ${
-                isFirstTile ? changeColor + "20" : "#e7e7e920"
-              }; color: ${isFirstTile ? changeColor : "#667085"};">
-                <span class="change-symbol">${
-                  isFirstTile ? changeSymbol : "--"
-                }</span>
-                <span class="change-percent">${
-                  isFirstTile ? "%" + Math.abs(changePercent).toFixed(2) : "--"
-                }</span>
+      
+      // First, create the 2 permanent index tiles
+      for (let i = 0; i < 2; i++) {
+        const indexSymbol = indexSymbols[i];
+        try {
+          const response = await api.getMarketEod(indexSymbol, days);
+          const data = response.data?.data || [];
+          
+          if (data.length > 0) {
+            const latest = data[0];
+            const chartSvg = this.createMiniChart(data);
+            
+            // Calculate change from first data point (oldest) to latest
+            const firstDataPoint = data[data.length - 1]; // Last in array is oldest
+            const change = latest.close - firstDataPoint.close;
+            const changePercent = firstDataPoint.close !== 0 ? ((change / firstDataPoint.close) * 100) : 0;
+            const isPositive = change >= 0;
+            const changeColor = isPositive ? "#10b981" : "#ef4444";
+            const changeSymbol = isPositive ? "↑" : "↓";
+
+            tiles.push(`
+              <div class="market-tile" data-tile-index="${i}">
+                <div class="market-tile-header">
+                  <div class="market-title">${indexSymbol}</div>
+                  <div class="market-change-indicator" style="background-color: ${changeColor + "20"}; color: ${changeColor};">
+                    <span class="change-symbol">${changeSymbol}</span>
+                    <span class="change-percent">%${Math.abs(changePercent).toFixed(2)}</span>
+                  </div>
+                </div>
+                <div class="market-change-absolute" style="color: ${changeColor};">
+                  ${(isPositive ? "+" : "") + change.toFixed(2)}
+                </div>
+                <div class="market-chart-container">
+                  <div class="market-chart">${chartSvg}</div>
+                </div>
+                <div class="market-price">${latest.close?.toLocaleString("tr-TR")} TRY</div>
               </div>
+            `);
+          } else {
+            // No data for this index
+            tiles.push(`
+              <div class="market-tile" data-tile-index="${i}">
+                <div class="market-tile-header">
+                  <div class="market-title">${indexSymbol}</div>
+                  <div class="market-change-indicator" style="background-color: #e7e7e920; color: #667085;">
+                    <span class="change-symbol">--</span>
+                    <span class="change-percent">--</span>
+                  </div>
+                </div>
+                <div class="market-change-absolute" style="color: #667085;">
+                  --
+                </div>
+                <div class="market-chart-container">
+                  <div class="market-chart"></div>
+                </div>
+                <div class="market-price">--</div>
+              </div>
+            `);
+          }
+        } catch (error) {
+          console.error(`Error fetching data for ${indexSymbol}:`, error);
+          // Fallback for index with error
+          tiles.push(`
+            <div class="market-tile" data-tile-index="${i}">
+              <div class="market-tile-header">
+                <div class="market-title">${indexSymbol}</div>
+                <div class="market-change-indicator" style="background-color: #e7e7e920; color: #667085;">
+                  <span class="change-symbol">--</span>
+                  <span class="change-percent">--</span>
+                </div>
+              </div>
+              <div class="market-change-absolute" style="color: #667085;">
+                --
+              </div>
+              <div class="market-chart-container">
+                <div class="market-chart"></div>
+              </div>
+              <div class="market-price">--</div>
             </div>
-            <div class="market-change-absolute" style="color: ${
-              isFirstTile ? changeColor : "#667085"
-            };">
-              ${
-                isFirstTile ? (isPositive ? "+" : "") + change.toFixed(2) : "--"
-              }
+          `);
+        }
+      }
+      
+      // Then, create the 8 most changed stock tiles
+      for (let i = 0; i < 8; i++) {
+        const tileIndex = i + 2; // Start from index 2 (after the 2 index tiles)
+        if (i < topPerformers.length) {
+          const performer = topPerformers[i];
+          const symbol = performer.symbol;
+          const data = performer.data;
+          const changePercent = performer.change_percent;
+          const latest = data?.[0];
+
+          if (latest && data.length > 0) {
+            // Create mini chart SVG for this stock
+            const chartSvg = this.createMiniChart(data);
+            
+            // Calculate absolute change from first data point (oldest) to latest
+            const firstDataPoint = data[data.length - 1]; // Last in array is oldest
+            const change = latest.close - firstDataPoint.close;
+            const isPositive = change >= 0;
+            const changeColor = isPositive ? "#10b981" : "#ef4444";
+            const changeSymbol = isPositive ? "↑" : "↓";
+
+            tiles.push(`
+              <div class="market-tile" data-tile-index="${tileIndex}">
+                <div class="market-tile-header">
+                  <div class="market-title">${symbol}</div>
+                  <div class="market-change-indicator" style="background-color: ${changeColor + "20"}; color: ${changeColor};">
+                    <span class="change-symbol">${changeSymbol}</span>
+                    <span class="change-percent">%${Math.abs(changePercent).toFixed(2)}</span>
+                  </div>
+                </div>
+                <div class="market-change-absolute" style="color: ${changeColor};">
+                  ${(isPositive ? "+" : "") + change.toFixed(2)}
+                </div>
+                <div class="market-chart-container">
+                  <div class="market-chart">${chartSvg}</div>
+                </div>
+                <div class="market-price">${latest.close?.toLocaleString("tr-TR")} TRY</div>
+              </div>
+            `);
+          } else {
+            // No data for this stock
+            tiles.push(`
+              <div class="market-tile" data-tile-index="${tileIndex}">
+                <div class="market-tile-header">
+                  <div class="market-title">${symbol}</div>
+                  <div class="market-change-indicator" style="background-color: #e7e7e920; color: #667085;">
+                    <span class="change-symbol">--</span>
+                    <span class="change-percent">--</span>
+                  </div>
+                </div>
+                <div class="market-change-absolute" style="color: #667085;">
+                  --
+                </div>
+                <div class="market-chart-container">
+                  <div class="market-chart"></div>
+                </div>
+                <div class="market-price">--</div>
+              </div>
+            `);
+          }
+        } else {
+          // Fallback for missing performers
+          tiles.push(`
+            <div class="market-tile" data-tile-index="${tileIndex}">
+              <div class="market-tile-header">
+                <div class="market-title">--</div>
+                <div class="market-change-indicator" style="background-color: #e7e7e920; color: #667085;">
+                  <span class="change-symbol">--</span>
+                  <span class="change-percent">--</span>
+                </div>
+              </div>
+              <div class="market-change-absolute" style="color: #667085;">
+                --
+              </div>
+              <div class="market-chart-container">
+                <div class="market-chart"></div>
+              </div>
+              <div class="market-price">--</div>
             </div>
-            <div class="market-chart-container">
-              <div class="market-chart">${isFirstTile ? chartSvg : ""}</div>
-            </div>
-            <div class="market-price">${
-              isFirstTile
-                ? latest.close?.toLocaleString("tr-TR") + " TRY"
-                : "--"
-            }</div>
-          </div>
-        `);
+          `);
+        }
       }
 
       container.innerHTML = `
@@ -170,10 +301,50 @@ class AIrisApp {
           ${tiles.join("")}
         </div>
       `;
+
+      // Add event listener for refresh button
+      this.setupMarketRefreshButton();
     } catch (e) {
       console.error("Market tiles render error", e);
     }
   }
+
+  setupMarketRefreshButton() {
+    const refreshBtn = document.getElementById("refresh-market-data");
+    if (refreshBtn) {
+      refreshBtn.onclick = async () => {
+        const symbols = [
+          "AEFES.IS", "AKBNK.IS", "ASELS.IS", "ASTOR.IS", "BIMAS.IS", "CIMSA.IS", 
+          "EKGYO.IS", "ENKAI.IS", "EREGL.IS", "FROTO.IS", "GARAN.IS", "GUBRF.IS", 
+          "ISCTR.IS", "KCHOL.IS", "KOZAL.IS", "KRDMD.IS", "MGROS.IS", "PETKM.IS", 
+          "PGSUS.IS", "SAHOL.IS", "SASA.IS", "SISE.IS", "TAVHL.IS", "TCELL.IS", 
+          "THYAO.IS", "TOASO.IS", "TTKOM.IS", "TUPRS.IS", "ULKER.IS", "YKBNK.IS"
+        ];
+        const indexSymbols = ["XU030.IS", "XU100.IS"];
+        const allSymbols = [...indexSymbols, ...symbols];
+        const symbolsString = allSymbols.join(",");
+        
+        // Add loading state
+        refreshBtn.classList.add("loading");
+        refreshBtn.disabled = true;
+        
+        try {
+          const api = new APIService();
+          await api.refreshMarketEod(symbolsString, 30);
+          
+          // Re-render the market tiles with fresh data
+          await this.renderMarketTiles(30);
+        } catch (error) {
+          console.error("Error refreshing market data:", error);
+        } finally {
+          // Remove loading state
+          refreshBtn.classList.remove("loading");
+          refreshBtn.disabled = false;
+        }
+      };
+    }
+  }
+
 
   createMiniChart(data) {
     if (!data || data.length < 2) return "";
@@ -187,7 +358,7 @@ class AIrisApp {
 
     // Chart dimensions - responsive width, fixed height
     const width = 200; // This will be overridden by CSS
-    const height = 12;
+    const height = 40;
     const padding = 2;
 
     // Create smooth curve using quadratic bezier curves
@@ -225,21 +396,12 @@ class AIrisApp {
     const color = isPositive ? "#10b981" : "#ef4444";
 
     return `
-      <svg viewBox="0 0 200 12" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
+      <svg viewBox="0 0 200 40" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
         <path d="${pathData}" stroke="${color}" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     `;
   }
 
-  setupChartPeriodSelector() {
-    const selector = document.getElementById("chart-days");
-    if (selector) {
-      selector.addEventListener("change", (e) => {
-        const days = parseInt(e.target.value);
-        this.renderMarketTiles(days);
-      });
-    }
-  }
 
   async checkBackendConnection(retries = 3) {
     for (let attempt = 1; attempt <= retries; attempt++) {
