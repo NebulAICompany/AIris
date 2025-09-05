@@ -18,6 +18,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 from backend.utils.news import get_aggregated_financial_news
+from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
 
 logger = get_logger("ROUTER")
@@ -42,6 +43,27 @@ class NewsChatRequest(BaseModel):
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
+
+
+@router.get("/market/eod")
+async def get_market_eod(symbol: str = "TUPRS.IS", limit: int = 10):
+    logger.info(f"Getting market EOD for {symbol} with limit {limit}")
+    try:
+        data = store.get_latest_quotes(symbol, limit)
+        return {"symbol": symbol, "count": len(data), "data": data}
+    except Exception as e:
+        logger.error(f"Error fetching EOD from DB: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/market/eod/refresh")
+async def refresh_market_eod():
+    try:
+        saved = await refresh_eod()
+        return {"status": "ok", "saved": saved}
+    except Exception as e:
+        logger.error(f"Error refreshing EOD: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/query")

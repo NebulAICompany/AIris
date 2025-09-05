@@ -22,6 +22,11 @@ AZURE_DOCUMENT_INTELLIGENCE_KEY = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 AZURE_LANGUAGE_ENDPOINT = os.environ.get("AZURE_LANGUAGE_ENDPOINT")
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
+MARKETSTACK_EOD_API_KEY = os.getenv("MARKETSTACK_EOD_API_KEY")
+MARKETSTACK_EOD_URL = os.getenv(
+    "MARKETSTACK_EOD_URL",
+    f"http://api.marketstack.com/v2/eod?access_key={MARKETSTACK_EOD_API_KEY}",
+)
 AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
 WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
 
@@ -65,6 +70,9 @@ MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
 # Charts directory - Use absolute path to prevent backend/backend issue
 CHARTS_DIR = PROJECT_ROOT / "backend" / "database" / "charts"
 CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
+
+# Market data database path
+MARKET_DATA_DB_PATH = DATABASE_DIR / "market_data.db"
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
