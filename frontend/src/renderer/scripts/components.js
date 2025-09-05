@@ -262,6 +262,15 @@ class UIComponents {
         this.switchTab(e.target.dataset.tab);
       }
 
+      // Handle news item clicks (hero variants and regular items)
+      const newsItem = e.target.closest(
+        ".news-item, .news-hero, .news-hero-left, .news-hero-right"
+      );
+      if (newsItem && newsItem.dataset.articleIndex !== undefined) {
+        const articleIndex = parseInt(newsItem.dataset.articleIndex);
+        this.showNewsDetail(articleIndex);
+      }
+
       // Handle markdown download links in chat messages
       if (
         e.target.tagName === "A" &&
@@ -308,14 +317,7 @@ class UIComponents {
         }
       }
 
-      // Handle news article clicks
-      if (e.target.closest(".news-item")) {
-        const newsItem = e.target.closest(".news-item");
-        const articleIndex = newsItem.dataset.articleIndex;
-        if (articleIndex !== undefined) {
-          this.showNewsDetail(parseInt(articleIndex));
-        }
-      }
+      // News article clicks are now handled above with hero support
 
       // Handle file selection item clicks
       if (e.target.closest(".file-selection-item")) {
@@ -2972,9 +2974,100 @@ class UIComponents {
     // FIXED: Store the sorted articles with indices (not the original unsorted ones)
     this.currentArticles = articlesWithIndices;
 
-    newsGrid.innerHTML = articlesWithIndices
-      .map((article) => this.createNewsItem(article))
-      .join("");
+    // Create Perplexity-style alternating layout
+    // Pattern: Hero Right -> 3 items -> Hero Left -> Hero Right -> 3 items -> ...
+    let html = "";
+    let articleIndex = 0;
+    let isHeroRight = true; // Start with right
+
+    while (articleIndex < articlesWithIndices.length) {
+      // Add a hero item
+      const heroArticle = articlesWithIndices[articleIndex];
+      if (heroArticle) {
+        const heroType = isHeroRight ? "right" : "left";
+        html += this.createHeroNewsItem(heroArticle, heroType);
+        articleIndex++;
+        isHeroRight = !isHeroRight; // Alternate for next hero
+      }
+
+      // Add 3 secondary items if available
+      const secondaryArticles = articlesWithIndices.slice(
+        articleIndex,
+        articleIndex + 3
+      );
+      if (secondaryArticles.length > 0) {
+        const secondaryHtml = secondaryArticles
+          .map((article) => this.createNewsItem(article))
+          .join("");
+        html += `<div class="news-secondary">${secondaryHtml}</div>`;
+        articleIndex += secondaryArticles.length;
+      }
+    }
+
+    newsGrid.innerHTML = html;
+  }
+
+  createHeroNewsItem(article, heroType = "right") {
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    let timeAgo = t("unknown");
+    try {
+      if (article.published) {
+        const publishedDate = new Date(article.published);
+        timeAgo = this.getTimeAgo(publishedDate);
+      }
+    } catch (error) {
+      console.warn("Error processing article date:", error, article.published);
+      timeAgo = t("unknown");
+    }
+
+    // Create image HTML for hero
+    let imageHtml = "";
+    let imageSrc = "";
+
+    if (article.image_url) {
+      imageSrc = article.image_url;
+    } else if (
+      article.available_images &&
+      article.available_images.length > 0
+    ) {
+      imageSrc = article.available_images[0].url;
+    }
+
+    if (imageSrc) {
+      imageHtml = `
+        <div class="news-hero-image">
+          <img src="${Utils.escapeHtml(imageSrc)}"
+               alt="${Utils.escapeHtml(article.title)}"
+               loading="lazy"
+               onerror="this.style.display='none'"
+          />
+        </div>
+      `;
+    }
+
+    const heroClass = `news-hero news-hero-${heroType}`;
+
+    return `
+      <div class="${heroClass}" data-article-index="${article.index || 0}">
+        ${imageHtml}
+        <div class="news-hero-content">
+          <h2 class="news-hero-title">${Utils.escapeHtml(article.title)}</h2>
+          <p class="news-hero-description">${Utils.escapeHtml(
+            article.summary || ""
+          )}</p>
+          <div class="news-hero-meta">
+            <span class="news-hero-sources">
+              <i class="fas fa-building"></i>
+              ${Utils.escapeHtml(article.source)}
+            </span>
+            <span class="news-hero-time">~${timeAgo}</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   createNewsItem(article) {
@@ -3028,16 +3121,14 @@ class UIComponents {
     // Create image HTML if we have an image source
     if (imageSrc) {
       imageHtml = `
-      <div class="news-image">
-        <img src="${Utils.escapeHtml(imageSrc)}"
-             alt="${imageAlt}"
-             loading="lazy"
-             onerror="this.style.display='none'"
-             ${imageWidth}
-             ${imageHeight}
-        />
-      </div>
-    `;
+        <div class="news-item-image">
+          <img src="${Utils.escapeHtml(imageSrc)}"
+               alt="${imageAlt}"
+               loading="lazy"
+               onerror="this.style.display='none'"
+          />
+        </div>
+      `;
     }
 
     return `
@@ -3045,22 +3136,16 @@ class UIComponents {
         ${imageHtml}
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
-          <p class="news-summary">${Utils.escapeHtml(article.summary || "")}</p>
+          <p class="news-description">${Utils.escapeHtml(
+            article.summary || ""
+          )}</p>
           <div class="news-meta">
-            <span class="news-source">
+            <span class="news-sources">
               <i class="fas fa-building"></i>
               ${Utils.escapeHtml(article.source)}
             </span>
-            <span class="news-time">
-              <i class="fas fa-clock"></i>
-              ${timeAgo}
-            </span>
+            <span class="news-time">~${timeAgo}</span>
           </div>
-        </div>
-        <div class="news-actions">
-          <button class="news-link-btn" title="Read full article">
-            <i class="fas fa-arrow-right"></i>
-          </button>
         </div>
       </div>
     `;
