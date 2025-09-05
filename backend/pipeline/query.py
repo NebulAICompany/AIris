@@ -23,6 +23,7 @@ from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
 from backend.server.finance_mcp import get_chart_datas, clear_chart_datas
 from backend.core.tools.office import get_generated_files, clear_generated_files
+from backend.utils.news import format_news_context
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -344,49 +345,3 @@ async def run_news_chat_orchestration(
         )
 
     return {"response": answer, "images": images, "session_id": session_id}
-
-
-def format_news_context(news_context: dict) -> str:
-    """
-    Format news context into a structured string for the agent.
-    """
-    context_parts = []
-
-    # Basic news information
-    if news_context.get("title"):
-        context_parts.append(f"News Title: {news_context['title']}")
-
-    if news_context.get("summary"):
-        context_parts.append(f"News Summary: {news_context['summary']}")
-
-    if news_context.get("content"):
-        context_parts.append(f"News Content: {news_context['content']}")
-
-    if news_context.get("source"):
-        context_parts.append(f"News Source: {news_context['source']}")
-
-    if news_context.get("sources") and isinstance(news_context["sources"], list):
-        sources_str = ", ".join(news_context["sources"])
-        context_parts.append(f"News Sources: {sources_str}")
-
-    if news_context.get("published"):
-        context_parts.append(f"Published: {news_context['published']}")
-
-    if news_context.get("url"):
-        context_parts.append(f"News URL: {news_context['url']}")
-
-    # Cluster data if available
-    if news_context.get("cluster_data"):
-        cluster = news_context["cluster_data"]
-        if cluster.get("unified_title"):
-            context_parts.append(f"Cluster Title: {cluster['unified_title']}")
-        if cluster.get("unified_description"):
-            context_parts.append(
-                f"Cluster Description: {cluster['unified_description']}"
-            )
-        if cluster.get("articles") and len(cluster["articles"]) > 1:
-            context_parts.append(
-                f"Related Articles: {len(cluster['articles'])} articles in this cluster"
-            )
-
-    return "\n\n".join(context_parts)
