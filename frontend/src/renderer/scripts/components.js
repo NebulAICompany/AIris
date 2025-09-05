@@ -559,7 +559,7 @@ class UIComponents {
           this.webSearchEnabled,
           this.currentSessionId,
           2,
-          uploadedFiles.length > 0 ? uploadedFiles : null
+          this.selectedFiles.length > 0 ? this.selectedFiles : null
         );
 
         if (response) {
