@@ -99,7 +99,7 @@ class LanguageService {
         askAboutNews: "Ask about this news",
         chatDescription:
           "Ask questions about this news article and get AI-powered insights",
-        askQuestionPlaceholder: "Ask a question about this news...",
+        askQuestionPlaceholder: "Ask follow up about this news...",
         followUpQuestionPlaceholder: "Ask a follow-up question...",
 
         // Settings Section
@@ -448,7 +448,7 @@ class LanguageService {
         askAboutNews: "Bu haber hakkında soru sor",
         chatDescription:
           "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
-        askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
+        askQuestionPlaceholder: "Bu haber hakkında sorular sorun...",
         followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
         // Settings Section
@@ -775,6 +775,13 @@ class LanguageService {
       } else {
         element.textContent = text;
       }
+    });
+
+    // Update elements with data-i18n-placeholder attribute
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-placeholder");
+      const text = this.get(key);
+      element.placeholder = text;
     });
 
     // Update title
