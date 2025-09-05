@@ -59,6 +59,18 @@ async def startup_event():
         await connect_mcp_servers()
         logger.info("MCP servers connected successfully.")
 
+        ## Start background news scheduler
+        #logger.info("Starting background news scheduler...")
+        #from backend.scheduler.news_scheduler import start_background_scheduler
+        #start_background_scheduler()
+        #logger.info("Background news scheduler started successfully.")
+
+        ## Start market EOD scheduler (daily)
+        #logger.info("Starting market EOD scheduler...")
+        #from backend.scheduler.market_scheduler import start_market_scheduler
+        #start_market_scheduler()
+        #logger.info("Market EOD scheduler started successfully.")
+
     except Exception as e:
         import traceback
 

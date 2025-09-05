@@ -72,9 +72,158 @@ class AIrisApp {
       this.isInitialized = true;
       logger.info("AIris App initialized successfully", "APP");
 
+      // Render market EOD tiles on news tab
+      this.renderMarketTiles();
+
+      // Setup chart period selector
+      this.setupChartPeriodSelector();
+
+      // Show connection status
+      this.updateConnectionStatus(this.backendConnected);
     } catch (error) {
       logger.error(`Failed to start app: ${error.message}`, "APP");
       this.showErrorScreen(error);
+    }
+  }
+
+  async renderMarketTiles(days = 7) {
+    try {
+      const api = new APIService();
+      let response = await api.getMarketEod("TUPRS.IS", days);
+      let data = response.data?.data || [];
+
+      const container = document.querySelector("#market-eod");
+      if (!container) return;
+
+      let latest = data?.[0];
+      // If no cached data yet, force refresh once
+      if (!latest) {
+        try {
+          await api.refreshMarketEod();
+          response = await api.getMarketEod("TUPRS.IS", days);
+          data = response.data?.data || [];
+          latest = data?.[0];
+        } catch {}
+      }
+
+      if (!latest) {
+        container.innerHTML = `
+          <div class="market-grid">
+            <div class="market-tile">
+              <div class="market-title">TUPRS.IS</div>
+              <div class="market-sub">No data yet. Click refresh above.</div>
+            </div>
+          </div>`;
+        return;
+      }
+
+      // Create mini chart SVG
+      const chartSvg = this.createMiniChart(data);
+      
+      // Calculate change from first data point (oldest) to latest
+      const firstDataPoint = data[data.length - 1]; // Last in array is oldest
+      const change = latest.close - firstDataPoint.close;
+      const changePercent = ((change / firstDataPoint.close) * 100);
+      const isPositive = change >= 0;
+      const changeColor = isPositive ? '#10b981' : '#ef4444';
+      const changeSymbol = isPositive ? '↑' : '↓';
+
+      // Create 8 market tiles
+      const tiles = [];
+      for (let i = 0; i < 8; i++) {
+        const isFirstTile = i === 0;
+        tiles.push(`
+          <div class="market-tile" data-tile-index="${i}">
+            <div class="market-tile-header">
+              <div class="market-title">${isFirstTile ? 'TUPRS.IS' : 'STOCK' + (i + 1)}</div>
+              <div class="market-change-indicator" style="background-color: ${isFirstTile ? changeColor + '20' : '#e7e7e920'}; color: ${isFirstTile ? changeColor : '#667085'};">
+                <span class="change-symbol">${isFirstTile ? changeSymbol : '--'}</span>
+                <span class="change-percent">${isFirstTile ? '%' + Math.abs(changePercent).toFixed(2) : '--'}</span>
+              </div>
+            </div>
+            <div class="market-change-absolute" style="color: ${isFirstTile ? changeColor : '#667085'};">
+              ${isFirstTile ? (isPositive ? '+' : '') + change.toFixed(2) : '--'}
+            </div>
+            <div class="market-chart-container">
+              <div class="market-chart">${isFirstTile ? chartSvg : ''}</div>
+            </div>
+            <div class="market-price">${isFirstTile ? latest.close?.toLocaleString("tr-TR") + ' TRY' : '--'}</div>
+          </div>
+        `);
+      }
+
+      container.innerHTML = `
+        <div class="market-grid">
+          ${tiles.join('')}
+        </div>
+      `;
+    } catch (e) {
+      console.error("Market tiles render error", e);
+    }
+  }
+
+  createMiniChart(data) {
+    if (!data || data.length < 2) return '';
+
+    // Sort data by date (oldest first for chart)
+    const sortedData = [...data].reverse();
+    const prices = sortedData.map(d => d.close);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRange = maxPrice - minPrice;
+    
+    // Chart dimensions - responsive width, fixed height
+    const width = 200; // This will be overridden by CSS
+    const height = 12;
+    const padding = 2;
+    
+    // Create smooth curve using quadratic bezier curves
+    const points = sortedData.map((d, i) => {
+      const x = padding + (i / (sortedData.length - 1)) * (width - 2 * padding);
+      const y = padding + ((maxPrice - d.close) / priceRange) * (height - 2 * padding);
+      return { x, y };
+    });
+    
+    // Create smooth path with curves
+    let pathData = `M ${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const next = points[i + 1];
+      
+      if (next) {
+        // Use quadratic bezier for smooth curves
+        const cp1x = prev.x + (curr.x - prev.x) / 2;
+        const cp1y = prev.y;
+        const cp2x = curr.x - (next.x - curr.x) / 2;
+        const cp2y = curr.y;
+        pathData += ` Q ${cp1x},${cp1y} ${curr.x},${curr.y}`;
+      } else {
+        // Last point - simple line
+        pathData += ` L ${curr.x},${curr.y}`;
+      }
+    }
+    
+    // Determine color based on trend
+    const firstPrice = prices[0];
+    const lastPrice = prices[prices.length - 1];
+    const isPositive = lastPrice >= firstPrice;
+    const color = isPositive ? '#10b981' : '#ef4444';
+    
+    return `
+      <svg viewBox="0 0 200 12" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
+        <path d="${pathData}" stroke="${color}" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+  }
+
+  setupChartPeriodSelector() {
+    const selector = document.getElementById('chart-days');
+    if (selector) {
+      selector.addEventListener('change', (e) => {
+        const days = parseInt(e.target.value);
+        this.renderMarketTiles(days);
+      });
     }
   }
 
