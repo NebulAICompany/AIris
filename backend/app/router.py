@@ -47,7 +47,7 @@ class UploadRequest(BaseModel):
 
 
 @router.get("/market/eod")
-async def get_market_eod(symbol: str = "TUPRS.IS", limit: int = 10):
+async def get_market_eod(symbol: str = "TUPRS.IS", limit: int = 7):
     logger.info(f"Getting market EOD for {symbol} with limit {limit}")
     try:
         data = store.get_latest_quotes(symbol, limit)
@@ -58,12 +58,28 @@ async def get_market_eod(symbol: str = "TUPRS.IS", limit: int = 10):
 
 
 @router.post("/market/eod/refresh")
-async def refresh_market_eod():
+async def refresh_market_eod(symbols: str = "TUPRS.IS", limit: int = 7):
+    logger.info("Refreshing market EOD")
     try:
-        saved = await refresh_eod()
+        saved = await refresh_eod(symbols=symbols, limit=limit)
         return {"status": "ok", "saved": saved}
     except Exception as e:
         logger.error(f"Error refreshing EOD: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/market/most-changed")
+async def get_most_changed_quotes(request: dict):
+    logger.info("Getting most changed quotes")
+    try:
+        symbols = request.get("symbols", [])
+        limit = request.get("limit", 30)
+        chart_num = request.get("chart_num", 8)
+        
+        data = store.get_most_changed_quotes(symbols, limit, chart_num)
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error getting most changed quotes: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
