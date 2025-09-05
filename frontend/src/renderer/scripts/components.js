@@ -2887,12 +2887,6 @@ class UIComponents {
               "lastUpdatedAt"
             )} ${new Date().toLocaleTimeString()}`;
           }
-
-          // Update scheduler status
-          this.updateSchedulerStatus();
-
-          // Set up auto-refresh interval
-          this.startNewsAutoRefresh();
         } else {
           // Empty database - show empty state and try initial refresh
           const t = window.languageService
@@ -2914,9 +2908,6 @@ class UIComponents {
             newsLastUpdated.textContent =
               t("noNewsAvailable") || "No news available";
           }
-
-          // Still set up auto-refresh for future updates
-          this.startNewsAutoRefresh();
         }
       } else {
         throw new Error(result.error || "Failed to load news");
@@ -3194,9 +3185,6 @@ class UIComponents {
               "lastUpdated"
             )} ${new Date().toLocaleTimeString()}`;
           }
-
-          // Update scheduler status hint
-          this.updateSchedulerStatus();
 
           // Show success message briefly
           if (refreshButton) {

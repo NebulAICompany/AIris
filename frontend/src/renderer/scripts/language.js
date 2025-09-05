@@ -93,7 +93,7 @@ class LanguageService {
         noNewsAvailable: "No news available",
         fetchLatestNews: "Fetch Latest News",
         getLatestNews: "Get Latest News",
-        autoUpdateInfo: "Auto-updates every 45 minutes",
+        manualUpdateInfo: "Click refresh to get latest news",
 
         // News Chat Section
         askAboutNews: "Ask about this news",
@@ -442,7 +442,7 @@ class LanguageService {
         noNewsAvailable: "Haber bulunmuyor",
         fetchLatestNews: "Son Haberleri Getir",
         getLatestNews: "Son Haberleri Getir",
-        autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
+        manualUpdateInfo: "Yenile butonuna tıklayarak en son haberleri alın",
 
         // News Chat Section
         askAboutNews: "Bu haber hakkında soru sor",

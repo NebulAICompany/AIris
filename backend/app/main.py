@@ -59,12 +59,6 @@ async def startup_event():
         await connect_mcp_servers()
         logger.info("MCP servers connected successfully.")
 
-        # Start background news scheduler
-        logger.info("Starting background news scheduler...")
-        from backend.scheduler.news_scheduler import start_background_scheduler
-        start_background_scheduler()
-        logger.info("Background news scheduler started successfully.")
-
     except Exception as e:
         import traceback
 
@@ -81,11 +75,6 @@ async def shutdown_event():
     Uygulama kapanırken MCP sunucularından bağlantıyı kes.
     """
     try:
-        logger.info("Stopping background news scheduler...")
-        from backend.scheduler.news_scheduler import stop_background_scheduler
-        stop_background_scheduler()
-        logger.info("Background news scheduler stopped successfully.")
-        
         logger.info("Disconnecting MCP servers...")
         from backend.core.tools.mcp import disconnect_mcp_servers
 
