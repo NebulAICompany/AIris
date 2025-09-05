@@ -26,6 +26,7 @@ class UIComponents {
     this.selectedFiles = [];
     this.allFiles = [];
     this.fileSelectionModal = null;
+    this.hasInitializedFiles = false; // Flag to track if files have been initialized
 
     this.init();
 
@@ -43,6 +44,9 @@ class UIComponents {
     // this.loadTheme();
     this.initializeComponents();
 
+    // Load files and select all by default
+    this.loadAndSelectAllFiles();
+
     // Set toggle state on load
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
@@ -59,6 +63,26 @@ class UIComponents {
       }
       // Update texts with current language
       window.languageService.updatePageTexts();
+    }
+  }
+
+  async loadAndSelectAllFiles() {
+    try {
+      // Fetch files from API
+      const result = await window.apiService.getFiles();
+
+      if (result.success && result.files) {
+        this.allFiles = result.files;
+        // Only select all files on the very first initialization
+        if (!this.hasInitializedFiles) {
+          this.selectedFiles = this.allFiles.map((file) => file.name);
+          this.hasInitializedFiles = true; // Mark as initialized
+          // Update button display
+          this.updateFileSelectionButton();
+        }
+      }
+    } catch (error) {
+      console.error("Error loading files for selection:", error);
     }
   }
 
@@ -2047,6 +2071,7 @@ class UIComponents {
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
       const files = data.files || [];
+
       // Get the file library container
       const fileLibrary = document.getElementById("files-grid");
       if (!fileLibrary) return;
@@ -4602,11 +4627,6 @@ class UIComponents {
 
       if (result.success && result.files) {
         this.allFiles = result.files;
-
-        // Initialize selected files to all files if not already set
-        if (this.selectedFiles.length === 0) {
-          this.selectedFiles = this.allFiles.map((file) => file.name);
-        }
 
         this.renderFileSelectionList();
         this.updateFileSelectionButton();
