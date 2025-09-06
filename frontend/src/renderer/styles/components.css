@@ -1,11 +1,14 @@
-
 /* Market EOD tiles - Changed to 2 columns, 5 rows layout (10 tiles total) */
-.market-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-.market-tile { 
-  background: var(--bg-primary); 
-  border: 1px solid var(--border-color); 
-  border-radius: 6px; 
-  padding: 6px 8px; 
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.market-tile {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 8px;
   position: relative;
   min-height: 60px;
   display: flex;
@@ -28,16 +31,16 @@
   margin-bottom: 1px;
 }
 
-.market-title { 
-  font-weight: 600; 
-  color: var(--text-primary); 
+.market-title {
+  font-weight: 600;
+  color: var(--text-primary);
   font-size: 11px;
   margin-bottom: 2px;
 }
-.market-change-indicator { 
-  padding: 2px 4px; 
-  border-radius: 3px; 
-  font-size: 8px; 
+.market-change-indicator {
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 8px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -55,14 +58,14 @@
   margin-bottom: 1px;
 }
 
-.market-price { 
-  font-size: 10px; 
-  font-weight: 600; 
+.market-price {
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-primary);
   margin-top: auto;
 }
-.market-sub { 
-  color: var(--text-secondary); 
+.market-sub {
+  color: var(--text-secondary);
   font-size: 10px;
   margin-top: 2px;
 }
@@ -3316,7 +3319,7 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
 }
 
 .news-header h2 {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 8px;
@@ -6426,16 +6429,24 @@ body.nebula-theme .web-search-button:hover {
 
 /* Nebula theme – Enhanced market charts with cosmic styling */
 body.nebula-theme .market-outlook {
-  background: linear-gradient(135deg, rgba(13, 2, 33, 0.8), rgba(26, 11, 46, 0.7)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 2, 33, 0.8),
+    rgba(26, 11, 46, 0.7)
+  ) !important;
   border: 1px solid rgba(139, 92, 246, 0.3) !important;
-  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2), 
-              0 0 0 1px rgba(236, 72, 153, 0.1) inset !important;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2),
+    0 0 0 1px rgba(236, 72, 153, 0.1) inset !important;
   backdrop-filter: blur(10px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
 }
 
 body.nebula-theme .market-tile {
-  background: linear-gradient(135deg, rgba(13, 2, 33, 0.6), rgba(26, 11, 46, 0.5)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 2, 33, 0.6),
+    rgba(26, 11, 46, 0.5)
+  ) !important;
   border: 1px solid rgba(139, 92, 246, 0.2) !important;
   box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15) !important;
   backdrop-filter: blur(8px);
@@ -6449,7 +6460,11 @@ body.nebula-theme .market-tile:hover {
 }
 
 body.nebula-theme .market-refresh-btn {
-  background: linear-gradient(135deg, rgba(13, 2, 33, 0.6), rgba(26, 11, 46, 0.5)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 2, 33, 0.6),
+    rgba(26, 11, 46, 0.5)
+  ) !important;
   border: 1px solid rgba(139, 92, 246, 0.3) !important;
   color: var(--text-secondary) !important;
   backdrop-filter: blur(8px);
@@ -6457,7 +6472,11 @@ body.nebula-theme .market-refresh-btn {
 }
 
 body.nebula-theme .market-refresh-btn:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15)) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.2),
+    rgba(236, 72, 153, 0.15)
+  ) !important;
   border-color: rgba(236, 72, 153, 0.5) !important;
   color: var(--accent-secondary) !important;
   box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3) !important;
