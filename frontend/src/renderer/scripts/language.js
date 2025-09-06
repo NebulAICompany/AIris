@@ -83,7 +83,7 @@ class LanguageService {
         // Finance News Section
         financeNewsTitle: "Finance News",
         latestFinancialNews: "Latest financial news and market updates",
-        refresh: "Refresh",
+        refresh: "Refresh News",
         loadingNews: "Loading latest finance news...",
         lastUpdated: "Last updated",
         readMore: "Read More",
@@ -433,7 +433,7 @@ class LanguageService {
         financeNewsTitle: "Finans Haberleri",
         latestFinancialNews:
           "En son finansal haberler ve piyasa güncellemeleri",
-        refresh: "Yenile",
+        refresh: "Haberleri Yenile",
         loadingNews: "En son finans haberleri yükleniyor...",
         lastUpdated: "Son güncelleme",
         readMore: "Devamını Oku",
