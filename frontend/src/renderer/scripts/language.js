@@ -253,7 +253,7 @@ class LanguageService {
         uploadedOn: "Uploaded",
         downloadFile: "Download file",
         deleteFile: "Delete file",
-        refresh: "Refresh",
+        refresh: "Refresh News",
 
         // Error states
         errorLoadingFiles: "Error loading files",
@@ -585,7 +585,7 @@ class LanguageService {
         uploadedOn: "Yüklenme",
         downloadFile: "Dosyayı indir",
         deleteFile: "Dosyayı sil",
-        refresh: "Yenile",
+        refresh: "Haberleri Yenile",
 
         // Error states
         errorLoadingFiles: "Dosyalar yüklenirken hata",
