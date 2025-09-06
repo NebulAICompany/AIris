@@ -175,16 +175,20 @@ async def run_orchestration(
                 reranked_docs = reranked_docs[:5]  # Take top 5 RSE segments
     else:
         # Standard retrieval methods
+        # Dummy query terms - replace with actual terms from external source
+        query_terms = ["kelime1", "kelime2", "kelime3"]
         if search_method == "keyword":
             logger.info("🔍 Using keyword search (BM25)")
+
             retrieved_docs = retrieve_with_keyword_search(
-                query=preprocessed_query, k=15, selected_files=selected_files
+                query_terms=query_terms, k=15, selected_files=selected_files
             )
         elif search_method == "hybrid":
             logger.info("🔍 Using hybrid search (vector + keyword)")
             retrieved_docs = retrieve_hybrid(
                 client=client,
                 query=preprocessed_query,
+                query_terms=query_terms,
                 k=15,
                 selected_files=selected_files,
             )
@@ -193,6 +197,7 @@ async def run_orchestration(
             retrieved_docs = retrieve_with_keyword_helping(
                 client=client,
                 query=preprocessed_query,
+                query_terms=query_terms,
                 k=15,
                 selected_files=selected_files,
             )

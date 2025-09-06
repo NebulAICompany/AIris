@@ -1,5 +1,5 @@
 """
-Turkish-aware Keyword Search System using BM25 Algorithm
+Simple Keyword Search System using BM25 Algorithm
 Integrates with existing vector search pipeline for hybrid retrieval
 """
 
@@ -7,40 +7,14 @@ import json
 import math
 import pickle
 from pathlib import Path
-from typing import Dict, List, Tuple, Any, Optional, Set
+from typing import Dict, List, Tuple, Any, Optional
 from collections import defaultdict, Counter
 from dataclasses import dataclass
-import re
 
 from backend.shared.logger import get_logger
 from backend.shared.constants import VECTORSTORE_PATH_STR
 
 logger = get_logger("KEYWORD_SEARCH")
-
-# Turkish language processing with Hugging Face
-try:
-    from transformers import AutoTokenizer
-    import torch
-
-    # Use Turkish BERT tokenizer - dbmdz/bert-base-turkish-cased is well-maintained
-    TURKISH_MODEL_NAME = "dbmdz/bert-base-turkish-cased"
-    turkish_tokenizer = AutoTokenizer.from_pretrained(TURKISH_MODEL_NAME)
-
-    TOKENIZER_AVAILABLE = True
-    logger.info(f"✅ Turkish tokenizer loaded: {TURKISH_MODEL_NAME}")
-
-except ImportError as e:
-    turkish_tokenizer = None
-    TOKENIZER_AVAILABLE = False
-    logger.warning(
-        f"⚠️ Transformers not available: {e}. Falling back to basic tokenization"
-    )
-except Exception as e:
-    turkish_tokenizer = None
-    TOKENIZER_AVAILABLE = False
-    logger.warning(
-        f"⚠️ Failed to load Turkish tokenizer: {e}. Falling back to basic tokenization"
-    )
 
 
 @dataclass
@@ -54,291 +28,13 @@ class SearchResult:
     matched_terms: List[str]
 
 
-class TurkishTextProcessor:
-    """Handles Turkish text tokenization, normalization, and basic stemming"""
-
-    def __init__(self):
-        self.stop_words = self._load_turkish_stop_words()
-
-    def _load_turkish_stop_words(self) -> Set[str]:
-        """Load Turkish stop words"""
-        # Comprehensive Turkish stop words
-        stop_words = {
-            # Most common stop words only - be less aggressive
-            "bir",
-            "bu",
-            "şu",
-            "o",
-            "her",
-            "hiç",
-            # Most common prepositions
-            "ile",
-            "için",
-            "gibi",
-            "göre",
-            "de",
-            "da",
-            "den",
-            "dan",
-            "te",
-            "ta",
-            # Conjunctions
-            "ve",
-            "veya",
-            "ama",
-            "fakat",
-            "hem",
-            # Question particles
-            "mi",
-            "mı",
-            "mu",
-            "mü",
-            # Pronouns
-            "ben",
-            "sen",
-            "biz",
-            "siz",
-            "onlar",
-            # Very common words
-            "olan",
-            "olarak",
-            "daha",
-            "en",
-            "çok",
-            "az",
-            "var",
-            "yok",
-        }
-        return stop_words
-
-    def normalize_text(self, text: str) -> str:
-        """Normalize Turkish text"""
-        if not text:
-            return ""
-
-        # Remove HTML tags and attributes more thoroughly
-        text = re.sub(r"<[^>]+>", " ", text)
-        text = re.sub(r"&[a-zA-Z0-9#]+;", " ", text)  # Remove HTML entities
-
-        # Remove excessive punctuation and special characters but keep Turkish chars
-        text = re.sub(r"[^\w\sçğıöşüÇĞIİÖŞÜ.,!?%-]", " ", text)
-
-        # Convert to lowercase
-        text = text.lower()
-
-        # Clean up extra whitespace and normalize
-        text = " ".join(text.split())
-
-        return text
-
-    def tokenize(self, text: str) -> List[str]:
-        """Tokenize Turkish text using Hugging Face tokenizer or fallback method"""
-        if not text or not text.strip():
-            return []
-
-        if TOKENIZER_AVAILABLE and turkish_tokenizer:
-            try:
-                # Use Hugging Face tokenizer with truncation to handle long texts
-                encoded = turkish_tokenizer(
-                    text,
-                    add_special_tokens=False,
-                    return_tensors=None,
-                    truncation=True,
-                    max_length=1024,
-                    padding=False,
-                )
-                token_ids = encoded["input_ids"]
-
-                # Decode tokens back to get the actual token strings
-                tokens = []
-                for token_id in token_ids:
-                    token_str = turkish_tokenizer.decode([token_id]).strip()
-                    # Filter out subword markers and clean tokens
-                    if (
-                        token_str
-                        and not token_str.startswith("##")
-                        and len(token_str) > 1
-                    ):
-                        # Remove any remaining special characters but keep Turkish chars
-                        clean_token = (
-                            re.sub(r"[^\w\sçğıöşüÇĞIİÖŞÜ]", "", token_str)
-                            .lower()
-                            .strip()
-                        )
-                        if clean_token and len(clean_token) > 1:
-                            tokens.append(clean_token)
-
-                return tokens
-
-            except Exception as e:
-                logger.warning(
-                    f"Hugging Face tokenization failed: {e}, falling back to basic tokenization"
-                )
-
-        # Fallback tokenization
-        # Remove punctuation but keep Turkish characters
-        text = re.sub(r"[^\w\sçğıöşüÇĞIİÖŞÜ]", " ", text)
-        tokens = [
-            token.lower().strip() for token in text.split() if len(token.strip()) > 1
-        ]
-        return tokens
-
-    def simple_turkish_stem(self, word: str) -> str:
-        """Simple Turkish stemming using common suffix removal"""
-        if not word or len(word) <= 3:
-            return word.lower()
-
-        word = word.lower()
-
-        # Common Turkish suffixes (ordered by length, longest first)
-        suffixes = [
-            # Plural + possessive combinations
-            "larımız",
-            "lerimiz",
-            "larınız",
-            "leriniz",
-            "larının",
-            "lerinin",
-            "larında",
-            "lerinde",
-            "larından",
-            "lerinden",
-            # Possessive suffixes
-            "imiz",
-            "ımız",
-            "umuz",
-            "ümüz",
-            "iniz",
-            "ınız",
-            "unuz",
-            "ünüz",
-            "inin",
-            "ının",
-            "unun",
-            "ünün",
-            "inde",
-            "ında",
-            "unda",
-            "ünde",
-            "inden",
-            "ından",
-            "undan",
-            "ünden",
-            # Plural suffixes
-            "lar",
-            "ler",
-            # Case suffixes
-            "den",
-            "dan",
-            "ten",
-            "tan",
-            "nin",
-            "nın",
-            "nun",
-            "nün",
-            "nde",
-            "nda",
-            "nte",
-            "nta",
-            "nden",
-            "ndan",
-            "nten",
-            "ntan",
-            # Personal suffixes
-            "im",
-            "ım",
-            "um",
-            "üm",
-            "in",
-            "ın",
-            "un",
-            "ün",
-            "si",
-            "sı",
-            "su",
-            "sü",
-            # Locative/Ablative
-            "de",
-            "da",
-            "te",
-            "ta",
-            "ye",
-            "ya",
-            "ne",
-            "na",
-            # Copula
-            "dir",
-            "dır",
-            "dur",
-            "dür",
-            "tir",
-            "tır",
-            "tur",
-            "tür",
-            # Other common suffixes
-            "ki",
-            "ca",
-            "ça",
-            "ce",
-            "çe",
-            "li",
-            "lı",
-            "lu",
-            "lü",
-            "siz",
-            "sız",
-            "suz",
-            "süz",
-        ]
-
-        # Try to remove suffixes
-        for suffix in suffixes:
-            if word.endswith(suffix) and len(word) - len(suffix) >= 3:
-                return word[: -len(suffix)]
-
-        return word
-
-    def process_text(self, text: str, use_stemming: bool = True) -> List[str]:
-        """Complete text processing pipeline"""
-        if not text:
-            return []
-
-        # Normalize text
-        normalized_text = self.normalize_text(text)
-
-        # Tokenize
-        tokens = self.tokenize(normalized_text)
-
-        # Filter stop words and very short tokens (be less aggressive)
-        filtered_tokens = [
-            token
-            for token in tokens
-            if token not in self.stop_words and len(token) > 1 and not token.isdigit()
-        ]
-
-        # Apply simple stemming if requested
-        if use_stemming:
-            processed_tokens = [
-                self.simple_turkish_stem(token) for token in filtered_tokens
-            ]
-        else:
-            processed_tokens = filtered_tokens
-
-        # Return all tokens (including duplicates) for proper term frequency calculation
-        # Filter out empty tokens but keep duplicates for BM25
-        final_tokens = [token for token in processed_tokens if token]
-
-        return final_tokens
-
-
 class BM25KeywordSearch:
-    """BM25-based keyword search with Turkish language support"""
+    """BM25-based keyword search"""
 
     def __init__(self, k1: float = 1.5, b: float = 0.75):
         self.k1 = k1  # Term frequency saturation parameter
         self.b = b  # Length normalization parameter
 
-        self.text_processor = TurkishTextProcessor()
         self.documents: Dict[str, Dict[str, Any]] = {}
         self.term_frequencies: Dict[str, Dict[str, int]] = {}
         self.document_frequencies: Dict[str, int] = defaultdict(int)
@@ -354,17 +50,22 @@ class BM25KeywordSearch:
 
         logger.info("🔍 BM25 Keyword Search initialized")
 
-    def add_document(self, doc_id: str, content: str, metadata: Dict[str, Any]):
-        """Add a document to the search index"""
+    def add_document(
+        self,
+        doc_id: str,
+        content: str,
+        metadata: Dict[str, Any],
+        terms: List[str] = None,
+    ):
+        """Add a document to the search index with pre-processed terms"""
         if not content or not content.strip():
             logger.warning(f"⚠️ Skipping document {doc_id}: empty content")
             return
 
-        # Process text to get terms
-        terms = self.text_processor.process_text(content, use_stemming=False)
-        if not terms:
-            logger.warning(f"⚠️ Skipping document {doc_id}: no terms after processing")
-            return
+        # Use provided terms or empty list
+        if terms is None:
+            terms = []
+            logger.warning(f"⚠️ No terms provided for document {doc_id}")
 
         # Store document
         self.documents[doc_id] = {
@@ -400,12 +101,6 @@ class BM25KeywordSearch:
         self, query_terms: List[str], doc_id: str
     ) -> Tuple[float, List[str]]:
         """Calculate BM25 score for a document given query terms"""
-        # logger.info(f"Calculating BM25 score for document {doc_id}")
-        # logger.info(f"Query terms: {query_terms}")
-        # logger.info(f"Term frequencies: {self.term_frequencies}")
-        # logger.info(f"Document frequencies: {self.document_frequencies}")
-        # logger.info(f"Document lengths: {self.document_lengths}")
-        # logger.info(f"Average document length: {self.avg_doc_length}")
         if doc_id not in self.term_frequencies:
             return 0.0, []
 
@@ -442,27 +137,24 @@ class BM25KeywordSearch:
         return score, matched_terms
 
     def search(
-        self, query: str, k: int = 10, selected_files: Optional[List[str]] = None
+        self,
+        query_terms: List[str],
+        k: int = 10,
+        selected_files: Optional[List[str]] = None,
     ) -> List[SearchResult]:
-        """Search documents using BM25 algorithm"""
-        if not query or not query.strip():
+        """Search documents using BM25 algorithm with pre-processed query terms"""
+        if not query_terms:
             return []
 
         if self.total_documents == 0:
             logger.warning("No documents in keyword search index")
             return []
 
-        logger.info(f"🔍 Keyword search for: '{query}' (limit: {k})")
+        logger.info(f"🔍 Keyword search for terms: {query_terms} (limit: {k})")
 
-        # Process query
-        query_terms = self.text_processor.process_text(query, use_stemming=False)
-        if not query_terms:
-            logger.warning("No valid terms found in query after processing")
-            return []
-
-        logger.info(f"Query terms after processing: {query_terms}")
         logger.info(f"Selected files: {selected_files}")
         logger.info(f"Length of Documents: {len(self.documents)}")
+
         # Calculate scores for all documents
         scores = []
         for doc_id in self.documents:
@@ -673,13 +365,13 @@ def get_keyword_search() -> BM25KeywordSearch:
 
 
 def keyword_search(
-    query: str, k: int = 10, selected_files: Optional[List[str]] = None
+    query_terms: List[str], k: int = 10, selected_files: Optional[List[str]] = None
 ) -> List[Dict[str, Any]]:
     """
     Perform keyword search and return results in the same format as vector search
 
     Args:
-        query: Search query
+        query_terms: Pre-processed search terms
         k: Number of results to return
         selected_files: Optional list of files to search in
 
@@ -687,7 +379,7 @@ def keyword_search(
         List of search results compatible with existing retrieval system
     """
     search_engine = get_keyword_search()
-    results = search_engine.search(query, k=k, selected_files=selected_files)
+    results = search_engine.search(query_terms, k=k, selected_files=selected_files)
 
     # Convert to format compatible with existing retrieval system
     formatted_results = []
