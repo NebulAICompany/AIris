@@ -2235,3 +2235,54 @@ body.nebula-theme .tab-content {
   isolation: isolate;
   z-index: 2;
 }
+
+/* Universal External Link Styles */
+/* All links open externally in browser, not in application */
+a,
+a[href] {
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--accent-primary);
+  transition: var(--transition);
+}
+
+a:hover,
+a[href]:hover {
+  color: var(--accent-secondary);
+  text-decoration: underline;
+}
+
+/* Add external link indicator to all links */
+a::after,
+a[href]::after {
+  content: "↗";
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.8em;
+  opacity: 0.6;
+  transition: var(--transition);
+}
+
+a:hover::after,
+a[href]:hover::after {
+  opacity: 1;
+  transform: translateX(2px) translateY(-2px);
+}
+
+/* Special styling for download links */
+a[href*="/download"]::after,
+a[href*="/api/files/"]::after,
+a[href*="/api/created-documents/"]::after {
+  content: "📥";
+  margin-left: 6px;
+}
+
+/* Exception: Remove indicators from certain UI elements that aren't actually links */
+.nav-item::after,
+.btn::after,
+button::after,
+[role="button"]::after,
+.cta-button::after {
+  display: none !important;
+}
