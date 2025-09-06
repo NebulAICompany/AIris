@@ -29,7 +29,7 @@ MARKETSTACK_EOD_URL = os.getenv(
 )
 AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
 WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
-
+MARKETSTACK_BASE_URL = "https://api.marketstack.com/v2"
 
 # Constants for API clients
 
