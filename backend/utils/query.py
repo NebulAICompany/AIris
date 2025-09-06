@@ -149,8 +149,8 @@ def refine_query(user_query, lang: str = "Turkish") -> RefinedQuery:
     from backend.core.prompts import refinement_prompt
 
     try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-2024-08-06",  # Use model that supports structured outputs
+        response = openai_client.chat.completions.parse(
+            model=OPENAI_MODEL,
             messages=[
                 {
                     "role": "system",
@@ -163,5 +163,4 @@ def refine_query(user_query, lang: str = "Turkish") -> RefinedQuery:
         return response.choices[0].message.parsed
     except Exception as e:
         logger.error(f"Error in structured query refinement: {e}")
-        # Fallback to simple structure
         return RefinedQuery(refined_query=user_query, keywords=[user_query])
