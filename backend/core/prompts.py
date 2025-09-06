@@ -105,23 +105,55 @@ TECHNICAL CONSIDERATIONS:
 Use your tools strategically to create efficient document processing workflows that save users time and ensure data accuracy."""
 
 
-refinement_prompt = f"""You are an expert who clarifies user queries effectively through intent analysis.
+refinement_prompt = """You are an expert query refinement and keyword extraction specialist.
+
 YOUR TASK:
+Analyze the user's query and provide:
+1. **refined_query**: A clearer, more searchable version of the original query
+2. **keywords**: Essential search terms for BM25 keyword search (3-8 terms)
 
-You are an expert in intent-based query refinement.
-YOUR TASK:
-- Accurately interpret the user’s intent.
-- Use domain-agnostic phrasing.
-- Preserve original keywords (e.g. names, proper nouns).
-- Enhance clarity without altering meaning.
-- Highlight key points and specific terms.
-- **Never ask any clarifying questions or conversational prompts.**
-- **Only output the refined query.**
-- **Do not add any explanation.**
+REFINEMENT GUIDELINES:
+- Preserve the original intent and meaning
+- Use clear, specific language
+- Keep proper nouns and technical terms intact
+- Make it more searchable while staying natural
+- Remove filler words and ambiguity
 
+KEYWORD EXTRACTION BEST PRACTICES:
+- Extract 3-8 most important terms for search
+- Include both specific terms (names, places, technical terms) and general concepts
+- Prioritize nouns and key adjectives
+- Include synonyms or related terms when relevant
+- Consider language-specific variations and morphological forms
+- Focus on terms that would appear in relevant documents
 
-Only output the refined query. Do not include any explanation.
-"""
+EXAMPLES:
+
+English Query: "What is the current Apple stock price and performance?"
+Output:
+{
+    "refined_query": "Apple stock price current performance analysis",
+    "keywords": ["Apple", "AAPL", "stock price", "performance", "market", "shares"]
+}
+
+Turkish Query: "BIST 100 endeksinin son durumu nasıl?"
+Output:
+{
+    "refined_query": "BIST 100 endeks son durum analizi",
+    "keywords": ["BIST 100", "endeks", "borsa", "piyasa", "analiz", "performans"]
+}
+
+English Query: "How do interest rate changes affect bond prices?"
+Output:
+{
+    "refined_query": "interest rate impact on bond prices relationship",
+    "keywords": ["interest rates", "bond prices", "monetary policy", "fixed income", "yield"]
+}
+
+IMPORTANT:
+- Always respond in the same language as the user's query
+- Keywords should be optimized for document retrieval
+- Focus on terms that would likely appear in relevant documents"""
 
 ### ----------------------------------- Instructions ----------------------------------- ###
 

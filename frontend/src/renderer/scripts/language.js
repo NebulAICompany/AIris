@@ -83,7 +83,7 @@ class LanguageService {
         // Finance News Section
         financeNewsTitle: "Finance News",
         latestFinancialNews: "Latest financial news and market updates",
-        refresh: "Refresh",
+        refresh: "Refresh News",
         loadingNews: "Loading latest finance news...",
         lastUpdated: "Last updated",
         readMore: "Read More",
@@ -253,7 +253,7 @@ class LanguageService {
         uploadedOn: "Uploaded",
         downloadFile: "Download file",
         deleteFile: "Delete file",
-        refresh: "Refresh",
+        refresh: "Refresh News",
 
         // Error states
         errorLoadingFiles: "Error loading files",
@@ -433,7 +433,7 @@ class LanguageService {
         financeNewsTitle: "Finans Haberleri",
         latestFinancialNews:
           "En son finansal haberler ve piyasa güncellemeleri",
-        refresh: "Yenile",
+        refresh: "Haberleri Yenile",
         loadingNews: "En son finans haberleri yükleniyor...",
         lastUpdated: "Son güncelleme",
         readMore: "Devamını Oku",
@@ -585,7 +585,7 @@ class LanguageService {
         uploadedOn: "Yüklenme",
         downloadFile: "Dosyayı indir",
         deleteFile: "Dosyayı sil",
-        refresh: "Yenile",
+        refresh: "Haberleri Yenile",
 
         // Error states
         errorLoadingFiles: "Dosyalar yüklenirken hata",
