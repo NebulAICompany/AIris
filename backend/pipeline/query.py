@@ -108,8 +108,11 @@ async def run_orchestration(
     preprocessed_query, lang = preprocess_query(query)
     logger.info(f"   - Preprocessed Query before refinement: {preprocessed_query}")
 
-    preprocessed_query = refine_query(preprocessed_query, lang)
+    refined_result = refine_query(preprocessed_query, lang)
+    preprocessed_query = refined_result.refined_query
+    query_keywords = refined_result.keywords
     logger.info(f"   - Query after refinement: {preprocessed_query}")
+    logger.info(f"   - Extracted keywords: {query_keywords}")
 
     # 2. Girdi kontrolü (OpenAI moderation)
     input_moderation = check_openai_moderation(preprocessed_query)
@@ -174,17 +177,19 @@ async def run_orchestration(
             if reranked_docs:
                 reranked_docs = reranked_docs[:5]  # Take top 5 RSE segments
     else:
-        # Standard retrieval methods
+        # Standard retrieval methods using extracted keywords
         if search_method == "keyword":
             logger.info("🔍 Using keyword search (BM25)")
+
             retrieved_docs = retrieve_with_keyword_search(
-                query=preprocessed_query, k=15, selected_files=selected_files
+                query_terms=query_keywords, k=15, selected_files=selected_files
             )
         elif search_method == "hybrid":
             logger.info("🔍 Using hybrid search (vector + keyword)")
             retrieved_docs = retrieve_hybrid(
                 client=client,
                 query=preprocessed_query,
+                query_terms=query_keywords,
                 k=15,
                 selected_files=selected_files,
             )
@@ -193,6 +198,7 @@ async def run_orchestration(
             retrieved_docs = retrieve_with_keyword_helping(
                 client=client,
                 query=preprocessed_query,
+                query_terms=query_keywords,
                 k=15,
                 selected_files=selected_files,
             )

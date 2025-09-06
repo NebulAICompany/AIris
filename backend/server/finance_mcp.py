@@ -14,7 +14,6 @@ import uuid
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from backend.utils.news import get_aggregated_financial_news, NewsResponse, FINANCIAL_NEWS_SOURCES, NewsSource
 from backend.shared.constants import (
     ALPHA_VANTAGE_API_KEY,
     ALPHA_VANTAGE_BASE_URL,

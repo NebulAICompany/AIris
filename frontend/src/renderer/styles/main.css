@@ -450,8 +450,8 @@ input:checked + .slider:before {
 }
 
 .sidebar.collapsed .nav-item {
-  padding: 12px 8px;
-  justify-content: flex-start;
+  padding: 12px;
+  justify-content: center;
 }
 
 .nav-item span {
@@ -493,11 +493,8 @@ input:checked + .slider:before {
   color: var(--text-primary);
   transform: translateX(2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar.collapsed .nav-item:hover {
-  transform: scale(1.05);
-  border-radius: 8px;
+  margin-right: -17px;
+  padding-right: 30px;
 }
 
 .sidebar.collapsed .nav-item:hover i {
@@ -545,6 +542,8 @@ input:checked + .slider:before {
   background-color: var(--accent-primary);
   color: white;
   box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
+  margin-right: -17px;
+  padding-right: 30px;
 }
 
 /* Content Area */
@@ -2235,4 +2234,55 @@ body.nebula-theme .tab-content {
   position: relative;
   isolation: isolate;
   z-index: 2;
+}
+
+/* Universal External Link Styles */
+/* All links open externally in browser, not in application */
+a,
+a[href] {
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--accent-primary);
+  transition: var(--transition);
+}
+
+a:hover,
+a[href]:hover {
+  color: var(--accent-secondary);
+  text-decoration: underline;
+}
+
+/* Add external link indicator to all links */
+a::after,
+a[href]::after {
+  content: "↗";
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.8em;
+  opacity: 0.6;
+  transition: var(--transition);
+}
+
+a:hover::after,
+a[href]:hover::after {
+  opacity: 1;
+  transform: translateX(2px) translateY(-2px);
+}
+
+/* Special styling for download links */
+a[href*="/download"]::after,
+a[href*="/api/files/"]::after,
+a[href*="/api/created-documents/"]::after {
+  content: "📥";
+  margin-left: 6px;
+}
+
+/* Exception: Remove indicators from certain UI elements that aren't actually links */
+.nav-item::after,
+.btn::after,
+button::after,
+[role="button"]::after,
+.cta-button::after {
+  display: none !important;
 }

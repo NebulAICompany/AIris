@@ -280,8 +280,93 @@ class UIComponents {
 
     // Removed keyboard shortcuts as requested by user
 
-    // Event delegation for dynamic buttons
+    // Event delegation for dynamic buttons and universal link interceptor
     document.addEventListener("click", (e) => {
+      // Universal link interceptor - catch ALL links and open externally
+      if (e.target.tagName === "A" || e.target.closest("a")) {
+        const link =
+          e.target.tagName === "A" ? e.target : e.target.closest("a");
+
+        // Only intercept links with href attributes
+        if (link.href) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          console.log(`🔗 Intercepted link: ${link.href}`);
+
+          // Check if this is a news source link
+          const isNewsSourceLink = link.classList.contains("news-source-link");
+          if (isNewsSourceLink) {
+            const sourceName = link.dataset.sourceName || "news source";
+            console.log(`📰 Opening news source: ${sourceName}`);
+          }
+
+          // Special handling for download links
+          if (
+            link.href.includes("/api/created-documents/") ||
+            link.href.includes("/api/files/")
+          ) {
+            const t = window.languageService
+              ? window.languageService.t.bind(window.languageService)
+              : (key) => key;
+
+            let filename = "";
+            try {
+              const urlParts = link.href.split("/");
+              if (link.href.includes("/api/created-documents/")) {
+                filename = decodeURIComponent(
+                  urlParts[urlParts.indexOf("created-documents") + 1]
+                );
+              } else if (link.href.includes("/api/files/")) {
+                filename = decodeURIComponent(
+                  urlParts[urlParts.indexOf("files") + 1]
+                );
+              }
+            } catch (err) {
+              console.warn("Could not extract filename from URL:", link.href);
+            }
+
+            if (filename) {
+              this.showNotification(
+                `${t("downloadingFile")} ${filename}...`,
+                "info"
+              );
+            }
+          }
+
+          // Use Electron API if available, otherwise fallback to window.open
+          if (window.airisAPI && window.airisAPI.openExternalUrl) {
+            window.airisAPI
+              .openExternalUrl(link.href)
+              .then((result) => {
+                if (result.success) {
+                  console.log(
+                    `✅ Successfully opened link externally: ${link.href}`
+                  );
+                } else {
+                  console.warn(
+                    "Failed to open link via Electron API:",
+                    result.error
+                  );
+                  // Fallback to window.open
+                  window.open(link.href, "_blank", "noopener,noreferrer");
+                }
+              })
+              .catch((error) => {
+                console.error("Error using Electron API:", error);
+                // Fallback to window.open
+                window.open(link.href, "_blank", "noopener,noreferrer");
+              });
+          } else {
+            // Fallback for non-Electron environments
+            console.log(`🌐 Opening link with window.open: ${link.href}`);
+            window.open(link.href, "_blank", "noopener,noreferrer");
+          }
+
+          return;
+        }
+      }
+
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
         this.switchTab(e.target.dataset.tab);
       }
@@ -293,33 +378,6 @@ class UIComponents {
       if (newsItem && newsItem.dataset.articleIndex !== undefined) {
         const articleIndex = parseInt(newsItem.dataset.articleIndex);
         this.showNewsDetail(articleIndex);
-      }
-
-      // Handle markdown download links in chat messages
-      if (
-        e.target.tagName === "A" &&
-        e.target.href &&
-        e.target.href.includes("/api/created-documents/")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        const url = e.target.href;
-
-        // Extract filename for notification
-        const urlParts = url.split("/");
-        const filename = decodeURIComponent(
-          urlParts[urlParts.indexOf("created-documents") + 1]
-        );
-
-        // Open the download URL in a new tab/window
-        window.open(url, "_blank");
-        this.showNotification(`${t("downloadingFile")} ${filename}...`, "info");
-
-        return;
       }
 
       // Handle delete button clicks
@@ -2467,7 +2525,16 @@ class UIComponents {
         const downloadUrl = `http://localhost:8001/api/files/${encodeURIComponent(
           fileName
         )}/download`;
-        window.open(downloadUrl, "_blank");
+
+        // Use consistent external opening logic
+        if (window.airisAPI && window.airisAPI.openExternalUrl) {
+          window.airisAPI.openExternalUrl(downloadUrl).catch(() => {
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
+          });
+        } else {
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
+        }
+
         this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
@@ -2522,7 +2589,16 @@ class UIComponents {
         const downloadUrl = `http://localhost:8001/api/created-documents/${encodeURIComponent(
           fileName
         )}/download`;
-        window.open(downloadUrl, "_blank");
+
+        // Use consistent external opening logic
+        if (window.airisAPI && window.airisAPI.openExternalUrl) {
+          window.airisAPI.openExternalUrl(downloadUrl).catch(() => {
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
+          });
+        } else {
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
+        }
+
         this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
@@ -3384,7 +3460,7 @@ class UIComponents {
     // Scroll to top of the news tab container when showing news details
     const newsTab = document.getElementById("news-tab");
     if (newsTab) {
-      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
     }
 
     // Populate detail view
@@ -3429,18 +3505,11 @@ class UIComponents {
     // Scroll to top of the news tab container when returning to news feed
     const newsTab = document.getElementById("news-tab");
     if (newsTab) {
-      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
     }
 
-    // Clean up event listeners when hiding detail view
-    const sourcesListElement = document.getElementById("news-sources-list");
-    if (sourcesListElement && this.sourceLinkClickHandler) {
-      sourcesListElement.removeEventListener(
-        "click",
-        this.sourceLinkClickHandler
-      );
-      this.sourceLinkClickHandler = null;
-    }
+    // Note: No need to clean up source link listeners anymore
+    // as they're handled by the universal link interceptor
 
     // Remove fixed chat styling when leaving detail view
     const chatContainer = document.getElementById("news-chat-input-container");
@@ -3730,136 +3799,10 @@ class UIComponents {
 
     sourcesListElement.innerHTML = sourcesHtml;
 
-    // Add event delegation for source link clicks with error handling
-    // Remove any existing listeners first to prevent duplicates
-    if (this.sourceLinkClickHandler) {
-      sourcesListElement.removeEventListener(
-        "click",
-        this.sourceLinkClickHandler
-      );
-    }
+    // Note: Source links are now handled by the universal link interceptor
 
-    // Create a bound handler and store reference for removal
-    this.sourceLinkClickHandler = this.handleSourceLinkClick.bind(this);
-    sourcesListElement.addEventListener("click", this.sourceLinkClickHandler);
-  }
-
-  async handleSourceLinkClick(event) {
-    const link = event.target.closest(".news-source-link");
-    if (!link) return;
-
-    event.preventDefault();
-
-    const url = link.dataset.sourceUrl;
-    const sourceName = link.dataset.sourceName;
-
-    console.log(`🔗 Attempting to open source link: ${sourceName} -> ${url}`);
-
-    // Check if we're in Electron environment
-    if (window.airisAPI && window.airisAPI.openExternalUrl) {
-      try {
-        const result = await window.airisAPI.openExternalUrl(url);
-
-        if (result.success) {
-          console.log(
-            `✅ Successfully opened ${sourceName} link in external browser`
-          );
-        } else {
-          console.warn(`❌ Failed to open ${sourceName} link: ${result.error}`);
-          this.handleFailedLinkOpen(url, sourceName);
-        }
-      } catch (error) {
-        console.error(`❌ Error using Electron API for ${sourceName}:`, error);
-        this.handleFailedLinkOpen(url, sourceName);
-      }
-    } else {
-      // Fallback for non-Electron environments (web browser)
-      console.log(
-        `🌐 Using fallback method for ${sourceName} (not in Electron)`
-      );
-      try {
-        const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-
-        // Immediate check for popup blocking
-        if (!newWindow) {
-          console.warn(
-            `❌ Popup blocked for ${sourceName}, trying alternative method...`
-          );
-          this.handleFailedLinkOpen(url, sourceName);
-          return;
-        }
-
-        // Check if window was immediately closed (indicates failure)
-        if (newWindow.closed) {
-          console.warn(
-            `❌ Window immediately closed for ${sourceName}, trying alternative method...`
-          );
-          this.handleFailedLinkOpen(url, sourceName);
-          return;
-        }
-
-        console.log(`✅ Successfully opened ${sourceName} link`);
-      } catch (error) {
-        console.error(`❌ Error opening ${sourceName} link:`, error);
-        this.handleFailedLinkOpen(url, sourceName);
-      }
-    }
-  }
-
-  async handleFailedLinkOpen(url, sourceName) {
-    // Show user notification with options
-    const message = `Unable to open ${sourceName} link directly. Would you like to copy the URL to clipboard?`;
-
-    if (confirm(message)) {
-      // Copy URL to clipboard
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(url)
-          .then(() => {
-            alert(
-              `✅ ${sourceName} URL copied to clipboard!\n\nURL: ${url}\n\nYou can now paste this in your browser.`
-            );
-          })
-          .catch(() => {
-            this.showManualCopyDialog(url, sourceName);
-          });
-      } else {
-        this.showManualCopyDialog(url, sourceName);
-      }
-    } else {
-      // Try using Electron API as alternative
-      if (window.airisAPI && window.airisAPI.openExternalUrl) {
-        if (confirm(`Try opening ${sourceName} using system browser?`)) {
-          try {
-            const result = await window.airisAPI.openExternalUrl(url);
-            if (result.success) {
-              console.log(
-                `✅ Successfully opened ${sourceName} using system browser`
-              );
-            } else {
-              alert(`Failed to open ${sourceName}: ${result.error}`);
-            }
-          } catch (error) {
-            console.error(
-              `Error using system browser for ${sourceName}:`,
-              error
-            );
-            alert(`Failed to open ${sourceName} using system browser.`);
-          }
-        }
-      } else {
-        // Last resort: try opening in same tab (for web environments)
-        if (confirm(`Try opening ${sourceName} in the same tab?`)) {
-          window.location.href = url;
-        }
-      }
-    }
-  }
-
-  showManualCopyDialog(url, sourceName) {
-    // Fallback: show URL in a dialog for manual copying
-    const dialog = `${sourceName} URL:\n\n${url}\n\nPlease copy this URL manually and paste it in your browser.`;
-    alert(dialog);
+    // Note: Source link clicks are now handled by the universal link interceptor
+    // No need for separate event handler as it causes duplicate opens
   }
 
   findClusterForArticle(article) {
