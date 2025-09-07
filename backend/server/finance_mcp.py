@@ -1873,23 +1873,12 @@ async def create_stock_chart(
         except Exception as e:
             pass  # Silent fail for file writing issues
 
-        # Prepare success message
-        success_message = f"✅ Professional stock chart created successfully!\n\n"
-        success_message += f"📊 **Analysis Summary:**\n"
-        success_message += f"• Symbols analyzed: {', '.join(successful_symbols)}\n"
-        success_message += f"• Chart type: {chart_type.title()}\n"
-        success_message += f"• Data period: {period.title()}\n"
-        success_message += f"• Time range: {time_range_days} days\n"
-        success_message += f"• Technical indicators: {', '.join(technical_indicators) if technical_indicators else 'None'}\n"
-        success_message += f"• Layout style: {layout_style.title()}\n"
-        success_message += (
-            f"• Total data points: {sum(len(df) for df in stock_data.values()):,}\n"
+        success_message = (
+            f"Chart created: {', '.join(successful_symbols)} | {chart_type.title()}"
         )
 
         if failed_symbols:
-            success_message += f"\n⚠️ **Note:** Could not retrieve data for: {', '.join(failed_symbols)}\n"
-
-        success_message += f"\n💼 The chart is optimized for professional analysis with modern styling and interactive features."
+            success_message += f" | Failed: {', '.join(failed_symbols)}"
 
         return {"message": success_message}
 
