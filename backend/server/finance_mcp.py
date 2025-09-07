@@ -1097,7 +1097,11 @@ async def get_ticker_info_detailed(
 #     return await make_request("frames", params)
 
 
-# Chart management functions
+# ============================================================================
+# CHART MANAGEMENT FUNCTIONS
+# ============================================================================
+
+
 def get_chart_datas():
     """Get chart data from JSON file storage"""
     try:
@@ -1140,150 +1144,306 @@ def clear_chart_datas():
         pass
 
 
+# ============================================================================
+# TECHNICAL INDICATORS HELPERS
+# ============================================================================
+
+
+def calculate_sma(data: pd.Series, window: int) -> pd.Series:
+    """Calculate Simple Moving Average"""
+    return data.rolling(window=window, min_periods=1).mean()
+
+
+def calculate_ema(data: pd.Series, window: int) -> pd.Series:
+    """Calculate Exponential Moving Average"""
+    return data.ewm(span=window, adjust=False).mean()
+
+
+def calculate_bollinger_bands(data: pd.Series, window: int = 20, num_std: float = 2):
+    """Calculate Bollinger Bands"""
+    sma = calculate_sma(data, window)
+    std = data.rolling(window=window, min_periods=1).std()
+    upper_band = sma + (std * num_std)
+    lower_band = sma - (std * num_std)
+    return upper_band, sma, lower_band
+
+
+def calculate_rsi(data: pd.Series, window: int = 14) -> pd.Series:
+    """Calculate Relative Strength Index"""
+    delta = data.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=window, min_periods=1).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=window, min_periods=1).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+
+def calculate_macd(data: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
+    """Calculate MACD"""
+    ema_fast = calculate_ema(data, fast)
+    ema_slow = calculate_ema(data, slow)
+    macd_line = ema_fast - ema_slow
+    signal_line = calculate_ema(macd_line, signal)
+    histogram = macd_line - signal_line
+    return macd_line, signal_line, histogram
+
+
+# ============================================================================
+# MODERN STOCK CHART FUNCTION
+# ============================================================================
+
+
 @mcp.tool()
 async def create_stock_chart(
     symbols: list,
     period: str = "daily",
     chart_type: str = "candlestick",
-    time_range_days: int = 30,
+    time_range_days: int = 180,
     include_volume: bool = True,
-    include_ma: bool = True,
-    ma_period: int = 20,
-    subplot_layout: str = "single",
+    technical_indicators: list = None,
+    layout_style: str = "professional",
 ):
     """
-    Creates comprehensive stock charts using Alpha Vantage data with multiple layout options.
-    Implements QuantStart methodology for advanced subplot configurations.
+    Create modern and professional stock charts with advanced technical analysis.
 
     Required:
         symbols (list): List of stock symbols (e.g., ["AAPL", "MSFT"])
 
     Optional:
-        period (str): "daily" | "weekly" | "monthly" | "intraday"
-        chart_type (str): "candlestick" | "line" | "area"
-        time_range_days (int): Number of days to display (default: 30)
-        include_volume (bool): Whether to show volume chart
-        include_ma (bool): Whether to show moving average
-        ma_period (int): Moving average period (default: 20)
-        subplot_layout (str): "single" | "grid" | "vertical" | "quantstart"
-        outputsize (str): "compact" | "full"
+        period (str): "daily" or "intraday" (default: "daily")
+        chart_type (str): "candlestick", "ohlc", "line", "area" (default: "candlestick")
+        time_range_days (int): Days of historical data (default: 60)
+        include_volume (bool): Show volume chart (default: True)
+        technical_indicators (list): ["sma", "ema", "bollinger", "rsi", "macd"] (default: ["sma"])
+        layout_style (str): "professional", "dark", "minimal" (default: "professional")
 
     Returns:
-        dict: Chart HTML and operation result
+        dict: Success message with chart creation details
     """
     try:
-        # Ensure CHARTS_DIR exists
+        # Input validation and defaults
+        if not symbols or len(symbols) == 0:
+            return {"error": "At least one stock symbol is required"}
+
+        if len(symbols) > 4:
+            return {"error": "Maximum 4 symbols allowed for optimal visualization"}
+
+        # Set default technical indicators if none provided
+        if technical_indicators is None:
+            technical_indicators = ["sma"]
+
+        # Ensure charts directory exists
         CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        if len(symbols) > 6:
-            return {"error": "Maximum 6 stock symbols can be analyzed"}
+        # Modern color palette
+        COLORS = {
+            "professional": {
+                "primary": ["#2E86C1", "#E74C3C", "#F39C12", "#8E44AD"],
+                "secondary": ["#5DADE2", "#EC7063", "#F7C71A", "#BB8FCE"],
+                "background": "#FFFFFF",
+                "grid": "#F8F9FA",
+                "text": "#2C3E50",
+                "candlestick_up": "#00C851",
+                "candlestick_down": "#FF4444",
+                "volume": "rgba(70, 130, 180, 0.5)",
+            },
+            "dark": {
+                "primary": ["#00D4AA", "#FF6B6B", "#4ECDC4", "#45B7D1"],
+                "secondary": ["#96CEB4", "#FECA57", "#FF9FF3", "#54A0FF"],
+                "background": "#1E1E1E",
+                "grid": "#2D2D2D",
+                "text": "#FFFFFF",
+                "candlestick_up": "#00D4AA",
+                "candlestick_down": "#FF6B6B",
+                "volume": "rgba(0, 212, 170, 0.3)",
+            },
+            "minimal": {
+                "primary": ["#6C5CE7", "#00B894", "#FDCB6E", "#E17055"],
+                "secondary": ["#A29BFE", "#00CEC9", "#FDCB6E", "#FD79A8"],
+                "background": "#FDFDFD",
+                "grid": "#F1F2F6",
+                "text": "#2D3436",
+                "candlestick_up": "#00B894",
+                "candlestick_down": "#E17055",
+                "volume": "rgba(108, 92, 231, 0.4)",
+            },
+        }
 
+        color_scheme = COLORS.get(layout_style, COLORS["professional"])
+
+        # Fetch data for all symbols
         stock_data = {}
-        colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
+        failed_symbols = []
 
-        # Her sembol için veri toplama
         for symbol in symbols:
             try:
-                data_response = None
-
+                # Fetch market data with increased limits
                 if period.lower() == "intraday":
-                    data_response = await get_intraday_data(
-                        symbols=symbol, interval="60min"
+                    response = await get_intraday_data(
+                        symbols=symbol,
+                        interval="1hour",
+                        limit=min(time_range_days * 12, 1000),
                     )
-                elif period.lower() == "daily":
-                    data_response = await get_eod_data(symbols=symbol)
                 else:
-                    # Marketstack doesn't have weekly/monthly endpoints, use daily data
-                    data_response = await get_eod_data(symbols=symbol)
+                    response = await get_eod_data(
+                        symbols=symbol, limit=min(max(time_range_days, 250), 1000)
+                    )
 
-                if "error" in data_response or "Error Message" in data_response:
+                if (
+                    "error" in response
+                    or "data" not in response
+                    or not response["data"]
+                ):
+                    failed_symbols.append(symbol)
                     continue
 
-                # Marketstack data structure
-                if "data" not in data_response:
-                    continue
-
-                # DataFrame'e çevir
-                raw_data = data_response["data"]
-                if not raw_data:
-                    continue
-
-                # Convert to DataFrame
-                df = pd.DataFrame(raw_data)
+                # Process data
+                df = pd.DataFrame(response["data"])
                 df["date"] = pd.to_datetime(df["date"])
-                df.set_index("date", inplace=True)
+                df = df.set_index("date").sort_index()
 
-                # Kolon isimlerini standardize et
-                column_mapping = {
-                    "open": "open",
-                    "high": "high",
-                    "low": "low",
-                    "close": "close",
-                    "volume": "volume",
-                }
+                # Ensure numeric columns
+                numeric_cols = ["open", "high", "low", "close", "volume"]
+                for col in numeric_cols:
+                    if col in df.columns:
+                        df[col] = pd.to_numeric(df[col], errors="coerce")
 
-                # Rename columns to lowercase for consistency
-                df.columns = [col.lower() for col in df.columns]
-
-                # Ensure we have the required columns
+                # Validate required data
                 required_cols = ["open", "high", "low", "close"]
                 if not all(col in df.columns for col in required_cols):
+                    failed_symbols.append(symbol)
                     continue
 
-                # Numeric'e çevir ve sırala
-                for col in required_cols + (
-                    ["volume"] if "volume" in df.columns else []
-                ):
-                    df[col] = pd.to_numeric(df[col], errors="coerce")
-                df = df.sort_index()
+                # Drop rows with missing OHLC data
+                df = df.dropna(subset=required_cols)
 
-                # Tarih filtreleme
-                if time_range_days and time_range_days > 0:
+                if len(df) == 0:
+                    failed_symbols.append(symbol)
+                    continue
+
+                # Limit data to requested time range
+                if time_range_days > 0:
                     df = df.tail(time_range_days)
 
-                # Moving Average hesapla
-                if include_ma and len(df) >= ma_period:
-                    df[f"MA{ma_period}"] = df["close"].rolling(window=ma_period).mean()
+                # Calculate technical indicators
+                if "sma" in technical_indicators:
+                    df["SMA_20"] = calculate_sma(df["close"], 20)
+                    df["SMA_50"] = calculate_sma(df["close"], 50)
+
+                if "ema" in technical_indicators:
+                    df["EMA_12"] = calculate_ema(df["close"], 12)
+                    df["EMA_26"] = calculate_ema(df["close"], 26)
+
+                if "bollinger" in technical_indicators:
+                    df["BB_Upper"], df["BB_Middle"], df["BB_Lower"] = (
+                        calculate_bollinger_bands(df["close"])
+                    )
+
+                if "rsi" in technical_indicators:
+                    df["RSI"] = calculate_rsi(df["close"])
+
+                if "macd" in technical_indicators:
+                    df["MACD"], df["MACD_Signal"], df["MACD_Histogram"] = (
+                        calculate_macd(df["close"])
+                    )
 
                 stock_data[symbol] = df
 
             except Exception as e:
+                failed_symbols.append(symbol)
                 continue
 
         if not stock_data:
-            return {"error": "No data could be retrieved for any symbol"}
+            return {
+                "error": f"Could not retrieve data for any symbols. Failed: {', '.join(failed_symbols)}"
+            }
 
-        # Grafik oluşturma
-        fig = None
-        symbols_list = list(stock_data.keys())
+        successful_symbols = list(stock_data.keys())
 
-        if subplot_layout == "quantstart" and len(symbols_list) >= 5:
-            fig = make_subplots(
-                rows=3,
-                cols=2,
-                specs=[
-                    [{"colspan": 2, "secondary_y": True}, None],
-                    [{"secondary_y": True}, {"secondary_y": True}],
-                    [{"secondary_y": True}, {"secondary_y": True}],
-                ],
-                subplot_titles=symbols_list,
-                x_title="Date",
-                y_title="OHLC",
+        # Create chart layout
+        subplot_count = len(successful_symbols)
+        has_rsi = "rsi" in technical_indicators
+        has_macd = "macd" in technical_indicators
+        has_volume = include_volume and any(
+            "volume" in df.columns for df in stock_data.values()
+        )
+
+        # Calculate subplot rows
+        extra_rows = 0
+        if has_volume:
+            extra_rows += 1
+        if has_rsi:
+            extra_rows += 1
+        if has_macd:
+            extra_rows += 1
+
+        total_rows = subplot_count + extra_rows
+        row_heights = []
+
+        # Main price charts get more height
+        for _ in range(subplot_count):
+            row_heights.append(
+                0.65 / subplot_count if extra_rows > 0 else 1.0 / subplot_count
             )
 
-            plot_symbols = [symbols_list[0], symbols_list[0]] + symbols_list[1:5]
+        # Technical indicator rows get optimized heights
+        if has_volume:
+            row_heights.append(0.18 if extra_rows > 1 else 0.4)
+        if has_rsi:
+            row_heights.append(0.085 if extra_rows > 1 else 0.3)
+        if has_macd:
+            row_heights.append(0.085 if extra_rows > 1 else 0.3)
 
-            for i, symbol in enumerate(plot_symbols):
-                # QuantStart exact logic
-                if i == 1:
-                    row = 1
-                    col = 1
-                else:
-                    row = (i // 2) + 1
-                    col = (i % 2) + 1
+        # Create subplot specifications
+        specs = [[{"secondary_y": False}] for _ in range(total_rows)]
+        subplot_titles = []
 
-                df = stock_data[symbol]
+        for symbol in successful_symbols:
+            latest_price = stock_data[symbol]["close"].iloc[-1]
+            price_change = (
+                stock_data[symbol]["close"].iloc[-1]
+                - stock_data[symbol]["close"].iloc[-2]
+                if len(stock_data[symbol]) > 1
+                else 0
+            )
+            change_pct = (
+                (price_change / stock_data[symbol]["close"].iloc[-2] * 100)
+                if len(stock_data[symbol]) > 1
+                and stock_data[symbol]["close"].iloc[-2] != 0
+                else 0
+            )
 
+            change_symbol = "+" if price_change >= 0 else ""
+            subplot_titles.append(
+                f"{symbol} - ${latest_price:.2f} ({change_symbol}{change_pct:.2f}%)"
+            )
+
+        if has_volume:
+            subplot_titles.append("Volume")
+        if has_rsi:
+            subplot_titles.append("RSI")
+        if has_macd:
+            subplot_titles.append("MACD")
+
+        # Create the figure
+        fig = make_subplots(
+            rows=total_rows,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.015,  # Reduced spacing for more chart area
+            subplot_titles=subplot_titles,
+            specs=specs,
+            row_heights=row_heights,
+        )
+
+        # Plot main price charts
+        for i, symbol in enumerate(successful_symbols):
+            df = stock_data[symbol]
+            row = i + 1
+            color = color_scheme["primary"][i % len(color_scheme["primary"])]
+
+            # Main price chart
+            if chart_type == "candlestick":
                 fig.add_trace(
                     go.Candlestick(
                         x=df.index,
@@ -1291,472 +1451,450 @@ async def create_stock_chart(
                         high=df["high"],
                         low=df["low"],
                         close=df["close"],
-                        name="OHLC",
+                        name=f"{symbol}",
+                        increasing=dict(
+                            line=dict(color=color_scheme["candlestick_up"], width=2)
+                        ),
+                        decreasing=dict(
+                            line=dict(color=color_scheme["candlestick_down"], width=2)
+                        ),
+                        showlegend=True,
                     ),
                     row=row,
-                    col=col,
+                    col=1,
                 )
-
-                if include_volume and "volume" in df.columns:
-                    fig.add_trace(
-                        go.Bar(
-                            x=df.index,
-                            y=df["volume"],
-                            opacity=0.1,
-                            marker=dict(color="blue"),
-                            name="volume",
-                        ),
-                        row=row,
-                        col=col,
-                        secondary_y=True,
-                    )
-
-                if include_ma and f"MA{ma_period}" in df.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df[f"MA{ma_period}"],
-                            line=dict(color="black", width=1),
-                            name=f"{ma_period} day MA",
-                            yaxis="y2",
-                        ),
-                        row=row,
-                        col=col,
-                        secondary_y=False,
-                    )
-
-                fig.layout.yaxis2.showgrid = False
-
-            fig.update_layout(
-                showlegend=False,
-                title_text=f"OHLC data for {', '.join(symbols_list)}",
-                title_xref="paper",
-                title_x=0.5,
-                title_xanchor="center",
-            )
-            fig.update_xaxes(rangeslider_visible=False)
-
-        elif subplot_layout == "single" and len(symbols_list) == 1:
-            symbol = symbols_list[0]
-            df = stock_data[symbol]
-
-            if include_volume and "volume" in df.columns:
-                fig = make_subplots(
-                    rows=2,
-                    cols=1,
-                    shared_xaxes=True,
-                    vertical_spacing=0.03,
-                    subplot_titles=(f"{symbol} {chart_type.title()}", "Volume"),
-                    row_width=[0.7, 0.3],
-                )
-
-                # Ana grafik
-                if chart_type == "candlestick":
-                    fig.add_trace(
-                        go.Candlestick(
-                            x=df.index,
-                            open=df["open"],
-                            high=df["high"],
-                            low=df["low"],
-                            close=df["close"],
-                            name=f"{symbol} OHLC",
-                            increasing=dict(line=dict(color="#00ff00")),
-                            decreasing=dict(line=dict(color="#ff0000")),
-                        ),
-                        row=1,
-                        col=1,
-                    )
-                elif chart_type == "line":
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df["close"],
-                            mode="lines",
-                            name=f"{symbol} Price",
-                            line=dict(color=colors[0], width=2),
-                        ),
-                        row=1,
-                        col=1,
-                    )
-                elif chart_type == "area":
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df["close"],
-                            mode="lines",
-                            fill="tonexty",
-                            name=f"{symbol} Price",
-                            line=dict(color=colors[0]),
-                        ),
-                        row=1,
-                        col=1,
-                    )
-
-                # Moving Average
-                if include_ma and f"MA{ma_period}" in df.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df[f"MA{ma_period}"],
-                            mode="lines",
-                            name=f"MA({ma_period})",
-                            line=dict(color="orange", width=2, dash="dash"),
-                        ),
-                        row=1,
-                        col=1,
-                    )
-
-                # Volume
+            elif chart_type == "ohlc":
                 fig.add_trace(
-                    go.Bar(
+                    go.Ohlc(
                         x=df.index,
-                        y=df["volume"],
-                        name="Volume",
-                        marker=dict(color="rgba(158,202,225,0.6)"),
+                        open=df["open"],
+                        high=df["high"],
+                        low=df["low"],
+                        close=df["close"],
+                        name=f"{symbol}",
+                        increasing=dict(
+                            line=dict(color=color_scheme["candlestick_up"], width=2)
+                        ),
+                        decreasing=dict(
+                            line=dict(color=color_scheme["candlestick_down"], width=2)
+                        ),
+                        showlegend=True,
                     ),
-                    row=2,
+                    row=row,
+                    col=1,
+                )
+            elif chart_type == "line":
+                fig.add_trace(
+                    go.Scatter(
+                        x=df.index,
+                        y=df["close"],
+                        mode="lines",
+                        name=f"{symbol}",
+                        line=dict(color=color, width=3),
+                        showlegend=True,
+                    ),
+                    row=row,
+                    col=1,
+                )
+            elif chart_type == "area":
+                fig.add_trace(
+                    go.Scatter(
+                        x=df.index,
+                        y=df["close"],
+                        mode="lines",
+                        fill="tonexty",
+                        name=f"{symbol}",
+                        line=dict(color=color, width=2),
+                        fillcolor=f"rgba{tuple(list(bytes.fromhex(color.lstrip('#'))) + [0.1])}",
+                        showlegend=True,
+                    ),
+                    row=row,
                     col=1,
                 )
 
-            else:
-                fig = go.Figure()
+            # Add technical indicators
+            if "sma" in technical_indicators:
+                if "SMA_20" in df.columns:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df.index,
+                            y=df["SMA_20"],
+                            mode="lines",
+                            name=f"{symbol} SMA(20)",
+                            line=dict(
+                                color="#FFA500",  # Orange - more visible
+                                width=3,
+                                dash="dash",
+                            ),
+                            showlegend=True,
+                            opacity=0.9,
+                        ),
+                        row=row,
+                        col=1,
+                    )
 
-                # Ana grafik
-                if chart_type == "candlestick":
-                    fig.add_trace(
-                        go.Candlestick(
-                            x=df.index,
-                            open=df["open"],
-                            high=df["high"],
-                            low=df["low"],
-                            close=df["close"],
-                            name=f"{symbol} OHLC",
-                            increasing=dict(line=dict(color="#00ff00")),
-                            decreasing=dict(line=dict(color="#ff0000")),
-                        )
-                    )
-                elif chart_type == "line":
+                if "SMA_50" in df.columns:
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df["close"],
+                            y=df["SMA_50"],
                             mode="lines",
-                            name=f"{symbol} Price",
-                            line=dict(color=colors[0], width=2),
-                        )
+                            name=f"{symbol} SMA(50)",
+                            line=dict(
+                                color="#9932CC",  # Purple - more visible
+                                width=3,
+                                dash="dot",
+                            ),
+                            showlegend=True,
+                            opacity=0.9,
+                        ),
+                        row=row,
+                        col=1,
                     )
-                elif chart_type == "area":
+
+            if "ema" in technical_indicators:
+                if "EMA_12" in df.columns:
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df["close"],
+                            y=df["EMA_12"],
                             mode="lines",
+                            name=f"{symbol} EMA(12)",
+                            line=dict(
+                                color=color_scheme["primary"][
+                                    i % len(color_scheme["primary"])
+                                ],
+                                width=1.5,
+                                dash="dash",
+                            ),
+                            opacity=0.8,
+                            showlegend=True,
+                        ),
+                        row=row,
+                        col=1,
+                    )
+
+            if "bollinger" in technical_indicators:
+                if all(
+                    col in df.columns for col in ["BB_Upper", "BB_Middle", "BB_Lower"]
+                ):
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df.index,
+                            y=df["BB_Upper"],
+                            mode="lines",
+                            name=f"{symbol} BB Upper",
+                            line=dict(color="rgba(128,128,128,0.5)", width=1),
+                            showlegend=False,
+                        ),
+                        row=row,
+                        col=1,
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df.index,
+                            y=df["BB_Lower"],
+                            mode="lines",
+                            name=f"{symbol} BB Lower",
+                            line=dict(color="rgba(128,128,128,0.5)", width=1),
                             fill="tonexty",
-                            name=f"{symbol} Price",
-                            line=dict(color=colors[0]),
-                        )
+                            fillcolor="rgba(128,128,128,0.1)",
+                            showlegend=False,
+                        ),
+                        row=row,
+                        col=1,
                     )
 
-                # Moving Average
-                if include_ma and f"MA{ma_period}" in df.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df[f"MA{ma_period}"],
-                            mode="lines",
-                            name=f"MA({ma_period})",
-                            line=dict(color="orange", width=2, dash="dash"),
-                        )
-                    )
-
-            fig.update_layout(
-                title=f"{symbol} Stock Analysis",
-                template="plotly_white",
-                height=(600 if (include_volume and "volume" in df.columns) else 400),
-                showlegend=True,
-                xaxis_title="Date",
-                yaxis_title="Price (USD)",
-                hovermode="x unified",
-            )
-
-        # GRID LAYOUT
-        elif subplot_layout == "grid":
-            rows = (len(symbols_list) + 1) // 2
-            cols = 2 if len(symbols_list) > 1 else 1
-
-            specs = []
-            for _ in range(rows):
-                row_specs = []
-                for _ in range(cols):
-                    row_specs.append({"secondary_y": True} if include_volume else {})
-                specs.append(row_specs)
-
-            fig = make_subplots(
-                rows=rows,
-                cols=cols,
-                specs=specs,
-                subplot_titles=symbols_list,
-                vertical_spacing=0.08,
-                horizontal_spacing=0.05,
-            )
-
-            for i, symbol in enumerate(symbols_list):
-                row = (i // cols) + 1
-                col = (i % cols) + 1
+        # Add volume chart with improved visibility
+        current_row = len(successful_symbols) + 1
+        if has_volume:
+            for i, symbol in enumerate(successful_symbols):
                 df = stock_data[symbol]
-                color = colors[i % len(colors)]
+                if "volume" in df.columns:
+                    # Color volume bars based on price movement
+                    colors = []
+                    for j in range(len(df)):
+                        if j > 0:
+                            if df["close"].iloc[j] >= df["close"].iloc[j - 1]:
+                                colors.append(
+                                    "rgba(0, 200, 81, 0.7)"
+                                )  # Green for up days
+                            else:
+                                colors.append(
+                                    "rgba(255, 68, 68, 0.7)"
+                                )  # Red for down days
+                        else:
+                            colors.append("rgba(100, 149, 237, 0.7)")  # Default blue
 
-                # Ana grafik
-                if chart_type == "candlestick":
-                    fig.add_trace(
-                        go.Candlestick(
-                            x=df.index,
-                            open=df["open"],
-                            high=df["high"],
-                            low=df["low"],
-                            close=df["close"],
-                            name=f"{symbol}",
-                            showlegend=False,
-                            increasing=dict(line=dict(color="#00ff00")),
-                            decreasing=dict(line=dict(color="#ff0000")),
-                        ),
-                        row=row,
-                        col=col,
-                    )
-                elif chart_type == "line":
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df["close"],
-                            mode="lines",
-                            name=f"{symbol}",
-                            line=dict(color=color, width=2),
-                            showlegend=False,
-                        ),
-                        row=row,
-                        col=col,
-                    )
-                elif chart_type == "area":
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df["close"],
-                            mode="lines",
-                            fill="tonexty",
-                            name=f"{symbol}",
-                            line=dict(color=color),
-                            showlegend=False,
-                        ),
-                        row=row,
-                        col=col,
-                    )
-
-                # Moving Average
-                if include_ma and f"MA{ma_period}" in df.columns:
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df[f"MA{ma_period}"],
-                            mode="lines",
-                            name=f"{symbol} MA",
-                            line=dict(color="orange", width=1, dash="dash"),
-                            showlegend=False,
-                        ),
-                        row=row,
-                        col=col,
-                    )
-
-                # Volume
-                if include_volume and "volume" in df.columns:
                     fig.add_trace(
                         go.Bar(
                             x=df.index,
                             y=df["volume"],
                             name=f"{symbol} Volume",
-                            opacity=0.3,
-                            marker_color=dict(color=color),
+                            marker_color=colors,
                             showlegend=False,
                         ),
-                        row=row,
-                        col=col,
-                        secondary_y=True,
+                        row=current_row,
+                        col=1,
                     )
+            current_row += 1
 
-            fig.update_layout(
-                title="Multi-Stock Analysis (Grid Layout)",
-                height=300 * rows,
-                showlegend=False,
-                template="plotly_white",
-            )
-
-        else:
-            specs = [
-                [{"secondary_y": True}] if include_volume else [{}]
-                for _ in symbols_list
-            ]
-
-            fig = make_subplots(
-                rows=len(symbols_list),
-                cols=1,
-                specs=specs,
-                subplot_titles=symbols_list,
-                vertical_spacing=0.05,
-            )
-
-            for i, symbol in enumerate(symbols_list):
-                row = i + 1
+        # Add RSI chart
+        if has_rsi:
+            for i, symbol in enumerate(successful_symbols):
                 df = stock_data[symbol]
-                color = colors[i % len(colors)]
-
-                # Ana grafik
-                if chart_type == "candlestick":
-                    fig.add_trace(
-                        go.Candlestick(
-                            x=df.index,
-                            open=df["open"],
-                            high=df["high"],
-                            low=df["low"],
-                            close=df["close"],
-                            name=f"{symbol}",
-                            showlegend=False,
-                            increasing=dict(line=dict(color="#00ff00")),
-                            decreasing=dict(line=dict(color="#ff0000")),
-                        ),
-                        row=row,
-                        col=1,
-                    )
-                elif chart_type == "line":
+                if "RSI" in df.columns:
+                    color = color_scheme["primary"][i % len(color_scheme["primary"])]
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df["close"],
+                            y=df["RSI"],
                             mode="lines",
-                            name=f"{symbol}",
-                            line=dict(color=color, width=2),
+                            name=f"{symbol} RSI",
+                            line=dict(color=color, width=3),  # Increased width
                             showlegend=False,
                         ),
-                        row=row,
-                        col=1,
-                    )
-                elif chart_type == "area":
-                    fig.add_trace(
-                        go.Scatter(
-                            x=df.index,
-                            y=df["close"],
-                            mode="lines",
-                            fill="tonexty",
-                            name=f"{symbol}",
-                            line=dict(color=color),
-                            showlegend=False,
-                        ),
-                        row=row,
+                        row=current_row,
                         col=1,
                     )
 
-                # Moving Average
-                if include_ma and f"MA{ma_period}" in df.columns:
+            # Add RSI reference lines
+            fig.add_hline(
+                y=70,
+                line_dash="dash",
+                line_color="red",
+                opacity=0.5,
+                row=current_row,
+                col=1,
+            )
+            fig.add_hline(
+                y=30,
+                line_dash="dash",
+                line_color="green",
+                opacity=0.5,
+                row=current_row,
+                col=1,
+            )
+            fig.add_hline(
+                y=50,
+                line_dash="dot",
+                line_color="gray",
+                opacity=0.3,
+                row=current_row,
+                col=1,
+            )
+
+            current_row += 1
+
+        # Add MACD chart
+        if has_macd:
+            for i, symbol in enumerate(successful_symbols):
+                df = stock_data[symbol]
+                if all(
+                    col in df.columns
+                    for col in ["MACD", "MACD_Signal", "MACD_Histogram"]
+                ):
+                    color = color_scheme["primary"][i % len(color_scheme["primary"])]
+
+                    # MACD line
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[f"MA{ma_period}"],
+                            y=df["MACD"],
                             mode="lines",
-                            name=f"{symbol} MA",
-                            line=dict(color="orange", width=1, dash="dash"),
+                            name=f"{symbol} MACD",
+                            line=dict(color=color, width=3),  # Increased width
                             showlegend=False,
                         ),
-                        row=row,
+                        row=current_row,
                         col=1,
                     )
 
-                # Volume
-                if include_volume and "volume" in df.columns:
+                    # Signal line
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df.index,
+                            y=df["MACD_Signal"],
+                            mode="lines",
+                            name=f"{symbol} Signal",
+                            line=dict(
+                                color=color_scheme["secondary"][
+                                    i % len(color_scheme["secondary"])
+                                ],
+                                width=3,  # Increased width
+                            ),
+                            showlegend=False,
+                        ),
+                        row=current_row,
+                        col=1,
+                    )
+
+                    # Histogram
+                    colors_hist = [
+                        "green" if x >= 0 else "red" for x in df["MACD_Histogram"]
+                    ]
                     fig.add_trace(
                         go.Bar(
                             x=df.index,
-                            y=df["volume"],
-                            name=f"{symbol} Volume",
-                            opacity=0.3,
-                            marker_color=dict(color=color),
+                            y=df["MACD_Histogram"],
+                            name=f"{symbol} Histogram",
+                            marker_color=colors_hist,
+                            opacity=0.6,
                             showlegend=False,
                         ),
-                        row=row,
+                        row=current_row,
                         col=1,
-                        secondary_y=True,
                     )
 
-            fig.update_layout(
-                title="Multi-Stock Analysis (Vertical Layout)",
-                height=400 * len(symbols_list),
-                showlegend=False,
-                template="plotly_white",
-            )
-
-        if fig is None:
-            return {"error": "Chart could not be created"}
-
-        # Ortak layout ayarları
-        fig.update_xaxes(rangeslider_visible=False)
-
-        # Range selector ekle (sadece single layout için)
-        if subplot_layout == "single":
-            fig.update_xaxes(
+        # Update layout with modern styling
+        fig.update_layout(
+            title=dict(
+                text=f"Professional Stock Analysis: {', '.join(successful_symbols)}",
+                x=0.5,
+                font=dict(
+                    size=24, color=color_scheme["text"], family="Arial, sans-serif"
+                ),
+            ),
+            template="plotly_white" if layout_style != "dark" else "plotly_dark",
+            plot_bgcolor=color_scheme["background"],
+            paper_bgcolor=color_scheme["background"],
+            font=dict(color=color_scheme["text"], family="Arial, sans-serif"),
+            height=300
+            + (450 * len(successful_symbols))
+            + (200 * extra_rows),  # Increased height
+            margin=dict(l=60, r=60, t=120, b=100),  # Optimized margins
+            hovermode="x unified",
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.05,
+                xanchor="center",
+                x=0.5,
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="rgba(0,0,0,0.2)",
+                borderwidth=1,
+            ),
+            xaxis=dict(
+                rangeslider=dict(visible=False),
                 rangeselector=dict(
                     buttons=list(
                         [
+                            dict(count=7, label="7D", step="day", stepmode="backward"),
                             dict(
-                                count=1, label="1M", step="month", stepmode="backward"
+                                count=30, label="30D", step="day", stepmode="backward"
                             ),
                             dict(
-                                count=3, label="3M", step="month", stepmode="backward"
+                                count=60, label="60D", step="day", stepmode="backward"
                             ),
                             dict(
-                                count=6, label="6M", step="month", stepmode="backward"
+                                count=90, label="90D", step="day", stepmode="backward"
                             ),
-                            dict(count=1, label="1Y", step="year", stepmode="backward"),
-                            dict(step="all"),
+                            dict(step="all", label="ALL"),
                         ]
-                    )
-                )
-            )
-
-        # HTML'e çevir
-        chart_html = fig.to_html(
-            include_plotlyjs="cdn",
-            div_id=f"stock_chart_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            config={"displayModeBar": True, "responsive": True},
+                    ),
+                    bgcolor=color_scheme["grid"],
+                    activecolor=color_scheme["primary"][0],
+                ),
+            ),
         )
 
+        # Style all subplots
+        fig.update_xaxes(
+            gridcolor=color_scheme["grid"],
+            showline=True,
+            linecolor=color_scheme["grid"],
+            mirror=True,
+        )
+        fig.update_yaxes(
+            gridcolor=color_scheme["grid"],
+            showline=True,
+            linecolor=color_scheme["grid"],
+            mirror=True,
+        )
+
+        # Generate unique chart ID and save
         chart_id = str(uuid.uuid4())
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Convert to HTML with modern configuration
+        chart_html = fig.to_html(
+            include_plotlyjs="cdn",
+            div_id=f"professional_stock_chart_{timestamp}",
+            config={
+                "displayModeBar": True,
+                "responsive": True,
+                "displaylogo": False,
+                "modeBarButtonsToAdd": [
+                    "drawline",
+                    "drawopenpath",
+                    "drawclosedpath",
+                    "drawcircle",
+                    "drawrect",
+                    "eraseshape",
+                ],
+                "modeBarButtonsToRemove": ["pan2d", "lasso2d"],
+                "toImageButtonOptions": {
+                    "format": "png",
+                    "filename": f"stock_chart_{timestamp}",
+                    "height": 800,
+                    "width": 1200,
+                    "scale": 2,
+                },
+            },
+        )
+
+        # Save chart file
         chart_file = CHARTS_DIR / f"{chart_id}.html"
 
-        # Create chart data with metadata - same structure as images
+        # Create chart metadata
         chart_data = {
             "filename": f"{chart_id}.html",
             "data": chart_html,
             "reference": chart_id,
             "type": "text/html",
-            "symbols": symbols_list,
+            "symbols": successful_symbols,
             "chart_type": chart_type,
             "period": period,
             "time_range_days": time_range_days,
+            "technical_indicators": technical_indicators,
+            "layout_style": layout_style,
             "created_at": datetime.now().isoformat(),
             "file_path": str(chart_file),
+            "data_points": sum(len(df) for df in stock_data.values()),
+            "failed_symbols": failed_symbols,
         }
 
+        # Save chart data and file
         set_chart_data(chart_data)
 
         try:
             with open(chart_file, "w", encoding="utf-8") as f:
                 f.write(chart_html)
         except Exception as e:
-            pass
+            pass  # Silent fail for file writing issues
 
-        return {
-            "message": f"✅ {len(symbols_list)} stock {chart_type} chart created successfully ({subplot_layout} layout). Chart is displayed above this response for your analysis."
-        }
+        # Prepare success message
+        success_message = f"✅ Professional stock chart created successfully!\n\n"
+        success_message += f"📊 **Analysis Summary:**\n"
+        success_message += f"• Symbols analyzed: {', '.join(successful_symbols)}\n"
+        success_message += f"• Chart type: {chart_type.title()}\n"
+        success_message += f"• Data period: {period.title()}\n"
+        success_message += f"• Time range: {time_range_days} days\n"
+        success_message += f"• Technical indicators: {', '.join(technical_indicators) if technical_indicators else 'None'}\n"
+        success_message += f"• Layout style: {layout_style.title()}\n"
+        success_message += (
+            f"• Total data points: {sum(len(df) for df in stock_data.values()):,}\n"
+        )
+
+        if failed_symbols:
+            success_message += f"\n⚠️ **Note:** Could not retrieve data for: {', '.join(failed_symbols)}\n"
+
+        success_message += f"\n💼 The chart is optimized for professional analysis with modern styling and interactive features."
+
+        return {"message": success_message}
 
     except Exception as e:
-        return {"error": f"Stock chart creation error: {str(e)}"}
+        return {"error": f"Chart creation failed: {str(e)}"}
 
 
 if __name__ == "__main__":
