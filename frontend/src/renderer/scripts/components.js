@@ -5612,7 +5612,7 @@ class UIComponents {
       
       if (response.data && response.data.data && response.data.data.length > 0) {
         const stockData = response.data.data;
-        this.populateStockDetail(symbol, stockData);
+        await this.populateStockDetail(symbol, stockData);
       } else {
         this.showStockErrorState(symbol);
       }
@@ -5667,7 +5667,7 @@ class UIComponents {
     }
   }
 
-  populateStockDetail(symbol, stockData) {
+  async populateStockDetail(symbol, stockData) {
     // Sort data by date (newest first)
     const sortedData = [...stockData].sort((a, b) => new Date(b.date) - new Date(a.date));
     const latest = sortedData[0];
@@ -5701,13 +5701,13 @@ class UIComponents {
     this.populateFinancialMetrics(latest, previous);
 
     // Populate company details
-    this.populateCompanyDetails(symbol);
+    await this.populateCompanyDetails(symbol);
 
     // Create and display chart
     this.createStockChart(sortedData);
 
     // Populate market movers
-    this.populateMarketMovers();
+    await this.fetchAndRenderMarketMovers();
 
     // Set up interval buttons
     this.setupIntervalButtons();
@@ -5782,48 +5782,100 @@ class UIComponents {
     `;
   }
 
-  populateCompanyDetails(symbol) {
+  async populateCompanyDetails(symbol) {
     const detailsContainer = document.getElementById("company-details");
     if (!detailsContainer) return;
 
-    detailsContainer.innerHTML = `
-      <div class="company-detail">
-        <span class="company-detail-label">Symbol</span>
-        <span class="company-detail-value">${symbol}</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">Market Cap</span>
-        <span class="company-detail-value">₺--</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">IPO Date</span>
-        <span class="company-detail-value">--</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">CEO</span>
-        <span class="company-detail-value">--</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">Fulltime Employees</span>
-        <span class="company-detail-value">--</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">Sector</span>
-        <span class="company-detail-value">--</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">Industry</span>
-        <span class="company-detail-value">--</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">Country</span>
-        <span class="company-detail-value">TR</span>
-      </div>
-      <div class="company-detail">
-        <span class="company-detail-label">Exchange</span>
-        <span class="company-detail-value">Istanbul Stock Exchange</span>
-      </div>
-    `;
+    try {
+      // Fetch company info from API
+      const api = new APIService();
+      const response = await api.getCompanyInfo(symbol);
+      const companyData = response.data?.data || {};
+
+      // Extract data with fallbacks
+      const fulltimeEmployees = companyData.fulltime_employees || "--";
+      const sector = companyData.sector || "--";
+      const industry = companyData.industry || "--";
+      const description = companyData.description || "";
+
+      // Create description HTML with read more using CSS clamp
+      let descriptionHtml = "";
+      if (description) {
+        const isLong = description.length > 240;
+        descriptionHtml = `
+          <div class="company-description">
+            <p class="description-text ${isLong ? '' : 'expanded'}">${description}</p>
+            ${isLong ? '<button class="read-more-btn" id="company-read-more">Read More</button>' : ''}
+          </div>
+        `;
+      } else {
+        descriptionHtml = '<div class="company-description"><p class="description-text expanded">No description available.</p></div>';
+      }
+
+      detailsContainer.innerHTML = `
+        <div class="company-detail">
+          <span class="company-detail-label">Fulltime Employees</span>
+          <span class="company-detail-value">${fulltimeEmployees}</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Sector</span>
+          <span class="company-detail-value">${sector}</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Industry</span>
+          <span class="company-detail-value">${industry}</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Country</span>
+          <span class="company-detail-value">TR</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Exchange</span>
+          <span class="company-detail-value">Istanbul Stock Exchange</span>
+        </div>
+        ${descriptionHtml}
+      `;
+
+      // Wire up Read More toggle without duplicating text
+      const readMoreBtn = document.getElementById("company-read-more");
+      if (readMoreBtn) {
+        readMoreBtn.addEventListener("click", () => {
+          const p = readMoreBtn.previousElementSibling;
+          if (p && p.classList.contains("description-text")) {
+            p.classList.add("expanded");
+            readMoreBtn.remove();
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching company info:", error);
+      // Fallback to default display
+      detailsContainer.innerHTML = `
+        <div class="company-detail">
+          <span class="company-detail-label">Fulltime Employees</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Sector</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Industry</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Country</span>
+          <span class="company-detail-value">TR</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">Exchange</span>
+          <span class="company-detail-value">Istanbul Stock Exchange</span>
+        </div>
+        <div class="company-description">
+          <p class="description-text">No description available.</p>
+        </div>
+      `;
+    }
   }
 
   createStockChart(data) {
@@ -5875,26 +5927,47 @@ class UIComponents {
     `;
   }
 
-  populateMarketMovers() {
+  async fetchAndRenderMarketMovers(limit = 30, chartNum = 8) {
     const moversContainer = document.getElementById("market-movers-content");
     if (!moversContainer) return;
 
-    // Sample data - in a real app, this would come from an API
-    const sampleMovers = [
-      { symbol: "OLEMA", price: "$8.11", change: "+27.72%", positive: true },
-      { symbol: "NVDA", price: "$166.34", change: "-3.1%", positive: false },
-      { symbol: "MSFT", price: "$496.89", change: "-2.18%", positive: false },
-      { symbol: "AAPL", price: "$238.75", change: "-0.43%", positive: false },
-      { symbol: "TSLA", price: "$347.60", change: "+2.68%", positive: true }
-    ];
+    try {
+      const symbols = [
+        "AEFES.IS", "AKBNK.IS", "ASELS.IS", "ASTOR.IS", "BIMAS.IS", "CIMSA.IS",
+        "EKGYO.IS", "ENKAI.IS", "EREGL.IS", "FROTO.IS", "GARAN.IS", "GUBRF.IS",
+        "ISCTR.IS", "KCHOL.IS", "KOZAL.IS", "KRDMD.IS", "MGROS.IS", "PETKM.IS",
+        "PGSUS.IS", "SAHOL.IS", "SASA.IS", "SISE.IS", "TAVHL.IS", "TCELL.IS",
+        "THYAO.IS", "TOASO.IS", "TTKOM.IS", "TUPRS.IS", "ULKER.IS", "YKBNK.IS"
+      ];
 
-    moversContainer.innerHTML = sampleMovers.map(mover => `
-      <div class="mover-item">
-        <span class="mover-symbol">${mover.symbol}</span>
-        <span class="mover-price">${mover.price}</span>
-        <span class="mover-change ${mover.positive ? 'positive' : 'negative'}">${mover.change}</span>
-      </div>
-    `).join('');
+      const api = new APIService();
+      const resp = await api.getGainersLosersActive(symbols, limit, chartNum);
+      const data = resp.data?.data || { gainers: [], losers: [], active: [] };
+      this.marketMoversData = data;
+
+      // Default render gainers tab
+      this.renderMarketMovers("gainers");
+    } catch (err) {
+      console.error("Failed to load market movers", err);
+      moversContainer.innerHTML = `<div class="text-muted">Unable to load market movers.</div>`;
+    }
+  }
+
+  renderMarketMovers(tab = "gainers") {
+    const moversContainer = document.getElementById("market-movers-content");
+    if (!moversContainer || !this.marketMoversData) return;
+
+    const list = this.marketMoversData[tab] || [];
+    moversContainer.innerHTML = list.map(item => {
+      const positive = item.change_percent >= 0;
+      const formatted = `${positive ? "+" : ""}${item.change_percent.toFixed(2)}%`;
+      return `
+        <div class="mover-item">
+          <span class="mover-symbol">${item.symbol}</span>
+          <span class="mover-change ${positive ? 'positive' : 'negative'}">${formatted}</span>
+        </div>
+      `;
+    }).join("");
   }
 
   setupIntervalButtons() {
@@ -5917,13 +5990,11 @@ class UIComponents {
     const moverTabs = document.querySelectorAll('.mover-tab');
     moverTabs.forEach(tab => {
       tab.addEventListener('click', (e) => {
-        // Remove active class from all tabs
         moverTabs.forEach(t => t.classList.remove('active'));
-        // Add active class to clicked tab
-        e.target.classList.add('active');
-        
-        // Here you would typically load different market mover data
-        console.log('Selected tab:', e.target.dataset.tab);
+        const target = e.currentTarget;
+        target.classList.add('active');
+        const tabKey = target.dataset.tab || 'gainers';
+        this.renderMarketMovers(tabKey);
       });
     });
   }

@@ -593,6 +593,22 @@ class APIService {
     });
   }
 
+  async getGainersLosersActive(symbols, limit = 30, chart_num = 8) {
+    console.log(`[API] Getting gainers/losers/active for ${symbols.length} symbols`);
+    return this.makeRequest(`/api/market/gainers-losers-active`, "POST", {
+      symbols,
+      limit,
+      chart_num
+    });
+  }
+
+  async getCompanyInfo(ticker = "TUPRS.IS") {
+    console.log(`[API] Getting company info for ${ticker}`);
+    return this.makeRequest(`/api/market/company-info`, "GET", null, {
+      params: { ticker },
+    });
+  }
+
   // News Chat API method
   async sendNewsChatQuery(message, newsContext) {
     try {
