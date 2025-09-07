@@ -88,21 +88,12 @@ async def run_orchestration(
 
     client = load_vectorstore(VECTORSTORE_PATH_STR)
 
-    # 0. Selected files control
-    if not selected_files or len(selected_files) == 0:
-        response_message = "Lütfen dosya seçiniz."
-
-        # Add assistant response to chat history
-        chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, response_message
+    # 0. Selected files control - skip retrieval if no files selected
+    skip_retrieval = not selected_files or len(selected_files) == 0
+    if skip_retrieval:
+        logger.info(
+            "   - No files selected, skipping retrieval and continuing with empty local context"
         )
-
-        return {
-            "response": response_message,
-            "images": [],
-            "charts": [],
-            "generatedFiles": [],
-        }
 
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
@@ -144,7 +135,10 @@ async def run_orchestration(
     # 4. Enhanced Retrieval with different techniques
     reranked_docs = None
 
-    if "rag_fusion" in ENABLED_RAG_TECHNIQUES:
+    if skip_retrieval:
+        logger.info("   - Skipping retrieval due to no selected files")
+        reranked_docs = []
+    elif "rag_fusion" in ENABLED_RAG_TECHNIQUES:
         # RAG Fusion (Multiple Query Generation + RRF)
         from backend.retrieval.rag_fusion import retrieve_with_fusion
 
@@ -223,57 +217,68 @@ async def run_orchestration(
 
     # Check if no documents were found
     if not reranked_docs:
-        logger.warning("No retrieved docs")
-        error_message = (
-            f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
-            if selected_files
-            else "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
-        )
+        if skip_retrieval:
+            logger.info(
+                "   - No documents retrieved (no files selected), continuing with empty local context"
+            )
+        else:
+            logger.warning("No retrieved docs")
+            error_message = (
+                f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
+                if selected_files
+                else "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
+            )
 
-        # Add assistant response to chat history
-        chat_history_manager.add_message(
-            session_id, MessageRole.ASSISTANT, error_message
-        )
+            # Add assistant response to chat history
+            chat_history_manager.add_message(
+                session_id, MessageRole.ASSISTANT, error_message
+            )
 
-        return {
-            "response": error_message,
-            "images": [],
-            "charts": [],
-            "generatedFiles": [],
-        }
+            return {
+                "response": error_message,
+                "images": [],
+                "charts": [],
+                "generatedFiles": [],
+            }
 
     context_entries = []
 
-    included_parent_chunk_ids = []
-    for doc in reranked_docs:
-        if (
-            pre_embedding_process == "pdr"
-            and doc["metadata"].get("content_type") == "child"
-        ):
-            if doc["metadata"].get("parent_chunk_id") in included_parent_chunk_ids:
-                continue
+    if reranked_docs:
+        included_parent_chunk_ids = []
+        for doc in reranked_docs:
+            if (
+                pre_embedding_process == "pdr"
+                and doc["metadata"].get("content_type") == "child"
+            ):
+                if doc["metadata"].get("parent_chunk_id") in included_parent_chunk_ids:
+                    continue
+                else:
+                    content = doc["metadata"].get("parent_content")
+                    included_parent_chunk_ids.append(
+                        doc["metadata"].get("parent_chunk_id")
+                    )
+
             else:
-                content = doc["metadata"].get("parent_content")
-                included_parent_chunk_ids.append(doc["metadata"].get("parent_chunk_id"))
+                included_parent_chunk_ids.append(doc["metadata"].get("chunk_id"))
+                content = doc["content"]
 
-        else:
-            included_parent_chunk_ids.append(doc["metadata"].get("chunk_id"))
-            content = doc["content"]
+            metadata = doc["metadata"]
 
-        metadata = doc["metadata"]
+            metadata_str = ""
+            metadata_str += f"Source: {metadata.get('file_name')}\n"
+            if (
+                pre_embedding_process == "pdr"
+                and doc["metadata"].get("content_type") == "child"
+            ):
+                metadata_str += f"Parent Chunk ID: {metadata.get('parent_chunk_id')}\n"
+            context_entries.append(
+                f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
+            )
 
-        metadata_str = ""
-        metadata_str += f"Source: {metadata.get('file_name')}\n"
-        if (
-            pre_embedding_process == "pdr"
-            and doc["metadata"].get("content_type") == "child"
-        ):
-            metadata_str += f"Parent Chunk ID: {metadata.get('parent_chunk_id')}\n"
-        context_entries.append(
-            f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
-        )
-
-    local_context = "\n\n---\n\n".join(context_entries)
+        local_context = "\n\n---\n\n".join(context_entries)
+    else:
+        local_context = ""
+        logger.info("   - Using empty local context")
     logger.info(f"In Query, Pre-embedding process: {pre_embedding_process}")
     logger.debug(f"   - Local Context: {local_context}")
     logger.info(f"using web search ?= {web_search_enabled}")
