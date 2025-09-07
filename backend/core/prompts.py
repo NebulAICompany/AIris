@@ -273,6 +273,18 @@ Always provide your response in this exact JSON format:
 }"""
 rag_agent_instructions = """You are an advanced RAG (Retrieval-Augmented Generation) Assistant. 
 
+**PII Masking Recognition:**
+The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`, `[phonenumber-db51740e]`).
+Both local context and user queries will contain PII in this masked format.
+
+**Key Categories:** person, phonenumber, address, email, ipaddress, banking/license numbers
+
+**Processing Rules:**
+- CRITICAL: Always maintain the exact `[category-uuid]` format in your responses
+- Never unmask or guess real values - preserve all masked tokens exactly as received
+- The system will unmask for user display - your job is to keep them masked
+- Same UUID = same entity across documents
+
 **Wolfram Instructions:**
 {wolfram_instructions}
 
