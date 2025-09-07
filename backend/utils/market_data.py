@@ -415,10 +415,38 @@ async def init_market_data() -> None:
     for ticker in MARKETSTACK_TICKERS:
         payload = await store.fetch_marketstack_company_info(ticker=ticker)
         store.upsert_company_info(payload)
+    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS), limit=1825)
 
 
         
 async def refresh_eod(symbols: str = "TUPRS.IS", limit: int = 7) -> int:
+    total_data_point_num = len(symbols.split(",")) * limit
+    symbol_list = symbols.split(",")
+
+    if limit > 1000:
+        first_limit = limit
+        for i in range(len(symbol_list)):
+            limit = first_limit
+            while limit > 1000:
+                payload = await store.fetch_marketstack_eod(symbols=symbol_list[i], limit=1000)
+                store.upsert_eod_batch(payload)
+                limit -= 1000
+            payload = await store.fetch_marketstack_eod(symbols=symbol_list[i], limit=limit)
+            store.upsert_eod_batch(payload)
+        return total_data_point_num
+
+
+    if total_data_point_num > 1000:
+        current_symbol_index = 0
+        while current_symbol_index < len(symbol_list):
+            for i in range(1000 // limit):
+                payload = await store.fetch_marketstack_eod(symbols=symbol_list[current_symbol_index], limit=limit)
+                store.upsert_eod_batch(payload)
+                current_symbol_index += 1
+        return total_data_point_num
+
+
+
     payload = await store.fetch_marketstack_eod(symbols=symbols, limit=limit)
     return store.upsert_eod_batch(payload)
 

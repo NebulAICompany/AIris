@@ -4086,6 +4086,33 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   color: var(--text-muted);
 }
 
+/* Interactive chart tooltip */
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+  font-size: 12px;
+  z-index: 2;
+  display: none;
+}
+
+.chart-tooltip .tooltip-price {
+  font-weight: 700;
+}
+
+.chart-tooltip .tooltip-date {
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-size: 11px;
+}
+
 .stock-financial-profile {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -4268,10 +4295,23 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .mover-item:last-child {
   border-bottom: none;
+}
+
+.mover-item:hover {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.mover-item:hover .mover-symbol {
+  color: var(--text-primary);
 }
 
 .mover-symbol {

@@ -5557,6 +5557,9 @@ class UIComponents {
 
     if (!newsGrid || !stockDetail) return;
 
+    // Track which stock is currently active to avoid race conditions
+    this.currentStockSymbol = symbol;
+
     // Hide news grid and market column, show stock detail
     newsGrid.style.display = "none";
     if (marketColumn) {
@@ -5576,8 +5579,21 @@ class UIComponents {
       backButton.onclick = () => this.hideStockDetail();
     }
 
-    // Load stock data and populate the detail view
-    await this.loadStockDetailData(symbol);
+    // Load stock data and populate the detail view using current interval
+    const activeIntervalBtn = document.querySelector('.interval-btn.active');
+    const interval = activeIntervalBtn ? activeIntervalBtn.dataset.interval : '1M';
+    const limit = this.computeLimitFromInterval(interval);
+    await this.loadStockDetailData(symbol, limit);
+
+    // Bind once: interval buttons and mover tabs
+    if (!this.intervalButtonsBound) {
+      this.setupIntervalButtons();
+      this.intervalButtonsBound = true;
+    }
+    if (!this.moverTabsBound) {
+      this.setupMarketMoverTabs();
+      this.moverTabsBound = true;
+    }
   }
 
   hideStockDetail() {
@@ -5601,14 +5617,19 @@ class UIComponents {
     }
   }
 
-  async loadStockDetailData(symbol) {
+  async loadStockDetailData(symbol, limit = 7) {
+    // Skip duplicate requests for the same params
+    if (this.isLoadingStockDetail && this.lastStockSymbol === symbol && this.lastStockLimit === limit) {
+      return;
+    }
+    this.isLoadingStockDetail = true;
     try {
       // Show loading state
       this.showStockLoadingState();
 
       // Get stock data from API
       const api = new APIService();
-      const response = await api.getMarketEod(symbol, 30);
+      const response = await api.getMarketEod(symbol, limit);
       
       if (response.data && response.data.data && response.data.data.length > 0) {
         const stockData = response.data.data;
@@ -5616,9 +5637,34 @@ class UIComponents {
       } else {
         this.showStockErrorState(symbol);
       }
+      this.lastStockSymbol = symbol;
+      this.lastStockLimit = limit;
     } catch (error) {
       console.error("Error loading stock detail:", error);
       this.showStockErrorState(symbol);
+    } finally {
+      this.isLoadingStockDetail = false;
+    }
+  }
+
+  computeLimitFromInterval(interval) {
+    const today = new Date();
+    switch ((interval || '').toUpperCase()) {
+      case '1M':
+        return 30;
+      case '6M':
+        return 180;
+      case 'YTD': {
+        const start = new Date(today.getFullYear(), 0, 1);
+        const diffMs = today - start;
+        return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
+      }
+      case '1Y':
+        return 365;
+      case '5Y':
+        return 365 * 5;
+      default:
+        return 30;
     }
   }
 
@@ -5671,11 +5717,11 @@ class UIComponents {
     // Sort data by date (newest first)
     const sortedData = [...stockData].sort((a, b) => new Date(b.date) - new Date(a.date));
     const latest = sortedData[0];
-    const previous = sortedData[1];
+    const earliest = sortedData[sortedData.length - 1];
 
-    // Calculate change
-    const change = latest.close - (previous ? previous.close : latest.close);
-    const changePercent = previous ? ((change / previous.close) * 100) : 0;
+    // Calculate change from earliest to latest within interval
+    const change = latest.close - (earliest ? earliest.close : latest.close);
+    const changePercent = earliest && earliest.close ? ((change / earliest.close) * 100) : 0;
     const isPositive = change >= 0;
 
     // Populate header information
@@ -5698,7 +5744,7 @@ class UIComponents {
     }
 
     // Populate financial metrics
-    this.populateFinancialMetrics(latest, previous);
+    this.populateFinancialMetrics(latest, earliest);
 
     // Populate company details
     await this.populateCompanyDetails(symbol);
@@ -5706,14 +5752,10 @@ class UIComponents {
     // Create and display chart
     this.createStockChart(sortedData);
 
-    // Populate market movers
-    await this.fetchAndRenderMarketMovers();
-
-    // Set up interval buttons
-    this.setupIntervalButtons();
-
-    // Set up market mover tabs
-    this.setupMarketMoverTabs();
+    // Populate market movers once per session
+    if (!this.marketMoversData) {
+      await this.fetchAndRenderMarketMovers();
+    }
   }
 
   getCompanyName(symbol) {
@@ -5786,6 +5828,21 @@ class UIComponents {
     const detailsContainer = document.getElementById("company-details");
     if (!detailsContainer) return;
 
+    // Show loading placeholder immediately
+    detailsContainer.innerHTML = `
+      <div class="company-detail"><span class="company-detail-label">Fulltime Employees</span><span class="company-detail-value">Loading...</span></div>
+      <div class="company-detail"><span class="company-detail-label">Sector</span><span class="company-detail-value">Loading...</span></div>
+      <div class="company-detail"><span class="company-detail-label">Industry</span><span class="company-detail-value">Loading...</span></div>
+      <div class="company-detail"><span class="company-detail-label">Country</span><span class="company-detail-value">TR</span></div>
+      <div class="company-detail"><span class="company-detail-label">Exchange</span><span class="company-detail-value">Istanbul Stock Exchange</span></div>
+      <div class="company-description"><p class="description-text">Fetching description…</p></div>
+    `;
+
+    // Debounce duplicate requests
+    if (this.isLoadingCompanyInfo && this.lastCompanyInfoSymbol === symbol) {
+      return;
+    }
+    this.isLoadingCompanyInfo = true;
     try {
       // Fetch company info from API
       const api = new APIService();
@@ -5810,6 +5867,11 @@ class UIComponents {
         `;
       } else {
         descriptionHtml = '<div class="company-description"><p class="description-text expanded">No description available.</p></div>';
+      }
+
+      // If user navigated to another stock while waiting, abort update
+      if (this.currentStockSymbol !== symbol) {
+        return;
       }
 
       detailsContainer.innerHTML = `
@@ -5847,6 +5909,7 @@ class UIComponents {
           }
         });
       }
+      this.lastCompanyInfoSymbol = symbol;
     } catch (error) {
       console.error("Error fetching company info:", error);
       // Fallback to default display
@@ -5875,6 +5938,9 @@ class UIComponents {
           <p class="description-text">No description available.</p>
         </div>
       `;
+    }
+    finally {
+      this.isLoadingCompanyInfo = false;
     }
   }
 
@@ -5914,7 +5980,15 @@ class UIComponents {
     const color = isPositive ? "#10b981" : "#ef4444";
 
     chartContainer.innerHTML = `
-      <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
+      <div class="chart-tooltip" id="chart-tooltip">
+        <div class="tooltip-price">--</div>
+        <div class="tooltip-date">--</div>
+      </div>
+      <div class="chart-tooltip" id="range-tooltip">
+        <div class="tooltip-price" id="range-price">--</div>
+        <div class="tooltip-date" id="range-dates">--</div>
+      </div>
+      <svg id="stock-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:${color};stop-opacity:0.3" />
@@ -5923,8 +5997,132 @@ class UIComponents {
         </defs>
         <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="${pathData} L ${points[points.length-1].x},${height-padding} L ${points[0].x},${height-padding} Z" fill="url(#chartGradient)"/>
+        <g id="hover-group">
+          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${height-padding}" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
+          <circle id="hover-dot" r="3" fill="${color}" stroke="#fff" stroke-width="1.5" style="display:none" />
+        </g>
+        <rect id="selection-rect" x="0" y="${padding}" width="0" height="${height - 2*padding}" fill="#3b82f6" opacity="0.15" style="display:none" />
+        <rect id="hover-capture" x="${padding}" y="${padding}" width="${width - 2*padding}" height="${height - 2*padding}" fill="transparent" />
       </svg>
     `;
+
+    // Interactivity: tooltip and crosshair
+    const svg = chartContainer.querySelector('#stock-svg');
+    const capture = chartContainer.querySelector('#hover-capture');
+    const hoverLine = chartContainer.querySelector('#hover-line');
+    const hoverDot = chartContainer.querySelector('#hover-dot');
+    const tooltip = chartContainer.querySelector('#chart-tooltip');
+
+    const bisect = (mouseX) => {
+      // Convert mouseX to index by nearest point
+      let nearestIndex = 0;
+      let minDx = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const dx = Math.abs(points[i].x - mouseX);
+        if (dx < minDx) {
+          minDx = dx;
+          nearestIndex = i;
+        }
+      }
+      return nearestIndex;
+    };
+
+    const formatDate = (d) => {
+      try {
+        const dt = new Date(d.date || d.time || d.datetime || d.Date || d.DATE);
+        return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch {
+        return '';
+      }
+    };
+
+    const showAtIndex = (idx) => {
+      const pt = points[idx];
+      const d = sortedData[idx];
+      hoverLine.setAttribute('x1', pt.x);
+      hoverLine.setAttribute('x2', pt.x);
+      hoverDot.setAttribute('cx', pt.x);
+      hoverDot.setAttribute('cy', pt.y);
+      hoverLine.style.display = 'block';
+      hoverDot.style.display = 'block';
+      tooltip.style.display = 'block';
+      const price = (d.close ?? d.Close ?? d.c)?.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+      tooltip.querySelector('.tooltip-price').textContent = `₺${price}`;
+      tooltip.querySelector('.tooltip-date').textContent = formatDate(d);
+      // Position tooltip
+      const bbox = svg.getBoundingClientRect();
+      const tx = ((pt.x / width) * bbox.width) + bbox.left;
+      const ty = ((pt.y / height) * bbox.height) + bbox.top;
+      tooltip.style.left = `${tx}px`;
+      tooltip.style.top = `${ty}px`;
+    };
+
+    let isSelecting = false;
+    let startIdx = null;
+    const selectionRect = chartContainer.querySelector('#selection-rect');
+    const rangeTooltip = chartContainer.querySelector('#range-tooltip');
+
+    const updateRange = (i1, i2) => {
+      const a = Math.min(i1, i2);
+      const b = Math.max(i1, i2);
+      const p1 = points[a];
+      const p2 = points[b];
+      selectionRect.setAttribute('x', p1.x);
+      selectionRect.setAttribute('width', Math.max(1, p2.x - p1.x));
+      selectionRect.style.display = 'block';
+
+      const d1 = sortedData[a];
+      const d2 = sortedData[b];
+      const change = (d2.close - d1.close);
+      const pct = d1.close ? (change / d1.close) * 100 : 0;
+      const priceStr = `₺${change.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+      rangeTooltip.querySelector('#range-price').textContent = priceStr;
+      rangeTooltip.querySelector('#range-dates').textContent = `${formatDate(d1)} → ${formatDate(d2)}`;
+      // Position tooltip near end point
+      const bbox = svg.getBoundingClientRect();
+      const tx = ((p2.x / width) * bbox.width) + bbox.left;
+      const ty = ((p2.y / height) * bbox.height) + bbox.top;
+      rangeTooltip.style.left = `${tx}px`;
+      rangeTooltip.style.top = `${ty}px`;
+      rangeTooltip.style.display = 'block';
+    };
+
+    capture.addEventListener('mousemove', (e) => {
+      const bbox = svg.getBoundingClientRect();
+      const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
+      const idx = bisect(mouseX);
+      if (isSelecting && startIdx !== null) {
+        updateRange(startIdx, idx);
+      } else {
+        showAtIndex(idx);
+      }
+    });
+
+    capture.addEventListener('mouseleave', () => {
+      hoverLine.style.display = 'none';
+      hoverDot.style.display = 'none';
+      tooltip.style.display = 'none';
+      if (!isSelecting) {
+        selectionRect.style.display = 'none';
+        rangeTooltip.style.display = 'none';
+      }
+    });
+
+    capture.addEventListener('mousedown', (e) => {
+      const bbox = svg.getBoundingClientRect();
+      const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
+      startIdx = bisect(mouseX);
+      isSelecting = true;
+      selectionRect.style.display = 'block';
+      rangeTooltip.style.display = 'block';
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isSelecting) {
+        isSelecting = false;
+        // Keep selection shown; user can start a new one to replace
+      }
+    });
   }
 
   async fetchAndRenderMarketMovers(limit = 30, chartNum = 8) {
@@ -5962,26 +6160,34 @@ class UIComponents {
       const positive = item.change_percent >= 0;
       const formatted = `${positive ? "+" : ""}${item.change_percent.toFixed(2)}%`;
       return `
-        <div class="mover-item">
+        <div class="mover-item" data-symbol="${item.symbol}">
           <span class="mover-symbol">${item.symbol}</span>
           <span class="mover-change ${positive ? 'positive' : 'negative'}">${formatted}</span>
         </div>
       `;
     }).join("");
+
+    // Click to open stock detail
+    moversContainer.onclick = (e) => {
+      const row = e.target.closest('.mover-item');
+      if (row && row.dataset.symbol) {
+        this.showStockDetail(row.dataset.symbol);
+      }
+    };
   }
 
   setupIntervalButtons() {
     const intervalButtons = document.querySelectorAll('.interval-btn');
     intervalButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        // Remove active class from all buttons
+      btn.addEventListener('click', async (e) => {
         intervalButtons.forEach(b => b.classList.remove('active'));
-        // Add active class to clicked button
-        e.target.classList.add('active');
-        
-        // Here you would typically reload the chart with new data
-        // For now, we'll just log the interval
-        console.log('Selected interval:', e.target.dataset.interval);
+        const target = e.currentTarget;
+        target.classList.add('active');
+        const interval = target.dataset.interval;
+        const limit = this.computeLimitFromInterval(interval);
+        if (this.currentStockSymbol) {
+          await this.loadStockDetailData(this.currentStockSymbol, limit);
+        }
       });
     });
   }
