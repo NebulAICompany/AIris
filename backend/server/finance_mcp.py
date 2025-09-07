@@ -15,11 +15,12 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from backend.shared.constants import (
-    ALPHA_VANTAGE_API_KEY,
-    ALPHA_VANTAGE_BASE_URL,
     CHARTS_DIR,
     CHART_DATA_FILE,
+    MARKETSTACK_EOD_API_KEY,
+    MARKETSTACK_BASE_URL,
 )
+
 
 # Setup logging for chart operations using loguru
 from loguru import logger
@@ -29,197 +30,1214 @@ chart_logger = logger.bind(name="CHART_OPERATIONS")
 mcp = FastMCP("finance")
 
 
-async def make_request(params: Dict[str, Any]) -> Dict[str, Any]:
-    """Alpha Vantage API'sine async istek gönder"""
-    params["apikey"] = ALPHA_VANTAGE_API_KEY
+async def make_request(endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    """Marketstack API'sine async istek gönder"""
+    params["access_key"] = MARKETSTACK_EOD_API_KEY
+    url = f"{MARKETSTACK_BASE_URL}/{endpoint}"
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(ALPHA_VANTAGE_BASE_URL, params=params)
+            response = await client.get(url, params=params)
             response.raise_for_status()
             return response.json()
     except Exception as e:
         return {"error": str(e)}
 
 
+# ============================================================================
+# END-OF-DAY DATA METHODS
+# ============================================================================
+
+
+@mcp.tool()
+async def get_eod_data(
+    symbols: str,
+    date_from: str = None,
+    date_to: str = None,
+    exchange: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch end-of-day data for one or multiple stock tickers from Marketstack.
+
+    Required:
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: End-of-day data with OHLCV values for specified symbols
+    """
+    params = {
+        "symbols": symbols,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        **({"exchange": exchange} if exchange else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("eod", params)
+
+
+@mcp.tool()
+async def get_eod_latest(
+    symbols: str,
+    exchange: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch latest end-of-day data for one or multiple stock tickers from Marketstack.
+
+    Required:
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
+
+    Optional:
+        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: Latest end-of-day data with OHLCV values for specified symbols
+    """
+    params = {
+        "symbols": symbols,
+        **({"exchange": exchange} if exchange else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("eod/latest", params)
+
+
+@mcp.tool()
+async def get_eod_date(
+    symbols: str,
+    date: str,
+    exchange: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch end-of-day data for a specific date from Marketstack.
+
+    Required:
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
+        date (str): Date in YYYY-MM-DD format (e.g., "2020-01-01")
+
+    Optional:
+        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: End-of-day data for specified date and symbols
+    """
+    params = {
+        "symbols": symbols,
+        **({"exchange": exchange} if exchange else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request(f"eod/{date}", params)
+
+
+# ============================================================================
+# INTRADAY DATA METHODS
+# ============================================================================
+
+
 @mcp.tool()
 async def get_intraday_data(
-    symbol: str,
-    interval: str,
-    outputsize: str = None,
-    adjusted: bool = None,
-    extended_hours: bool = None,
-    month: str = None,
+    symbols: str,
+    interval: str = "1min",
+    date_from: str = None,
+    date_to: str = None,
+    exchange: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
 ):
     """
-    Fetch intraday OHLCV data from Alpha Vantage.
+    Fetch intraday data for one or multiple stock tickers from Marketstack.
 
     Required:
-        symbol (str): Stock ticker (e.g., "IBM")
-        interval (str): "1min" | "5min" | "15min" | "30min" | "60min"
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
 
     Optional:
-        outputsize (str): "compact" or "full"
-        adjusted (bool): True/False
-        extended_hours (bool): True/False
-        month (str): YYYY-MM format (e.g., "2009-01")
+        interval (str): Data interval - "1min", "5min", "15min", "30min", "1hour", "3hour", "6hour", "12hour", "24hour"
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
 
     Returns:
-        dict: Intraday time series data with OHLCV values covering current and 20+ years of historical data
+        dict: Intraday data with OHLCV values for specified symbols
     """
-
     params = {
-        "function": "TIME_SERIES_INTRADAY",
-        "symbol": symbol,
+        "symbols": symbols,
         "interval": interval,
-        **({"outputsize": outputsize} if outputsize else {}),
-        **({"adjusted": str(adjusted).lower()} if adjusted is not None else {}),
-        **(
-            {"extended_hours": str(extended_hours).lower()}
-            if extended_hours is not None
-            else {}
-        ),
-        **({"month": month} if month else {}),
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        **({"exchange": exchange} if exchange else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
     }
-
-    return await make_request(params)
+    return await make_request("intraday", params)
 
 
 @mcp.tool()
-async def get_daily_data(
-    symbol: str,
-    outputsize: str = None,
+async def get_intraday_latest(
+    symbols: str,
+    interval: str = "1min",
+    exchange: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
 ):
     """
-    Fetch daily OHLCV time series data from Alpha Vantage.
+    Fetch latest intraday data for one or multiple stock tickers from Marketstack.
 
     Required:
-        symbol (str): Stock ticker (e.g., "IBM")
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
 
     Optional:
-        outputsize (str): "compact" or "full"
+        interval (str): Data interval - "1min", "5min", "15min", "30min", "1hour", "3hour", "6hour", "12hour", "24hour"
+        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
 
     Returns:
-        dict: Raw daily time series data with OHLCV values covering 20+ years of historical data
+        dict: Latest intraday data with OHLCV values for specified symbols
     """
-
     params = {
-        "function": "TIME_SERIES_DAILY",
-        "symbol": symbol,
-        **({"outputsize": outputsize} if outputsize else {}),
+        "symbols": symbols,
+        "interval": interval,
+        **({"exchange": exchange} if exchange else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
     }
+    return await make_request("intraday/latest", params)
 
-    return await make_request(params)
+
+# ============================================================================
+# TICKERS AND EXCHANGES METHODS
+# ============================================================================
 
 
 @mcp.tool()
-async def get_weekly_data(
+async def get_ticker_eod_data(
     symbol: str,
+    date_from: str = None,
+    date_to: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
 ):
     """
-    Fetch weekly OHLCV time series data from Alpha Vantage.
+    Fetch end-of-day data for a specific ticker using tickers endpoint.
 
     Required:
-        symbol (str): Stock ticker (e.g., "IBM")
+        symbol (str): Stock ticker symbol (e.g., "AAPL")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
 
     Returns:
-        dict: Weekly time series data with OHLCV values covering 20+ years of historical data
+        dict: End-of-day data for the specified ticker
     """
-
     params = {
-        "function": "TIME_SERIES_WEEKLY",
-        "symbol": symbol,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
     }
-
-    return await make_request(params)
+    return await make_request(f"tickers/{symbol}/eod", params)
 
 
 @mcp.tool()
-async def get_weekly_adjusted_data(
+async def get_ticker_intraday_data(
     symbol: str,
+    interval: str = "1hour",
+    date_from: str = None,
+    date_to: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
+    after_hours: bool = False,
 ):
     """
-    Fetch weekly adjusted OHLCV time series data from Alpha Vantage.
+    Fetch intraday data for a specific ticker using tickers endpoint.
 
     Required:
-        symbol (str): Stock ticker (e.g., "IBM")
+        symbol (str): Stock ticker symbol (e.g., "AAPL")
+
+    Optional:
+        interval (str): Data interval - "1min", "5min", "10min", "15min", "30min", "1hour", "3hour", "6hour", "12hour", "24hour"
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+        after_hours (bool): Include pre and post market data if available
 
     Returns:
-        dict: Weekly adjusted time series data with OHLCV values, adjusted close, volume and dividend covering 20+ years of historical data
+        dict: Intraday data for the specified ticker
     """
-
     params = {
-        "function": "TIME_SERIES_WEEKLY_ADJUSTED",
-        "symbol": symbol,
+        "interval": interval,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
+        "after_hours": str(after_hours).lower(),
     }
-
-    return await make_request(params)
+    return await make_request(f"tickers/{symbol}/intraday", params)
 
 
 @mcp.tool()
-async def get_monthly_data(
+async def get_ticker_splits_data(
     symbol: str,
+    date_from: str = None,
+    date_to: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
 ):
     """
-    Fetch monthly OHLCV time series data from Alpha Vantage.
+    Fetch splits data for a specific ticker using tickers endpoint.
 
     Required:
-        symbol (str): Stock ticker (e.g., "IBM")
+        symbol (str): Stock ticker symbol (e.g., "AAPL")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
 
     Returns:
-        dict: Monthly time series data with OHLCV values covering 20+ years of historical data
+        dict: Splits data for the specified ticker
     """
-
     params = {
-        "function": "TIME_SERIES_MONTHLY",
-        "symbol": symbol,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
     }
-
-    return await make_request(params)
+    return await make_request(f"tickers/{symbol}/splits", params)
 
 
 @mcp.tool()
-async def get_monthly_adjusted_data(
+async def get_ticker_dividends_data(
     symbol: str,
+    date_from: str = None,
+    date_to: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
 ):
     """
-    Fetch monthly adjusted OHLCV time series data from Alpha Vantage.
+    Fetch dividends data for a specific ticker using tickers endpoint.
 
     Required:
-        symbol (str): Stock ticker (e.g., "IBM")
+        symbol (str): Stock ticker symbol (e.g., "AAPL")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
 
     Returns:
-        dict: Monthly adjusted time series data with OHLCV values, adjusted close, volume and dividend covering 20+ years of historical data
+        dict: Dividends data for the specified ticker
     """
-
     params = {
-        "function": "TIME_SERIES_MONTHLY_ADJUSTED",
-        "symbol": symbol,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
     }
-
-    return await make_request(params)
+    return await make_request(f"tickers/{symbol}/dividends", params)
 
 
 @mcp.tool()
-async def get_global_quote(
-    symbol: str,
+async def get_exchanges(
+    search: str = None,
+    country: str = None,
+    limit: int = 100,
+    offset: int = 0,
 ):
     """
-    Fetch latest price and volume information for a ticker from Alpha Vantage.
+    Fetch list of available exchanges from Marketstack.
 
-    Required:
-        symbol (str): Stock ticker (e.g., "IBM")
+    Optional:
+        search (str): Search term for exchange name
+        country (str): Filter by country code (e.g., "US")
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
 
     Returns:
-        dict: Latest price and volume information for the specified ticker
+        dict: List of available exchanges with their information
     """
-
     params = {
-        "function": "GLOBAL_QUOTE",
-        "symbol": symbol,
+        **({"search": search} if search else {}),
+        **({"country": country} if country else {}),
+        "limit": limit,
+        "offset": offset,
     }
+    return await make_request("exchanges", params)
 
-    return await make_request(params)
+
+@mcp.tool()
+async def get_exchange_info(
+    exchange: str,
+):
+    """
+    Fetch detailed information for a specific exchange from Marketstack.
+
+    Required:
+        exchange (str): Exchange MIC code (e.g., "XNAS")
+
+    Returns:
+        dict: Detailed information about the specified exchange
+    """
+    return await make_request(f"exchanges/{exchange}", {})
+
+
+# ============================================================================
+# CURRENCIES AND TIMEZONES METHODS
+# ============================================================================
+
+
+@mcp.tool()
+async def get_currencies(
+    search: str = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch list of available currencies from Marketstack.
+
+    Optional:
+        search (str): Search term for currency name or code
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: List of available currencies with their information
+    """
+    params = {
+        **({"search": search} if search else {}),
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("currencies", params)
+
+
+@mcp.tool()
+async def get_timezones(
+    search: str = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch list of available timezones from Marketstack.
+
+    Optional:
+        search (str): Search term for timezone name
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: List of available timezones with their information
+    """
+    params = {
+        **({"search": search} if search else {}),
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("timezones", params)
+
+
+# ============================================================================
+# BONDS METHODS
+# ============================================================================
+
+
+@mcp.tool()
+async def get_bond_list(
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Get list of supported countries for bonds data.
+    Available for Basic Plan and higher.
+
+    Optional:
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: List of supported countries for bonds
+    """
+    params = {
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("bondlist", params)
+
+
+@mcp.tool()
+async def get_bond_info(
+    country: str,
+):
+    """
+    Get real-time government bond data for a specific country.
+    Available for Basic Plan and higher.
+
+    Required:
+        country (str): Country name (e.g., "kenya" or "united%20states")
+
+    Returns:
+        dict: Government bond data including yield and price changes
+    """
+    params = {
+        "country": country,
+    }
+    return await make_request("bond", params)
+
+
+# ============================================================================
+# ETF HOLDINGS METHODS
+# ============================================================================
+
+
+@mcp.tool()
+async def get_etf_list(
+    list_type: str = "ticker",
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Get list of supported ETF tickers.
+    Available for Basic Plan and higher. Call count multiplier: 20.
+
+    Required:
+        list_type (str): Type of list to retrieve (currently only "ticker" supported)
+
+    Optional:
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: List of supported ETF tickers
+    """
+    params = {
+        "list": list_type,
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("etflist", params)
+
+
+@mcp.tool()
+async def get_etf_holdings(
+    ticker: str,
+    date_from: str = None,
+    date_to: str = None,
+):
+    """
+    Get complete ETF holdings data based on ticker identifier.
+    Available for Basic Plan and higher. Call count multiplier: 20.
+
+    Required:
+        ticker (str): ETF ticker symbol (e.g., "SPY")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+
+    Returns:
+        dict: Complete ETF holdings data with fund information and holdings details
+    """
+    params = {
+        "ticker": ticker,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+    }
+    return await make_request("etfholdings", params)
+
+
+# ============================================================================
+# SPLITS AND DIVIDENDS METHODS
+# ============================================================================
+
+
+@mcp.tool()
+async def get_splits_data(
+    symbols: str,
+    date_from: str = None,
+    date_to: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch stock splits data for one or multiple stock tickers.
+
+    Required:
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: Stock splits data with split factors and dates
+    """
+    params = {
+        "symbols": symbols,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("splits", params)
+
+
+@mcp.tool()
+async def get_dividends_data(
+    symbols: str,
+    date_from: str = None,
+    date_to: str = None,
+    sort: str = "DESC",
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Fetch dividends data for one or multiple stock tickers.
+
+    Required:
+        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
+
+    Optional:
+        date_from (str): Filter results from date in YYYY-MM-DD format
+        date_to (str): Filter results to date in YYYY-MM-DD format
+        sort (str): Sort order - "DESC" (default) or "ASC"
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: Dividends data with payment dates and amounts
+    """
+    params = {
+        "symbols": symbols,
+        **({"date_from": date_from} if date_from else {}),
+        **({"date_to": date_to} if date_to else {}),
+        "sort": sort,
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("dividends", params)
+
+
+# ============================================================================
+# STOCK MARKET INDEXES METHODS (Updated)
+# ============================================================================
+
+
+@mcp.tool()
+async def get_index_list(
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Get list of available stock market indexes.
+    Available for Basic Plan and higher.
+
+    Optional:
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: List of available stock market indexes
+    """
+    params = {
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("indexlist", params)
+
+
+@mcp.tool()
+async def get_index_info(
+    index: str,
+):
+    """
+    Get detailed information for a specific stock market index.
+    Available for Basic Plan and higher.
+
+    Required:
+        index (str): Index code (e.g., "australia_all_ordinaries")
+
+    Returns:
+        dict: Detailed information about the specified stock market index
+    """
+    params = {
+        "index": index,
+    }
+    return await make_request("indexinfo", params)
+
+
+# ============================================================================
+# TICKERS METHODS (Updated to match documentation)
+# ============================================================================
+
+
+@mcp.tool()
+async def get_tickers_list(
+    search: str = None,
+    exchange: str = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    Get the full list of supported tickers from Marketstack.
+
+    Optional:
+        search (str): Search stock tickers by name or ticker symbol
+        exchange (str): Search stock tickers by exchange MIC
+        limit (int): Number of results per page (max 1000)
+        offset (int): Number of results to skip
+
+    Returns:
+        dict: List of available tickers with their information
+    """
+    params = {
+        **({"search": search} if search else {}),
+        **({"exchange": exchange} if exchange else {}),
+        "limit": limit,
+        "offset": offset,
+    }
+    return await make_request("tickerslist", params)
+
+
+@mcp.tool()
+async def get_ticker_info_detailed(
+    ticker: str,
+):
+    """
+    Get detailed information about a specific ticker.
+
+    Required:
+        ticker (str): Stock ticker symbol (e.g., "MSFT")
+
+    Returns:
+        dict: Detailed information about the ticker including executives, addresses, etc.
+    """
+    params = {
+        "ticker": ticker,
+    }
+    return await make_request("tickerinfo", params)
+
+
+# ============================================================================
+# HIGHER PLAN METHODS (COMMENTED OUT - NOT AVAILABLE FOR BASIC PLAN)
+# ============================================================================
+
+# ============================================================================
+# PROFESSIONAL PLAN METHODS (403 Forbidden for Free/Basic Plans)
+# ============================================================================
+
+# @mcp.tool()
+# async def get_realtime_stock_price(
+#     ticker: str,
+#     exchange: str = None,
+# ):
+#     """
+#     Fetch real-time stock price for a specific ticker from Marketstack.
+#     Available for Professional and Higher plans. Rate limit: 1 API call per minute.
+
+#     Required:
+#         ticker (str): Stock ticker symbol (e.g., "AAPL")
+
+#     Optional:
+#         exchange (str): Filter by exchange name (e.g., "nasdaq")
+
+#     Returns:
+#         dict: Real-time stock price data for the specified ticker
+#         Note: Returns 403 Forbidden for Free/Basic plans
+#     """
+#     params = {
+#         "ticker": ticker,
+#         **({"exchange": exchange} if exchange else {}),
+#     }
+#     return await make_request("stockprice", params)
+
+
+# @mcp.tool()
+# async def get_commodity_prices(
+#     commodity_name: str,
+# ):
+#     """
+#     Get commodity prices for 70+ world-known commodities.
+#     Available for Professional and Higher plans. Rate limit: 1 API call per minute.
+
+#     Required:
+#         commodity_name (str): Commodity name (e.g., "gold", "aluminum")
+
+#     Returns:
+#         dict: Current commodity price data with price changes and forecasts
+#         Note: Returns 403 Forbidden for Free/Basic plans
+#     """
+#     params = {
+#         "commodity_name": commodity_name,
+#     }
+#     return await make_request("commodities", params)
+
+
+# @mcp.tool()
+# async def get_commodities_history(
+#     commodity_name: str,
+#     date_from: str = None,
+#     date_to: str = None,
+#     frequency: str = "day",
+# ):
+#     """
+#     Get historical commodity prices for up to 15 years.
+#     Available for Professional and Higher plans. Rate limit: 1 API call per minute.
+
+#     Required:
+#         commodity_name (str): Commodity name (e.g., "aluminum", "brent")
+
+#     Optional:
+#         date_from (str): Start date in YYYY-MM-DD format
+#         date_to (str): End date in YYYY-MM-DD format
+#         frequency (str): "day" or "month" (default: "day")
+
+#     Returns:
+#         dict: Historical commodity price data
+#         Note: Returns 403 Forbidden for Free/Basic plans
+#     """
+#     params = {
+#         "commodity_name": commodity_name,
+#         **({"date_from": date_from} if date_from else {}),
+#         **({"date_to": date_to} if date_to else {}),
+#         "frequency": frequency,
+#     }
+#     return await make_request("commoditieshistory", params)
+
+
+# ============================================================================
+# BUSINESS PLAN METHODS (403 Forbidden for Free/Basic/Professional Plans)
+# ============================================================================
+
+# @mcp.tool()
+# async def get_company_ratings(
+#     ticker: str,
+#     date_from: str = None,
+#     date_to: str = None,
+#     rated: str = None,
+# ):
+#     """
+#     Get current and historical analyst buy/sell/hold ratings.
+#     Available for Business and Higher plans. Rate limit: 1 API call per minute.
+
+#     Required:
+#         ticker (str): Stock ticker symbol (e.g., "AAPL")
+
+#     Optional:
+#         date_from (str): Start date in YYYY-MM-DD format
+#         date_to (str): End date in YYYY-MM-DD format
+#         rated (str): Filter by rating - "buy", "sell", or "hold"
+
+#     Returns:
+#         dict: Company ratings with analyst consensus and individual ratings
+#         Note: Returns 403 Forbidden for Free/Basic/Professional plans
+#     """
+#     params = {
+#         "ticker": ticker,
+#         **({"date_from": date_from} if date_from else {}),
+#         **({"date_to": date_to} if date_to else {}),
+#         **({"rated": rated} if rated else {}),
+#     }
+#     return await make_request("companyratings", params)
+
+
+# @mcp.tool()
+# async def find_cik_by_company_name_edgar(
+#     company_name: str,
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Find CIK code by company name using EDGAR integration.
+#     Available for Business Plan only.
+
+#     Required:
+#         company_name (str): Company name to search for (minimum 3 letters)
+
+#     Optional:
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: CIK codes matching the company name
+#     """
+#     params = {
+#         "company_name": company_name,
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request("cik_code", params)
+
+
+# @mcp.tool()
+# async def find_company_name_by_cik_edgar(
+#     cik_code: str,
+# ):
+#     """
+#     Find company name by CIK code using EDGAR integration.
+#     Available for Business Plan only.
+
+#     Required:
+#         cik_code (str): 10-digit CIK code including leading zeros
+
+#     Returns:
+#         dict: Company information matching the CIK code
+#     """
+#     params = {
+#         "cik_code": cik_code,
+#     }
+#     return await make_request("company_name", params)
+
+
+# @mcp.tool()
+# async def get_company_submissions_edgar(
+#     cik_code: str,
+# ):
+#     """
+#     Get company submission data from EDGAR.
+#     Available for Business Plan only.
+
+#     Required:
+#         cik_code (str): 10-digit CIK code including leading zeros
+
+#     Returns:
+#         dict: Company submission data including filings and metadata
+#     """
+#     params = {
+#         "cik_code": cik_code,
+#     }
+#     return await make_request("submissions", params)
+
+
+# @mcp.tool()
+# async def get_company_facts_edgar(
+#     cik_code: str,
+# ):
+#     """
+#     Get company facts data from EDGAR using XBRL.
+#     Available for Business Plan only.
+
+#     Required:
+#         cik_code (str): 10-digit CIK code including leading zeros
+
+#     Returns:
+#         dict: Company facts data with XBRL taxonomy information
+#     """
+#     params = {
+#         "cik_code": cik_code,
+#     }
+#     return await make_request("company_facts", params)
+
+
+# @mcp.tool()
+# async def get_company_concepts_accounts_payable(
+#     cik_code: str,
+# ):
+#     """
+#     Get company concepts for US GAAP Accounts Payable.
+#     Available for Business Plan only.
+
+#     Required:
+#         cik_code (str): 10-digit CIK code including leading zeros
+
+#     Returns:
+#         dict: Company concepts data for accounts payable
+#     """
+#     params = {
+#         "cik_code": cik_code,
+#     }
+#     return await make_request("concept/accounts_payable", params)
+
+
+# @mcp.tool()
+# async def get_frames_accounts_payable(
+#     frame: str,
+#     units: str = "USD",
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Get frames data for US GAAP Accounts Payable.
+#     Available for Business Plan only.
+
+#     Required:
+#         frame (str): Frame period (e.g., "CY2009Q3I")
+
+#     Optional:
+#         units (str): Unit of measurement (default: "USD")
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: Frames data for accounts payable
+#     """
+#     params = {
+#         "frame": frame,
+#         "units": units,
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request(f"frames/accounts_payable/{units}", params)
+
+
+# ============================================================================
+# COMPANY DATA METHODS (Legacy - Business Plan Required)
+# ============================================================================
+
+# @mcp.tool()
+# async def find_cik_by_company_name(
+#     company_name: str,
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Find CIK code by company name using EDGAR integration.
+#     Available for Business Plan only.
+
+#     Required:
+#         company_name (str): Company name to search for (minimum 3 letters)
+
+#     Optional:
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: CIK codes matching the company name
+#     """
+#     params = {
+#         "company_name": company_name,
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request("cik_code", params)
+
+
+# @mcp.tool()
+# async def find_company_name_by_cik(
+#     cik: str,
+# ):
+#     """
+#     Find company name by CIK code using EDGAR integration.
+#     Available for Business Plan only.
+
+#     Required:
+#         cik (str): 10-digit CIK code including leading zeros
+
+#     Returns:
+#         dict: Company information matching the CIK code
+#     """
+#     params = {
+#         "cik_code": cik,
+#     }
+#     return await make_request("company_name", params)
+
+
+# @mcp.tool()
+# async def get_company_submissions(
+#     cik: str,
+#     form_type: str = None,
+#     date_from: str = None,
+#     date_to: str = None,
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Fetch company submission data from Marketstack.
+
+#     Required:
+#         cik (str): CIK code of the company
+
+#     Optional:
+#         form_type (str): Filter by form type (e.g., "10-K", "10-Q")
+#         date_from (str): Filter results from date in YYYY-MM-DD format
+#         date_to (str): Filter results to date in YYYY-MM-DD format
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: Company submission data for the specified CIK
+#     """
+#     params = {
+#         **({"form_type": form_type} if form_type else {}),
+#         **({"date_from": date_from} if date_from else {}),
+#         **({"date_to": date_to} if date_to else {}),
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request(f"company_submissions/{cik}/submissions", params)
+
+
+# @mcp.tool()
+# async def get_company_facts(
+#     cik: str,
+#     taxonomy: str = "us-gaap",
+#     tag: str = None,
+#     date_from: str = None,
+#     date_to: str = None,
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Fetch company facts data from Marketstack.
+
+#     Required:
+#         cik (str): CIK code of the company
+
+#     Optional:
+#         taxonomy (str): Taxonomy to use (default: "us-gaap")
+#         tag (str): Specific tag to filter by
+#         date_from (str): Filter results from date in YYYY-MM-DD format
+#         date_to (str): Filter results to date in YYYY-MM-DD format
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: Company facts data for the specified CIK
+#     """
+#     params = {
+#         "taxonomy": taxonomy,
+#         **({"tag": tag} if tag else {}),
+#         **({"date_from": date_from} if date_from else {}),
+#         **({"date_to": date_to} if date_to else {}),
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request(f"company_facts/{cik}", params)
+
+
+# @mcp.tool()
+# async def get_company_concepts(
+#     cik: str,
+#     taxonomy: str = "us-gaap",
+#     tag: str = None,
+#     date_from: str = None,
+#     date_to: str = None,
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Fetch company concepts data from Marketstack.
+
+#     Required:
+#         cik (str): CIK code of the company
+
+#     Optional:
+#         taxonomy (str): Taxonomy to use (default: "us-gaap")
+#         tag (str): Specific tag to filter by
+#         date_from (str): Filter results from date in YYYY-MM-DD format
+#         date_to (str): Filter results to date in YYYY-MM-DD format
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: Company concepts data for the specified CIK
+#     """
+#     params = {
+#         "taxonomy": taxonomy,
+#         **({"tag": tag} if tag else {}),
+#         **({"date_from": date_from} if date_from else {}),
+#         **({"date_to": date_to} if date_to else {}),
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request(f"company_concepts/{cik}", params)
+
+
+# @mcp.tool()
+# async def get_frames(
+#     taxonomy: str = "us-gaap",
+#     tag: str = None,
+#     ccp: str = None,
+#     uom: str = None,
+#     date_from: str = None,
+#     date_to: str = None,
+#     limit: int = 100,
+#     offset: int = 0,
+# ):
+#     """
+#     Fetch frames data from Marketstack.
+
+#     Optional:
+#         taxonomy (str): Taxonomy to use (default: "us-gaap")
+#         tag (str): Specific tag to filter by
+#         ccp (str): Company concept period
+#         uom (str): Unit of measure
+#         date_from (str): Filter results from date in YYYY-MM-DD format
+#         date_to (str): Filter results to date in YYYY-MM-DD format
+#         limit (int): Number of results per page (max 1000)
+#         offset (int): Number of results to skip
+
+#     Returns:
+#         dict: Frames data for the specified parameters
+#     """
+#     params = {
+#         "taxonomy": taxonomy,
+#         **({"tag": tag} if tag else {}),
+#         **({"ccp": ccp} if ccp else {}),
+#         **({"uom": uom} if uom else {}),
+#         **({"date_from": date_from} if date_from else {}),
+#         **({"date_to": date_to} if date_to else {}),
+#         "limit": limit,
+#         "offset": offset,
+#     }
+#     return await make_request("frames", params)
 
 
 # Chart management functions
@@ -295,7 +1313,6 @@ async def create_stock_chart(
     include_ma: bool = True,
     ma_period: int = 20,
     subplot_layout: str = "single",
-    outputsize: str = "compact",
 ):
     """
     Creates comprehensive stock charts using Alpha Vantage data with multiple layout options.
@@ -336,56 +1353,52 @@ async def create_stock_chart(
 
                 if period.lower() == "intraday":
                     data_response = await get_intraday_data(
-                        symbol=symbol, interval="60min", outputsize=outputsize
+                        symbols=symbol, interval="60min"
                     )
                 elif period.lower() == "daily":
-                    data_response = await get_daily_data(
-                        symbol=symbol, outputsize=outputsize
-                    )
-                elif period.lower() == "weekly":
-                    data_response = await get_weekly_data(symbol=symbol)
-                elif period.lower() == "monthly":
-                    data_response = await get_monthly_data(symbol=symbol)
+                    data_response = await get_eod_data(symbols=symbol)
                 else:
-                    continue
+                    # Marketstack doesn't have weekly/monthly endpoints, use daily data
+                    data_response = await get_eod_data(symbols=symbol)
 
                 if "error" in data_response or "Error Message" in data_response:
                     continue
 
-                # Time series verisini bul
-                time_series_key = None
-                for key in data_response.keys():
-                    if "Time Series" in key:
-                        time_series_key = key
-                        break
-
-                if not time_series_key:
+                # Marketstack data structure
+                if "data" not in data_response:
                     continue
 
                 # DataFrame'e çevir
-                raw_data = data_response[time_series_key]
-                df = pd.DataFrame.from_dict(raw_data, orient="index")
-                df.index = pd.to_datetime(df.index)
+                raw_data = data_response["data"]
+                if not raw_data:
+                    continue
 
-                # Kolon isimlerini standardize et - QuantStart yaklaşımı
-                if len(df.columns) >= 5:
-                    # AlphaVantage adjusted data için
-                    if "adjusted_close" in str(df.columns).lower():
-                        df.columns = [
-                            "open",
-                            "high",
-                            "low",
-                            "close",
-                            "adjusted_close",
-                            "volume",
-                        ][: len(df.columns)]
-                    else:
-                        df.columns = ["Open", "High", "Low", "Close", "Volume"]
-                elif len(df.columns) == 4:
-                    df.columns = ["Open", "High", "Low", "Close"]
+                # Convert to DataFrame
+                df = pd.DataFrame(raw_data)
+                df["date"] = pd.to_datetime(df["date"])
+                df.set_index("date", inplace=True)
+
+                # Kolon isimlerini standardize et
+                column_mapping = {
+                    "open": "open",
+                    "high": "high",
+                    "low": "low",
+                    "close": "close",
+                    "volume": "volume",
+                }
+
+                # Rename columns to lowercase for consistency
+                df.columns = [col.lower() for col in df.columns]
+
+                # Ensure we have the required columns
+                required_cols = ["open", "high", "low", "close"]
+                if not all(col in df.columns for col in required_cols):
+                    continue
 
                 # Numeric'e çevir ve sırala
-                for col in df.columns:
+                for col in required_cols + (
+                    ["volume"] if "volume" in df.columns else []
+                ):
                     df[col] = pd.to_numeric(df[col], errors="coerce")
                 df = df.sort_index()
 
@@ -393,18 +1406,14 @@ async def create_stock_chart(
                 if time_range_days and time_range_days > 0:
                     df = df.tail(time_range_days)
 
-                # Moving Average hesapla - QuantStart metoduyla
+                # Moving Average hesapla
                 if include_ma and len(df) >= ma_period:
-                    close_col = (
-                        "adjusted_close" if "adjusted_close" in df.columns else "Close"
-                    )
-                    df[f"MA{ma_period}"] = (
-                        df[close_col].rolling(window=ma_period).mean()
-                    )
+                    df[f"MA{ma_period}"] = df["close"].rolling(window=ma_period).mean()
 
                 stock_data[symbol] = df
 
-            except Exception:
+            except Exception as e:
+                chart_logger.error(f"Error processing {symbol}: {e}")
                 continue
 
         if not stock_data:
@@ -440,31 +1449,25 @@ async def create_stock_chart(
                     col = (i % 2) + 1
 
                 df = stock_data[symbol]
-                close_col = (
-                    "adjusted_close" if "adjusted_close" in df.columns else "Close"
-                )
 
                 fig.add_trace(
                     go.Candlestick(
                         x=df.index,
-                        open=df["open"] if "open" in df.columns else df["Open"],
-                        high=df["high"] if "high" in df.columns else df["High"],
-                        low=df["low"] if "low" in df.columns else df["Low"],
-                        close=df[close_col],
+                        open=df["open"],
+                        high=df["high"],
+                        low=df["low"],
+                        close=df["close"],
                         name="OHLC",
                     ),
                     row=row,
                     col=col,
                 )
 
-                if include_volume and (
-                    "volume" in df.columns or "Volume" in df.columns
-                ):
-                    vol_col = "volume" if "volume" in df.columns else "Volume"
+                if include_volume and "volume" in df.columns:
                     fig.add_trace(
                         go.Bar(
                             x=df.index,
-                            y=df[vol_col],
+                            y=df["volume"],
                             opacity=0.1,
                             marker=dict(color="blue"),
                             name="volume",
@@ -502,9 +1505,8 @@ async def create_stock_chart(
         elif subplot_layout == "single" and len(symbols_list) == 1:
             symbol = symbols_list[0]
             df = stock_data[symbol]
-            close_col = "adjusted_close" if "adjusted_close" in df.columns else "Close"
 
-            if include_volume and ("volume" in df.columns or "Volume" in df.columns):
+            if include_volume and "volume" in df.columns:
                 fig = make_subplots(
                     rows=2,
                     cols=1,
@@ -519,10 +1521,10 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Candlestick(
                             x=df.index,
-                            open=df["open"] if "open" in df.columns else df["Open"],
-                            high=df["high"] if "high" in df.columns else df["High"],
-                            low=df["low"] if "low" in df.columns else df["Low"],
-                            close=df[close_col],
+                            open=df["open"],
+                            high=df["high"],
+                            low=df["low"],
+                            close=df["close"],
                             name=f"{symbol} OHLC",
                             increasing=dict(line=dict(color="#00ff00")),
                             decreasing=dict(line=dict(color="#ff0000")),
@@ -534,7 +1536,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             name=f"{symbol} Price",
                             line=dict(color=colors[0], width=2),
@@ -546,7 +1548,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             fill="tonexty",
                             name=f"{symbol} Price",
@@ -571,11 +1573,10 @@ async def create_stock_chart(
                     )
 
                 # Volume
-                vol_col = "volume" if "volume" in df.columns else "Volume"
                 fig.add_trace(
                     go.Bar(
                         x=df.index,
-                        y=df[vol_col],
+                        y=df["volume"],
                         name="Volume",
                         marker=dict(color="rgba(158,202,225,0.6)"),
                     ),
@@ -591,10 +1592,10 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Candlestick(
                             x=df.index,
-                            open=df["open"] if "open" in df.columns else df["Open"],
-                            high=df["high"] if "high" in df.columns else df["High"],
-                            low=df["low"] if "low" in df.columns else df["Low"],
-                            close=df[close_col],
+                            open=df["open"],
+                            high=df["high"],
+                            low=df["low"],
+                            close=df["close"],
                             name=f"{symbol} OHLC",
                             increasing=dict(line=dict(color="#00ff00")),
                             decreasing=dict(line=dict(color="#ff0000")),
@@ -604,7 +1605,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             name=f"{symbol} Price",
                             line=dict(color=colors[0], width=2),
@@ -614,7 +1615,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             fill="tonexty",
                             name=f"{symbol} Price",
@@ -637,14 +1638,7 @@ async def create_stock_chart(
             fig.update_layout(
                 title=f"{symbol} Stock Analysis",
                 template="plotly_white",
-                height=(
-                    600
-                    if (
-                        include_volume
-                        and ("volume" in df.columns or "Volume" in df.columns)
-                    )
-                    else 400
-                ),
+                height=(600 if (include_volume and "volume" in df.columns) else 400),
                 showlegend=True,
                 xaxis_title="Date",
                 yaxis_title="Price (USD)",
@@ -677,19 +1671,16 @@ async def create_stock_chart(
                 col = (i % cols) + 1
                 df = stock_data[symbol]
                 color = colors[i % len(colors)]
-                close_col = (
-                    "adjusted_close" if "adjusted_close" in df.columns else "Close"
-                )
 
                 # Ana grafik
                 if chart_type == "candlestick":
                     fig.add_trace(
                         go.Candlestick(
                             x=df.index,
-                            open=df["open"] if "open" in df.columns else df["Open"],
-                            high=df["high"] if "high" in df.columns else df["High"],
-                            low=df["low"] if "low" in df.columns else df["Low"],
-                            close=df[close_col],
+                            open=df["open"],
+                            high=df["high"],
+                            low=df["low"],
+                            close=df["close"],
                             name=f"{symbol}",
                             showlegend=False,
                             increasing=dict(line=dict(color="#00ff00")),
@@ -702,7 +1693,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             name=f"{symbol}",
                             line=dict(color=color, width=2),
@@ -715,7 +1706,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             fill="tonexty",
                             name=f"{symbol}",
@@ -742,14 +1733,11 @@ async def create_stock_chart(
                     )
 
                 # Volume
-                if include_volume and (
-                    "volume" in df.columns or "Volume" in df.columns
-                ):
-                    vol_col = "volume" if "volume" in df.columns else "Volume"
+                if include_volume and "volume" in df.columns:
                     fig.add_trace(
                         go.Bar(
                             x=df.index,
-                            y=df[vol_col],
+                            y=df["volume"],
                             name=f"{symbol} Volume",
                             opacity=0.3,
                             marker_color=dict(color=color),
@@ -785,19 +1773,16 @@ async def create_stock_chart(
                 row = i + 1
                 df = stock_data[symbol]
                 color = colors[i % len(colors)]
-                close_col = (
-                    "adjusted_close" if "adjusted_close" in df.columns else "Close"
-                )
 
                 # Ana grafik
                 if chart_type == "candlestick":
                     fig.add_trace(
                         go.Candlestick(
                             x=df.index,
-                            open=df["open"] if "open" in df.columns else df["Open"],
-                            high=df["high"] if "high" in df.columns else df["High"],
-                            low=df["low"] if "low" in df.columns else df["Low"],
-                            close=df[close_col],
+                            open=df["open"],
+                            high=df["high"],
+                            low=df["low"],
+                            close=df["close"],
                             name=f"{symbol}",
                             showlegend=False,
                             increasing=dict(line=dict(color="#00ff00")),
@@ -810,7 +1795,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             name=f"{symbol}",
                             line=dict(color=color, width=2),
@@ -823,7 +1808,7 @@ async def create_stock_chart(
                     fig.add_trace(
                         go.Scatter(
                             x=df.index,
-                            y=df[close_col],
+                            y=df["close"],
                             mode="lines",
                             fill="tonexty",
                             name=f"{symbol}",
@@ -850,14 +1835,11 @@ async def create_stock_chart(
                     )
 
                 # Volume
-                if include_volume and (
-                    "volume" in df.columns or "Volume" in df.columns
-                ):
-                    vol_col = "volume" if "volume" in df.columns else "Volume"
+                if include_volume and "volume" in df.columns:
                     fig.add_trace(
                         go.Bar(
                             x=df.index,
-                            y=df[vol_col],
+                            y=df["volume"],
                             name=f"{symbol} Volume",
                             opacity=0.3,
                             marker_color=dict(color=color),
