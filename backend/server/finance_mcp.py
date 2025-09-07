@@ -490,14 +490,6 @@ async def get_timezones(
 
 
 # ============================================================================
-# STOCK MARKET INDEXES METHODS
-# ============================================================================
-
-
-# Removed - replaced by get_index_list and get_index_info methods above
-
-
-# ============================================================================
 # BONDS METHODS
 # ============================================================================
 
@@ -604,8 +596,6 @@ async def get_etf_holdings(
         **({"date_to": date_to} if date_to else {}),
     }
     return await make_request("etfholdings", params)
-
-
 
 
 # ============================================================================
@@ -1323,7 +1313,6 @@ async def create_stock_chart(
     include_ma: bool = True,
     ma_period: int = 20,
     subplot_layout: str = "single",
-    outputsize: str = "compact",
 ):
     """
     Creates comprehensive stock charts using Alpha Vantage data with multiple layout options.
