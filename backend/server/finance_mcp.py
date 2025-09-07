@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import sys
 import json
@@ -21,26 +22,34 @@ from backend.shared.constants import (
 )
 
 
-# Setup logging for chart operations using loguru
-from loguru import logger
-
-chart_logger = logger.bind(name="CHART_OPERATIONS")
-
 mcp = FastMCP("finance")
 
 
-async def make_request(endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
-    """Marketstack API'sine async istek gönder"""
+async def make_request(
+    endpoint: str, params: Dict[str, Any], retries: int = 3, timeout: float = 10.0
+) -> Dict[str, Any]:
+    """Sends an asynchronous request to the Marketstack API."""
     params["access_key"] = MARKETSTACK_EOD_API_KEY
     url = f"{MARKETSTACK_BASE_URL}/{endpoint}"
 
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            return response.json()
-    except Exception as e:
-        return {"error": str(e)}
+    attempt = 0
+    while attempt < retries:
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            return {"error": f"HTTP hata: {e.response.status_code} - {e.response.text}"}
+        except (httpx.RequestError, asyncio.TimeoutError) as e:
+            attempt += 1
+            if attempt < retries:
+                wait_time = 2 ** (attempt - 1)
+                await asyncio.sleep(wait_time)
+            else:
+                return {"error": f"İstek hatası: {str(e)}"}
+        except Exception as e:
+            return {"error": f"Beklenmeyen hata: {str(e)}"}
 
 
 # ============================================================================
@@ -1093,21 +1102,13 @@ def get_chart_datas():
     """Get chart data from JSON file storage"""
     try:
         if not CHART_DATA_FILE.exists():
-            chart_logger.info(
-                "📊 get_chart_datas() called - No chart data file found, returning empty list"
-            )
             return []
 
         with open(CHART_DATA_FILE, "r", encoding="utf-8") as f:
             chart_data = json.load(f)
 
-        for i, chart in enumerate(chart_data):
-            chart_logger.info(
-                f"  Chart {i+1}: {type(chart)} - Length: {len(str(chart)) if chart else 0}"
-            )
         return chart_data
     except Exception as e:
-        chart_logger.error(f"❌ Error reading chart data: {e}")
         return []
 
 
@@ -1117,19 +1118,12 @@ def set_chart_data(data):
         # Ensure CHARTS_DIR exists
         CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        chart_logger.info(f"📊 set_chart_data() called with data type: {type(data)}")
-        chart_logger.info(f"  Data length: {len(str(data)) if data else 0}")
-        chart_logger.info(f"  Data preview: {str(data)[:200] if data else 'None'}...")
-
         # Overwrite file with new chart data (don't append)
         with open(CHART_DATA_FILE, "w", encoding="utf-8") as f:
             json.dump([data], f, ensure_ascii=False, indent=2)
 
-        chart_logger.info(
-            f"  Chart data saved to file: {CHART_DATA_FILE} - New chart data written"
-        )
     except Exception as e:
-        chart_logger.error(f"❌ Error saving chart data: {e}")
+        pass
 
 
 def clear_chart_datas():
@@ -1140,15 +1134,10 @@ def clear_chart_datas():
             with open(CHART_DATA_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)
 
-            chart_logger.info(
-                f"📊 clear_chart_datas() called - Chart data cleared from file"
-            )
         else:
-            chart_logger.info(
-                f"📊 clear_chart_datas() called - No chart data file found to clear"
-            )
+            pass
     except Exception as e:
-        chart_logger.error(f"❌ Error clearing chart data: {e}")
+        pass
 
 
 @mcp.tool()
@@ -1185,8 +1174,6 @@ async def create_stock_chart(
     try:
         # Ensure CHARTS_DIR exists
         CHARTS_DIR.mkdir(parents=True, exist_ok=True)
-        chart_logger.info(f"📁 Charts directory ensured: {CHARTS_DIR}")
-        chart_logger.info(f"🚀 Starting chart creation for symbols: {symbols}")
 
         if len(symbols) > 6:
             return {"error": "Maximum 6 stock symbols can be analyzed"}
@@ -1261,7 +1248,6 @@ async def create_stock_chart(
                 stock_data[symbol] = df
 
             except Exception as e:
-                chart_logger.error(f"Error processing {symbol}: {e}")
                 continue
 
         if not stock_data:
@@ -1734,15 +1720,11 @@ async def create_stock_chart(
             )
 
         # HTML'e çevir
-        chart_logger.info("🔄 Converting chart to HTML...")
         chart_html = fig.to_html(
             include_plotlyjs="cdn",
             div_id=f"stock_chart_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             config={"displayModeBar": True, "responsive": True},
         )
-
-        chart_logger.info(f"✅ HTML generated successfully - Length: {len(chart_html)}")
-        chart_logger.info(f"  HTML preview: {chart_html[:300]}...")
 
         chart_id = str(uuid.uuid4())
         chart_file = CHARTS_DIR / f"{chart_id}.html"
@@ -1761,18 +1743,14 @@ async def create_stock_chart(
             "file_path": str(chart_file),
         }
 
-        chart_logger.info("📊 Setting chart data to global storage...")
         set_chart_data(chart_data)
 
-        chart_logger.info(f"💾 Saving chart to file: {chart_file}")
         try:
             with open(chart_file, "w", encoding="utf-8") as f:
                 f.write(chart_html)
-            chart_logger.info(f"✅ Chart saved successfully to {chart_file}")
         except Exception as e:
-            chart_logger.error(f"❌ Error saving chart to file: {e}")
+            pass
 
-        chart_logger.info(f"🎯 Chart operation completed - ID: {chart_id}")
         return {
             "message": f"✅ {len(symbols_list)} stock {chart_type} chart created successfully ({subplot_layout} layout). Chart is displayed above this response for your analysis."
         }
