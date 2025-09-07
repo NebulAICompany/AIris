@@ -602,10 +602,10 @@ class APIService {
     });
   }
 
-  async getCompanyInfo(ticker = "TUPRS.IS") {
-    console.log(`[API] Getting company info for ${ticker}`);
+  async getCompanyInfo(symbol = "TUPRS.IS") {
+    console.log(`[API] Getting company info for ${symbol}`);
     return this.makeRequest(`/api/market/company-info`, "GET", null, {
-      params: { ticker },
+      params: { symbol },
     });
   }
 
