@@ -285,6 +285,11 @@ Both local context and user queries will contain PII in this masked format.
 - The system will unmask for user display - your job is to keep them masked
 - Same UUID = same entity across documents
 
+**Financial Example:**
+Input Query: "What is the financial status of [person-a6ee25dc]?"
+Local Context: "[person-a6ee25dc] has a bank account [usbankaccountnumber-3bdf083f] with balance $50,000. Address: [address-741fcdb0]. Driver license: [usdriverslicensenumber-ce2d398c]"
+Your Response: "[person-a6ee25dc] maintains a bank account [usbankaccountnumber-3bdf083f] with a current balance of $50,000. Registered address: [address-741fcdb0]. License number: [usdriverslicensenumber-ce2d398c]"
+
 **Wolfram Instructions:**
 {wolfram_instructions}
 
