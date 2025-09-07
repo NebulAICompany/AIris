@@ -5661,8 +5661,8 @@ class UIComponents {
       }
       case '1Y':
         return 365;
-      case '5Y':
-        return 365 * 5;
+      case 'MAX':
+        return 10000;
       default:
         return 30;
     }
@@ -5782,7 +5782,7 @@ class UIComponents {
 
     const prevClose = previous ? previous.close : latest.close;
     const dayRange = `${Math.min(latest.low, latest.high).toFixed(2)} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
-    const volume = latest.volume ? latest.volume.toLocaleString("tr-TR") : "--";
+    const volume = latest.volume ? latest.volume.toLocaleString("tr-TR") : (previous ? previous.volume.toLocaleString("tr-TR") : "--");
 
     metricsContainer.innerHTML = `
       <div class="financial-metric">

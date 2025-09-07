@@ -6,7 +6,7 @@ import sqlite3
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 import httpx
 
 from backend.shared.logger import get_logger
@@ -105,16 +105,35 @@ class MarketDataStore:
             r.raise_for_status()
             return r.json()
 
-    def upsert_eod_batch(self, payload: Dict[str, Any]) -> int:
+    def upsert_eod_batch(self, payload: Dict[str, Any], limit: int = 1000) -> int:
         data: List[Dict[str, Any]] = payload.get("data", [])
         saved = 0
         with sqlite3.connect(self.db_path) as conn:
+            previous_item = data[0]
             for item in data:
                 try:
                     symbol = item.get("symbol")
                     date_str = item.get("date")
                     # Normalize date to YYYY-MM-DD
                     date_norm = datetime.fromisoformat(date_str.replace("Z", "+00:00")).date().isoformat()
+
+                    if limit >= 500 and round(item.get("close") / previous_item.get("close"), 2) >= 1.7:
+                        split_factor = self.__get_split_factor(symbol, date_norm)
+                        logger.info(f"Split factor found for {symbol} on {date_norm} with factor: {split_factor}")
+                        if split_factor == 1:
+                            # Remove the previous item that was already upserted since it needs split adjustment
+                            conn.execute(
+                                "DELETE FROM eod_quotes WHERE symbol = ? AND date = ?",
+                                (symbol, datetime.fromisoformat(previous_item.get("date").replace("Z", "+00:00")).date().isoformat())
+                            )
+                            previous_item = item
+                            continue
+                        item["open"] = item.get("open") / split_factor
+                        item["high"] = item.get("high") / split_factor
+                        item["low"] = item.get("low") / split_factor
+                        item["close"] = item.get("close") / split_factor
+                        item["volume"] = item.get("volume") * split_factor
+
                     conn.execute(
                         """
                         INSERT OR REPLACE INTO eod_quotes(
@@ -124,15 +143,16 @@ class MarketDataStore:
                         (
                             symbol,
                             date_norm,
-                            item.get("open"),
-                            item.get("high"),
-                            item.get("low"),
-                            item.get("close"),
-                            item.get("volume"),
+                            item["open"],
+                            item["high"],
+                            item["low"],
+                            item["close"],
+                            item["volume"],
                             json.dumps(item, ensure_ascii=False),
                         ),
                     )
                     saved += 1
+                    previous_item = item
                 except Exception as e:
                     logger.error(f"Failed to upsert EOD row: {e}")
             conn.commit()
@@ -398,7 +418,31 @@ class MarketDataStore:
             )
             rows = cur.fetchall()
         return [json.loads(r[0]) for r in rows]
+    
+    def __get_split_factor(self, symbol: str, date: str) -> float:
+        if symbol not in SPLIT_FACTOR_MAP:
+            return 1
+            
+        split_entries = SPLIT_FACTOR_MAP[symbol]
+        target_date = datetime.fromisoformat(date).date()
+        
+        closest_split = None
+        closest_diff = None
+        for split_entry in split_entries:
+            for split_date_str, split_ratio in split_entry.items():
+                split_date = datetime.fromisoformat(split_date_str).date()
+                diff = abs((target_date - split_date).days)
+                
+                if closest_diff is None or diff < closest_diff:
+                    closest_diff = diff
+                    closest_split = split_ratio
+        
+        if closest_split:
+            # Extract the split factor from ratio string (e.g., "2:1" -> 2)
+            return float(closest_split.split(":")[0])
 
+
+        return 1
 
 store = MarketDataStore()
 
@@ -415,39 +459,41 @@ async def init_market_data() -> None:
     for ticker in MARKETSTACK_TICKERS:
         payload = await store.fetch_marketstack_company_info(ticker=ticker)
         store.upsert_company_info(payload)
-    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS), limit=1825)
+    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS), limit=1000)
 
 
         
 async def refresh_eod(symbols: str = "TUPRS.IS", limit: int = 7) -> int:
+    logger.info(f"Refreshing EOD for symbols: {symbols[:10]}... with limit: {limit}")
     total_data_point_num = len(symbols.split(",")) * limit
     symbol_list = symbols.split(",")
 
     if limit > 1000:
-        first_limit = limit
-        for i in range(len(symbol_list)):
-            limit = first_limit
-            while limit > 1000:
-                payload = await store.fetch_marketstack_eod(symbols=symbol_list[i], limit=1000)
-                store.upsert_eod_batch(payload)
-                limit -= 1000
-            payload = await store.fetch_marketstack_eod(symbols=symbol_list[i], limit=limit)
-            store.upsert_eod_batch(payload)
-        return total_data_point_num
-
+        limit = 1000
 
     if total_data_point_num > 1000:
         current_symbol_index = 0
         while current_symbol_index < len(symbol_list):
-            for i in range(1000 // limit):
+            for i in range((1000 // limit)):
                 payload = await store.fetch_marketstack_eod(symbols=symbol_list[current_symbol_index], limit=limit)
-                store.upsert_eod_batch(payload)
+                store.upsert_eod_batch(payload, limit=limit)
                 current_symbol_index += 1
         return total_data_point_num
 
 
 
     payload = await store.fetch_marketstack_eod(symbols=symbols, limit=limit)
-    return store.upsert_eod_batch(payload)
+    return store.upsert_eod_batch(payload, limit=limit)
 
 
+
+SPLIT_FACTOR_MAP = {
+    "AEFES.IS": [{"2025-06-26": "10:1"}],
+    "ASELS.IS": [{"2023-08-25": "2:1"}],
+    "CIMSA.IS": [{"2023-09-29": "7:1"}],
+    "EREGL.IS": [{"2024-11-27": "2:1"}],
+    "FROTO.IS": [{"2025-05-07": "10:1"}],
+    "ISCTR.IS": [{"2024-02-27": "2.5:1"}],
+    "PGSUS.IS": [{"2024-05-14": "4.8876:1"}],
+    "SASA.IS": [{"2024-08-12": "8:1"}, {"2023-05-23": "2.3:1"}],
+}
