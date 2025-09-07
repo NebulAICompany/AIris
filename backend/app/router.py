@@ -57,6 +57,17 @@ async def get_market_eod(symbol: str = "TUPRS.IS", limit: int = 7):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/market/company-info")
+async def get_company_info(symbol: str = "TUPRS.IS"):
+    logger.info(f"Getting company info for {symbol}")
+    try:
+        data = store.get_company_info(symbol)
+        return {"symbol": symbol, "data": data}
+    except Exception as e:
+        logger.error(f"Error fetching company info from DB: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/market/eod/refresh")
 async def refresh_market_eod(symbols: str = "TUPRS.IS", limit: int = 7):
     logger.info("Refreshing market EOD")
@@ -80,6 +91,21 @@ async def get_most_changed_quotes(request: dict):
         return {"data": data}
     except Exception as e:
         logger.error(f"Error getting most changed quotes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/market/gainers-losers-active")
+async def get_gainers_losers_active(request: dict):
+    logger.info("Getting gainers/losers/active")
+    try:
+        symbols = request.get("symbols", [])
+        limit = request.get("limit", 30)
+        chart_num = request.get("chart_num", 8)
+
+        data = store.get_gainers_losers_active(symbols, limit, chart_num)
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error getting gainers/losers/active: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

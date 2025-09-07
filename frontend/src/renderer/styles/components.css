@@ -4182,6 +4182,49 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   color: var(--text-primary);
 }
 
+.company-description {
+  margin-top: 16px;
+}
+
+.description-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.description-text.expanded {
+  display: block;
+  -webkit-line-clamp: initial;
+  overflow: visible;
+}
+
+.read-more-btn {
+  background: none;
+  border: none;
+  color: var(--accent-primary);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: var(--transition);
+}
+
+.read-more-btn:hover {
+  color: var(--accent-secondary);
+}
+
+.full-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 8px 0 0 0;
+}
+
 .market-movers-tabs {
   display: flex;
   gap: 4px;
