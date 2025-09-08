@@ -294,6 +294,37 @@ class LanguageService {
         wolframMathVerification: "Wolfram Alpha Mathematical Verification",
         wolframMathVerificationDesc:
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
+        // Verification stage names
+        qualityControl: "Quality Control",
+        documentClassification: "Document Classification", 
+        textExtraction: "Text Extraction",
+        templateValidation: "Template Validation",
+        dataConsistency: "Data Consistency",
+        fraudAnalysis: "Fraud Analysis",
+        // Verification status values
+        verified: "Verified",
+        reviewRequired: "Review Required", 
+        rejected: "Rejected",
+        passed: "Passed",
+        failed: "Failed",
+        warning: "Warning",
+        // Additional verification terms
+        score: "Score",
+        noDetailsAvailable: "No details available",
+        verifying: "Verifying...",
+        startingVerification: "Starting verification...",
+        selected: "Selected",
+        // Risk levels
+        low: "Low",
+        medium: "Medium", 
+        high: "High",
+        // Quality levels
+        good: "Good",
+        fair: "Fair",
+        poor: "Poor",
+        // Document types
+        announcement: "Announcement",
+        expense_voucher: "Expense Voucher",
 
         // Calculator Section
         calculateLoanPayments: "Calculate your loan payments and total costs",
@@ -627,6 +658,37 @@ class LanguageService {
         wolframMathVerification: "Wolfram Alpha Matematiksel Doğrulama",
         wolframMathVerificationDesc:
           "Hesaplamalar, sahtekarlık tespiti ve para birimi doğrulaması için gelişmiş matematiksel doğrulamayı etkinleştir",
+        // Verification stage names
+        qualityControl: "Kalite Kontrol",
+        documentClassification: "Belge Sınıflandırma", 
+        textExtraction: "Metin Çıkarma",
+        templateValidation: "Şablon Doğrulama",
+        dataConsistency: "Veri Tutarlılığı",
+        fraudAnalysis: "Sahtekarlık Analizi",
+        // Verification status values
+        verified: "Doğrulandı",
+        reviewRequired: "İnceleme Gerekli", 
+        rejected: "Reddedildi",
+        passed: "Geçti",
+        failed: "Başarısız",
+        warning: "Uyarı",
+        // Additional verification terms
+        score: "Puan",
+        noDetailsAvailable: "Detay bulunmuyor",
+        verifying: "Doğrulanıyor...",
+        startingVerification: "Doğrulama başlatılıyor...",
+        selected: "Seçildi",
+        // Risk levels
+        low: "Düşük",
+        medium: "Orta", 
+        high: "Yüksek",
+        // Quality levels
+        good: "İyi",
+        fair: "Orta",
+        poor: "Kötü",
+        // Document types
+        announcement: "Duyuru",
+        expense_voucher: "Harcama Fişi",
 
         // File Selection
         selectFiles: "Dosya Seç",
