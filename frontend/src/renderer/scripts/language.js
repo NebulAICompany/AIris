@@ -358,6 +358,7 @@ class LanguageService {
         searchStocks: "Search stocks...",
         noResultsFound: "No results found",
         searchForStocks: "Search for stocks",
+        atClose: "At close",
       },
 
       tr: {
@@ -693,6 +694,7 @@ class LanguageService {
         searchStocks: "Hisse ara...",
         noResultsFound: "Sonuç bulunamadı",
         searchForStocks: "Hisse arayın",
+        atClose: "Kapanışta",
       },
     };
   }

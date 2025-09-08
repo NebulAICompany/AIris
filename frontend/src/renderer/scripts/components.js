@@ -5671,6 +5671,28 @@ class UIComponents {
     }
   }
 
+  isIndexSymbol(symbol) {
+    // Common index symbols and patterns
+    const indexPatterns = [
+      /^XU\d+/i,        // Turkish indices (XU100, XU030, etc.)
+      /^BIST\d+/i,      // BIST indices
+      /^\^/,            // Yahoo Finance index format (^GSPC, ^DJI, etc.)
+      /^SPX$/i,         // S&P 500
+      /^DJI$/i,         // Dow Jones
+      /^IXIC$/i,        // NASDAQ
+      /^RUT$/i,         // Russell 2000
+      /^VIX$/i,         // Volatility Index
+      /^FTSE/i,         // FTSE indices
+      /^DAX$/i,         // DAX
+      /^CAC$/i,         // CAC 40
+      /^NIKKEI/i,       // Nikkei
+      /INDEX$/i,        // Generic index suffix
+    ];
+    
+    // Check if symbol matches any index pattern
+    return indexPatterns.some(pattern => pattern.test(symbol));
+  }
+
   showStockLoadingState() {
     const companyName = document.getElementById("stock-company-name");
     const symbol = document.getElementById("stock-symbol");
@@ -5744,14 +5766,43 @@ class UIComponents {
     }
     if (priceTime) {
       const date = new Date(latest.date);
-      priceTime.textContent = `At close: ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", timeZoneName: "short" })}`;
+      const currentLanguage = window.languageService.getCurrentLanguage();
+      
+      let formattedDate;
+      if (currentLanguage === 'tr') {
+        // Turkish locale
+        formattedDate = date.toLocaleDateString("tr-TR", { 
+          month: "short", 
+          day: "numeric"
+        });
+      } else {
+        // Default English locale
+        formattedDate = date.toLocaleDateString("en-US", { 
+          month: "short", 
+          day: "numeric"
+        });
+      }
+      
+      priceTime.textContent = `${window.languageService.get('atClose')}: ${formattedDate}`;
     }
 
     // Populate financial metrics
     this.populateFinancialMetrics(latest, previous);
 
-    // Populate company details
-    await this.populateCompanyDetails(symbol);
+    // Populate company details (only for individual stocks, not indices)
+    const companyDetailsSection = document.querySelector(".stock-company-details");
+    if (this.isIndexSymbol(symbol)) {
+      // Hide company details section for indices
+      if (companyDetailsSection) {
+        companyDetailsSection.style.display = "none";
+      }
+    } else {
+      // Show company details section for individual stocks
+      if (companyDetailsSection) {
+        companyDetailsSection.style.display = "block";
+      }
+      await this.populateCompanyDetails(symbol);
+    }
 
     // Create and display chart
     this.createStockChart(sortedData);
@@ -5812,6 +5863,17 @@ class UIComponents {
   async populateCompanyDetails(symbol) {
     const detailsContainer = document.getElementById("company-details");
     if (!detailsContainer) return;
+
+    // Don't fetch company details for indices
+    if (this.isIndexSymbol(symbol)) {
+      detailsContainer.innerHTML = `
+        <div class="company-detail">
+          <span class="company-detail-label">Index Information</span>
+          <span class="company-detail-value">This is a market index, not an individual company.</span>
+        </div>
+      `;
+      return;
+    }
 
     // Show loading placeholder immediately
     detailsContainer.innerHTML = `
@@ -5938,7 +6000,8 @@ class UIComponents {
     // Create a simple line chart using SVG
     const width = 800;
     const height = 400;
-    const padding = 40;
+    const padding = 60; // Increased padding for axis labels
+    const bottomPadding = 80; // Extra padding for x-axis labels
 
     // Sort data by date (oldest first for chart)
     const sortedData = [...data].reverse();
@@ -5946,13 +6009,25 @@ class UIComponents {
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const priceRange = maxPrice - minPrice;
+    
+    // Add some margin to price range for better visualization
+    const priceMargin = priceRange * 0.05;
+    const adjustedMinPrice = minPrice - priceMargin;
+    const adjustedMaxPrice = maxPrice + priceMargin;
+    const adjustedPriceRange = adjustedMaxPrice - adjustedMinPrice;
 
     // Create points for the line
+    const chartWidth = width - 2 * padding;
+    const chartHeight = height - padding - bottomPadding;
+    
     const points = sortedData.map((d, i) => {
-      const x = padding + (i / (sortedData.length - 1)) * (width - 2 * padding);
-      const y = padding + ((maxPrice - d.close) / priceRange) * (height - 2 * padding);
-      return { x, y };
+      const x = padding + (i / (sortedData.length - 1)) * chartWidth;
+      const y = padding + ((adjustedMaxPrice - d.close) / adjustedPriceRange) * chartHeight;
+      return { x, y, data: d };
     });
+
+    // Generate axis labels
+    const { xAxisLabels, yAxisLabels } = this.generateAxisLabels(sortedData, adjustedMinPrice, adjustedMaxPrice, chartWidth, chartHeight, padding, bottomPadding);
 
     // Create path data
     let pathData = `M ${points[0].x},${points[0].y}`;
@@ -5975,21 +6050,51 @@ class UIComponents {
         <div class="tooltip-price" id="range-price">--</div>
         <div class="tooltip-date" id="range-dates">--</div>
       </div>
-      <svg id="stock-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="display: block; width: 100%; height: 100%;">
+      <svg id="stock-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="display: block; width: 100%; height: 100%;">
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" style="stop-color:${color};stop-opacity:0.3" />
             <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
           </linearGradient>
         </defs>
-        <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="${pathData} L ${points[points.length-1].x},${height-padding} L ${points[0].x},${height-padding} Z" fill="url(#chartGradient)"/>
+        
+        <!-- Grid lines and axes -->
+        <g class="chart-grid" stroke="#e5e7eb" stroke-width="0.5" opacity="0.6">
+          ${yAxisLabels.map(label => `
+            <line x1="${padding}" y1="${label.y}" x2="${padding + chartWidth}" y2="${label.y}" />
+          `).join('')}
+          ${xAxisLabels.map(label => `
+            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${padding + chartHeight}" />
+          `).join('')}
+        </g>
+        
+        <!-- Y-axis labels (prices) -->
+        <g class="y-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
+          ${yAxisLabels.map(label => `
+            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${label.text}</text>
+          `).join('')}
+        </g>
+        
+        <!-- X-axis labels (dates) -->
+        <g class="x-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
+          ${xAxisLabels.map(label => `
+            <text x="${label.x}" y="${padding + chartHeight + 20}" text-anchor="middle">${label.text}</text>
+          `).join('')}
+        </g>
+        
+        <!-- Main chart area -->
+        <g class="chart-area">
+          <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${pathData} L ${points[points.length-1].x},${padding + chartHeight} L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
+        </g>
+        
+        <!-- Interactive elements -->
         <g id="hover-group">
-          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${height-padding}" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
+          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${padding + chartHeight}" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
           <circle id="hover-dot" r="3" fill="${color}" stroke="#fff" stroke-width="1.5" style="display:none" />
         </g>
-        <rect id="selection-rect" x="0" y="${padding}" width="0" height="${height - 2*padding}" fill="#3b82f6" opacity="0.15" style="display:none" />
-        <rect id="hover-capture" x="${padding}" y="${padding}" width="${width - 2*padding}" height="${height - 2*padding}" fill="transparent" />
+        <rect id="selection-rect" x="0" y="${padding}" width="0" height="${chartHeight}" fill="#3b82f6" opacity="0.15" style="display:none" />
+        <rect id="hover-capture" x="${padding}" y="${padding}" width="${chartWidth}" height="${chartHeight}" fill="transparent" />
       </svg>
     `;
 
@@ -6036,10 +6141,10 @@ class UIComponents {
       const price = (d.close ?? d.Close ?? d.c)?.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
       tooltip.querySelector('.tooltip-price').textContent = `₺${price}`;
       tooltip.querySelector('.tooltip-date').textContent = formatDate(d);
-      // Position tooltip
-      const bbox = svg.getBoundingClientRect();
-      const tx = ((pt.x / width) * bbox.width) + bbox.left;
-      const ty = ((pt.y / height) * bbox.height) + bbox.top;
+      // Position tooltip relative to chart container
+      const chartRect = chartContainer.getBoundingClientRect();
+      const tx = (pt.x / width) * chartRect.width;
+      const ty = (pt.y / height) * chartRect.height;
       tooltip.style.left = `${tx}px`;
       tooltip.style.top = `${ty}px`;
     };
@@ -6065,10 +6170,10 @@ class UIComponents {
       const priceStr = `₺${change.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
       rangeTooltip.querySelector('#range-price').textContent = priceStr;
       rangeTooltip.querySelector('#range-dates').textContent = `${formatDate(d1)} → ${formatDate(d2)}`;
-      // Position tooltip near end point
-      const bbox = svg.getBoundingClientRect();
-      const tx = ((p2.x / width) * bbox.width) + bbox.left;
-      const ty = ((p2.y / height) * bbox.height) + bbox.top;
+      // Position tooltip near end point relative to chart container
+      const chartRect = chartContainer.getBoundingClientRect();
+      const tx = (p2.x / width) * chartRect.width;
+      const ty = (p2.y / height) * chartRect.height;
       rangeTooltip.style.left = `${tx}px`;
       rangeTooltip.style.top = `${ty}px`;
       rangeTooltip.style.display = 'block';
@@ -6100,16 +6205,105 @@ class UIComponents {
       const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
       startIdx = bisect(mouseX);
       isSelecting = true;
+      
+      // Reset selection rectangle position before showing
+      const startPoint = points[startIdx];
+      selectionRect.setAttribute('x', startPoint.x);
+      selectionRect.setAttribute('width', 0);
       selectionRect.style.display = 'block';
-      rangeTooltip.style.display = 'block';
+      
+      // Don't show range tooltip yet, wait for movement
+      rangeTooltip.style.display = 'none';
     });
 
     window.addEventListener('mouseup', () => {
       if (isSelecting) {
         isSelecting = false;
-        // Keep selection shown; user can start a new one to replace
+        // Hide selection when mouse is released
+        selectionRect.style.display = 'none';
+        rangeTooltip.style.display = 'none';
       }
     });
+  }
+
+  generateAxisLabels(sortedData, minPrice, maxPrice, chartWidth, chartHeight, padding, bottomPadding) {
+    const priceRange = maxPrice - minPrice;
+    
+    // Generate Y-axis labels (prices)
+    const yAxisLabels = [];
+    const numYTicks = 6;
+    for (let i = 0; i <= numYTicks; i++) {
+      const ratio = i / numYTicks;
+      const price = maxPrice - (ratio * priceRange);
+      const y = padding + (ratio * chartHeight);
+      
+      yAxisLabels.push({
+        y: y,
+        text: `₺${price.toFixed(2)}`,
+        value: price
+      });
+    }
+    
+    // Generate X-axis labels (dates)
+    const xAxisLabels = [];
+    const dataLength = sortedData.length;
+    
+    if (dataLength <= 2) {
+      // If very few data points, show all
+      sortedData.forEach((d, i) => {
+        const x = padding + (i / (dataLength - 1)) * chartWidth;
+        xAxisLabels.push({
+          x: x,
+          text: this.formatDateForAxis(d),
+          data: d
+        });
+      });
+    } else {
+      // Show smart intervals based on data length
+      let numXTicks;
+      if (dataLength <= 7) {
+        numXTicks = dataLength;
+      } else if (dataLength <= 30) {
+        numXTicks = Math.min(6, Math.ceil(dataLength / 5));
+      } else if (dataLength <= 90) {
+        numXTicks = 6;
+      } else {
+        numXTicks = 8;
+      }
+      
+      for (let i = 0; i < numXTicks; i++) {
+        const dataIndex = i === numXTicks - 1 ? dataLength - 1 : Math.floor(i * (dataLength - 1) / (numXTicks - 1));
+        const x = padding + (dataIndex / (dataLength - 1)) * chartWidth;
+        const d = sortedData[dataIndex];
+        
+        xAxisLabels.push({
+          x: x,
+          text: this.formatDateForAxis(d),
+          data: d,
+          index: dataIndex
+        });
+      }
+    }
+    
+    return { xAxisLabels, yAxisLabels };
+  }
+
+  formatDateForAxis(dataPoint) {
+    try {
+      const date = new Date(dataPoint.date || dataPoint.time || dataPoint.datetime || dataPoint.Date || dataPoint.DATE);
+      
+      // Format based on current language
+      const currentLang = languageService.getCurrentLanguage();
+      const locale = currentLang === 'tr' ? 'tr-TR' : 'en-US';
+      
+      // Use shorter format for axis labels
+      return date.toLocaleDateString(locale, { 
+        month: 'short', 
+        day: 'numeric'
+      });
+    } catch {
+      return '--';
+    }
   }
 
   async fetchAndRenderMarketMovers(limit = 30, chartNum = 8) {
