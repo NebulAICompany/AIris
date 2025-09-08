@@ -10,6 +10,7 @@ if sys.platform == "win32":
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
+from backend.utils.market_data import init_market_data
 from backend.shared.logger import get_logger
 
 from fastapi.staticfiles import StaticFiles
@@ -51,6 +52,9 @@ async def startup_event():
             logger.info("Vectorstore loaded successfully.")
         else:
             logger.warning("Vectorstore not found. Please upload files to create it.")
+
+        # Initialize company info once (skips if already present)
+        await init_market_data()
 
         # Connect MCP servers using best practices
         logger.info("Connecting MCP servers...")

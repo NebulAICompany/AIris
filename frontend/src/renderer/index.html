@@ -773,6 +773,87 @@
                 </div>
               </div>
 
+              <!-- Stock Detail View -->
+              <div class="stock-detail" id="stock-detail" style="display: none">
+                <div class="stock-detail-header">
+                  <button
+                    class="btn btn-secondary stock-detail-back"
+                    id="stock-detail-back"
+                  >
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-i18n="backToNews">Back to News</span>
+                  </button>
+                  <div class="stock-search-container">
+                    <div class="stock-search-bar">
+                      <i class="fas fa-search"></i>
+                      <input type="text" id="stock-search-input" data-i18n-placeholder="searchStocks" />
+                      <div class="stock-search-dropdown" id="stock-search-dropdown">
+                        <!-- Search results will be populated here -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stock-detail-content">
+                  <div class="stock-main-content">
+                    <div class="stock-header">
+                      <div class="stock-company-info">
+                        <h1 class="stock-company-name" id="stock-company-name"></h1>
+                        <div class="stock-symbol" id="stock-symbol"></div>
+                      </div>
+                      <div class="stock-price-info">
+                        <div class="stock-current-price" id="stock-current-price"></div>
+                        <div class="stock-price-change" id="stock-price-change"></div>
+                        <div class="stock-price-time" id="stock-price-time"></div>
+                      </div>
+                    </div>
+
+                    <div class="stock-chart-container">
+                      <div class="stock-chart-intervals">
+                        <button class="interval-btn active" data-interval="1M">1M</button>
+                        <button class="interval-btn" data-interval="6M">6M</button>
+                        <button class="interval-btn" data-interval="YTD">YTD</button>
+                        <button class="interval-btn" data-interval="1Y">1Y</button>
+                        <button class="interval-btn" data-interval="MAX">MAX</button>
+                      </div>
+                      <div class="stock-chart" id="stock-chart">
+                        <div class="chart-loading">
+                          <div class="loading-spinner"></div>
+                          <p>Loading chart...</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stock-financial-profile">
+                      <h3>Financial Profile</h3>
+                      <div class="financial-metrics" id="financial-metrics">
+                        <!-- Financial metrics will be populated here -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stock-sidebar">
+                    <div class="stock-company-details">
+                      <h3>Company Information</h3>
+                      <div class="company-details" id="company-details">
+                        <!-- Company details will be populated here -->
+                      </div>
+                    </div>
+
+                    <div class="stock-market-movers">
+                      <div class="market-movers-tabs">
+                        <button class="mover-tab active" data-tab="gainers">Gainers</button>
+                        <button class="mover-tab" data-tab="losers">Losers</button>
+                        <button class="mover-tab" data-tab="active">Active</button>
+                      </div>
+                      <div class="market-movers-content" id="market-movers-content">
+                        <!-- Market movers will be populated here -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- News Detail View -->
               <div class="news-detail" id="news-detail" style="display: none">
                 <div class="news-detail-header">
