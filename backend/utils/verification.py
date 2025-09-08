@@ -17,15 +17,15 @@ logger = get_logger("DOCUMENT_VERIFICATION")
 
 class DocumentType(BaseModel):
     detected_type: Literal[
-        "invoice",
-        "receipt",
-        "bank_statement",
-        "payslip",
-        "contract",
-        "tax_declaration",
-        "expense_voucher",
-        "announcement",
-        "other",
+        "fatura",
+        "fiş",
+        "banka_ekstresi",
+        "bordro",
+        "sözleşme",
+        "vergi_beyannamesi",
+        "harcama_fişi",
+        "duyuru",
+        "diğer",
     ]
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
@@ -33,7 +33,7 @@ class DocumentType(BaseModel):
 
 
 class QualityAssessment(BaseModel):
-    overall_quality: Literal["high", "medium", "low"]
+    overall_quality: Literal["yüksek", "orta", "düşük"]
     quality_score: float = Field(ge=0.0, le=1.0)
     issues: List[str]
     strengths: List[str]
@@ -60,7 +60,7 @@ class ValidationResults(BaseModel):
 
 
 class FraudAnalysis(BaseModel):
-    risk_level: Literal["low", "medium", "high"]
+    risk_level: Literal["düşük", "orta", "yüksek"]
     risk_score: float = Field(ge=0.0, le=1.0)
     fraud_indicators: List[str] = Field(default_factory=list)
     suspicious_patterns: List[str] = Field(default_factory=list)
@@ -71,22 +71,22 @@ class FraudAnalysis(BaseModel):
 class DataConsistency(BaseModel):
     is_consistent: bool
     consistency_score: float = Field(ge=0.0, le=1.0)
-    date_consistency: Literal["consistent", "inconsistent"]
-    calculation_accuracy: Literal["accurate", "inaccurate"]
-    cross_field_validation: Literal["valid", "invalid"]
-    business_logic_compliance: Literal["compliant", "non-compliant"]
+    date_consistency: Literal["tutarlı", "tutarsız"]
+    calculation_accuracy: Literal["doğru", "hatalı"]
+    cross_field_validation: Literal["geçerli", "geçersiz"]
+    business_logic_compliance: Literal["uyumlu", "uyumsuz"]
 
 
 class Recommendations(BaseModel):
-    action_required: Literal["none", "review", "reject"]
-    priority: Literal["low", "medium", "high"]
+    action_required: Literal["onay", "inceleme", "red"]
+    priority: Literal["düşük", "orta", "yüksek"]
     suggestions: List[str] = Field(default_factory=list)
     manual_review_needed: bool
 
 
 class ConfidenceSummary(BaseModel):
     overall_confidence: float = Field(ge=0.0, le=1.0)
-    verification_status: Literal["verified", "review_required", "rejected"]
+    verification_status: Literal["doğrulandı", "inceleme_gerekli", "reddedildi"]
     reliability_factors: List[str]
 
 
@@ -218,7 +218,7 @@ Genel güveni şu ağırlıklarla hesapla:
     "key_indicators": ["gösterge1", "gösterge2"]
   },
   "quality_assessment": {
-    "overall_quality": "high",
+    "overall_quality": "yüksek",
     "quality_score": 0.9,
     "issues": [],
     "strengths": ["güçlü yön1"]
@@ -245,7 +245,7 @@ Genel güveni şu ağırlıklarla hesapla:
     "date_issues": []
   },
   "fraud_analysis": {
-    "risk_level": "low",
+    "risk_level": "düşük",
     "risk_score": 0.1,
     "fraud_indicators": [],
     "suspicious_patterns": [],
@@ -255,20 +255,20 @@ Genel güveni şu ağırlıklarla hesapla:
   "data_consistency": {
     "is_consistent": true,
     "consistency_score": 0.95,
-    "date_consistency": "consistent",
-    "calculation_accuracy": "accurate", 
-    "cross_field_validation": "valid",
-    "business_logic_compliance": "compliant"
+    "date_consistency": "tutarlı",
+    "calculation_accuracy": "doğru", 
+    "cross_field_validation": "geçerli",
+    "business_logic_compliance": "uyumlu"
   },
   "recommendations": {
-    "action_required": "none",
-    "priority": "low",
+    "action_required": "onay",
+    "priority": "düşük",
     "suggestions": ["öneri1"],
     "manual_review_needed": false
   },
   "confidence_summary": {
     "overall_confidence": 0.89,
-    "verification_status": "verified",
+    "verification_status": "doğrulandı",
     "reliability_factors": ["faktör1", "faktör2"]
   }
 }
@@ -277,7 +277,7 @@ Genel güveni şu ağırlıklarla hesapla:
 ÖNEMLİ NOTLAR:
 - "parties" alanı mutlaka {"individuals": ["liste"], "entities": ["liste"]} formatında olmalı
 - Tüm score alanları 0.0-1.0 arasında float olmalı  
-- "verification_status" sadece "verified", "review_required", "rejected" değerlerinden biri olmalı
+- "verification_status" sadece "doğrulandı", "inceleme_gerekli", "reddedildi" değerlerinden biri olmalı
 - JSON syntax'ını kontrol et, virgül ve tırnak işaretlerini doğru kullan
 """,
     output_type=AgentOutputSchema(VerificationResult, strict_json_schema=False),
@@ -287,42 +287,10 @@ logger.info("Document Verification Agent initialized successfully")
 logger.info(f"Agent name: {verification_agent.name}")
 
 
-def translate_verification_status(status: str) -> str:
-    """Verification status değerlerini Türkçeye çevirir"""
-    status_translations = {
-        "verified": "Doğrulandı",
-        "review_required": "İnceleme Gerekli", 
-        "rejected": "Reddedildi",
-        "completed": "Tamamlandı",
-        "failed": "Başarısız",
-        "processing": "İşleniyor",
-        "unknown": "Bilinmeyen",
-        "low": "Düşük",
-        "medium": "Orta", 
-        "high": "Yüksek"
-    }
-    return status_translations.get(status, status)
-
-def translate_stage_names(stages: dict) -> dict:
-    """Stage isimlerini Türkçeye çevirir"""
-    stage_translations = {
-        "quality_control": "Kalite Kontrol",
-        "classification": "Belge Sınıflandırma",
-        "text_extraction": "Metin Çıkarma", 
-        "template_validation": "Şablon Doğrulama",
-        "data_consistency": "Veri Tutarlılığı",
-        "fraud_analysis": "Sahtekarlık Analizi"
-    }
-    
-    translated_stages = {}
-    for stage_key, stage_data in stages.items():
-        translated_key = stage_translations.get(stage_key, stage_key)
-        translated_stages[translated_key] = stage_data
-    
-    return translated_stages
 
 
-async def verify_document(file_path: str, document_type: str = "auto") -> dict:
+
+async def verify_document(file_path: str) -> dict:
     """
     Main verification function that uses OpenAI Agents SDK
     """
@@ -335,8 +303,8 @@ async def verify_document(file_path: str, document_type: str = "auto") -> dict:
         if not parsed_text or len(parsed_text.strip()) < 10:
             logger.warning(f"Document parsing failed - insufficient text extracted")
             return {
-                "error": "Insufficient text extracted",
-                "status": "failed",
+                "error": "Yetersiz metin çıkarıldı",
+                "status": "başarısız",
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -353,7 +321,7 @@ async def verify_document(file_path: str, document_type: str = "auto") -> dict:
 
         # Step 4: Format result for frontend
         result = format_result_for_frontend(file_path, parsed_text, result_data)
-        logger.info(f"Verification completed - Status: {result.get('verification_status', 'unknown')}, Confidence: {result.get('confidence_score', 0)}")
+        logger.info(f"Verification completed - Status: {result.get('verification_status', 'bilinmeyen')}, Confidence: {result.get('confidence_score', 0)}")
 
         return result
 
@@ -361,7 +329,7 @@ async def verify_document(file_path: str, document_type: str = "auto") -> dict:
         logger.error(f"Verification failed: {str(e)}")
         return {
             "error": str(e),
-            "status": "failed",
+            "status": "başarısız",
             "timestamp": datetime.now().isoformat(),
         }
 
@@ -396,32 +364,32 @@ def format_result_for_frontend(
     consistency = result_data.get("data_consistency", {"not detected"})
     confidence = result_data.get("confidence_summary", {"not detected"})
 
-    # Build stages
+    # Build stages with direct Turkish values
     stages = {
-        "quality_control": {
-            "passed": quality.get("overall_quality", "low") in ["high", "medium"],
+        "kalite kontrol": {
+            "passed": quality.get("overall_quality", "düşük") in ["yüksek", "orta"],
             "score": quality.get("quality_score", 0),
             "issues": quality.get("issues", []),
-            "assessment": f"Kalite: {translate_verification_status(quality.get('overall_quality', 'unknown'))}",
+            "assessment": f"Kalite: {quality.get('overall_quality', 'bilinmeyen')}",
         },
-        "classification": {
+        "belge sınıflandırma": {
             "passed": doc_type.get("confidence", 0) >= 0.7,
             "score": doc_type.get("confidence", 0),
             "reasoning": doc_type.get("reasoning", ""),
             "assessment": f"Tespit edilen: {doc_type.get('detected_type', 'bilinmeyen')}",
         },
-        "data_consistency": {
+        "veri tutarlılığı": {
             "consistent": consistency.get("is_consistent", False),
             "score": consistency.get("consistency_score", 0),
             "assessment": f"Veri tutarlılığı: {consistency.get('date_consistency', 'bilinmeyen')}",
         },
-        "fraud_analysis": {
-            "risk_level": translate_verification_status(fraud.get("risk_level", "unknown")),
+        "sahtekarlık analizi": {
+            "risk_level": fraud.get("risk_level", "bilinmeyen"),
             "score": 1.0 - fraud.get("risk_score", 0),
             "assessment": fraud.get("overall_assessment", ""),
             "indicators": fraud.get("fraud_indicators", []),
         },
-        "template_validation": {
+        "şablon doğrulama": {
             "valid": validation.get("is_valid", False),
             "score": validation.get("validation_score", 0),
             "issues": validation.get("format_issues", []),
@@ -438,12 +406,12 @@ def format_result_for_frontend(
     return {
         "file_name": Path(file_path).name,
         "timestamp": datetime.now().isoformat(),
-        "status": translate_verification_status("completed"),
+        "status": "Tamamlandı",
         "parsed_text_length": len(parsed_text),
-        "verification_type": doc_type.get("detected_type", "unknown"),
+        "verification_type": doc_type.get("detected_type", "bilinmeyen"),
         "confidence_score": confidence.get("overall_confidence", 0),
-        "verification_status": translate_verification_status(confidence.get("verification_status", "unknown")),
-        "stages": translate_stage_names(stages),
+        "verification_status": confidence.get("verification_status", "bilinmeyen"),
+        "stages": stages,
         "warnings": warnings,
         "errors": errors,
         "verification_result": result_data,
