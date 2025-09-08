@@ -4149,7 +4149,10 @@ class UIComponents {
 
       const uploadText = uploadArea.querySelector("h3");
       if (uploadText) {
-        uploadText.textContent = `Selected: ${file.name}`;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        uploadText.textContent = `${t("selected")}: ${file.name}`;
       }
     }
 
@@ -4176,12 +4179,18 @@ class UIComponents {
       // Disable button and show loading state
       if (verifyBtn) {
         verifyBtn.disabled = true;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
         verifyBtn.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> <span>Verifying...</span>';
+          `<i class="fas fa-spinner fa-spin"></i> <span>${t("verifying")}</span>`;
       }
 
       // Show progress indicator
-      this.showVerificationProgress("Starting verification...");
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showVerificationProgress(t("startingVerification"));
 
       // Call verification API
       const result = await window.apiService.verifyDocument(
@@ -4327,23 +4336,29 @@ class UIComponents {
     const finalStatus = document.getElementById("verification-final-status");
     const fraudRisk = document.getElementById("fraud-risk-level");
 
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
     if (detectedType) {
-      detectedType.textContent =
-        result.verification_type ||
-        window.languageService?.get("unknown") ||
-        "Unknown";
+      const docType = result.verification_type || "unknown";
+      // Try to translate the document type, fall back to original if no translation
+      const translatedType = t(docType) || docType;
+      detectedType.textContent = translatedType;
     }
 
     if (finalStatus) {
       finalStatus.textContent =
-        result.status || window.languageService?.get("unknown") || "Unknown";
+        result.status || t("unknown");
       finalStatus.className = `detail-value ${result.status}`;
     }
 
     if (fraudRisk) {
       const fraudLevel = result.stages?.fraud_analysis?.risk_level || "unknown";
-      fraudRisk.textContent = fraudLevel;
-      fraudRisk.className = `detail-value risk-${fraudLevel}`;
+      // Fraud level is already translated from backend, but translate again for consistency
+      const translatedLevel = t(fraudLevel.toLowerCase()) || fraudLevel;
+      fraudRisk.textContent = translatedLevel;
+      fraudRisk.className = `detail-value risk-${fraudLevel.toLowerCase()}`;
     }
   }
 
@@ -4353,13 +4368,17 @@ class UIComponents {
 
     stagesGrid.innerHTML = "";
 
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
     const stageNames = {
-      quality_control: "Quality Control",
-      classification: "Document Classification",
-      text_extraction: "Text Extraction",
-      template_validation: "Template Validation",
-      data_consistency: "Data Consistency",
-      fraud_analysis: "Fraud Analysis",
+      quality_control: t("qualityControl"),
+      classification: t("documentClassification"),
+      text_extraction: t("textExtraction"),
+      template_validation: t("templateValidation"),
+      data_consistency: t("dataConsistency"),
+      fraud_analysis: t("fraudAnalysis"),
     };
 
     Object.entries(stages).forEach(([stageName, stageData]) => {
@@ -4401,7 +4420,14 @@ class UIComponents {
     const issues = stageData.issues || stageData.indicators || [];
     const details = Array.isArray(issues)
       ? issues.join(", ")
-      : stageData.assessment || stageData.reasoning || "No details available";
+      : stageData.assessment || stageData.reasoning || 
+        (window.languageService 
+          ? window.languageService.t("noDetailsAvailable") 
+          : "No details available");
+
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
 
     card.innerHTML = `
       <div class="stage-header">
@@ -4412,7 +4438,7 @@ class UIComponents {
       </div>
       <div class="stage-details">${Utils.escapeHtml(details)}</div>
       <div class="stage-score">
-        <span class="stage-score-label">Score</span>
+        <span class="stage-score-label">${t("score")}</span>
         <span class="stage-score-value">${percentage}%</span>
       </div>
     `;
