@@ -609,6 +609,12 @@ class APIService {
     });
   }
 
+  async searchSymbols(query = "") {
+    const response = await this.makeRequest(`/api/market/search-symbols`, "GET", null, { params: { query } });
+    console.log(`[API] Searching symbols for ${query} response:`, response.data);
+    return response.data;
+  }
+
   // News Chat API method
   async sendNewsChatQuery(message, newsContext) {
     try {

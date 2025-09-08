@@ -5579,6 +5579,9 @@ class UIComponents {
       backButton.onclick = () => this.hideStockDetail();
     }
 
+    // Set up stock search functionality
+    this.setupStockSearch();
+
     // Load stock data and populate the detail view using current interval
     const activeIntervalBtn = document.querySelector('.interval-btn.active');
     const interval = activeIntervalBtn ? activeIntervalBtn.dataset.interval : '1M';
@@ -5718,6 +5721,7 @@ class UIComponents {
     const sortedData = [...stockData].sort((a, b) => new Date(b.date) - new Date(a.date));
     const latest = sortedData[0];
     const earliest = sortedData[sortedData.length - 1];
+    const previous = sortedData[1];
 
     // Calculate change from earliest to latest within interval
     const change = latest.close - (earliest ? earliest.close : latest.close);
@@ -5744,7 +5748,7 @@ class UIComponents {
     }
 
     // Populate financial metrics
-    this.populateFinancialMetrics(latest, earliest);
+    this.populateFinancialMetrics(latest, previous);
 
     // Populate company details
     await this.populateCompanyDetails(symbol);
@@ -5780,46 +5784,27 @@ class UIComponents {
     const metricsContainer = document.getElementById("financial-metrics");
     if (!metricsContainer) return;
 
-    const prevClose = previous ? previous.close : latest.close;
+    const previousClose = previous.close ? previous.close.toFixed(2) : "--";
+    const open = latest.open ? latest.open.toFixed(2) : "--";
     const dayRange = `${Math.min(latest.low, latest.high).toFixed(2)} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
     const volume = latest.volume ? latest.volume.toLocaleString("tr-TR") : (previous ? previous.volume.toLocaleString("tr-TR") : "--");
 
     metricsContainer.innerHTML = `
       <div class="financial-metric">
-        <span class="financial-metric-label">Prev Close</span>
-        <span class="financial-metric-value">₺${prevClose.toFixed(2)}</span>
+        <span class="financial-metric-label">${languageService.get('prevClose')}</span>
+        <span class="financial-metric-value">₺${previousClose}</span>
       </div>
       <div class="financial-metric">
-        <span class="financial-metric-label">52W Range</span>
-        <span class="financial-metric-value">₺-- - ₺--</span>
+        <span class="financial-metric-label">${languageService.get('open')}</span>
+        <span class="financial-metric-value">₺${open}</span>
       </div>
       <div class="financial-metric">
-        <span class="financial-metric-label">Open</span>
-        <span class="financial-metric-value">₺${latest.open?.toFixed(2) || "--"}</span>
-      </div>
-      <div class="financial-metric">
-        <span class="financial-metric-label">P/E Ratio</span>
-        <span class="financial-metric-value">--</span>
-      </div>
-      <div class="financial-metric">
-        <span class="financial-metric-label">Day Range</span>
+        <span class="financial-metric-label">${languageService.get('dayRange')}</span>
         <span class="financial-metric-value">₺${dayRange}</span>
       </div>
       <div class="financial-metric">
-        <span class="financial-metric-label">Volume</span>
+        <span class="financial-metric-label">${languageService.get('volume')}</span>
         <span class="financial-metric-value">${volume}</span>
-      </div>
-      <div class="financial-metric">
-        <span class="financial-metric-label">Market Cap</span>
-        <span class="financial-metric-value">₺--</span>
-      </div>
-      <div class="financial-metric">
-        <span class="financial-metric-label">Dividend Yield</span>
-        <span class="financial-metric-value">--</span>
-      </div>
-      <div class="financial-metric">
-        <span class="financial-metric-label">EPS</span>
-        <span class="financial-metric-value">₺--</span>
       </div>
     `;
   }
@@ -5830,11 +5815,11 @@ class UIComponents {
 
     // Show loading placeholder immediately
     detailsContainer.innerHTML = `
-      <div class="company-detail"><span class="company-detail-label">Fulltime Employees</span><span class="company-detail-value">Loading...</span></div>
-      <div class="company-detail"><span class="company-detail-label">Sector</span><span class="company-detail-value">Loading...</span></div>
-      <div class="company-detail"><span class="company-detail-label">Industry</span><span class="company-detail-value">Loading...</span></div>
-      <div class="company-detail"><span class="company-detail-label">Country</span><span class="company-detail-value">TR</span></div>
-      <div class="company-detail"><span class="company-detail-label">Exchange</span><span class="company-detail-value">Istanbul Stock Exchange</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get('fulltimeEmployees')}</span><span class="company-detail-value">${languageService.get('loading')}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get('sector')}</span><span class="company-detail-value">${languageService.get('loading')}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get('industry')}</span><span class="company-detail-value">${languageService.get('loading')}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get('country')}</span><span class="company-detail-value">TR</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get('exchange')}</span><span class="company-detail-value">${languageService.get('istanbulStockExchange')}</span></div>
       <div class="company-description"><p class="description-text">Fetching description…</p></div>
     `;
 
@@ -5849,12 +5834,14 @@ class UIComponents {
       const response = await api.getCompanyInfo(symbol);
       const companyData = response.data?.data || {};
 
-      // Extract data with fallbacks
+      // Extract data with fallbacks, use Turkish versions if language is Turkish
+      const currentLang = languageService.getCurrentLanguage();
       const fulltimeEmployees = companyData.fulltime_employees || "--";
-      const sector = companyData.sector || "--";
-      const industry = companyData.industry || "--";
-      const description = companyData.description || "";
+      const sector = currentLang === 'tr' ? (companyData.sector_tr || companyData.sector || "--") : (companyData.sector || "--");
+      const industry = currentLang === 'tr' ? (companyData.industry_tr || companyData.industry || "--") : (companyData.industry || "--");
+      const description = currentLang === 'tr' ? (companyData.description_tr || companyData.description || "") : (companyData.description || "");
 
+      console.log(currentLang, sector, industry, description);
       // Create description HTML with read more using CSS clamp
       let descriptionHtml = "";
       if (description) {
@@ -5876,24 +5863,24 @@ class UIComponents {
 
       detailsContainer.innerHTML = `
         <div class="company-detail">
-          <span class="company-detail-label">Fulltime Employees</span>
+          <span class="company-detail-label">${languageService.get('fulltimeEmployees')}</span>
           <span class="company-detail-value">${fulltimeEmployees}</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Sector</span>
+          <span class="company-detail-label">${languageService.get('sector')}</span>
           <span class="company-detail-value">${sector}</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Industry</span>
+          <span class="company-detail-label">${languageService.get('industry')}</span>
           <span class="company-detail-value">${industry}</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Country</span>
+          <span class="company-detail-label">${languageService.get('country')}</span>
           <span class="company-detail-value">TR</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Exchange</span>
-          <span class="company-detail-value">Istanbul Stock Exchange</span>
+          <span class="company-detail-label">${languageService.get('exchange')}</span>
+          <span class="company-detail-value">${languageService.get('istanbulStockExchange')}</span>
         </div>
         ${descriptionHtml}
       `;
@@ -5915,24 +5902,24 @@ class UIComponents {
       // Fallback to default display
       detailsContainer.innerHTML = `
         <div class="company-detail">
-          <span class="company-detail-label">Fulltime Employees</span>
+          <span class="company-detail-label">${languageService.get('fulltimeEmployees')}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Sector</span>
+          <span class="company-detail-label">${languageService.get('sector')}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Industry</span>
+          <span class="company-detail-label">${languageService.get('industry')}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Country</span>
-          <span class="company-detail-value">TR</span>
+          <span class="company-detail-label">${languageService.get('country')}</span>
+          <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">Exchange</span>
-          <span class="company-detail-value">Istanbul Stock Exchange</span>
+          <span class="company-detail-label">${languageService.get('exchange')}</span>
+          <span class="company-detail-value">--</span>
         </div>
         <div class="company-description">
           <p class="description-text">No description available.</p>
@@ -6203,6 +6190,214 @@ class UIComponents {
         this.renderMarketMovers(tabKey);
       });
     });
+  }
+
+  // Stock Search functionality
+  setupStockSearch() {
+    const searchInput = document.getElementById('stock-search-input');
+    const searchDropdown = document.getElementById('stock-search-dropdown');
+    
+    if (!searchInput || !searchDropdown) return;
+
+    // Avoid setting up multiple times
+    if (searchInput.dataset.searchSetup) return;
+    searchInput.dataset.searchSetup = 'true';
+
+    let searchTimeout;
+    let highlightedIndex = -1;
+    let searchResults = [];
+
+    // Handle input changes
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      
+      // Clear previous timeout
+      clearTimeout(searchTimeout);
+      
+      if (query.length < 1) {
+        this.hideSearchDropdown();
+        return;
+      }
+
+      // Debounce search requests
+      searchTimeout = setTimeout(async () => {
+        await this.performStockSearch(query);
+      }, 300);
+    });
+
+    // Handle keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+      const items = searchDropdown.querySelectorAll('.stock-search-item');
+      
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+          this.updateSearchHighlight(items, highlightedIndex);
+          break;
+          
+        case 'ArrowUp':
+          e.preventDefault();
+          highlightedIndex = Math.max(highlightedIndex - 1, -1);
+          this.updateSearchHighlight(items, highlightedIndex);
+          break;
+          
+        case 'Enter':
+          e.preventDefault();
+          if (highlightedIndex >= 0 && items[highlightedIndex]) {
+            const symbol = items[highlightedIndex].dataset.symbol;
+            this.selectStock(symbol);
+          }
+          break;
+          
+        case 'Escape':
+          this.hideSearchDropdown();
+          searchInput.blur();
+          break;
+      }
+    });
+
+    // Handle clicks outside to close dropdown
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+        this.hideSearchDropdown();
+      }
+    });
+
+    // Reset highlight index when dropdown content changes
+    const observer = new MutationObserver(() => {
+      highlightedIndex = -1;
+    });
+    observer.observe(searchDropdown, { childList: true });
+  }
+
+  async performStockSearch(query) {
+    const searchDropdown = document.getElementById('stock-search-dropdown');
+    if (!searchDropdown) return;
+
+    try {
+      // Show loading state
+      searchDropdown.innerHTML = `
+        <div class="stock-search-no-results">
+          <i class="fas fa-spinner fa-spin"></i> ${languageService.get('loading')}
+        </div>
+      `;
+      searchDropdown.classList.add('show');
+
+      // Call the API
+      const api = new APIService();
+      const response = await api.searchSymbols(query);
+      
+      console.log('Search response:', response); // Debug log
+      
+      // The API method returns response.data directly, so the symbols are in response.symbols or response.data
+      let symbols = null;
+      if (response) {
+        symbols = response.symbols || response.data || [];
+      }
+      
+      if (symbols && symbols.length > 0) {
+        this.renderSearchResults(symbols);
+      } else {
+        this.renderNoResults();
+      }
+    } catch (error) {
+      console.error('Stock search error:', error);
+      this.renderSearchError();
+    }
+  }
+
+  renderSearchResults(symbols) {
+    const searchDropdown = document.getElementById('stock-search-dropdown');
+    if (!searchDropdown) return;
+
+    const resultsHtml = symbols.map(symbol => {
+      // Handle both simple strings and objects
+      const symbolCode = typeof symbol === 'string' ? symbol : symbol.symbol;
+      const displayName = typeof symbol === 'object' && symbol.name ? symbol.name : symbolCode;
+      
+      return `
+        <div class="stock-search-item" data-symbol="${symbolCode}">
+          <div class="stock-search-item-symbol">${symbolCode}</div>
+          <div class="stock-search-item-name">${displayName}</div>
+        </div>
+      `;
+    }).join('');
+
+    searchDropdown.innerHTML = resultsHtml;
+    searchDropdown.classList.add('show');
+
+    // Add click handlers
+    searchDropdown.querySelectorAll('.stock-search-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const symbol = item.dataset.symbol;
+        this.selectStock(symbol);
+      });
+    });
+  }
+
+  renderNoResults() {
+    const searchDropdown = document.getElementById('stock-search-dropdown');
+    if (!searchDropdown) return;
+
+    searchDropdown.innerHTML = `
+      <div class="stock-search-no-results">
+        ${languageService.get('noResultsFound')}
+      </div>
+    `;
+    searchDropdown.classList.add('show');
+  }
+
+  renderSearchError() {
+    const searchDropdown = document.getElementById('stock-search-dropdown');
+    if (!searchDropdown) return;
+
+    searchDropdown.innerHTML = `
+      <div class="stock-search-no-results">
+        <i class="fas fa-exclamation-triangle"></i> ${languageService.get('error')}
+      </div>
+    `;
+    searchDropdown.classList.add('show');
+  }
+
+  updateSearchHighlight(items, highlightedIndex) {
+    items.forEach((item, index) => {
+      if (index === highlightedIndex) {
+        item.classList.add('highlighted');
+      } else {
+        item.classList.remove('highlighted');
+      }
+    });
+  }
+
+  hideSearchDropdown() {
+    const searchDropdown = document.getElementById('stock-search-dropdown');
+    if (searchDropdown) {
+      searchDropdown.classList.remove('show');
+    }
+  }
+
+  async selectStock(symbol) {
+    const searchInput = document.getElementById('stock-search-input');
+    
+    // Update search input with selected symbol
+    if (searchInput) {
+      searchInput.value = symbol;
+    }
+    
+    // Hide dropdown
+    this.hideSearchDropdown();
+    
+    // Load the selected stock data
+    if (symbol !== this.currentStockSymbol) {
+      this.currentStockSymbol = symbol;
+      
+      // Load stock data with current interval
+      const activeIntervalBtn = document.querySelector('.interval-btn.active');
+      const interval = activeIntervalBtn ? activeIntervalBtn.dataset.interval : '1M';
+      const limit = this.computeLimitFromInterval(interval);
+      await this.loadStockDetailData(symbol, limit);
+    }
   }
 }
 

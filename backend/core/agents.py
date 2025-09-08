@@ -217,5 +217,12 @@ Now analyze the news and answer the user's question comprehensively! """
 
     return agent
 
-
-# TODO: This main function is only for connection reminder
+def create_translation_agent(instructions: str) -> Agent:
+    """Create a specialized translation agent"""
+    agent = Agent(
+        name="Translation_Assistant",
+        instructions=instructions,
+        model="gpt-4o-mini",
+        tools=[],
+    )
+    return agent
