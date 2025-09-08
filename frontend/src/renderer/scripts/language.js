@@ -341,6 +341,23 @@ class LanguageService {
 
         // Navigation
         goToChat: "Go to Chat",
+
+        // Stock/Company Details
+        exchange: "Exchange",
+        istanbulStockExchange: "Istanbul Stock Exchange",
+        fulltimeEmployees: "Fulltime Employees",
+        sector: "Sector",
+        industry: "Industry",
+        country: "Country",
+        loading: "Loading...",
+        companyInfo: "Company Info",
+        prevClose: "Prev Close",
+        open: "Open",
+        dayRange: "Day Range",
+        volume: "Volume",
+        searchStocks: "Search stocks...",
+        noResultsFound: "No results found",
+        searchForStocks: "Search for stocks",
       },
 
       tr: {
@@ -659,6 +676,23 @@ class LanguageService {
 
         // Navigation
         goToChat: "Sohbete Git",
+
+        // Stock/Company Details
+        exchange: "Borsa",
+        istanbulStockExchange: "Borsa İstanbul",
+        fulltimeEmployees: "Tam Zamanlı Çalışan",
+        sector: "Sektör",
+        industry: "Endüstri",
+        country: "Ülke",
+        loading: "Yükleniyor...",
+        companyInfo: "Şirket Bilgileri",
+        prevClose: "Önceki Kapanış",
+        open: "Açılış",
+        dayRange: "Günlük Aralık",
+        volume: "Hacim",
+        searchStocks: "Hisse ara...",
+        noResultsFound: "Sonuç bulunamadı",
+        searchForStocks: "Hisse arayın",
       },
     };
   }

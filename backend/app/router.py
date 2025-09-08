@@ -108,6 +108,15 @@ async def get_gainers_losers_active(request: dict):
         logger.error(f"Error getting gainers/losers/active: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/market/search-symbols")
+async def search_symbols(query: str = ""):
+    logger.info("Searching symbols")
+    try:
+        data = store.search_symbols(query)
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error searching symbols: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):

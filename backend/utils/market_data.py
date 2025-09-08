@@ -11,6 +11,8 @@ import httpx
 
 from backend.shared.logger import get_logger
 from backend.shared.constants import MARKETSTACK_EOD_URL, MARKET_DATA_DB_PATH, MARKETSTACK_API_KEY, MARKETSTACK_COMPANY_INFO_URL, MARKETSTACK_TICKERS
+from backend.core.agents import create_translation_agent
+from backend.core.runner import generate_answer
 
 
 logger = get_logger("MARKET_DATA")
@@ -58,6 +60,9 @@ class MarketDataStore:
                     country TEXT,
                     sector TEXT,
                     industry TEXT,
+                    sector_tr TEXT,
+                    industry_tr TEXT,
+                    description_tr TEXT,
                     website TEXT,
                     description TEXT,
                     logo TEXT,
@@ -160,11 +165,16 @@ class MarketDataStore:
         logger.info(f"Saved EOD rows: {data}")
         return saved
 
-    def upsert_company_info(self, payload: Dict[str, Any]) -> int:
+    async def upsert_company_info(self, payload: Dict[str, Any]) -> int:
         """
         Upsert company info for a single company from the API response format.
         Expected payload format: {"data": {...company_data...}}
         """
+        async def translate_text(text: str) -> str:
+            agent = create_translation_agent(instructions="You are a translation agent for financial texts. You are given a text and you need to translate it to Turkish. Only output the translated Turkish text and nothing else.")
+            response = await generate_answer(text, agent)
+            return f"{response}"    
+        
         company_data = payload.get("data", {})
         if not company_data:
             logger.warning("No company data found in payload")
@@ -178,6 +188,9 @@ class MarketDataStore:
             industry = company_data.get("industry", "")
             fulltime_employees = company_data.get("full_time_employees", "")
             description = company_data.get("about", "")
+            sector_tr = await translate_text(sector)
+            industry_tr = await translate_text(industry)
+            description_tr = await translate_text(description)
             website = company_data.get("website", "")
             exchange_code = company_data.get("exchange_code", "")
             
@@ -195,9 +208,9 @@ class MarketDataStore:
                 conn.execute(
                     """
                     INSERT OR REPLACE INTO company_info(
-                        symbol, name, exchange, currency, country, sector, industry, 
+                        symbol, name, exchange, currency, country, sector, industry, sector_tr, industry_tr, description_tr, 
                         website, description, logo, fulltime_employees, raw_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         symbol,
@@ -207,6 +220,9 @@ class MarketDataStore:
                         "TR",   # Default country for Turkish stocks
                         sector,
                         industry,
+                        sector_tr,
+                        industry_tr,
+                        description_tr,
                         website,
                         description,
                         None,  # logo
@@ -239,7 +255,7 @@ class MarketDataStore:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute(
                     """
-                    SELECT symbol, name, exchange, currency, country, sector, industry, 
+                    SELECT symbol, name, exchange, currency, country, sector, industry, sector_tr, industry_tr, description_tr, 
                            website, description, logo, fulltime_employees, raw_json
                     FROM company_info 
                     WHERE symbol = ?
@@ -257,11 +273,14 @@ class MarketDataStore:
                         "country": row[4],
                         "sector": row[5],
                         "industry": row[6],
-                        "website": row[7],
-                        "description": row[8],
-                        "logo": row[9],
-                        "fulltime_employees": row[10],
-                        "raw_json": row[11]
+                        "sector_tr": row[7],
+                        "industry_tr": row[8],
+                        "description_tr": row[9],
+                        "website": row[10],
+                        "description": row[11],
+                        "logo": row[12],
+                        "fulltime_employees": row[13],
+                        "raw_json": row[14]
                     }
                 return {}
         except Exception as e:
@@ -444,6 +463,33 @@ class MarketDataStore:
 
         return 1
 
+    def search_symbols(self, query: str) -> List[str]:
+        """
+        Search for stock symbols in the database that match the given query.
+        
+        Args:
+            query: Partial symbol to search for (case-insensitive)
+            
+        Returns:
+            List of matching symbols found in the database that start with the query
+        """
+        if not query:
+            return []
+            
+        query_upper = query.upper()
+        
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute(
+                    "SELECT DISTINCT symbol FROM eod_quotes WHERE UPPER(symbol) LIKE ? ORDER BY symbol",
+                    (f"{query_upper}%",)
+                )
+                rows = cursor.fetchall()
+                return [row[0] for row in rows]
+        except Exception as e:
+            logger.error(f"Failed to search symbols: {e}")
+            return []
+
 store = MarketDataStore()
 
 async def init_market_data() -> None:
@@ -458,8 +504,8 @@ async def init_market_data() -> None:
     logger.info("Initializing company info...")
     for ticker in MARKETSTACK_TICKERS:
         payload = await store.fetch_marketstack_company_info(ticker=ticker)
-        store.upsert_company_info(payload)
-    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS), limit=1000)
+        await store.upsert_company_info(payload)
+    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS + ",XU100.IS,XU030.IS"), limit=1000)
 
 
         
