@@ -654,7 +654,7 @@ class APIService {
 
       // Call progress callback for start
       if (progressCallback) {
-        progressCallback(0, "Starting verification...");
+        progressCallback(0, "Doğrulama Başlatılıyor...");
       }
 
       const response = await this.api.post("/api/verify", formData, config);
