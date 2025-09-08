@@ -151,7 +151,7 @@ class AIrisApp {
             const changeSymbol = isPositive ? "↑" : "↓";
 
             tiles.push(`
-              <div class="market-tile" data-tile-index="${i}">
+              <div class="market-tile" data-tile-index="${i}" data-symbol="${indexSymbol}">
                 <div class="market-tile-header">
                   <div class="market-title">${indexSymbol}</div>
                   <div class="market-change-indicator" style="background-color: ${changeColor + "20"}; color: ${changeColor};">
@@ -235,7 +235,7 @@ class AIrisApp {
             const changeSymbol = isPositive ? "↑" : "↓";
 
             tiles.push(`
-              <div class="market-tile" data-tile-index="${tileIndex}">
+              <div class="market-tile" data-tile-index="${tileIndex}" data-symbol="${symbol}">
                 <div class="market-tile-header">
                   <div class="market-title">${symbol}</div>
                   <div class="market-change-indicator" style="background-color: ${changeColor + "20"}; color: ${changeColor};">
@@ -304,6 +304,9 @@ class AIrisApp {
 
       // Add event listener for refresh button
       this.setupMarketRefreshButton();
+      
+      // Add click handlers for market tiles
+      this.setupMarketTileClickHandlers();
     } catch (e) {
       console.error("Market tiles render error", e);
     }
@@ -342,6 +345,29 @@ class AIrisApp {
           refreshBtn.disabled = false;
         }
       };
+    }
+  }
+
+  setupMarketTileClickHandlers() {
+    const marketTiles = document.querySelectorAll('.market-tile');
+    marketTiles.forEach(tile => {
+      tile.addEventListener('click', (e) => {
+        const symbol = tile.dataset.symbol;
+        if (symbol) {
+          this.showStockDetail(symbol);
+        }
+      });
+    });
+  }
+
+  showStockDetail(symbol) {
+    // Switch to news tab first to show the stock detail
+    if (window.uiComponents) {
+      window.uiComponents.switchTab("news");
+      // Show stock detail after a short delay to ensure tab is switched
+      setTimeout(() => {
+        window.uiComponents.showStockDetail(symbol);
+      }, 100);
     }
   }
 
