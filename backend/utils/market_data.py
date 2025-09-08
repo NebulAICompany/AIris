@@ -171,6 +171,8 @@ class MarketDataStore:
         Expected payload format: {"data": {...company_data...}}
         """
         async def translate_text(text: str) -> str:
+            if not text:
+                return ""
             agent = create_translation_agent(instructions="You are a translation agent for financial texts. You are given a text and you need to translate it to Turkish. Only output the translated Turkish text and nothing else.")
             response = await generate_answer(text, agent)
             return f"{response}"    
@@ -505,7 +507,7 @@ async def init_market_data() -> None:
     for ticker in MARKETSTACK_TICKERS:
         payload = await store.fetch_marketstack_company_info(ticker=ticker)
         await store.upsert_company_info(payload)
-    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS + ",XU100.IS,XU030.IS"), limit=1000)
+    await refresh_eod(symbols=",".join(MARKETSTACK_TICKERS) + ",XU100.IS,XU030.IS", limit=1000)
 
 
         
