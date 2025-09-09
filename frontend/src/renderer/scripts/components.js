@@ -3156,7 +3156,7 @@ class UIComponents {
         ${imageHtml}
         <div class="news-hero-content">
           <h2 class="news-hero-title">${Utils.escapeHtml(article.title)}</h2>
-          <p class="news-hero-description">${Utils.escapeHtml(
+          <p class="news-hero-description">${this.cleanDescriptionForCard(
             article.summary || ""
           )}</p>
           <div class="news-hero-meta">
@@ -3237,7 +3237,7 @@ class UIComponents {
         ${imageHtml}
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
-          <p class="news-description">${Utils.escapeHtml(
+          <p class="news-description">${this.cleanDescriptionForCard(
             article.summary || ""
           )}</p>
           <div class="news-meta">
@@ -3729,6 +3729,24 @@ class UIComponents {
       })
       .filter((para) => para)
       .join("\n");
+  }
+
+  cleanDescriptionForCard(description) {
+    if (!description) return "";
+    
+    // Remove template expressions like {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, etc.
+    let cleaned = description.replace(/\{\{[^}]+\}\}/g, "");
+    
+    // Convert markdown-style bold formatting (** or ****)
+    cleaned = cleaned.replace(/\*{2,4}([^*]+)\*{2,4}/g, "<strong>$1</strong>");
+    
+    // Convert markdown-style italic formatting (single *)
+    cleaned = cleaned.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    
+    // Clean up extra whitespace and line breaks for card display
+    cleaned = cleaned.replace(/\s+/g, " ").trim();
+    
+    return cleaned;
   }
 
   populateSourcesList(article) {
