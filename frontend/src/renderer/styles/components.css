@@ -1096,10 +1096,13 @@ body.dark-theme .image-caption {
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  background-color: var(--bg-secondary);
-  border-radius: var(--border-radius-lg);
-  margin-bottom: 16px;
+  overflow-x: hidden;
+  padding: 16px 24px;
+  background-color: transparent;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .welcome-message {
@@ -2205,9 +2208,12 @@ body.dark-theme .progress-bar {
 
 /* Files Components */
 .files-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
   padding: 0 20px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .files-header {
@@ -2231,6 +2237,10 @@ body.dark-theme .progress-bar {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
   padding: 8px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .empty-state {
