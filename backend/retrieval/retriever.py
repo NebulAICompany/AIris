@@ -57,9 +57,8 @@ def retrieve_top_k(
             logger.info("No collection found")
             return None
 
-        logger.info(
-            f"📊 Searching through {client.count(collection_name='test_collection')} document chunks (original + HyPE prompt expansions)"
-        )
+        logger.info(f"📊 Searching through {client.count(collection_name='test_collection')} document chunks")
+        
         if selected_files:
             selected_files = [file.split(".")[0] for file in selected_files]
             logger.info(f"🔍 Searching through {selected_files} document chunks")
@@ -106,7 +105,6 @@ def retrieve_top_k(
                     },
                 }
             )
-        logger.debug("CHUNKS WITH IMAGES IS: ", chunks_with_images)
         logger.info(f"📈 Retrieved {len(results)} document chunks")
 
         return results
@@ -149,9 +147,8 @@ def retrieve_with_keyword_helping(
         )
         results = keyword_search(query_terms, k=3, selected_files=selected_files)
         results = vector_results + results
-        logger.info(
-            f"✅ Retrieved {len(results)} documents via vector + keyword search helping"
-        )
+        logger.info(f"✅ Retrieved {len(results)} documents via vector + keyword search helping")
+
         return results
 
     except Exception as e:
@@ -187,12 +184,8 @@ def retrieve_hybrid(
         logger.info(f"🔍 Hybrid search for: '{query}' (limit: {k})")
 
         # Get results from both methods
-        vector_results = retrieve_top_k(
-            client, query, k=k * 2, selected_files=selected_files
-        )
-        keyword_results = retrieve_with_keyword_search(
-            query_terms, k=k * 2, selected_files=selected_files
-        )
+        vector_results = retrieve_top_k(client, query, k=k * 2, selected_files=selected_files)
+        keyword_results = retrieve_with_keyword_search(query_terms, k=k * 2, selected_files=selected_files)
 
         # Normalize scores and combine results
         combined_results = {}
