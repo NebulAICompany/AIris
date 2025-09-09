@@ -4540,13 +4540,13 @@ class UIComponents {
     // Hide any progress indicators
     this.hideVerificationProgress();
 
-    // Scroll back to top
-    const verificationContainer = document.querySelector(
-      ".verification-container"
-    );
-    if (verificationContainer) {
-      verificationContainer.scrollIntoView({ behavior: "smooth" });
-    }
+    // Scroll back to top - removed to prevent content shifting
+    // const verificationContainer = document.querySelector(
+    //   ".verification-container"
+    // );
+    // if (verificationContainer) {
+    //   verificationContainer.scrollIntoView({ behavior: "smooth" });
+    // }
   }
 
   downloadVerificationReport() {
