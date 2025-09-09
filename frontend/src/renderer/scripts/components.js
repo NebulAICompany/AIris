@@ -3164,7 +3164,7 @@ class UIComponents {
               <i class="fas fa-building"></i>
               ${Utils.escapeHtml(article.source)}
             </span>
-            <span class="news-hero-time">~${timeAgo}</span>
+            <span class="news-hero-time">${timeAgo}</span>
           </div>
         </div>
       </div>
@@ -3245,7 +3245,7 @@ class UIComponents {
               <i class="fas fa-building"></i>
               ${Utils.escapeHtml(article.source)}
             </span>
-            <span class="news-time">~${timeAgo}</span>
+            <span class="news-time">${timeAgo}</span>
           </div>
         </div>
       </div>
