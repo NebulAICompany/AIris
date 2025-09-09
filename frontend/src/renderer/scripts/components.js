@@ -4202,8 +4202,9 @@ class UIComponents {
         const t = window.languageService
           ? window.languageService.t.bind(window.languageService)
           : (key) => key;
-        verifyBtn.innerHTML =
-          `<i class="fas fa-spinner fa-spin"></i> <span>${t("verifying")}</span>`;
+        verifyBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${t(
+          "verifying"
+        )}</span>`;
       }
 
       // Show progress indicator
@@ -4230,7 +4231,8 @@ class UIComponents {
 
         if (resultsContainer) {
           resultsContainer.style.display = "block";
-          resultsContainer.scrollIntoView({ behavior: "smooth" });
+          // Remove scrollIntoView to prevent content shifting
+          // resultsContainer.scrollIntoView({ behavior: "smooth" });
         }
 
         const t = window.languageService
@@ -4368,8 +4370,7 @@ class UIComponents {
     }
 
     if (finalStatus) {
-      finalStatus.textContent =
-        result.status || t("unknown");
+      finalStatus.textContent = result.status || t("unknown");
       finalStatus.className = `detail-value ${result.status}`;
     }
 
@@ -4440,9 +4441,10 @@ class UIComponents {
     const issues = stageData.issues || stageData.indicators || [];
     const details = Array.isArray(issues)
       ? issues.join(", ")
-      : stageData.assessment || stageData.reasoning || 
-        (window.languageService 
-          ? window.languageService.t("noDetailsAvailable") 
+      : stageData.assessment ||
+        stageData.reasoning ||
+        (window.languageService
+          ? window.languageService.t("noDetailsAvailable")
           : "No details available");
 
     const t = window.languageService
@@ -5580,7 +5582,7 @@ class UIComponents {
     // Scroll to top of the news tab container when showing stock details
     const newsTab = document.getElementById("news-tab");
     if (newsTab) {
-      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
     }
 
     // Set up back button handler
@@ -5593,8 +5595,10 @@ class UIComponents {
     this.setupStockSearch();
 
     // Load stock data and populate the detail view using current interval
-    const activeIntervalBtn = document.querySelector('.interval-btn.active');
-    const interval = activeIntervalBtn ? activeIntervalBtn.dataset.interval : '1M';
+    const activeIntervalBtn = document.querySelector(".interval-btn.active");
+    const interval = activeIntervalBtn
+      ? activeIntervalBtn.dataset.interval
+      : "1M";
     const limit = this.computeLimitFromInterval(interval);
     await this.loadStockDetailData(symbol, limit);
 
@@ -5626,13 +5630,17 @@ class UIComponents {
     // Scroll to top of the news tab container when returning to news feed
     const newsTab = document.getElementById("news-tab");
     if (newsTab) {
-      newsTab.scrollTo({ top: 0, behavior: 'instant' });
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
     }
   }
 
   async loadStockDetailData(symbol, limit = 7) {
     // Skip duplicate requests for the same params
-    if (this.isLoadingStockDetail && this.lastStockSymbol === symbol && this.lastStockLimit === limit) {
+    if (
+      this.isLoadingStockDetail &&
+      this.lastStockSymbol === symbol &&
+      this.lastStockLimit === limit
+    ) {
       return;
     }
     this.isLoadingStockDetail = true;
@@ -5643,8 +5651,12 @@ class UIComponents {
       // Get stock data from API
       const api = new APIService();
       const response = await api.getMarketEod(symbol, limit);
-      
-      if (response.data && response.data.data && response.data.data.length > 0) {
+
+      if (
+        response.data &&
+        response.data.data &&
+        response.data.data.length > 0
+      ) {
         const stockData = response.data.data;
         await this.populateStockDetail(symbol, stockData);
       } else {
@@ -5662,19 +5674,19 @@ class UIComponents {
 
   computeLimitFromInterval(interval) {
     const today = new Date();
-    switch ((interval || '').toUpperCase()) {
-      case '1M':
+    switch ((interval || "").toUpperCase()) {
+      case "1M":
         return 30;
-      case '6M':
+      case "6M":
         return 180;
-      case 'YTD': {
+      case "YTD": {
         const start = new Date(today.getFullYear(), 0, 1);
         const diffMs = today - start;
         return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
       }
-      case '1Y':
+      case "1Y":
         return 365;
-      case 'MAX':
+      case "MAX":
         return 10000;
       default:
         return 30;
@@ -5684,23 +5696,23 @@ class UIComponents {
   isIndexSymbol(symbol) {
     // Common index symbols and patterns
     const indexPatterns = [
-      /^XU\d+/i,        // Turkish indices (XU100, XU030, etc.)
-      /^BIST\d+/i,      // BIST indices
-      /^\^/,            // Yahoo Finance index format (^GSPC, ^DJI, etc.)
-      /^SPX$/i,         // S&P 500
-      /^DJI$/i,         // Dow Jones
-      /^IXIC$/i,        // NASDAQ
-      /^RUT$/i,         // Russell 2000
-      /^VIX$/i,         // Volatility Index
-      /^FTSE/i,         // FTSE indices
-      /^DAX$/i,         // DAX
-      /^CAC$/i,         // CAC 40
-      /^NIKKEI/i,       // Nikkei
-      /INDEX$/i,        // Generic index suffix
+      /^XU\d+/i, // Turkish indices (XU100, XU030, etc.)
+      /^BIST\d+/i, // BIST indices
+      /^\^/, // Yahoo Finance index format (^GSPC, ^DJI, etc.)
+      /^SPX$/i, // S&P 500
+      /^DJI$/i, // Dow Jones
+      /^IXIC$/i, // NASDAQ
+      /^RUT$/i, // Russell 2000
+      /^VIX$/i, // Volatility Index
+      /^FTSE/i, // FTSE indices
+      /^DAX$/i, // DAX
+      /^CAC$/i, // CAC 40
+      /^NIKKEI/i, // Nikkei
+      /INDEX$/i, // Generic index suffix
     ];
-    
+
     // Check if symbol matches any index pattern
-    return indexPatterns.some(pattern => pattern.test(symbol));
+    return indexPatterns.some((pattern) => pattern.test(symbol));
   }
 
   showStockLoadingState() {
@@ -5750,14 +5762,17 @@ class UIComponents {
 
   async populateStockDetail(symbol, stockData) {
     // Sort data by date (newest first)
-    const sortedData = [...stockData].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedData = [...stockData].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
     const latest = sortedData[0];
     const earliest = sortedData[sortedData.length - 1];
     const previous = sortedData[1];
 
     // Calculate change from earliest to latest within interval
     const change = latest.close - (earliest ? earliest.close : latest.close);
-    const changePercent = earliest && earliest.close ? ((change / earliest.close) * 100) : 0;
+    const changePercent =
+      earliest && earliest.close ? (change / earliest.close) * 100 : 0;
     const isPositive = change >= 0;
 
     // Populate header information
@@ -5769,38 +5784,47 @@ class UIComponents {
 
     if (companyName) companyName.textContent = this.getCompanyName(symbol);
     if (symbolEl) symbolEl.textContent = symbol;
-    if (currentPrice) currentPrice.textContent = `₺${latest.close?.toLocaleString("tr-TR")}`;
+    if (currentPrice)
+      currentPrice.textContent = `₺${latest.close?.toLocaleString("tr-TR")}`;
     if (priceChange) {
-      priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(2)} (${isPositive ? "+" : ""}${changePercent.toFixed(2)}%)`;
-      priceChange.className = `stock-price-change ${isPositive ? "positive" : "negative"}`;
+      priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(
+        2
+      )} (${isPositive ? "+" : ""}${changePercent.toFixed(2)}%)`;
+      priceChange.className = `stock-price-change ${
+        isPositive ? "positive" : "negative"
+      }`;
     }
     if (priceTime) {
       const date = new Date(latest.date);
       const currentLanguage = window.languageService.getCurrentLanguage();
-      
+
       let formattedDate;
-      if (currentLanguage === 'tr') {
+      if (currentLanguage === "tr") {
         // Turkish locale
-        formattedDate = date.toLocaleDateString("tr-TR", { 
-          month: "short", 
-          day: "numeric"
+        formattedDate = date.toLocaleDateString("tr-TR", {
+          month: "short",
+          day: "numeric",
         });
       } else {
         // Default English locale
-        formattedDate = date.toLocaleDateString("en-US", { 
-          month: "short", 
-          day: "numeric"
+        formattedDate = date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
         });
       }
-      
-      priceTime.textContent = `${window.languageService.get('atClose')}: ${formattedDate}`;
+
+      priceTime.textContent = `${window.languageService.get(
+        "atClose"
+      )}: ${formattedDate}`;
     }
 
     // Populate financial metrics
     this.populateFinancialMetrics(latest, previous);
 
     // Populate company details (only for individual stocks, not indices)
-    const companyDetailsSection = document.querySelector(".stock-company-details");
+    const companyDetailsSection = document.querySelector(
+      ".stock-company-details"
+    );
     if (this.isIndexSymbol(symbol)) {
       // Hide company details section for indices
       if (companyDetailsSection) {
@@ -5836,7 +5860,7 @@ class UIComponents {
       "KCHOL.IS": "Koç Holding A.Ş.",
       "SAHOL.IS": "Hacı Ömer Sabancı Holding A.Ş.",
       "XU030.IS": "BIST 30",
-      "XU100.IS": "BIST 100"
+      "XU100.IS": "BIST 100",
     };
     return companyNames[symbol] || symbol;
   }
@@ -5847,24 +5871,38 @@ class UIComponents {
 
     const previousClose = previous.close ? previous.close.toFixed(2) : "--";
     const open = latest.open ? latest.open.toFixed(2) : "--";
-    const dayRange = `${Math.min(latest.low, latest.high).toFixed(2)} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
-    const volume = latest.volume ? latest.volume.toLocaleString("tr-TR") : (previous ? previous.volume.toLocaleString("tr-TR") : "--");
+    const dayRange = `${Math.min(latest.low, latest.high).toFixed(
+      2
+    )} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
+    const volume = latest.volume
+      ? latest.volume.toLocaleString("tr-TR")
+      : previous
+      ? previous.volume.toLocaleString("tr-TR")
+      : "--";
 
     metricsContainer.innerHTML = `
       <div class="financial-metric">
-        <span class="financial-metric-label">${languageService.get('prevClose')}</span>
+        <span class="financial-metric-label">${languageService.get(
+          "prevClose"
+        )}</span>
         <span class="financial-metric-value">₺${previousClose}</span>
       </div>
       <div class="financial-metric">
-        <span class="financial-metric-label">${languageService.get('open')}</span>
+        <span class="financial-metric-label">${languageService.get(
+          "open"
+        )}</span>
         <span class="financial-metric-value">₺${open}</span>
       </div>
       <div class="financial-metric">
-        <span class="financial-metric-label">${languageService.get('dayRange')}</span>
+        <span class="financial-metric-label">${languageService.get(
+          "dayRange"
+        )}</span>
         <span class="financial-metric-value">₺${dayRange}</span>
       </div>
       <div class="financial-metric">
-        <span class="financial-metric-label">${languageService.get('volume')}</span>
+        <span class="financial-metric-label">${languageService.get(
+          "volume"
+        )}</span>
         <span class="financial-metric-value">${volume}</span>
       </div>
     `;
@@ -5887,11 +5925,29 @@ class UIComponents {
 
     // Show loading placeholder immediately
     detailsContainer.innerHTML = `
-      <div class="company-detail"><span class="company-detail-label">${languageService.get('fulltimeEmployees')}</span><span class="company-detail-value">${languageService.get('loading')}</span></div>
-      <div class="company-detail"><span class="company-detail-label">${languageService.get('sector')}</span><span class="company-detail-value">${languageService.get('loading')}</span></div>
-      <div class="company-detail"><span class="company-detail-label">${languageService.get('industry')}</span><span class="company-detail-value">${languageService.get('loading')}</span></div>
-      <div class="company-detail"><span class="company-detail-label">${languageService.get('country')}</span><span class="company-detail-value">TR</span></div>
-      <div class="company-detail"><span class="company-detail-label">${languageService.get('exchange')}</span><span class="company-detail-value">${languageService.get('istanbulStockExchange')}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "fulltimeEmployees"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "loading"
+    )}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "sector"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "loading"
+    )}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "industry"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "loading"
+    )}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "country"
+      )}</span><span class="company-detail-value">TR</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "exchange"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "istanbulStockExchange"
+    )}</span></div>
       <div class="company-description"><p class="description-text">Fetching description…</p></div>
     `;
 
@@ -5909,9 +5965,18 @@ class UIComponents {
       // Extract data with fallbacks, use Turkish versions if language is Turkish
       const currentLang = languageService.getCurrentLanguage();
       const fulltimeEmployees = companyData.fulltime_employees || "--";
-      const sector = currentLang === 'tr' ? (companyData.sector_tr || companyData.sector || "--") : (companyData.sector || "--");
-      const industry = currentLang === 'tr' ? (companyData.industry_tr || companyData.industry || "--") : (companyData.industry || "--");
-      const description = currentLang === 'tr' ? (companyData.description_tr || companyData.description || "") : (companyData.description || "");
+      const sector =
+        currentLang === "tr"
+          ? companyData.sector_tr || companyData.sector || "--"
+          : companyData.sector || "--";
+      const industry =
+        currentLang === "tr"
+          ? companyData.industry_tr || companyData.industry || "--"
+          : companyData.industry || "--";
+      const description =
+        currentLang === "tr"
+          ? companyData.description_tr || companyData.description || ""
+          : companyData.description || "";
 
       console.log(currentLang, sector, industry, description);
       // Create description HTML with read more using CSS clamp
@@ -5920,12 +5985,19 @@ class UIComponents {
         const isLong = description.length > 240;
         descriptionHtml = `
           <div class="company-description">
-            <p class="description-text ${isLong ? '' : 'expanded'}">${description}</p>
-            ${isLong ? '<button class="read-more-btn" id="company-read-more">Read More</button>' : ''}
+            <p class="description-text ${
+              isLong ? "" : "expanded"
+            }">${description}</p>
+            ${
+              isLong
+                ? '<button class="read-more-btn" id="company-read-more">Read More</button>'
+                : ""
+            }
           </div>
         `;
       } else {
-        descriptionHtml = '<div class="company-description"><p class="description-text expanded">No description available.</p></div>';
+        descriptionHtml =
+          '<div class="company-description"><p class="description-text expanded">No description available.</p></div>';
       }
 
       // If user navigated to another stock while waiting, abort update
@@ -5935,24 +6007,36 @@ class UIComponents {
 
       detailsContainer.innerHTML = `
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('fulltimeEmployees')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "fulltimeEmployees"
+          )}</span>
           <span class="company-detail-value">${fulltimeEmployees}</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('sector')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "sector"
+          )}</span>
           <span class="company-detail-value">${sector}</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('industry')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "industry"
+          )}</span>
           <span class="company-detail-value">${industry}</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('country')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "country"
+          )}</span>
           <span class="company-detail-value">TR</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('exchange')}</span>
-          <span class="company-detail-value">${languageService.get('istanbulStockExchange')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "exchange"
+          )}</span>
+          <span class="company-detail-value">${languageService.get(
+            "istanbulStockExchange"
+          )}</span>
         </div>
         ${descriptionHtml}
       `;
@@ -5974,31 +6058,40 @@ class UIComponents {
       // Fallback to default display
       detailsContainer.innerHTML = `
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('fulltimeEmployees')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "fulltimeEmployees"
+          )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('sector')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "sector"
+          )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('industry')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "industry"
+          )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('country')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "country"
+          )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
-          <span class="company-detail-label">${languageService.get('exchange')}</span>
+          <span class="company-detail-label">${languageService.get(
+            "exchange"
+          )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-description">
           <p class="description-text">No description available.</p>
         </div>
       `;
-    }
-    finally {
+    } finally {
       this.isLoadingCompanyInfo = false;
     }
   }
@@ -6015,11 +6108,11 @@ class UIComponents {
 
     // Sort data by date (oldest first for chart)
     const sortedData = [...data].reverse();
-    const prices = sortedData.map(d => d.close);
+    const prices = sortedData.map((d) => d.close);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const priceRange = maxPrice - minPrice;
-    
+
     // Add some margin to price range for better visualization
     const priceMargin = priceRange * 0.05;
     const adjustedMinPrice = minPrice - priceMargin;
@@ -6029,15 +6122,25 @@ class UIComponents {
     // Create points for the line
     const chartWidth = width - 2 * padding;
     const chartHeight = height - padding - bottomPadding;
-    
+
     const points = sortedData.map((d, i) => {
       const x = padding + (i / (sortedData.length - 1)) * chartWidth;
-      const y = padding + ((adjustedMaxPrice - d.close) / adjustedPriceRange) * chartHeight;
+      const y =
+        padding +
+        ((adjustedMaxPrice - d.close) / adjustedPriceRange) * chartHeight;
       return { x, y, data: d };
     });
 
     // Generate axis labels
-    const { xAxisLabels, yAxisLabels } = this.generateAxisLabels(sortedData, adjustedMinPrice, adjustedMaxPrice, chartWidth, chartHeight, padding, bottomPadding);
+    const { xAxisLabels, yAxisLabels } = this.generateAxisLabels(
+      sortedData,
+      adjustedMinPrice,
+      adjustedMaxPrice,
+      chartWidth,
+      chartHeight,
+      padding,
+      bottomPadding
+    );
 
     // Create path data
     let pathData = `M ${points[0].x},${points[0].y}`;
@@ -6070,37 +6173,65 @@ class UIComponents {
         
         <!-- Grid lines and axes -->
         <g class="chart-grid" stroke="#e5e7eb" stroke-width="0.5" opacity="0.6">
-          ${yAxisLabels.map(label => `
-            <line x1="${padding}" y1="${label.y}" x2="${padding + chartWidth}" y2="${label.y}" />
-          `).join('')}
-          ${xAxisLabels.map(label => `
-            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${padding + chartHeight}" />
-          `).join('')}
+          ${yAxisLabels
+            .map(
+              (label) => `
+            <line x1="${padding}" y1="${label.y}" x2="${
+                padding + chartWidth
+              }" y2="${label.y}" />
+          `
+            )
+            .join("")}
+          ${xAxisLabels
+            .map(
+              (label) => `
+            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${
+                padding + chartHeight
+              }" />
+          `
+            )
+            .join("")}
         </g>
         
         <!-- Y-axis labels (prices) -->
         <g class="y-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
-          ${yAxisLabels.map(label => `
-            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${label.text}</text>
-          `).join('')}
+          ${yAxisLabels
+            .map(
+              (label) => `
+            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${
+                label.text
+              }</text>
+          `
+            )
+            .join("")}
         </g>
         
         <!-- X-axis labels (dates) -->
         <g class="x-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
-          ${xAxisLabels.map(label => `
-            <text x="${label.x}" y="${padding + chartHeight + 20}" text-anchor="middle">${label.text}</text>
-          `).join('')}
+          ${xAxisLabels
+            .map(
+              (label) => `
+            <text x="${label.x}" y="${
+                padding + chartHeight + 20
+              }" text-anchor="middle">${label.text}</text>
+          `
+            )
+            .join("")}
         </g>
         
         <!-- Main chart area -->
         <g class="chart-area">
           <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="${pathData} L ${points[points.length-1].x},${padding + chartHeight} L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
+          <path d="${pathData} L ${points[points.length - 1].x},${
+      padding + chartHeight
+    } L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
         </g>
         
         <!-- Interactive elements -->
         <g id="hover-group">
-          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${padding + chartHeight}" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
+          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${
+      padding + chartHeight
+    }" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
           <circle id="hover-dot" r="3" fill="${color}" stroke="#fff" stroke-width="1.5" style="display:none" />
         </g>
         <rect id="selection-rect" x="0" y="${padding}" width="0" height="${chartHeight}" fill="#3b82f6" opacity="0.15" style="display:none" />
@@ -6109,11 +6240,11 @@ class UIComponents {
     `;
 
     // Interactivity: tooltip and crosshair
-    const svg = chartContainer.querySelector('#stock-svg');
-    const capture = chartContainer.querySelector('#hover-capture');
-    const hoverLine = chartContainer.querySelector('#hover-line');
-    const hoverDot = chartContainer.querySelector('#hover-dot');
-    const tooltip = chartContainer.querySelector('#chart-tooltip');
+    const svg = chartContainer.querySelector("#stock-svg");
+    const capture = chartContainer.querySelector("#hover-capture");
+    const hoverLine = chartContainer.querySelector("#hover-line");
+    const hoverDot = chartContainer.querySelector("#hover-dot");
+    const tooltip = chartContainer.querySelector("#chart-tooltip");
 
     const bisect = (mouseX) => {
       // Convert mouseX to index by nearest point
@@ -6132,25 +6263,32 @@ class UIComponents {
     const formatDate = (d) => {
       try {
         const dt = new Date(d.date || d.time || d.datetime || d.Date || d.DATE);
-        return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return dt.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
       } catch {
-        return '';
+        return "";
       }
     };
 
     const showAtIndex = (idx) => {
       const pt = points[idx];
       const d = sortedData[idx];
-      hoverLine.setAttribute('x1', pt.x);
-      hoverLine.setAttribute('x2', pt.x);
-      hoverDot.setAttribute('cx', pt.x);
-      hoverDot.setAttribute('cy', pt.y);
-      hoverLine.style.display = 'block';
-      hoverDot.style.display = 'block';
-      tooltip.style.display = 'block';
-      const price = (d.close ?? d.Close ?? d.c)?.toLocaleString('tr-TR', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-      tooltip.querySelector('.tooltip-price').textContent = `₺${price}`;
-      tooltip.querySelector('.tooltip-date').textContent = formatDate(d);
+      hoverLine.setAttribute("x1", pt.x);
+      hoverLine.setAttribute("x2", pt.x);
+      hoverDot.setAttribute("cx", pt.x);
+      hoverDot.setAttribute("cy", pt.y);
+      hoverLine.style.display = "block";
+      hoverDot.style.display = "block";
+      tooltip.style.display = "block";
+      const price = (d.close ?? d.Close ?? d.c)?.toLocaleString("tr-TR", {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+      });
+      tooltip.querySelector(".tooltip-price").textContent = `₺${price}`;
+      tooltip.querySelector(".tooltip-date").textContent = formatDate(d);
       // Position tooltip relative to chart container
       const chartRect = chartContainer.getBoundingClientRect();
       const tx = (pt.x / width) * chartRect.width;
@@ -6161,35 +6299,39 @@ class UIComponents {
 
     let isSelecting = false;
     let startIdx = null;
-    const selectionRect = chartContainer.querySelector('#selection-rect');
-    const rangeTooltip = chartContainer.querySelector('#range-tooltip');
+    const selectionRect = chartContainer.querySelector("#selection-rect");
+    const rangeTooltip = chartContainer.querySelector("#range-tooltip");
 
     const updateRange = (i1, i2) => {
       const a = Math.min(i1, i2);
       const b = Math.max(i1, i2);
       const p1 = points[a];
       const p2 = points[b];
-      selectionRect.setAttribute('x', p1.x);
-      selectionRect.setAttribute('width', Math.max(1, p2.x - p1.x));
-      selectionRect.style.display = 'block';
+      selectionRect.setAttribute("x", p1.x);
+      selectionRect.setAttribute("width", Math.max(1, p2.x - p1.x));
+      selectionRect.style.display = "block";
 
       const d1 = sortedData[a];
       const d2 = sortedData[b];
-      const change = (d2.close - d1.close);
+      const change = d2.close - d1.close;
       const pct = d1.close ? (change / d1.close) * 100 : 0;
-      const priceStr = `₺${change.toFixed(2)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
-      rangeTooltip.querySelector('#range-price').textContent = priceStr;
-      rangeTooltip.querySelector('#range-dates').textContent = `${formatDate(d1)} → ${formatDate(d2)}`;
+      const priceStr = `₺${change.toFixed(2)} (${
+        pct >= 0 ? "+" : ""
+      }${pct.toFixed(2)}%)`;
+      rangeTooltip.querySelector("#range-price").textContent = priceStr;
+      rangeTooltip.querySelector("#range-dates").textContent = `${formatDate(
+        d1
+      )} → ${formatDate(d2)}`;
       // Position tooltip near end point relative to chart container
       const chartRect = chartContainer.getBoundingClientRect();
       const tx = (p2.x / width) * chartRect.width;
       const ty = (p2.y / height) * chartRect.height;
       rangeTooltip.style.left = `${tx}px`;
       rangeTooltip.style.top = `${ty}px`;
-      rangeTooltip.style.display = 'block';
+      rangeTooltip.style.display = "block";
     };
 
-    capture.addEventListener('mousemove', (e) => {
+    capture.addEventListener("mousemove", (e) => {
       const bbox = svg.getBoundingClientRect();
       const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
       const idx = bisect(mouseX);
@@ -6200,64 +6342,72 @@ class UIComponents {
       }
     });
 
-    capture.addEventListener('mouseleave', () => {
-      hoverLine.style.display = 'none';
-      hoverDot.style.display = 'none';
-      tooltip.style.display = 'none';
+    capture.addEventListener("mouseleave", () => {
+      hoverLine.style.display = "none";
+      hoverDot.style.display = "none";
+      tooltip.style.display = "none";
       if (!isSelecting) {
-        selectionRect.style.display = 'none';
-        rangeTooltip.style.display = 'none';
+        selectionRect.style.display = "none";
+        rangeTooltip.style.display = "none";
       }
     });
 
-    capture.addEventListener('mousedown', (e) => {
+    capture.addEventListener("mousedown", (e) => {
       const bbox = svg.getBoundingClientRect();
       const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
       startIdx = bisect(mouseX);
       isSelecting = true;
-      
+
       // Reset selection rectangle position before showing
       const startPoint = points[startIdx];
-      selectionRect.setAttribute('x', startPoint.x);
-      selectionRect.setAttribute('width', 0);
-      selectionRect.style.display = 'block';
-      
+      selectionRect.setAttribute("x", startPoint.x);
+      selectionRect.setAttribute("width", 0);
+      selectionRect.style.display = "block";
+
       // Don't show range tooltip yet, wait for movement
-      rangeTooltip.style.display = 'none';
+      rangeTooltip.style.display = "none";
     });
 
-    window.addEventListener('mouseup', () => {
+    window.addEventListener("mouseup", () => {
       if (isSelecting) {
         isSelecting = false;
         // Hide selection when mouse is released
-        selectionRect.style.display = 'none';
-        rangeTooltip.style.display = 'none';
+        selectionRect.style.display = "none";
+        rangeTooltip.style.display = "none";
       }
     });
   }
 
-  generateAxisLabels(sortedData, minPrice, maxPrice, chartWidth, chartHeight, padding, bottomPadding) {
+  generateAxisLabels(
+    sortedData,
+    minPrice,
+    maxPrice,
+    chartWidth,
+    chartHeight,
+    padding,
+    bottomPadding
+  ) {
     const priceRange = maxPrice - minPrice;
-    
+
     // Generate Y-axis labels (prices)
     const yAxisLabels = [];
     const numYTicks = 6;
     for (let i = 0; i <= numYTicks; i++) {
       const ratio = i / numYTicks;
-      const price = maxPrice - (ratio * priceRange);
-      const y = padding + (ratio * chartHeight);
-      
+      const price = maxPrice - ratio * priceRange;
+      const y = padding + ratio * chartHeight;
+
       yAxisLabels.push({
         y: y,
         text: `₺${price.toFixed(2)}`,
-        value: price
+        value: price,
       });
     }
-    
+
     // Generate X-axis labels (dates)
     const xAxisLabels = [];
     const dataLength = sortedData.length;
-    
+
     if (dataLength <= 2) {
       // If very few data points, show all
       sortedData.forEach((d, i) => {
@@ -6265,7 +6415,7 @@ class UIComponents {
         xAxisLabels.push({
           x: x,
           text: this.formatDateForAxis(d),
-          data: d
+          data: d,
         });
       });
     } else {
@@ -6280,39 +6430,48 @@ class UIComponents {
       } else {
         numXTicks = 8;
       }
-      
+
       for (let i = 0; i < numXTicks; i++) {
-        const dataIndex = i === numXTicks - 1 ? dataLength - 1 : Math.floor(i * (dataLength - 1) / (numXTicks - 1));
+        const dataIndex =
+          i === numXTicks - 1
+            ? dataLength - 1
+            : Math.floor((i * (dataLength - 1)) / (numXTicks - 1));
         const x = padding + (dataIndex / (dataLength - 1)) * chartWidth;
         const d = sortedData[dataIndex];
-        
+
         xAxisLabels.push({
           x: x,
           text: this.formatDateForAxis(d),
           data: d,
-          index: dataIndex
+          index: dataIndex,
         });
       }
     }
-    
+
     return { xAxisLabels, yAxisLabels };
   }
 
   formatDateForAxis(dataPoint) {
     try {
-      const date = new Date(dataPoint.date || dataPoint.time || dataPoint.datetime || dataPoint.Date || dataPoint.DATE);
-      
+      const date = new Date(
+        dataPoint.date ||
+          dataPoint.time ||
+          dataPoint.datetime ||
+          dataPoint.Date ||
+          dataPoint.DATE
+      );
+
       // Format based on current language
       const currentLang = languageService.getCurrentLanguage();
-      const locale = currentLang === 'tr' ? 'tr-TR' : 'en-US';
-      
+      const locale = currentLang === "tr" ? "tr-TR" : "en-US";
+
       // Use shorter format for axis labels
-      return date.toLocaleDateString(locale, { 
-        month: 'short', 
-        day: 'numeric'
+      return date.toLocaleDateString(locale, {
+        month: "short",
+        day: "numeric",
       });
     } catch {
-      return '--';
+      return "--";
     }
   }
 
@@ -6322,11 +6481,36 @@ class UIComponents {
 
     try {
       const symbols = [
-        "AEFES.IS", "AKBNK.IS", "ASELS.IS", "ASTOR.IS", "BIMAS.IS", "CIMSA.IS",
-        "EKGYO.IS", "ENKAI.IS", "EREGL.IS", "FROTO.IS", "GARAN.IS", "GUBRF.IS",
-        "ISCTR.IS", "KCHOL.IS", "KOZAL.IS", "KRDMD.IS", "MGROS.IS", "PETKM.IS",
-        "PGSUS.IS", "SAHOL.IS", "SASA.IS", "SISE.IS", "TAVHL.IS", "TCELL.IS",
-        "THYAO.IS", "TOASO.IS", "TTKOM.IS", "TUPRS.IS", "ULKER.IS", "YKBNK.IS"
+        "AEFES.IS",
+        "AKBNK.IS",
+        "ASELS.IS",
+        "ASTOR.IS",
+        "BIMAS.IS",
+        "CIMSA.IS",
+        "EKGYO.IS",
+        "ENKAI.IS",
+        "EREGL.IS",
+        "FROTO.IS",
+        "GARAN.IS",
+        "GUBRF.IS",
+        "ISCTR.IS",
+        "KCHOL.IS",
+        "KOZAL.IS",
+        "KRDMD.IS",
+        "MGROS.IS",
+        "PETKM.IS",
+        "PGSUS.IS",
+        "SAHOL.IS",
+        "SASA.IS",
+        "SISE.IS",
+        "TAVHL.IS",
+        "TCELL.IS",
+        "THYAO.IS",
+        "TOASO.IS",
+        "TTKOM.IS",
+        "TUPRS.IS",
+        "ULKER.IS",
+        "YKBNK.IS",
       ];
 
       const api = new APIService();
@@ -6347,20 +6531,26 @@ class UIComponents {
     if (!moversContainer || !this.marketMoversData) return;
 
     const list = this.marketMoversData[tab] || [];
-    moversContainer.innerHTML = list.map(item => {
-      const positive = item.change_percent >= 0;
-      const formatted = `${positive ? "+" : ""}${item.change_percent.toFixed(2)}%`;
-      return `
+    moversContainer.innerHTML = list
+      .map((item) => {
+        const positive = item.change_percent >= 0;
+        const formatted = `${positive ? "+" : ""}${item.change_percent.toFixed(
+          2
+        )}%`;
+        return `
         <div class="mover-item" data-symbol="${item.symbol}">
           <span class="mover-symbol">${item.symbol}</span>
-          <span class="mover-change ${positive ? 'positive' : 'negative'}">${formatted}</span>
+          <span class="mover-change ${
+            positive ? "positive" : "negative"
+          }">${formatted}</span>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
 
     // Click to open stock detail
     moversContainer.onclick = (e) => {
-      const row = e.target.closest('.mover-item');
+      const row = e.target.closest(".mover-item");
       if (row && row.dataset.symbol) {
         this.showStockDetail(row.dataset.symbol);
       }
@@ -6368,12 +6558,12 @@ class UIComponents {
   }
 
   setupIntervalButtons() {
-    const intervalButtons = document.querySelectorAll('.interval-btn');
-    intervalButtons.forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        intervalButtons.forEach(b => b.classList.remove('active'));
+    const intervalButtons = document.querySelectorAll(".interval-btn");
+    intervalButtons.forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        intervalButtons.forEach((b) => b.classList.remove("active"));
         const target = e.currentTarget;
-        target.classList.add('active');
+        target.classList.add("active");
         const interval = target.dataset.interval;
         const limit = this.computeLimitFromInterval(interval);
         if (this.currentStockSymbol) {
@@ -6384,13 +6574,13 @@ class UIComponents {
   }
 
   setupMarketMoverTabs() {
-    const moverTabs = document.querySelectorAll('.mover-tab');
-    moverTabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        moverTabs.forEach(t => t.classList.remove('active'));
+    const moverTabs = document.querySelectorAll(".mover-tab");
+    moverTabs.forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        moverTabs.forEach((t) => t.classList.remove("active"));
         const target = e.currentTarget;
-        target.classList.add('active');
-        const tabKey = target.dataset.tab || 'gainers';
+        target.classList.add("active");
+        const tabKey = target.dataset.tab || "gainers";
         this.renderMarketMovers(tabKey);
       });
     });
@@ -6398,26 +6588,26 @@ class UIComponents {
 
   // Stock Search functionality
   setupStockSearch() {
-    const searchInput = document.getElementById('stock-search-input');
-    const searchDropdown = document.getElementById('stock-search-dropdown');
-    
+    const searchInput = document.getElementById("stock-search-input");
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+
     if (!searchInput || !searchDropdown) return;
 
     // Avoid setting up multiple times
     if (searchInput.dataset.searchSetup) return;
-    searchInput.dataset.searchSetup = 'true';
+    searchInput.dataset.searchSetup = "true";
 
     let searchTimeout;
     let highlightedIndex = -1;
     let searchResults = [];
 
     // Handle input changes
-    searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener("input", (e) => {
       const query = e.target.value.trim();
-      
+
       // Clear previous timeout
       clearTimeout(searchTimeout);
-      
+
       if (query.length < 1) {
         this.hideSearchDropdown();
         return;
@@ -6430,31 +6620,31 @@ class UIComponents {
     });
 
     // Handle keyboard navigation
-    searchInput.addEventListener('keydown', (e) => {
-      const items = searchDropdown.querySelectorAll('.stock-search-item');
-      
+    searchInput.addEventListener("keydown", (e) => {
+      const items = searchDropdown.querySelectorAll(".stock-search-item");
+
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
           this.updateSearchHighlight(items, highlightedIndex);
           break;
-          
-        case 'ArrowUp':
+
+        case "ArrowUp":
           e.preventDefault();
           highlightedIndex = Math.max(highlightedIndex - 1, -1);
           this.updateSearchHighlight(items, highlightedIndex);
           break;
-          
-        case 'Enter':
+
+        case "Enter":
           e.preventDefault();
           if (highlightedIndex >= 0 && items[highlightedIndex]) {
             const symbol = items[highlightedIndex].dataset.symbol;
             this.selectStock(symbol);
           }
           break;
-          
-        case 'Escape':
+
+        case "Escape":
           this.hideSearchDropdown();
           searchInput.blur();
           break;
@@ -6462,8 +6652,11 @@ class UIComponents {
     });
 
     // Handle clicks outside to close dropdown
-    document.addEventListener('click', (e) => {
-      if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+    document.addEventListener("click", (e) => {
+      if (
+        !searchInput.contains(e.target) &&
+        !searchDropdown.contains(e.target)
+      ) {
         this.hideSearchDropdown();
       }
     });
@@ -6476,64 +6669,69 @@ class UIComponents {
   }
 
   async performStockSearch(query) {
-    const searchDropdown = document.getElementById('stock-search-dropdown');
+    const searchDropdown = document.getElementById("stock-search-dropdown");
     if (!searchDropdown) return;
 
     try {
       // Show loading state
       searchDropdown.innerHTML = `
         <div class="stock-search-no-results">
-          <i class="fas fa-spinner fa-spin"></i> ${languageService.get('loading')}
+          <i class="fas fa-spinner fa-spin"></i> ${languageService.get(
+            "loading"
+          )}
         </div>
       `;
-      searchDropdown.classList.add('show');
+      searchDropdown.classList.add("show");
 
       // Call the API
       const api = new APIService();
       const response = await api.searchSymbols(query);
-      
-      console.log('Search response:', response); // Debug log
-      
+
+      console.log("Search response:", response); // Debug log
+
       // The API method returns response.data directly, so the symbols are in response.symbols or response.data
       let symbols = null;
       if (response) {
         symbols = response.symbols || response.data || [];
       }
-      
+
       if (symbols && symbols.length > 0) {
         this.renderSearchResults(symbols);
       } else {
         this.renderNoResults();
       }
     } catch (error) {
-      console.error('Stock search error:', error);
+      console.error("Stock search error:", error);
       this.renderSearchError();
     }
   }
 
   renderSearchResults(symbols) {
-    const searchDropdown = document.getElementById('stock-search-dropdown');
+    const searchDropdown = document.getElementById("stock-search-dropdown");
     if (!searchDropdown) return;
 
-    const resultsHtml = symbols.map(symbol => {
-      // Handle both simple strings and objects
-      const symbolCode = typeof symbol === 'string' ? symbol : symbol.symbol;
-      const displayName = typeof symbol === 'object' && symbol.name ? symbol.name : symbolCode;
-      
-      return `
+    const resultsHtml = symbols
+      .map((symbol) => {
+        // Handle both simple strings and objects
+        const symbolCode = typeof symbol === "string" ? symbol : symbol.symbol;
+        const displayName =
+          typeof symbol === "object" && symbol.name ? symbol.name : symbolCode;
+
+        return `
         <div class="stock-search-item" data-symbol="${symbolCode}">
           <div class="stock-search-item-symbol">${symbolCode}</div>
           <div class="stock-search-item-name">${displayName}</div>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
 
     searchDropdown.innerHTML = resultsHtml;
-    searchDropdown.classList.add('show');
+    searchDropdown.classList.add("show");
 
     // Add click handlers
-    searchDropdown.querySelectorAll('.stock-search-item').forEach(item => {
-      item.addEventListener('click', () => {
+    searchDropdown.querySelectorAll(".stock-search-item").forEach((item) => {
+      item.addEventListener("click", () => {
         const symbol = item.dataset.symbol;
         this.selectStock(symbol);
       });
@@ -6541,64 +6739,68 @@ class UIComponents {
   }
 
   renderNoResults() {
-    const searchDropdown = document.getElementById('stock-search-dropdown');
+    const searchDropdown = document.getElementById("stock-search-dropdown");
     if (!searchDropdown) return;
 
     searchDropdown.innerHTML = `
       <div class="stock-search-no-results">
-        ${languageService.get('noResultsFound')}
+        ${languageService.get("noResultsFound")}
       </div>
     `;
-    searchDropdown.classList.add('show');
+    searchDropdown.classList.add("show");
   }
 
   renderSearchError() {
-    const searchDropdown = document.getElementById('stock-search-dropdown');
+    const searchDropdown = document.getElementById("stock-search-dropdown");
     if (!searchDropdown) return;
 
     searchDropdown.innerHTML = `
       <div class="stock-search-no-results">
-        <i class="fas fa-exclamation-triangle"></i> ${languageService.get('error')}
+        <i class="fas fa-exclamation-triangle"></i> ${languageService.get(
+          "error"
+        )}
       </div>
     `;
-    searchDropdown.classList.add('show');
+    searchDropdown.classList.add("show");
   }
 
   updateSearchHighlight(items, highlightedIndex) {
     items.forEach((item, index) => {
       if (index === highlightedIndex) {
-        item.classList.add('highlighted');
+        item.classList.add("highlighted");
       } else {
-        item.classList.remove('highlighted');
+        item.classList.remove("highlighted");
       }
     });
   }
 
   hideSearchDropdown() {
-    const searchDropdown = document.getElementById('stock-search-dropdown');
+    const searchDropdown = document.getElementById("stock-search-dropdown");
     if (searchDropdown) {
-      searchDropdown.classList.remove('show');
+      searchDropdown.classList.remove("show");
     }
   }
 
   async selectStock(symbol) {
-    const searchInput = document.getElementById('stock-search-input');
-    
+    const searchInput = document.getElementById("stock-search-input");
+
     // Update search input with selected symbol
     if (searchInput) {
       searchInput.value = symbol;
     }
-    
+
     // Hide dropdown
     this.hideSearchDropdown();
-    
+
     // Load the selected stock data
     if (symbol !== this.currentStockSymbol) {
       this.currentStockSymbol = symbol;
-      
+
       // Load stock data with current interval
-      const activeIntervalBtn = document.querySelector('.interval-btn.active');
-      const interval = activeIntervalBtn ? activeIntervalBtn.dataset.interval : '1M';
+      const activeIntervalBtn = document.querySelector(".interval-btn.active");
+      const interval = activeIntervalBtn
+        ? activeIntervalBtn.dataset.interval
+        : "1M";
       const limit = this.computeLimitFromInterval(interval);
       await this.loadStockDetailData(symbol, limit);
     }
