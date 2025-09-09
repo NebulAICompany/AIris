@@ -83,7 +83,7 @@ class LanguageService {
         // Finance News Section
         financeNewsTitle: "Finance News",
         latestFinancialNews: "Latest financial news and market updates",
-        refresh: "Refresh",
+        refresh: "Refresh News",
         loadingNews: "Loading latest finance news...",
         lastUpdated: "Last updated",
         readMore: "Read More",
@@ -93,13 +93,14 @@ class LanguageService {
         noNewsAvailable: "No news available",
         fetchLatestNews: "Fetch Latest News",
         getLatestNews: "Get Latest News",
-        autoUpdateInfo: "Auto-updates every 45 minutes",
+        manualUpdateInfo: "Click refresh to get latest news",
+        marketOutlook: "Market Outlook",
 
         // News Chat Section
         askAboutNews: "Ask about this news",
         chatDescription:
           "Ask questions about this news article and get AI-powered insights",
-        askQuestionPlaceholder: "Ask a question about this news...",
+        askQuestionPlaceholder: "Ask follow up about this news...",
         followUpQuestionPlaceholder: "Ask a follow-up question...",
 
         // Settings Section
@@ -252,7 +253,7 @@ class LanguageService {
         uploadedOn: "Uploaded",
         downloadFile: "Download file",
         deleteFile: "Delete file",
-        refresh: "Refresh",
+        refresh: "Refresh News",
 
         // Error states
         errorLoadingFiles: "Error loading files",
@@ -293,6 +294,37 @@ class LanguageService {
         wolframMathVerification: "Wolfram Alpha Mathematical Verification",
         wolframMathVerificationDesc:
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
+        // Verification stage names
+        qualityControl: "Quality Control",
+        documentClassification: "Document Classification", 
+        textExtraction: "Text Extraction",
+        templateValidation: "Template Validation",
+        dataConsistency: "Data Consistency",
+        fraudAnalysis: "Fraud Analysis",
+        // Verification status values
+        verified: "Verified",
+        reviewRequired: "Review Required", 
+        rejected: "Rejected",
+        passed: "Passed",
+        failed: "Failed",
+        warning: "Warning",
+        // Additional verification terms
+        score: "Score",
+        noDetailsAvailable: "No details available",
+        verifying: "Verifying...",
+        startingVerification: "Starting verification...",
+        selected: "Selected",
+        // Risk levels
+        low: "Low",
+        medium: "Medium", 
+        high: "High",
+        // Quality levels
+        good: "Good",
+        fair: "Fair",
+        poor: "Poor",
+        // Document types
+        announcement: "Announcement",
+        expense_voucher: "Expense Voucher",
 
         // Calculator Section
         calculateLoanPayments: "Calculate your loan payments and total costs",
@@ -340,6 +372,24 @@ class LanguageService {
 
         // Navigation
         goToChat: "Go to Chat",
+
+        // Stock/Company Details
+        exchange: "Exchange",
+        istanbulStockExchange: "Istanbul Stock Exchange",
+        fulltimeEmployees: "Fulltime Employees",
+        sector: "Sector",
+        industry: "Industry",
+        country: "Country",
+        loading: "Loading...",
+        companyInfo: "Company Info",
+        prevClose: "Prev Close",
+        open: "Open",
+        dayRange: "Day Range",
+        volume: "Volume",
+        searchStocks: "Search stocks...",
+        noResultsFound: "No results found",
+        searchForStocks: "Search for stocks",
+        atClose: "At close",
       },
 
       tr: {
@@ -432,7 +482,7 @@ class LanguageService {
         financeNewsTitle: "Finans Haberleri",
         latestFinancialNews:
           "En son finansal haberler ve piyasa güncellemeleri",
-        refresh: "Yenile",
+        refresh: "Haberleri Yenile",
         loadingNews: "En son finans haberleri yükleniyor...",
         lastUpdated: "Son güncelleme",
         readMore: "Devamını Oku",
@@ -442,13 +492,14 @@ class LanguageService {
         noNewsAvailable: "Haber bulunmuyor",
         fetchLatestNews: "Son Haberleri Getir",
         getLatestNews: "Son Haberleri Getir",
-        autoUpdateInfo: "Her 45 dakikada otomatik güncellenir",
+        manualUpdateInfo: "Yenile butonuna tıklayarak en son haberleri alın",
+        marketOutlook: "Piyasa Görünümü",
 
         // News Chat Section
         askAboutNews: "Bu haber hakkında soru sor",
         chatDescription:
           "Bu haber makalesi hakkında sorular sorun ve AI destekli öngörüler alın",
-        askQuestionPlaceholder: "Bu haber hakkında bir soru sorun...",
+        askQuestionPlaceholder: "Bu haber hakkında sorular sorun...",
         followUpQuestionPlaceholder: "Bir takip sorusu sorun...",
 
         // Settings Section
@@ -583,7 +634,7 @@ class LanguageService {
         uploadedOn: "Yüklenme",
         downloadFile: "Dosyayı indir",
         deleteFile: "Dosyayı sil",
-        refresh: "Yenile",
+        refresh: "Haberleri Yenile",
 
         // Error states
         errorLoadingFiles: "Dosyalar yüklenirken hata",
@@ -625,6 +676,37 @@ class LanguageService {
         wolframMathVerification: "Wolfram Alpha Matematiksel Doğrulama",
         wolframMathVerificationDesc:
           "Hesaplamalar, sahtekarlık tespiti ve para birimi doğrulaması için gelişmiş matematiksel doğrulamayı etkinleştir",
+        // Verification stage names
+        qualityControl: "Kalite Kontrol",
+        documentClassification: "Belge Sınıflandırma", 
+        textExtraction: "Metin Çıkarma",
+        templateValidation: "Şablon Doğrulama",
+        dataConsistency: "Veri Tutarlılığı",
+        fraudAnalysis: "Sahtekarlık Analizi",
+        // Verification status values
+        verified: "Doğrulandı",
+        reviewRequired: "İnceleme Gerekli", 
+        rejected: "Reddedildi",
+        passed: "Geçti",
+        failed: "Başarısız",
+        warning: "Uyarı",
+        // Additional verification terms
+        score: "Puan",
+        noDetailsAvailable: "Detay bulunmuyor",
+        verifying: "Doğrulanıyor...",
+        startingVerification: "Doğrulama başlatılıyor...",
+        selected: "Seçildi",
+        // Risk levels
+        low: "Düşük",
+        medium: "Orta", 
+        high: "Yüksek",
+        // Quality levels
+        good: "İyi",
+        fair: "Orta",
+        poor: "Kötü",
+        // Document types
+        announcement: "Duyuru",
+        expense_voucher: "Harcama Fişi",
 
         // File Selection
         selectFiles: "Dosya Seç",
@@ -657,6 +739,24 @@ class LanguageService {
 
         // Navigation
         goToChat: "Sohbete Git",
+
+        // Stock/Company Details
+        exchange: "Borsa",
+        istanbulStockExchange: "Borsa İstanbul",
+        fulltimeEmployees: "Tam Zamanlı Çalışan",
+        sector: "Sektör",
+        industry: "Endüstri",
+        country: "Ülke",
+        loading: "Yükleniyor...",
+        companyInfo: "Şirket Bilgileri",
+        prevClose: "Önceki Kapanış",
+        open: "Açılış",
+        dayRange: "Günlük Aralık",
+        volume: "Hacim",
+        searchStocks: "Hisse ara...",
+        noResultsFound: "Sonuç bulunamadı",
+        searchForStocks: "Hisse arayın",
+        atClose: "Kapanışta",
       },
     };
   }
@@ -775,6 +875,13 @@ class LanguageService {
       } else {
         element.textContent = text;
       }
+    });
+
+    // Update elements with data-i18n-placeholder attribute
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-placeholder");
+      const text = this.get(key);
+      element.placeholder = text;
     });
 
     // Update title

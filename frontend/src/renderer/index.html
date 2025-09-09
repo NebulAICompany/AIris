@@ -726,21 +726,12 @@
             <div class="news-container">
               <div class="news-header">
                 <h2 data-i18n="financeNewsTitle">Finance News</h2>
-                <p data-i18n="latestFinancialNews">
-                  Latest financial news and market updates
-                </p>
                 <div class="news-controls">
                   <div class="news-refresh-group">
                     <button id="refresh-news" class="btn btn-primary">
                       <i class="fas fa-sync-alt"></i>
                       <span data-i18n="getLatestNews">Get Latest News</span>
                     </button>
-                    <div class="news-refresh-hint">
-                      <i class="fas fa-info-circle"></i>
-                      <span data-i18n="autoUpdateInfo"
-                        >Auto-updates every 45 minutes</span
-                      >
-                    </div>
                   </div>
                   <div class="news-status">
                     <span id="news-last-updated" data-i18n="loading"
@@ -750,10 +741,116 @@
                 </div>
               </div>
 
-              <div class="news-grid" id="news-grid">
-                <div class="loading-state">
-                  <div class="loading-spinner"></div>
-                  <p data-i18n="loadingNews">Loading latest finance news...</p>
+              <!-- Two-column layout: News on left, Market charts on right -->
+              <div class="news-layout">
+                <!-- Left column: News articles -->
+                <div class="news-column">
+                  <div class="news-grid" id="news-grid">
+                    <div class="loading-state">
+                      <div class="loading-spinner"></div>
+                      <p data-i18n="loadingNews">
+                        Loading latest finance news...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right column: Market charts -->
+                <div class="market-column">
+                  <div class="market-outlook">
+                    <div class="market-outlook-header">
+                      <h3 data-i18n="marketOutlook">Market Outlook</h3>
+                      <button
+                        id="refresh-market-data"
+                        class="market-refresh-btn"
+                        title="Refresh market data"
+                      >
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
+                    </div>
+                    <div id="market-eod" class="market-charts-container"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stock Detail View -->
+              <div class="stock-detail" id="stock-detail" style="display: none">
+                <div class="stock-detail-header">
+                  <button
+                    class="btn btn-secondary stock-detail-back"
+                    id="stock-detail-back"
+                  >
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-i18n="backToNews">Back to News</span>
+                  </button>
+                  <div class="stock-search-container">
+                    <div class="stock-search-bar">
+                      <i class="fas fa-search"></i>
+                      <input type="text" id="stock-search-input" data-i18n-placeholder="searchStocks" />
+                      <div class="stock-search-dropdown" id="stock-search-dropdown">
+                        <!-- Search results will be populated here -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stock-detail-content">
+                  <div class="stock-main-content">
+                    <div class="stock-header">
+                      <div class="stock-company-info">
+                        <h1 class="stock-company-name" id="stock-company-name"></h1>
+                        <div class="stock-symbol" id="stock-symbol"></div>
+                      </div>
+                      <div class="stock-price-info">
+                        <div class="stock-current-price" id="stock-current-price"></div>
+                        <div class="stock-price-change" id="stock-price-change"></div>
+                        <div class="stock-price-time" id="stock-price-time"></div>
+                      </div>
+                    </div>
+
+                    <div class="stock-chart-container">
+                      <div class="stock-chart-intervals">
+                        <button class="interval-btn active" data-interval="1M">1M</button>
+                        <button class="interval-btn" data-interval="6M">6M</button>
+                        <button class="interval-btn" data-interval="YTD">YTD</button>
+                        <button class="interval-btn" data-interval="1Y">1Y</button>
+                        <button class="interval-btn" data-interval="MAX">MAX</button>
+                      </div>
+                      <div class="stock-chart" id="stock-chart">
+                        <div class="chart-loading">
+                          <div class="loading-spinner"></div>
+                          <p>Loading chart...</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="stock-financial-profile">
+                      <h3>Financial Profile</h3>
+                      <div class="financial-metrics" id="financial-metrics">
+                        <!-- Financial metrics will be populated here -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stock-sidebar">
+                    <div class="stock-company-details">
+                      <h3>Company Information</h3>
+                      <div class="company-details" id="company-details">
+                        <!-- Company details will be populated here -->
+                      </div>
+                    </div>
+
+                    <div class="stock-market-movers">
+                      <div class="market-movers-tabs">
+                        <button class="mover-tab active" data-tab="gainers">Gainers</button>
+                        <button class="mover-tab" data-tab="losers">Losers</button>
+                        <button class="mover-tab" data-tab="active">Active</button>
+                      </div>
+                      <div class="market-movers-content" id="market-movers-content">
+                        <!-- Market movers will be populated here -->
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

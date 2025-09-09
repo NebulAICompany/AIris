@@ -18,6 +18,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 from backend.utils.news import get_aggregated_financial_news
+from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
 
 logger = get_logger("ROUTER")
@@ -29,6 +30,7 @@ class QueryRequest(BaseModel):
     webSearchEnabled: bool = False
     preEmbeddingProcess: str = "pdr"
     sessionId: Optional[str] = None
+    selectedFiles: Optional[List[str]] = None
 
 
 class NewsChatRequest(BaseModel):
@@ -41,8 +43,80 @@ class NewsChatRequest(BaseModel):
 
 class UploadRequest(BaseModel):
     file: str
-    preEmbeddingProcess: str = "pdr"  # "none", "hype", "cch"
+    preEmbeddingProcess: str = "pdr"  # "none", "cch"
 
+
+@router.get("/market/eod")
+async def get_market_eod(symbol: str = "TUPRS.IS", limit: int = 7):
+    logger.info(f"Getting market EOD for {symbol} with limit {limit}")
+    try:
+        data = store.get_latest_quotes(symbol, limit)
+        return {"symbol": symbol, "count": len(data), "data": data}
+    except Exception as e:
+        logger.error(f"Error fetching EOD from DB: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/market/company-info")
+async def get_company_info(symbol: str = "TUPRS.IS"):
+    logger.info(f"Getting company info for {symbol}")
+    try:
+        data = store.get_company_info(symbol)
+        return {"symbol": symbol, "data": data}
+    except Exception as e:
+        logger.error(f"Error fetching company info from DB: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/market/eod/refresh")
+async def refresh_market_eod(symbols: str = "TUPRS.IS", limit: int = 7):
+    logger.info("Refreshing market EOD")
+    try:
+        saved = await refresh_eod(symbols=symbols, limit=limit)
+        return {"status": "ok", "saved": saved}
+    except Exception as e:
+        logger.error(f"Error refreshing EOD: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/market/most-changed")
+async def get_most_changed_quotes(request: dict):
+    logger.info("Getting most changed quotes")
+    try:
+        symbols = request.get("symbols", [])
+        limit = request.get("limit", 30)
+        chart_num = request.get("chart_num", 8)
+        
+        data = store.get_most_changed_quotes(symbols, limit, chart_num)
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error getting most changed quotes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/market/gainers-losers-active")
+async def get_gainers_losers_active(request: dict):
+    logger.info("Getting gainers/losers/active")
+    try:
+        symbols = request.get("symbols", [])
+        limit = request.get("limit", 30)
+        chart_num = request.get("chart_num", 8)
+
+        data = store.get_gainers_losers_active(symbols, limit, chart_num)
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error getting gainers/losers/active: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/market/search-symbols")
+async def search_symbols(query: str = ""):
+    logger.info("Searching symbols")
+    try:
+        data = store.search_symbols(query)
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error searching symbols: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
@@ -139,12 +213,9 @@ async def handle_upload(file: UploadFile = File(...)):
 
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
-
         pre_embedding_process = "pdr"
 
-        result = await process_file(
-            str(file_path), pre_embedding_process=pre_embedding_process
-        )
+        result = await process_file(str(file_path), pre_embedding_process=pre_embedding_process)
 
         logger.info(f"File processed successfully: {file.filename}")
 
@@ -175,9 +246,7 @@ def list_chat_sessions():
     except Exception as e:
         error_message = str(e)
         logger.error(f"Error listing chat sessions: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error listing chat sessions: {error_message}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error listing chat sessions: {error_message}")
 
 
 @router.get("/chat/sessions/{session_id}")
@@ -188,9 +257,7 @@ def get_chat_session(session_id: str):
     try:
         session = chat_history_manager.get_session(session_id)
         if not session:
-            raise HTTPException(
-                status_code=404, detail=f"Session {session_id} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
 
         return {
             "session": {
@@ -238,19 +305,14 @@ def delete_chat_session(session_id: str):
     try:
         success = chat_history_manager.delete_session(session_id)
         if not success:
-            raise HTTPException(
-                status_code=404, detail=f"Session {session_id} not found"
-            )
-
+            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
         return {"message": f"Session {session_id} deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
         error_message = str(e)
         logger.error(f"Error deleting chat session {session_id}: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error deleting chat session: {error_message}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error deleting chat session: {error_message}")
 
 
 @router.get("/files")
@@ -333,12 +395,10 @@ def delete_file(filename: str):
     """
     try:
         logger.info(f"Starting deletion for file '{filename}'")
-
         # Check if file exists in uploads directory
         uploads_dir = Path(UPLOADS_PATH)
         file_path = uploads_dir / filename
 
-        logger.debug(f"Checking file existence: {file_path}")
         logger.debug(f"File exists: {file_path.exists()}")
 
         if not file_path.exists():
@@ -350,7 +410,6 @@ def delete_file(filename: str):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
-            logger.info(f"File deleted successfully: {filename}")
             return {
                 "message": f"File '{filename}' deleted successfully (no vector store found)"
             }
@@ -403,9 +462,7 @@ def delete_file(filename: str):
         try:
             from backend.retrieval.keyword_search import get_keyword_search
 
-            logger.info(
-                f"🔍 Removing documents from keyword search index for file: {base_filename}"
-            )
+            logger.info(f"🔍 Removing documents from keyword search index for file: {base_filename}")
             keyword_search = get_keyword_search()
             keyword_search.remove_documents_by_file(base_filename)
             keyword_search.save_index()
@@ -414,9 +471,7 @@ def delete_file(filename: str):
             logger.error(f"Error deleting documents from keyword search index: {e}")
 
         # Delete the actual file
-        logger.info(f"🗑️ Deleting physical file: {file_path}")
         file_path.unlink()
-        logger.info(f"✅ Physical file deleted successfully: {filename}")
 
         result = {
             "message": f"File '{filename}' deleted successfully",
@@ -512,10 +567,9 @@ def get_file_preview(filename: str):
             "success": True,
         }
     except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error generating preview for {filename}: {error_message}")
+        logger.error(f"Error generating preview for {filename}: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Error generating preview: {error_message}"
+            status_code=500, detail=f"Error generating preview: {str(e)}"
         )
 
 
@@ -534,11 +588,10 @@ def download_created_document(filename: str):
             path=file_path, filename=filename, media_type="application/octet-stream"
         )
     except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error downloading created document {filename}: {error_message}")
+        logger.error(f"Error downloading created document {filename}: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error downloading created document: {error_message}",
+            detail=f"Error downloading created document: {str(e)}",
         )
 
 
@@ -561,11 +614,9 @@ def get_created_document_info(filename: str):
             "modified_at": datetime.fromtimestamp(stats.st_mtime).isoformat(),
         }
     except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error getting created document info {filename}: {error_message}")
         raise HTTPException(
             status_code=500,
-            detail=f"Error getting created document info: {error_message}",
+            detail=f"Error getting created document info: {str(e)}",
         )
 
 
@@ -593,12 +644,11 @@ def get_created_document_preview(filename: str):
             "success": True,
         }
     except Exception as e:
-        error_message = str(e)
         logger.error(
-            f"Error generating preview for created document {filename}: {error_message}"
+            f"Error generating preview for created document {filename}: {str(e)}"
         )
         raise HTTPException(
-            status_code=500, detail=f"Error generating preview: {error_message}"
+            status_code=500, detail=f"Error generating preview: {str(e)}"
         )
 
 
@@ -722,24 +772,6 @@ async def get_finance_news(force_refresh: bool = False):
         logger.error(f"Error fetching aggregated finance news: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error fetching finance news: {str(e)}"
-        )
-
-
-@router.get("/finance-news/scheduler/status")
-async def get_finance_news_scheduler_status():
-    """
-    Get status information about the background news scheduler.
-    """
-    try:
-        from backend.scheduler.news_scheduler import get_news_scheduler
-
-        scheduler = get_news_scheduler()
-
-        return {"status": "success", "scheduler": scheduler.get_status()}
-    except Exception as e:
-        logger.error(f"Error getting scheduler status: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting scheduler status: {str(e)}"
         )
 
 

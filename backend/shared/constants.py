@@ -22,9 +22,16 @@ AZURE_DOCUMENT_INTELLIGENCE_KEY = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 AZURE_LANGUAGE_ENDPOINT = os.environ.get("AZURE_LANGUAGE_ENDPOINT")
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
+MARKETSTACK_API_KEY = os.getenv("MARKETSTACK_API_KEY")
+MARKETSTACK_BASE_URL = os.getenv(
+    "MARKETSTACK_BASE_URL",
+    f"http://api.marketstack.com/v2/",
+)
+MARKETSTACK_EOD_URL = MARKETSTACK_BASE_URL + "eod"
+MARKETSTACK_COMPANY_INFO_URL = MARKETSTACK_BASE_URL + "tickerinfo"
 AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
 WOLFRAM_APP_ID = os.getenv("WOLFRAM_APP_ID")
-
+MARKETSTACK_BASE_URL = "https://api.marketstack.com/v2"
 
 # Constants for API clients
 
@@ -65,6 +72,9 @@ MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
 # Charts directory - Use absolute path to prevent backend/backend issue
 CHARTS_DIR = PROJECT_ROOT / "backend" / "database" / "charts"
 CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
+
+# Market data database path
+MARKET_DATA_DB_PATH = DATABASE_DIR / "market_data.db"
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
@@ -133,3 +143,14 @@ BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
 
 OPENAI_MODEL = "gpt-5"
 ANTHROPIC_MODEL = "litellm/anthropic/claude-sonnet-4-20250514"
+
+
+
+# Marketstack tickers
+MARKETSTACK_TICKERS = [
+    "AEFES.IS", "AKBNK.IS", "ASELS.IS", "ASTOR.IS", "BIMAS.IS", "CIMSA.IS", 
+    "EKGYO.IS", "ENKAI.IS", "EREGL.IS", "FROTO.IS", "GARAN.IS", "GUBRF.IS", 
+    "ISCTR.IS", "KCHOL.IS", "KOZAL.IS", "KRDMD.IS", "MGROS.IS", "PETKM.IS", 
+    "PGSUS.IS", "SAHOL.IS", "SASA.IS", "SISE.IS", "TAVHL.IS", "TCELL.IS", 
+    "THYAO.IS", "TOASO.IS", "TTKOM.IS", "TUPRS.IS", "ULKER.IS", "YKBNK.IS"
+]

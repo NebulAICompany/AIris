@@ -570,6 +570,51 @@ class APIService {
     }
   }
 
+  async getMarketEod(symbol = "TUPRS.IS", limit = 7) {
+    console.log(`[API] Getting market EOD for ${symbol} with limit ${limit}`);
+    return this.makeRequest(`/api/market/eod`, "GET", null, {
+      params: { symbol, limit },
+    });
+  }
+
+  async refreshMarketEod(symbols = "TUPRS.IS", limit = 7) {
+    console.log(`[API] Refreshing market EOD`);
+    return this.makeRequest(`/api/market/eod/refresh`, "POST", null, {
+      params: { symbols, limit },
+    });
+  }
+
+  async getMostChangedQuotes(symbols, limit = 30, chart_num = 8) {
+    console.log(`[API] Getting most changed quotes for ${symbols.length} symbols`);
+    return this.makeRequest(`/api/market/most-changed`, "POST", {
+      symbols,
+      limit,
+      chart_num
+    });
+  }
+
+  async getGainersLosersActive(symbols, limit = 30, chart_num = 8) {
+    console.log(`[API] Getting gainers/losers/active for ${symbols.length} symbols`);
+    return this.makeRequest(`/api/market/gainers-losers-active`, "POST", {
+      symbols,
+      limit,
+      chart_num
+    });
+  }
+
+  async getCompanyInfo(symbol = "TUPRS.IS") {
+    console.log(`[API] Getting company info for ${symbol}`);
+    return this.makeRequest(`/api/market/company-info`, "GET", null, {
+      params: { symbol },
+    });
+  }
+
+  async searchSymbols(query = "") {
+    const response = await this.makeRequest(`/api/market/search-symbols`, "GET", null, { params: { query } });
+    console.log(`[API] Searching symbols for ${query} response:`, response.data);
+    return response.data;
+  }
+
   // News Chat API method
   async sendNewsChatQuery(message, newsContext) {
     try {
@@ -631,7 +676,7 @@ class APIService {
 
       // Call progress callback for start
       if (progressCallback) {
-        progressCallback(0, "Starting verification...");
+        progressCallback(0, "Doğrulama Başlatılıyor...");
       }
 
       const response = await this.api.post("/api/verify", formData, config);

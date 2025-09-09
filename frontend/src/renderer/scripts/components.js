@@ -26,6 +26,7 @@ class UIComponents {
     this.selectedFiles = [];
     this.allFiles = [];
     this.fileSelectionModal = null;
+    this.hasInitializedFiles = false; // Flag to track if files have been initialized
 
     this.init();
 
@@ -43,6 +44,9 @@ class UIComponents {
     // this.loadTheme();
     this.initializeComponents();
 
+    // Load files and select all by default
+    this.loadAndSelectAllFiles();
+
     // Set toggle state on load
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle) {
@@ -59,6 +63,26 @@ class UIComponents {
       }
       // Update texts with current language
       window.languageService.updatePageTexts();
+    }
+  }
+
+  async loadAndSelectAllFiles() {
+    try {
+      // Fetch files from API
+      const result = await window.apiService.getFiles();
+
+      if (result.success && result.files) {
+        this.allFiles = result.files;
+        // Only select all files on the very first initialization
+        if (!this.hasInitializedFiles) {
+          this.selectedFiles = this.allFiles.map((file) => file.name);
+          this.hasInitializedFiles = true; // Mark as initialized
+          // Update button display
+          this.updateFileSelectionButton();
+        }
+      }
+    } catch (error) {
+      console.error("Error loading files for selection:", error);
     }
   }
 
@@ -256,37 +280,104 @@ class UIComponents {
 
     // Removed keyboard shortcuts as requested by user
 
-    // Event delegation for dynamic buttons
+    // Event delegation for dynamic buttons and universal link interceptor
     document.addEventListener("click", (e) => {
+      // Universal link interceptor - catch ALL links and open externally
+      if (e.target.tagName === "A" || e.target.closest("a")) {
+        const link =
+          e.target.tagName === "A" ? e.target : e.target.closest("a");
+
+        // Only intercept links with href attributes
+        if (link.href) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          console.log(`🔗 Intercepted link: ${link.href}`);
+
+          // Check if this is a news source link
+          const isNewsSourceLink = link.classList.contains("news-source-link");
+          if (isNewsSourceLink) {
+            const sourceName = link.dataset.sourceName || "news source";
+            console.log(`📰 Opening news source: ${sourceName}`);
+          }
+
+          // Special handling for download links
+          if (
+            link.href.includes("/api/created-documents/") ||
+            link.href.includes("/api/files/")
+          ) {
+            const t = window.languageService
+              ? window.languageService.t.bind(window.languageService)
+              : (key) => key;
+
+            let filename = "";
+            try {
+              const urlParts = link.href.split("/");
+              if (link.href.includes("/api/created-documents/")) {
+                filename = decodeURIComponent(
+                  urlParts[urlParts.indexOf("created-documents") + 1]
+                );
+              } else if (link.href.includes("/api/files/")) {
+                filename = decodeURIComponent(
+                  urlParts[urlParts.indexOf("files") + 1]
+                );
+              }
+            } catch (err) {
+              console.warn("Could not extract filename from URL:", link.href);
+            }
+
+            if (filename) {
+              this.showNotification(
+                `${t("downloadingFile")} ${filename}...`,
+                "info"
+              );
+            }
+          }
+
+          // Use Electron API if available, otherwise fallback to window.open
+          if (window.airisAPI && window.airisAPI.openExternalUrl) {
+            window.airisAPI
+              .openExternalUrl(link.href)
+              .then((result) => {
+                if (result.success) {
+                  console.log(
+                    `✅ Successfully opened link externally: ${link.href}`
+                  );
+                } else {
+                  console.warn(
+                    "Failed to open link via Electron API:",
+                    result.error
+                  );
+                  // Fallback to window.open
+                  window.open(link.href, "_blank", "noopener,noreferrer");
+                }
+              })
+              .catch((error) => {
+                console.error("Error using Electron API:", error);
+                // Fallback to window.open
+                window.open(link.href, "_blank", "noopener,noreferrer");
+              });
+          } else {
+            // Fallback for non-Electron environments
+            console.log(`🌐 Opening link with window.open: ${link.href}`);
+            window.open(link.href, "_blank", "noopener,noreferrer");
+          }
+
+          return;
+        }
+      }
+
       if (e.target.classList.contains("cta-button") && e.target.dataset.tab) {
         this.switchTab(e.target.dataset.tab);
       }
 
-      // Handle markdown download links in chat messages
-      if (
-        e.target.tagName === "A" &&
-        e.target.href &&
-        e.target.href.includes("/api/created-documents/")
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        const url = e.target.href;
-
-        // Extract filename for notification
-        const urlParts = url.split("/");
-        const filename = decodeURIComponent(
-          urlParts[urlParts.indexOf("created-documents") + 1]
-        );
-
-        // Open the download URL in a new tab/window
-        window.open(url, "_blank");
-        this.showNotification(`${t("downloadingFile")} ${filename}...`, "info");
-
-        return;
+      // Handle news item clicks (hero variants and regular items)
+      const newsItem = e.target.closest(
+        ".news-item, .news-hero, .news-hero-left, .news-hero-right"
+      );
+      if (newsItem && newsItem.dataset.articleIndex !== undefined) {
+        const articleIndex = parseInt(newsItem.dataset.articleIndex);
+        this.showNewsDetail(articleIndex);
       }
 
       // Handle delete button clicks
@@ -308,14 +399,7 @@ class UIComponents {
         }
       }
 
-      // Handle news article clicks
-      if (e.target.closest(".news-item")) {
-        const newsItem = e.target.closest(".news-item");
-        const articleIndex = newsItem.dataset.articleIndex;
-        if (articleIndex !== undefined) {
-          this.showNewsDetail(parseInt(articleIndex));
-        }
-      }
+      // News article clicks are now handled above with hero support
 
       // Handle file selection item clicks
       if (e.target.closest(".file-selection-item")) {
@@ -557,7 +641,7 @@ class UIComponents {
           this.webSearchEnabled,
           this.currentSessionId,
           2,
-          uploadedFiles.length > 0 ? uploadedFiles : null
+          this.selectedFiles.length > 0 ? this.selectedFiles : null
         );
 
         if (response) {
@@ -2045,6 +2129,7 @@ class UIComponents {
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
       const files = data.files || [];
+
       // Get the file library container
       const fileLibrary = document.getElementById("files-grid");
       if (!fileLibrary) return;
@@ -2440,7 +2525,16 @@ class UIComponents {
         const downloadUrl = `http://localhost:8001/api/files/${encodeURIComponent(
           fileName
         )}/download`;
-        window.open(downloadUrl, "_blank");
+
+        // Use consistent external opening logic
+        if (window.airisAPI && window.airisAPI.openExternalUrl) {
+          window.airisAPI.openExternalUrl(downloadUrl).catch(() => {
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
+          });
+        } else {
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
+        }
+
         this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
@@ -2495,7 +2589,16 @@ class UIComponents {
         const downloadUrl = `http://localhost:8001/api/created-documents/${encodeURIComponent(
           fileName
         )}/download`;
-        window.open(downloadUrl, "_blank");
+
+        // Use consistent external opening logic
+        if (window.airisAPI && window.airisAPI.openExternalUrl) {
+          window.airisAPI.openExternalUrl(downloadUrl).catch(() => {
+            window.open(downloadUrl, "_blank", "noopener,noreferrer");
+          });
+        } else {
+          window.open(downloadUrl, "_blank", "noopener,noreferrer");
+        }
+
         this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
@@ -2887,12 +2990,6 @@ class UIComponents {
               "lastUpdatedAt"
             )} ${new Date().toLocaleTimeString()}`;
           }
-
-          // Update scheduler status
-          this.updateSchedulerStatus();
-
-          // Set up auto-refresh interval
-          this.startNewsAutoRefresh();
         } else {
           // Empty database - show empty state and try initial refresh
           const t = window.languageService
@@ -2914,9 +3011,6 @@ class UIComponents {
             newsLastUpdated.textContent =
               t("noNewsAvailable") || "No news available";
           }
-
-          // Still set up auto-refresh for future updates
-          this.startNewsAutoRefresh();
         }
       } else {
         throw new Error(result.error || "Failed to load news");
@@ -2981,9 +3075,100 @@ class UIComponents {
     // FIXED: Store the sorted articles with indices (not the original unsorted ones)
     this.currentArticles = articlesWithIndices;
 
-    newsGrid.innerHTML = articlesWithIndices
-      .map((article) => this.createNewsItem(article))
-      .join("");
+    // Create Perplexity-style alternating layout
+    // Pattern: Hero Right -> 3 items -> Hero Left -> Hero Right -> 3 items -> ...
+    let html = "";
+    let articleIndex = 0;
+    let isHeroRight = true; // Start with right
+
+    while (articleIndex < articlesWithIndices.length) {
+      // Add a hero item
+      const heroArticle = articlesWithIndices[articleIndex];
+      if (heroArticle) {
+        const heroType = isHeroRight ? "right" : "left";
+        html += this.createHeroNewsItem(heroArticle, heroType);
+        articleIndex++;
+        isHeroRight = !isHeroRight; // Alternate for next hero
+      }
+
+      // Add 3 secondary items if available
+      const secondaryArticles = articlesWithIndices.slice(
+        articleIndex,
+        articleIndex + 3
+      );
+      if (secondaryArticles.length > 0) {
+        const secondaryHtml = secondaryArticles
+          .map((article) => this.createNewsItem(article))
+          .join("");
+        html += `<div class="news-secondary">${secondaryHtml}</div>`;
+        articleIndex += secondaryArticles.length;
+      }
+    }
+
+    newsGrid.innerHTML = html;
+  }
+
+  createHeroNewsItem(article, heroType = "right") {
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    let timeAgo = t("unknown");
+    try {
+      if (article.published) {
+        const publishedDate = new Date(article.published);
+        timeAgo = this.getTimeAgo(publishedDate);
+      }
+    } catch (error) {
+      console.warn("Error processing article date:", error, article.published);
+      timeAgo = t("unknown");
+    }
+
+    // Create image HTML for hero
+    let imageHtml = "";
+    let imageSrc = "";
+
+    if (article.image_url) {
+      imageSrc = article.image_url;
+    } else if (
+      article.available_images &&
+      article.available_images.length > 0
+    ) {
+      imageSrc = article.available_images[0].url;
+    }
+
+    if (imageSrc) {
+      imageHtml = `
+        <div class="news-hero-image">
+          <img src="${Utils.escapeHtml(imageSrc)}"
+               alt="${Utils.escapeHtml(article.title)}"
+               loading="lazy"
+               onerror="this.style.display='none'"
+          />
+        </div>
+      `;
+    }
+
+    const heroClass = `news-hero news-hero-${heroType}`;
+
+    return `
+      <div class="${heroClass}" data-article-index="${article.index || 0}">
+        ${imageHtml}
+        <div class="news-hero-content">
+          <h2 class="news-hero-title">${Utils.escapeHtml(article.title)}</h2>
+          <p class="news-hero-description">${this.cleanDescriptionForCard(
+            article.summary || ""
+          )}</p>
+          <div class="news-hero-meta">
+            <span class="news-hero-sources">
+              <i class="fas fa-building"></i>
+              ${Utils.escapeHtml(article.source)}
+            </span>
+            <span class="news-hero-time">~${timeAgo}</span>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   createNewsItem(article) {
@@ -3037,16 +3222,14 @@ class UIComponents {
     // Create image HTML if we have an image source
     if (imageSrc) {
       imageHtml = `
-      <div class="news-image">
-        <img src="${Utils.escapeHtml(imageSrc)}"
-             alt="${imageAlt}"
-             loading="lazy"
-             onerror="this.style.display='none'"
-             ${imageWidth}
-             ${imageHeight}
-        />
-      </div>
-    `;
+        <div class="news-item-image">
+          <img src="${Utils.escapeHtml(imageSrc)}"
+               alt="${imageAlt}"
+               loading="lazy"
+               onerror="this.style.display='none'"
+          />
+        </div>
+      `;
     }
 
     return `
@@ -3054,22 +3237,16 @@ class UIComponents {
         ${imageHtml}
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
-          <p class="news-summary">${Utils.escapeHtml(article.summary || "")}</p>
+          <p class="news-description">${this.cleanDescriptionForCard(
+            article.summary || ""
+          )}</p>
           <div class="news-meta">
-            <span class="news-source">
+            <span class="news-sources">
               <i class="fas fa-building"></i>
               ${Utils.escapeHtml(article.source)}
             </span>
-            <span class="news-time">
-              <i class="fas fa-clock"></i>
-              ${timeAgo}
-            </span>
+            <span class="news-time">~${timeAgo}</span>
           </div>
-        </div>
-        <div class="news-actions">
-          <button class="news-link-btn" title="Read full article">
-            <i class="fas fa-arrow-right"></i>
-          </button>
         </div>
       </div>
     `;
@@ -3195,9 +3372,6 @@ class UIComponents {
             )} ${new Date().toLocaleTimeString()}`;
           }
 
-          // Update scheduler status hint
-          this.updateSchedulerStatus();
-
           // Show success message briefly
           if (refreshButton) {
             refreshButton.innerHTML = `<i class="fas fa-check"></i> ${t(
@@ -3272,12 +3446,22 @@ class UIComponents {
     const article = this.currentArticles[articleIndex];
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
+    const marketColumn = document.querySelector(".market-column");
 
     if (!newsGrid || !newsDetail) return;
 
-    // Hide news grid and show detail view
+    // Hide news grid and market column, show detail view
     newsGrid.style.display = "none";
+    if (marketColumn) {
+      marketColumn.style.display = "none";
+    }
     newsDetail.style.display = "flex";
+
+    // Scroll to top of the news tab container when showing news details
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
+    }
 
     // Populate detail view
     this.populateNewsDetail(article);
@@ -3300,6 +3484,8 @@ class UIComponents {
   hideNewsDetail() {
     const newsGrid = document.getElementById("news-grid");
     const newsDetail = document.getElementById("news-detail");
+    const stockDetail = document.getElementById("stock-detail");
+    const marketColumn = document.querySelector(".market-column");
 
     if (!newsGrid || !newsDetail) return;
 
@@ -3310,19 +3496,22 @@ class UIComponents {
       // Continue to hide the detail view after reset
     }
 
-    // Show news grid and hide detail view
+    // Show news grid and market column, hide detail views
     newsDetail.style.display = "none";
+    if (stockDetail) stockDetail.style.display = "none";
     newsGrid.style.display = "grid";
-
-    // Clean up event listeners when hiding detail view
-    const sourcesListElement = document.getElementById("news-sources-list");
-    if (sourcesListElement && this.sourceLinkClickHandler) {
-      sourcesListElement.removeEventListener(
-        "click",
-        this.sourceLinkClickHandler
-      );
-      this.sourceLinkClickHandler = null;
+    if (marketColumn) {
+      marketColumn.style.display = "block";
     }
+
+    // Scroll to top of the news tab container when returning to news feed
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
+    }
+
+    // Note: No need to clean up source link listeners anymore
+    // as they're handled by the universal link interceptor
 
     // Remove fixed chat styling when leaving detail view
     const chatContainer = document.getElementById("news-chat-input-container");
@@ -3542,6 +3731,24 @@ class UIComponents {
       .join("\n");
   }
 
+  cleanDescriptionForCard(description) {
+    if (!description) return "";
+    
+    // Remove template expressions like {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, etc.
+    let cleaned = description.replace(/\{\{[^}]+\}\}/g, "");
+    
+    // Convert markdown-style bold formatting (** or ****)
+    cleaned = cleaned.replace(/\*{2,4}([^*]+)\*{2,4}/g, "<strong>$1</strong>");
+    
+    // Convert markdown-style italic formatting (single *)
+    cleaned = cleaned.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+    
+    // Clean up extra whitespace and line breaks for card display
+    cleaned = cleaned.replace(/\s+/g, " ").trim();
+    
+    return cleaned;
+  }
+
   populateSourcesList(article) {
     const sourcesListElement = document.getElementById("news-sources-list");
     if (!sourcesListElement) return;
@@ -3612,136 +3819,10 @@ class UIComponents {
 
     sourcesListElement.innerHTML = sourcesHtml;
 
-    // Add event delegation for source link clicks with error handling
-    // Remove any existing listeners first to prevent duplicates
-    if (this.sourceLinkClickHandler) {
-      sourcesListElement.removeEventListener(
-        "click",
-        this.sourceLinkClickHandler
-      );
-    }
+    // Note: Source links are now handled by the universal link interceptor
 
-    // Create a bound handler and store reference for removal
-    this.sourceLinkClickHandler = this.handleSourceLinkClick.bind(this);
-    sourcesListElement.addEventListener("click", this.sourceLinkClickHandler);
-  }
-
-  async handleSourceLinkClick(event) {
-    const link = event.target.closest(".news-source-link");
-    if (!link) return;
-
-    event.preventDefault();
-
-    const url = link.dataset.sourceUrl;
-    const sourceName = link.dataset.sourceName;
-
-    console.log(`🔗 Attempting to open source link: ${sourceName} -> ${url}`);
-
-    // Check if we're in Electron environment
-    if (window.airisAPI && window.airisAPI.openExternalUrl) {
-      try {
-        const result = await window.airisAPI.openExternalUrl(url);
-
-        if (result.success) {
-          console.log(
-            `✅ Successfully opened ${sourceName} link in external browser`
-          );
-        } else {
-          console.warn(`❌ Failed to open ${sourceName} link: ${result.error}`);
-          this.handleFailedLinkOpen(url, sourceName);
-        }
-      } catch (error) {
-        console.error(`❌ Error using Electron API for ${sourceName}:`, error);
-        this.handleFailedLinkOpen(url, sourceName);
-      }
-    } else {
-      // Fallback for non-Electron environments (web browser)
-      console.log(
-        `🌐 Using fallback method for ${sourceName} (not in Electron)`
-      );
-      try {
-        const newWindow = window.open(url, "_blank", "noopener,noreferrer");
-
-        // Immediate check for popup blocking
-        if (!newWindow) {
-          console.warn(
-            `❌ Popup blocked for ${sourceName}, trying alternative method...`
-          );
-          this.handleFailedLinkOpen(url, sourceName);
-          return;
-        }
-
-        // Check if window was immediately closed (indicates failure)
-        if (newWindow.closed) {
-          console.warn(
-            `❌ Window immediately closed for ${sourceName}, trying alternative method...`
-          );
-          this.handleFailedLinkOpen(url, sourceName);
-          return;
-        }
-
-        console.log(`✅ Successfully opened ${sourceName} link`);
-      } catch (error) {
-        console.error(`❌ Error opening ${sourceName} link:`, error);
-        this.handleFailedLinkOpen(url, sourceName);
-      }
-    }
-  }
-
-  async handleFailedLinkOpen(url, sourceName) {
-    // Show user notification with options
-    const message = `Unable to open ${sourceName} link directly. Would you like to copy the URL to clipboard?`;
-
-    if (confirm(message)) {
-      // Copy URL to clipboard
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(url)
-          .then(() => {
-            alert(
-              `✅ ${sourceName} URL copied to clipboard!\n\nURL: ${url}\n\nYou can now paste this in your browser.`
-            );
-          })
-          .catch(() => {
-            this.showManualCopyDialog(url, sourceName);
-          });
-      } else {
-        this.showManualCopyDialog(url, sourceName);
-      }
-    } else {
-      // Try using Electron API as alternative
-      if (window.airisAPI && window.airisAPI.openExternalUrl) {
-        if (confirm(`Try opening ${sourceName} using system browser?`)) {
-          try {
-            const result = await window.airisAPI.openExternalUrl(url);
-            if (result.success) {
-              console.log(
-                `✅ Successfully opened ${sourceName} using system browser`
-              );
-            } else {
-              alert(`Failed to open ${sourceName}: ${result.error}`);
-            }
-          } catch (error) {
-            console.error(
-              `Error using system browser for ${sourceName}:`,
-              error
-            );
-            alert(`Failed to open ${sourceName} using system browser.`);
-          }
-        }
-      } else {
-        // Last resort: try opening in same tab (for web environments)
-        if (confirm(`Try opening ${sourceName} in the same tab?`)) {
-          window.location.href = url;
-        }
-      }
-    }
-  }
-
-  showManualCopyDialog(url, sourceName) {
-    // Fallback: show URL in a dialog for manual copying
-    const dialog = `${sourceName} URL:\n\n${url}\n\nPlease copy this URL manually and paste it in your browser.`;
-    alert(dialog);
+    // Note: Source link clicks are now handled by the universal link interceptor
+    // No need for separate event handler as it causes duplicate opens
   }
 
   findClusterForArticle(article) {
@@ -4088,7 +4169,10 @@ class UIComponents {
 
       const uploadText = uploadArea.querySelector("h3");
       if (uploadText) {
-        uploadText.textContent = `Selected: ${file.name}`;
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        uploadText.textContent = `${t("selected")}: ${file.name}`;
       }
     }
 
@@ -4115,12 +4199,19 @@ class UIComponents {
       // Disable button and show loading state
       if (verifyBtn) {
         verifyBtn.disabled = true;
-        verifyBtn.innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> <span>Verifying...</span>';
+        const t = window.languageService
+          ? window.languageService.t.bind(window.languageService)
+          : (key) => key;
+        verifyBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${t(
+          "verifying"
+        )}</span>`;
       }
 
       // Show progress indicator
-      this.showVerificationProgress("Starting verification...");
+      const t = window.languageService
+        ? window.languageService.t.bind(window.languageService)
+        : (key) => key;
+      this.showVerificationProgress(t("startingVerification"));
 
       // Call verification API
       const result = await window.apiService.verifyDocument(
@@ -4140,7 +4231,8 @@ class UIComponents {
 
         if (resultsContainer) {
           resultsContainer.style.display = "block";
-          resultsContainer.scrollIntoView({ behavior: "smooth" });
+          // Remove scrollIntoView to prevent content shifting
+          // resultsContainer.scrollIntoView({ behavior: "smooth" });
         }
 
         const t = window.languageService
@@ -4266,23 +4358,28 @@ class UIComponents {
     const finalStatus = document.getElementById("verification-final-status");
     const fraudRisk = document.getElementById("fraud-risk-level");
 
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
     if (detectedType) {
-      detectedType.textContent =
-        result.verification_type ||
-        window.languageService?.get("unknown") ||
-        "Unknown";
+      const docType = result.verification_type || "unknown";
+      // Try to translate the document type, fall back to original if no translation
+      const translatedType = t(docType) || docType;
+      detectedType.textContent = translatedType;
     }
 
     if (finalStatus) {
-      finalStatus.textContent =
-        result.status || window.languageService?.get("unknown") || "Unknown";
+      finalStatus.textContent = result.status || t("unknown");
       finalStatus.className = `detail-value ${result.status}`;
     }
 
     if (fraudRisk) {
       const fraudLevel = result.stages?.fraud_analysis?.risk_level || "unknown";
-      fraudRisk.textContent = fraudLevel;
-      fraudRisk.className = `detail-value risk-${fraudLevel}`;
+      // Fraud level is already translated from backend, but translate again for consistency
+      const translatedLevel = t(fraudLevel.toLowerCase()) || fraudLevel;
+      fraudRisk.textContent = translatedLevel;
+      fraudRisk.className = `detail-value risk-${fraudLevel.toLowerCase()}`;
     }
   }
 
@@ -4292,13 +4389,17 @@ class UIComponents {
 
     stagesGrid.innerHTML = "";
 
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
     const stageNames = {
-      quality_control: "Quality Control",
-      classification: "Document Classification",
-      text_extraction: "Text Extraction",
-      template_validation: "Template Validation",
-      data_consistency: "Data Consistency",
-      fraud_analysis: "Fraud Analysis",
+      quality_control: t("qualityControl"),
+      classification: t("documentClassification"),
+      text_extraction: t("textExtraction"),
+      template_validation: t("templateValidation"),
+      data_consistency: t("dataConsistency"),
+      fraud_analysis: t("fraudAnalysis"),
     };
 
     Object.entries(stages).forEach(([stageName, stageData]) => {
@@ -4340,7 +4441,15 @@ class UIComponents {
     const issues = stageData.issues || stageData.indicators || [];
     const details = Array.isArray(issues)
       ? issues.join(", ")
-      : stageData.assessment || stageData.reasoning || "No details available";
+      : stageData.assessment ||
+        stageData.reasoning ||
+        (window.languageService
+          ? window.languageService.t("noDetailsAvailable")
+          : "No details available");
+
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
 
     card.innerHTML = `
       <div class="stage-header">
@@ -4351,7 +4460,7 @@ class UIComponents {
       </div>
       <div class="stage-details">${Utils.escapeHtml(details)}</div>
       <div class="stage-score">
-        <span class="stage-score-label">Score</span>
+        <span class="stage-score-label">${t("score")}</span>
         <span class="stage-score-value">${percentage}%</span>
       </div>
     `;
@@ -4431,13 +4540,13 @@ class UIComponents {
     // Hide any progress indicators
     this.hideVerificationProgress();
 
-    // Scroll back to top
-    const verificationContainer = document.querySelector(
-      ".verification-container"
-    );
-    if (verificationContainer) {
-      verificationContainer.scrollIntoView({ behavior: "smooth" });
-    }
+    // Scroll back to top - removed to prevent content shifting
+    // const verificationContainer = document.querySelector(
+    //   ".verification-container"
+    // );
+    // if (verificationContainer) {
+    //   verificationContainer.scrollIntoView({ behavior: "smooth" });
+    // }
   }
 
   downloadVerificationReport() {
@@ -4529,11 +4638,6 @@ class UIComponents {
 
       if (result.success && result.files) {
         this.allFiles = result.files;
-
-        // Initialize selected files to all files if not already set
-        if (this.selectedFiles.length === 0) {
-          this.selectedFiles = this.allFiles.map((file) => file.name);
-        }
 
         this.renderFileSelectionList();
         this.updateFileSelectionButton();
@@ -4674,14 +4778,17 @@ class UIComponents {
 
     if (selectedCount === 0) {
       button.classList.remove("has-selection");
+      button.classList.remove("all-selected");
       button.removeAttribute("data-count");
       button.title = "Select files to include";
     } else if (selectedCount === totalCount) {
       button.classList.add("has-selection");
-      button.setAttribute("data-count", "All");
+      button.classList.add("all-selected");
+      button.setAttribute("data-count", totalCount);
       button.title = `All ${totalCount} files selected`;
     } else {
       button.classList.add("has-selection");
+      button.classList.remove("all-selected");
       button.setAttribute("data-count", selectedCount);
       button.title = `${selectedCount} of ${totalCount} files selected`;
     }
@@ -5452,6 +5559,1251 @@ class UIComponents {
       url: this.currentNewsArticle.url,
       cluster_data: clusterData || null,
     };
+  }
+
+  // Stock Detail functionality
+  async showStockDetail(symbol) {
+    const newsGrid = document.getElementById("news-grid");
+    const stockDetail = document.getElementById("stock-detail");
+    const marketColumn = document.querySelector(".market-column");
+
+    if (!newsGrid || !stockDetail) return;
+
+    // Track which stock is currently active to avoid race conditions
+    this.currentStockSymbol = symbol;
+
+    // Hide news grid and market column, show stock detail
+    newsGrid.style.display = "none";
+    if (marketColumn) {
+      marketColumn.style.display = "none";
+    }
+    stockDetail.style.display = "flex";
+
+    // Scroll to top of the news tab container when showing stock details
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
+    }
+
+    // Set up back button handler
+    const backButton = document.getElementById("stock-detail-back");
+    if (backButton) {
+      backButton.onclick = () => this.hideStockDetail();
+    }
+
+    // Set up stock search functionality
+    this.setupStockSearch();
+
+    // Load stock data and populate the detail view using current interval
+    const activeIntervalBtn = document.querySelector(".interval-btn.active");
+    const interval = activeIntervalBtn
+      ? activeIntervalBtn.dataset.interval
+      : "1M";
+    const limit = this.computeLimitFromInterval(interval);
+    await this.loadStockDetailData(symbol, limit);
+
+    // Bind once: interval buttons and mover tabs
+    if (!this.intervalButtonsBound) {
+      this.setupIntervalButtons();
+      this.intervalButtonsBound = true;
+    }
+    if (!this.moverTabsBound) {
+      this.setupMarketMoverTabs();
+      this.moverTabsBound = true;
+    }
+  }
+
+  hideStockDetail() {
+    const newsGrid = document.getElementById("news-grid");
+    const stockDetail = document.getElementById("stock-detail");
+    const marketColumn = document.querySelector(".market-column");
+
+    if (!newsGrid || !stockDetail) return;
+
+    // Show news grid and market column, hide stock detail
+    stockDetail.style.display = "none";
+    newsGrid.style.display = "grid";
+    if (marketColumn) {
+      marketColumn.style.display = "block";
+    }
+
+    // Scroll to top of the news tab container when returning to news feed
+    const newsTab = document.getElementById("news-tab");
+    if (newsTab) {
+      newsTab.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }
+
+  async loadStockDetailData(symbol, limit = 7) {
+    // Skip duplicate requests for the same params
+    if (
+      this.isLoadingStockDetail &&
+      this.lastStockSymbol === symbol &&
+      this.lastStockLimit === limit
+    ) {
+      return;
+    }
+    this.isLoadingStockDetail = true;
+    try {
+      // Show loading state
+      this.showStockLoadingState();
+
+      // Get stock data from API
+      const api = new APIService();
+      const response = await api.getMarketEod(symbol, limit);
+
+      if (
+        response.data &&
+        response.data.data &&
+        response.data.data.length > 0
+      ) {
+        const stockData = response.data.data;
+        await this.populateStockDetail(symbol, stockData);
+      } else {
+        this.showStockErrorState(symbol);
+      }
+      this.lastStockSymbol = symbol;
+      this.lastStockLimit = limit;
+    } catch (error) {
+      console.error("Error loading stock detail:", error);
+      this.showStockErrorState(symbol);
+    } finally {
+      this.isLoadingStockDetail = false;
+    }
+  }
+
+  computeLimitFromInterval(interval) {
+    const today = new Date();
+    switch ((interval || "").toUpperCase()) {
+      case "1M":
+        return 30;
+      case "6M":
+        return 180;
+      case "YTD": {
+        const start = new Date(today.getFullYear(), 0, 1);
+        const diffMs = today - start;
+        return Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
+      }
+      case "1Y":
+        return 365;
+      case "MAX":
+        return 10000;
+      default:
+        return 30;
+    }
+  }
+
+  isIndexSymbol(symbol) {
+    // Common index symbols and patterns
+    const indexPatterns = [
+      /^XU\d+/i, // Turkish indices (XU100, XU030, etc.)
+      /^BIST\d+/i, // BIST indices
+      /^\^/, // Yahoo Finance index format (^GSPC, ^DJI, etc.)
+      /^SPX$/i, // S&P 500
+      /^DJI$/i, // Dow Jones
+      /^IXIC$/i, // NASDAQ
+      /^RUT$/i, // Russell 2000
+      /^VIX$/i, // Volatility Index
+      /^FTSE/i, // FTSE indices
+      /^DAX$/i, // DAX
+      /^CAC$/i, // CAC 40
+      /^NIKKEI/i, // Nikkei
+      /INDEX$/i, // Generic index suffix
+    ];
+
+    // Check if symbol matches any index pattern
+    return indexPatterns.some((pattern) => pattern.test(symbol));
+  }
+
+  showStockLoadingState() {
+    const companyName = document.getElementById("stock-company-name");
+    const symbol = document.getElementById("stock-symbol");
+    const currentPrice = document.getElementById("stock-current-price");
+    const priceChange = document.getElementById("stock-price-change");
+    const priceTime = document.getElementById("stock-price-time");
+    const chart = document.getElementById("stock-chart");
+
+    if (companyName) companyName.textContent = "Loading...";
+    if (symbol) symbol.textContent = "";
+    if (currentPrice) currentPrice.textContent = "--";
+    if (priceChange) priceChange.textContent = "";
+    if (priceTime) priceTime.textContent = "";
+    if (chart) {
+      chart.innerHTML = `
+        <div class="chart-loading">
+          <div class="loading-spinner"></div>
+          <p>Loading chart...</p>
+        </div>
+      `;
+    }
+  }
+
+  showStockErrorState(symbol) {
+    const companyName = document.getElementById("stock-company-name");
+    const symbolEl = document.getElementById("stock-symbol");
+    const currentPrice = document.getElementById("stock-current-price");
+    const priceChange = document.getElementById("stock-price-change");
+    const priceTime = document.getElementById("stock-price-time");
+    const chart = document.getElementById("stock-chart");
+
+    if (companyName) companyName.textContent = "Error loading data";
+    if (symbolEl) symbolEl.textContent = symbol;
+    if (currentPrice) currentPrice.textContent = "--";
+    if (priceChange) priceChange.textContent = "";
+    if (priceTime) priceTime.textContent = "";
+    if (chart) {
+      chart.innerHTML = `
+        <div class="chart-loading">
+          <p>Error loading chart data</p>
+        </div>
+      `;
+    }
+  }
+
+  async populateStockDetail(symbol, stockData) {
+    // Sort data by date (newest first)
+    const sortedData = [...stockData].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+    const latest = sortedData[0];
+    const earliest = sortedData[sortedData.length - 1];
+    const previous = sortedData[1];
+
+    // Calculate change from earliest to latest within interval
+    const change = latest.close - (earliest ? earliest.close : latest.close);
+    const changePercent =
+      earliest && earliest.close ? (change / earliest.close) * 100 : 0;
+    const isPositive = change >= 0;
+
+    // Populate header information
+    const companyName = document.getElementById("stock-company-name");
+    const symbolEl = document.getElementById("stock-symbol");
+    const currentPrice = document.getElementById("stock-current-price");
+    const priceChange = document.getElementById("stock-price-change");
+    const priceTime = document.getElementById("stock-price-time");
+
+    if (companyName) companyName.textContent = this.getCompanyName(symbol);
+    if (symbolEl) symbolEl.textContent = symbol;
+    if (currentPrice)
+      currentPrice.textContent = `₺${latest.close?.toLocaleString("tr-TR")}`;
+    if (priceChange) {
+      priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(
+        2
+      )} (${isPositive ? "+" : ""}${changePercent.toFixed(2)}%)`;
+      priceChange.className = `stock-price-change ${
+        isPositive ? "positive" : "negative"
+      }`;
+    }
+    if (priceTime) {
+      const date = new Date(latest.date);
+      const currentLanguage = window.languageService.getCurrentLanguage();
+
+      let formattedDate;
+      if (currentLanguage === "tr") {
+        // Turkish locale
+        formattedDate = date.toLocaleDateString("tr-TR", {
+          month: "short",
+          day: "numeric",
+        });
+      } else {
+        // Default English locale
+        formattedDate = date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      priceTime.textContent = `${window.languageService.get(
+        "atClose"
+      )}: ${formattedDate}`;
+    }
+
+    // Populate financial metrics
+    this.populateFinancialMetrics(latest, previous);
+
+    // Populate company details (only for individual stocks, not indices)
+    const companyDetailsSection = document.querySelector(
+      ".stock-company-details"
+    );
+    if (this.isIndexSymbol(symbol)) {
+      // Hide company details section for indices
+      if (companyDetailsSection) {
+        companyDetailsSection.style.display = "none";
+      }
+    } else {
+      // Show company details section for individual stocks
+      if (companyDetailsSection) {
+        companyDetailsSection.style.display = "block";
+      }
+      await this.populateCompanyDetails(symbol);
+    }
+
+    // Create and display chart
+    this.createStockChart(sortedData);
+
+    // Populate market movers once per session
+    if (!this.marketMoversData) {
+      await this.fetchAndRenderMarketMovers();
+    }
+  }
+
+  getCompanyName(symbol) {
+    const companyNames = {
+      "TUPRS.IS": "Türkiye Petrol Rafinerileri A.Ş.",
+      "AKBNK.IS": "Akbank T.A.Ş.",
+      "GARAN.IS": "Garanti BBVA",
+      "ISCTR.IS": "Türkiye İş Bankası A.Ş.",
+      "THYAO.IS": "Türk Hava Yolları A.O.",
+      "BIMAS.IS": "BİM Birleşik Mağazalar A.Ş.",
+      "EREGL.IS": "Ereğli Demir ve Çelik Fabrikaları T.A.Ş.",
+      "FROTO.IS": "Ford Otomotiv Sanayi A.Ş.",
+      "KCHOL.IS": "Koç Holding A.Ş.",
+      "SAHOL.IS": "Hacı Ömer Sabancı Holding A.Ş.",
+      "XU030.IS": "BIST 30",
+      "XU100.IS": "BIST 100",
+    };
+    return companyNames[symbol] || symbol;
+  }
+
+  populateFinancialMetrics(latest, previous) {
+    const metricsContainer = document.getElementById("financial-metrics");
+    if (!metricsContainer) return;
+
+    const previousClose = previous.close ? previous.close.toFixed(2) : "--";
+    const open = latest.open ? latest.open.toFixed(2) : "--";
+    const dayRange = `${Math.min(latest.low, latest.high).toFixed(
+      2
+    )} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
+    const volume = latest.volume
+      ? latest.volume.toLocaleString("tr-TR")
+      : previous
+      ? previous.volume.toLocaleString("tr-TR")
+      : "--";
+
+    metricsContainer.innerHTML = `
+      <div class="financial-metric">
+        <span class="financial-metric-label">${languageService.get(
+          "prevClose"
+        )}</span>
+        <span class="financial-metric-value">₺${previousClose}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">${languageService.get(
+          "open"
+        )}</span>
+        <span class="financial-metric-value">₺${open}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">${languageService.get(
+          "dayRange"
+        )}</span>
+        <span class="financial-metric-value">₺${dayRange}</span>
+      </div>
+      <div class="financial-metric">
+        <span class="financial-metric-label">${languageService.get(
+          "volume"
+        )}</span>
+        <span class="financial-metric-value">${volume}</span>
+      </div>
+    `;
+  }
+
+  async populateCompanyDetails(symbol) {
+    const detailsContainer = document.getElementById("company-details");
+    if (!detailsContainer) return;
+
+    // Don't fetch company details for indices
+    if (this.isIndexSymbol(symbol)) {
+      detailsContainer.innerHTML = `
+        <div class="company-detail">
+          <span class="company-detail-label">Index Information</span>
+          <span class="company-detail-value">This is a market index, not an individual company.</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Show loading placeholder immediately
+    detailsContainer.innerHTML = `
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "fulltimeEmployees"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "loading"
+    )}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "sector"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "loading"
+    )}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "industry"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "loading"
+    )}</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "country"
+      )}</span><span class="company-detail-value">TR</span></div>
+      <div class="company-detail"><span class="company-detail-label">${languageService.get(
+        "exchange"
+      )}</span><span class="company-detail-value">${languageService.get(
+      "istanbulStockExchange"
+    )}</span></div>
+      <div class="company-description"><p class="description-text">Fetching description…</p></div>
+    `;
+
+    // Debounce duplicate requests
+    if (this.isLoadingCompanyInfo && this.lastCompanyInfoSymbol === symbol) {
+      return;
+    }
+    this.isLoadingCompanyInfo = true;
+    try {
+      // Fetch company info from API
+      const api = new APIService();
+      const response = await api.getCompanyInfo(symbol);
+      const companyData = response.data?.data || {};
+
+      // Extract data with fallbacks, use Turkish versions if language is Turkish
+      const currentLang = languageService.getCurrentLanguage();
+      const fulltimeEmployees = companyData.fulltime_employees || "--";
+      const sector =
+        currentLang === "tr"
+          ? companyData.sector_tr || companyData.sector || "--"
+          : companyData.sector || "--";
+      const industry =
+        currentLang === "tr"
+          ? companyData.industry_tr || companyData.industry || "--"
+          : companyData.industry || "--";
+      const description =
+        currentLang === "tr"
+          ? companyData.description_tr || companyData.description || ""
+          : companyData.description || "";
+
+      console.log(currentLang, sector, industry, description);
+      // Create description HTML with read more using CSS clamp
+      let descriptionHtml = "";
+      if (description) {
+        const isLong = description.length > 240;
+        descriptionHtml = `
+          <div class="company-description">
+            <p class="description-text ${
+              isLong ? "" : "expanded"
+            }">${description}</p>
+            ${
+              isLong
+                ? '<button class="read-more-btn" id="company-read-more">Read More</button>'
+                : ""
+            }
+          </div>
+        `;
+      } else {
+        descriptionHtml =
+          '<div class="company-description"><p class="description-text expanded">No description available.</p></div>';
+      }
+
+      // If user navigated to another stock while waiting, abort update
+      if (this.currentStockSymbol !== symbol) {
+        return;
+      }
+
+      detailsContainer.innerHTML = `
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "fulltimeEmployees"
+          )}</span>
+          <span class="company-detail-value">${fulltimeEmployees}</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "sector"
+          )}</span>
+          <span class="company-detail-value">${sector}</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "industry"
+          )}</span>
+          <span class="company-detail-value">${industry}</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "country"
+          )}</span>
+          <span class="company-detail-value">TR</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "exchange"
+          )}</span>
+          <span class="company-detail-value">${languageService.get(
+            "istanbulStockExchange"
+          )}</span>
+        </div>
+        ${descriptionHtml}
+      `;
+
+      // Wire up Read More toggle without duplicating text
+      const readMoreBtn = document.getElementById("company-read-more");
+      if (readMoreBtn) {
+        readMoreBtn.addEventListener("click", () => {
+          const p = readMoreBtn.previousElementSibling;
+          if (p && p.classList.contains("description-text")) {
+            p.classList.add("expanded");
+            readMoreBtn.remove();
+          }
+        });
+      }
+      this.lastCompanyInfoSymbol = symbol;
+    } catch (error) {
+      console.error("Error fetching company info:", error);
+      // Fallback to default display
+      detailsContainer.innerHTML = `
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "fulltimeEmployees"
+          )}</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "sector"
+          )}</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "industry"
+          )}</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "country"
+          )}</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-detail">
+          <span class="company-detail-label">${languageService.get(
+            "exchange"
+          )}</span>
+          <span class="company-detail-value">--</span>
+        </div>
+        <div class="company-description">
+          <p class="description-text">No description available.</p>
+        </div>
+      `;
+    } finally {
+      this.isLoadingCompanyInfo = false;
+    }
+  }
+
+  createStockChart(data) {
+    const chartContainer = document.getElementById("stock-chart");
+    if (!chartContainer) return;
+
+    // Create a simple line chart using SVG
+    const width = 800;
+    const height = 400;
+    const padding = 60; // Increased padding for axis labels
+    const bottomPadding = 80; // Extra padding for x-axis labels
+
+    // Sort data by date (oldest first for chart)
+    const sortedData = [...data].reverse();
+    const prices = sortedData.map((d) => d.close);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRange = maxPrice - minPrice;
+
+    // Add some margin to price range for better visualization
+    const priceMargin = priceRange * 0.05;
+    const adjustedMinPrice = minPrice - priceMargin;
+    const adjustedMaxPrice = maxPrice + priceMargin;
+    const adjustedPriceRange = adjustedMaxPrice - adjustedMinPrice;
+
+    // Create points for the line
+    const chartWidth = width - 2 * padding;
+    const chartHeight = height - padding - bottomPadding;
+
+    const points = sortedData.map((d, i) => {
+      const x = padding + (i / (sortedData.length - 1)) * chartWidth;
+      const y =
+        padding +
+        ((adjustedMaxPrice - d.close) / adjustedPriceRange) * chartHeight;
+      return { x, y, data: d };
+    });
+
+    // Generate axis labels
+    const { xAxisLabels, yAxisLabels } = this.generateAxisLabels(
+      sortedData,
+      adjustedMinPrice,
+      adjustedMaxPrice,
+      chartWidth,
+      chartHeight,
+      padding,
+      bottomPadding
+    );
+
+    // Create path data
+    let pathData = `M ${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      pathData += ` L ${points[i].x},${points[i].y}`;
+    }
+
+    // Determine color based on trend
+    const firstPrice = prices[0];
+    const lastPrice = prices[prices.length - 1];
+    const isPositive = lastPrice >= firstPrice;
+    const color = isPositive ? "#10b981" : "#ef4444";
+
+    chartContainer.innerHTML = `
+      <div class="chart-tooltip" id="chart-tooltip">
+        <div class="tooltip-price">--</div>
+        <div class="tooltip-date">--</div>
+      </div>
+      <div class="chart-tooltip" id="range-tooltip">
+        <div class="tooltip-price" id="range-price">--</div>
+        <div class="tooltip-date" id="range-dates">--</div>
+      </div>
+      <svg id="stock-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="display: block; width: 100%; height: 100%;">
+        <defs>
+          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:${color};stop-opacity:0.3" />
+            <stop offset="100%" style="stop-color:${color};stop-opacity:0" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Grid lines and axes -->
+        <g class="chart-grid" stroke="#e5e7eb" stroke-width="0.5" opacity="0.6">
+          ${yAxisLabels
+            .map(
+              (label) => `
+            <line x1="${padding}" y1="${label.y}" x2="${
+                padding + chartWidth
+              }" y2="${label.y}" />
+          `
+            )
+            .join("")}
+          ${xAxisLabels
+            .map(
+              (label) => `
+            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${
+                padding + chartHeight
+              }" />
+          `
+            )
+            .join("")}
+        </g>
+        
+        <!-- Y-axis labels (prices) -->
+        <g class="y-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
+          ${yAxisLabels
+            .map(
+              (label) => `
+            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${
+                label.text
+              }</text>
+          `
+            )
+            .join("")}
+        </g>
+        
+        <!-- X-axis labels (dates) -->
+        <g class="x-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
+          ${xAxisLabels
+            .map(
+              (label) => `
+            <text x="${label.x}" y="${
+                padding + chartHeight + 20
+              }" text-anchor="middle">${label.text}</text>
+          `
+            )
+            .join("")}
+        </g>
+        
+        <!-- Main chart area -->
+        <g class="chart-area">
+          <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${pathData} L ${points[points.length - 1].x},${
+      padding + chartHeight
+    } L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
+        </g>
+        
+        <!-- Interactive elements -->
+        <g id="hover-group">
+          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${
+      padding + chartHeight
+    }" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
+          <circle id="hover-dot" r="3" fill="${color}" stroke="#fff" stroke-width="1.5" style="display:none" />
+        </g>
+        <rect id="selection-rect" x="0" y="${padding}" width="0" height="${chartHeight}" fill="#3b82f6" opacity="0.15" style="display:none" />
+        <rect id="hover-capture" x="${padding}" y="${padding}" width="${chartWidth}" height="${chartHeight}" fill="transparent" />
+      </svg>
+    `;
+
+    // Interactivity: tooltip and crosshair
+    const svg = chartContainer.querySelector("#stock-svg");
+    const capture = chartContainer.querySelector("#hover-capture");
+    const hoverLine = chartContainer.querySelector("#hover-line");
+    const hoverDot = chartContainer.querySelector("#hover-dot");
+    const tooltip = chartContainer.querySelector("#chart-tooltip");
+
+    const bisect = (mouseX) => {
+      // Convert mouseX to index by nearest point
+      let nearestIndex = 0;
+      let minDx = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const dx = Math.abs(points[i].x - mouseX);
+        if (dx < minDx) {
+          minDx = dx;
+          nearestIndex = i;
+        }
+      }
+      return nearestIndex;
+    };
+
+    const formatDate = (d) => {
+      try {
+        const dt = new Date(d.date || d.time || d.datetime || d.Date || d.DATE);
+        return dt.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      } catch {
+        return "";
+      }
+    };
+
+    const showAtIndex = (idx) => {
+      const pt = points[idx];
+      const d = sortedData[idx];
+      hoverLine.setAttribute("x1", pt.x);
+      hoverLine.setAttribute("x2", pt.x);
+      hoverDot.setAttribute("cx", pt.x);
+      hoverDot.setAttribute("cy", pt.y);
+      hoverLine.style.display = "block";
+      hoverDot.style.display = "block";
+      tooltip.style.display = "block";
+      const price = (d.close ?? d.Close ?? d.c)?.toLocaleString("tr-TR", {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+      });
+      tooltip.querySelector(".tooltip-price").textContent = `₺${price}`;
+      tooltip.querySelector(".tooltip-date").textContent = formatDate(d);
+      // Position tooltip relative to chart container
+      const chartRect = chartContainer.getBoundingClientRect();
+      const tx = (pt.x / width) * chartRect.width;
+      const ty = (pt.y / height) * chartRect.height;
+      tooltip.style.left = `${tx}px`;
+      tooltip.style.top = `${ty}px`;
+    };
+
+    let isSelecting = false;
+    let startIdx = null;
+    const selectionRect = chartContainer.querySelector("#selection-rect");
+    const rangeTooltip = chartContainer.querySelector("#range-tooltip");
+
+    const updateRange = (i1, i2) => {
+      const a = Math.min(i1, i2);
+      const b = Math.max(i1, i2);
+      const p1 = points[a];
+      const p2 = points[b];
+      selectionRect.setAttribute("x", p1.x);
+      selectionRect.setAttribute("width", Math.max(1, p2.x - p1.x));
+      selectionRect.style.display = "block";
+
+      const d1 = sortedData[a];
+      const d2 = sortedData[b];
+      const change = d2.close - d1.close;
+      const pct = d1.close ? (change / d1.close) * 100 : 0;
+      const priceStr = `₺${change.toFixed(2)} (${
+        pct >= 0 ? "+" : ""
+      }${pct.toFixed(2)}%)`;
+      rangeTooltip.querySelector("#range-price").textContent = priceStr;
+      rangeTooltip.querySelector("#range-dates").textContent = `${formatDate(
+        d1
+      )} → ${formatDate(d2)}`;
+      // Position tooltip near end point relative to chart container
+      const chartRect = chartContainer.getBoundingClientRect();
+      const tx = (p2.x / width) * chartRect.width;
+      const ty = (p2.y / height) * chartRect.height;
+      rangeTooltip.style.left = `${tx}px`;
+      rangeTooltip.style.top = `${ty}px`;
+      rangeTooltip.style.display = "block";
+    };
+
+    capture.addEventListener("mousemove", (e) => {
+      const bbox = svg.getBoundingClientRect();
+      const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
+      const idx = bisect(mouseX);
+      if (isSelecting && startIdx !== null) {
+        updateRange(startIdx, idx);
+      } else {
+        showAtIndex(idx);
+      }
+    });
+
+    capture.addEventListener("mouseleave", () => {
+      hoverLine.style.display = "none";
+      hoverDot.style.display = "none";
+      tooltip.style.display = "none";
+      if (!isSelecting) {
+        selectionRect.style.display = "none";
+        rangeTooltip.style.display = "none";
+      }
+    });
+
+    capture.addEventListener("mousedown", (e) => {
+      const bbox = svg.getBoundingClientRect();
+      const mouseX = ((e.clientX - bbox.left) / bbox.width) * width;
+      startIdx = bisect(mouseX);
+      isSelecting = true;
+
+      // Reset selection rectangle position before showing
+      const startPoint = points[startIdx];
+      selectionRect.setAttribute("x", startPoint.x);
+      selectionRect.setAttribute("width", 0);
+      selectionRect.style.display = "block";
+
+      // Don't show range tooltip yet, wait for movement
+      rangeTooltip.style.display = "none";
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (isSelecting) {
+        isSelecting = false;
+        // Hide selection when mouse is released
+        selectionRect.style.display = "none";
+        rangeTooltip.style.display = "none";
+      }
+    });
+  }
+
+  generateAxisLabels(
+    sortedData,
+    minPrice,
+    maxPrice,
+    chartWidth,
+    chartHeight,
+    padding,
+    bottomPadding
+  ) {
+    const priceRange = maxPrice - minPrice;
+
+    // Generate Y-axis labels (prices)
+    const yAxisLabels = [];
+    const numYTicks = 6;
+    for (let i = 0; i <= numYTicks; i++) {
+      const ratio = i / numYTicks;
+      const price = maxPrice - ratio * priceRange;
+      const y = padding + ratio * chartHeight;
+
+      yAxisLabels.push({
+        y: y,
+        text: `₺${price.toFixed(2)}`,
+        value: price,
+      });
+    }
+
+    // Generate X-axis labels (dates)
+    const xAxisLabels = [];
+    const dataLength = sortedData.length;
+
+    if (dataLength <= 2) {
+      // If very few data points, show all
+      sortedData.forEach((d, i) => {
+        const x = padding + (i / (dataLength - 1)) * chartWidth;
+        xAxisLabels.push({
+          x: x,
+          text: this.formatDateForAxis(d),
+          data: d,
+        });
+      });
+    } else {
+      // Show smart intervals based on data length
+      let numXTicks;
+      if (dataLength <= 7) {
+        numXTicks = dataLength;
+      } else if (dataLength <= 30) {
+        numXTicks = Math.min(6, Math.ceil(dataLength / 5));
+      } else if (dataLength <= 90) {
+        numXTicks = 6;
+      } else {
+        numXTicks = 8;
+      }
+
+      for (let i = 0; i < numXTicks; i++) {
+        const dataIndex =
+          i === numXTicks - 1
+            ? dataLength - 1
+            : Math.floor((i * (dataLength - 1)) / (numXTicks - 1));
+        const x = padding + (dataIndex / (dataLength - 1)) * chartWidth;
+        const d = sortedData[dataIndex];
+
+        xAxisLabels.push({
+          x: x,
+          text: this.formatDateForAxis(d),
+          data: d,
+          index: dataIndex,
+        });
+      }
+    }
+
+    return { xAxisLabels, yAxisLabels };
+  }
+
+  formatDateForAxis(dataPoint) {
+    try {
+      const date = new Date(
+        dataPoint.date ||
+          dataPoint.time ||
+          dataPoint.datetime ||
+          dataPoint.Date ||
+          dataPoint.DATE
+      );
+
+      // Format based on current language
+      const currentLang = languageService.getCurrentLanguage();
+      const locale = currentLang === "tr" ? "tr-TR" : "en-US";
+
+      // Use shorter format for axis labels
+      return date.toLocaleDateString(locale, {
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "--";
+    }
+  }
+
+  async fetchAndRenderMarketMovers(limit = 30, chartNum = 8) {
+    const moversContainer = document.getElementById("market-movers-content");
+    if (!moversContainer) return;
+
+    try {
+      const symbols = [
+        "AEFES.IS",
+        "AKBNK.IS",
+        "ASELS.IS",
+        "ASTOR.IS",
+        "BIMAS.IS",
+        "CIMSA.IS",
+        "EKGYO.IS",
+        "ENKAI.IS",
+        "EREGL.IS",
+        "FROTO.IS",
+        "GARAN.IS",
+        "GUBRF.IS",
+        "ISCTR.IS",
+        "KCHOL.IS",
+        "KOZAL.IS",
+        "KRDMD.IS",
+        "MGROS.IS",
+        "PETKM.IS",
+        "PGSUS.IS",
+        "SAHOL.IS",
+        "SASA.IS",
+        "SISE.IS",
+        "TAVHL.IS",
+        "TCELL.IS",
+        "THYAO.IS",
+        "TOASO.IS",
+        "TTKOM.IS",
+        "TUPRS.IS",
+        "ULKER.IS",
+        "YKBNK.IS",
+      ];
+
+      const api = new APIService();
+      const resp = await api.getGainersLosersActive(symbols, limit, chartNum);
+      const data = resp.data?.data || { gainers: [], losers: [], active: [] };
+      this.marketMoversData = data;
+
+      // Default render gainers tab
+      this.renderMarketMovers("gainers");
+    } catch (err) {
+      console.error("Failed to load market movers", err);
+      moversContainer.innerHTML = `<div class="text-muted">Unable to load market movers.</div>`;
+    }
+  }
+
+  renderMarketMovers(tab = "gainers") {
+    const moversContainer = document.getElementById("market-movers-content");
+    if (!moversContainer || !this.marketMoversData) return;
+
+    const list = this.marketMoversData[tab] || [];
+    moversContainer.innerHTML = list
+      .map((item) => {
+        const positive = item.change_percent >= 0;
+        const formatted = `${positive ? "+" : ""}${item.change_percent.toFixed(
+          2
+        )}%`;
+        return `
+        <div class="mover-item" data-symbol="${item.symbol}">
+          <span class="mover-symbol">${item.symbol}</span>
+          <span class="mover-change ${
+            positive ? "positive" : "negative"
+          }">${formatted}</span>
+        </div>
+      `;
+      })
+      .join("");
+
+    // Click to open stock detail
+    moversContainer.onclick = (e) => {
+      const row = e.target.closest(".mover-item");
+      if (row && row.dataset.symbol) {
+        this.showStockDetail(row.dataset.symbol);
+      }
+    };
+  }
+
+  setupIntervalButtons() {
+    const intervalButtons = document.querySelectorAll(".interval-btn");
+    intervalButtons.forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        intervalButtons.forEach((b) => b.classList.remove("active"));
+        const target = e.currentTarget;
+        target.classList.add("active");
+        const interval = target.dataset.interval;
+        const limit = this.computeLimitFromInterval(interval);
+        if (this.currentStockSymbol) {
+          await this.loadStockDetailData(this.currentStockSymbol, limit);
+        }
+      });
+    });
+  }
+
+  setupMarketMoverTabs() {
+    const moverTabs = document.querySelectorAll(".mover-tab");
+    moverTabs.forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        moverTabs.forEach((t) => t.classList.remove("active"));
+        const target = e.currentTarget;
+        target.classList.add("active");
+        const tabKey = target.dataset.tab || "gainers";
+        this.renderMarketMovers(tabKey);
+      });
+    });
+  }
+
+  // Stock Search functionality
+  setupStockSearch() {
+    const searchInput = document.getElementById("stock-search-input");
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+
+    if (!searchInput || !searchDropdown) return;
+
+    // Avoid setting up multiple times
+    if (searchInput.dataset.searchSetup) return;
+    searchInput.dataset.searchSetup = "true";
+
+    let searchTimeout;
+    let highlightedIndex = -1;
+    let searchResults = [];
+
+    // Handle input changes
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.trim();
+
+      // Clear previous timeout
+      clearTimeout(searchTimeout);
+
+      if (query.length < 1) {
+        this.hideSearchDropdown();
+        return;
+      }
+
+      // Debounce search requests
+      searchTimeout = setTimeout(async () => {
+        await this.performStockSearch(query);
+      }, 300);
+    });
+
+    // Handle keyboard navigation
+    searchInput.addEventListener("keydown", (e) => {
+      const items = searchDropdown.querySelectorAll(".stock-search-item");
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          highlightedIndex = Math.min(highlightedIndex + 1, items.length - 1);
+          this.updateSearchHighlight(items, highlightedIndex);
+          break;
+
+        case "ArrowUp":
+          e.preventDefault();
+          highlightedIndex = Math.max(highlightedIndex - 1, -1);
+          this.updateSearchHighlight(items, highlightedIndex);
+          break;
+
+        case "Enter":
+          e.preventDefault();
+          if (highlightedIndex >= 0 && items[highlightedIndex]) {
+            const symbol = items[highlightedIndex].dataset.symbol;
+            this.selectStock(symbol);
+          }
+          break;
+
+        case "Escape":
+          this.hideSearchDropdown();
+          searchInput.blur();
+          break;
+      }
+    });
+
+    // Handle clicks outside to close dropdown
+    document.addEventListener("click", (e) => {
+      if (
+        !searchInput.contains(e.target) &&
+        !searchDropdown.contains(e.target)
+      ) {
+        this.hideSearchDropdown();
+      }
+    });
+
+    // Reset highlight index when dropdown content changes
+    const observer = new MutationObserver(() => {
+      highlightedIndex = -1;
+    });
+    observer.observe(searchDropdown, { childList: true });
+  }
+
+  async performStockSearch(query) {
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+    if (!searchDropdown) return;
+
+    try {
+      // Show loading state
+      searchDropdown.innerHTML = `
+        <div class="stock-search-no-results">
+          <i class="fas fa-spinner fa-spin"></i> ${languageService.get(
+            "loading"
+          )}
+        </div>
+      `;
+      searchDropdown.classList.add("show");
+
+      // Call the API
+      const api = new APIService();
+      const response = await api.searchSymbols(query);
+
+      console.log("Search response:", response); // Debug log
+
+      // The API method returns response.data directly, so the symbols are in response.symbols or response.data
+      let symbols = null;
+      if (response) {
+        symbols = response.symbols || response.data || [];
+      }
+
+      if (symbols && symbols.length > 0) {
+        this.renderSearchResults(symbols);
+      } else {
+        this.renderNoResults();
+      }
+    } catch (error) {
+      console.error("Stock search error:", error);
+      this.renderSearchError();
+    }
+  }
+
+  renderSearchResults(symbols) {
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+    if (!searchDropdown) return;
+
+    const resultsHtml = symbols
+      .map((symbol) => {
+        // Handle both simple strings and objects
+        const symbolCode = typeof symbol === "string" ? symbol : symbol.symbol;
+        const displayName =
+          typeof symbol === "object" && symbol.name ? symbol.name : symbolCode;
+
+        return `
+        <div class="stock-search-item" data-symbol="${symbolCode}">
+          <div class="stock-search-item-symbol">${symbolCode}</div>
+          <div class="stock-search-item-name">${displayName}</div>
+        </div>
+      `;
+      })
+      .join("");
+
+    searchDropdown.innerHTML = resultsHtml;
+    searchDropdown.classList.add("show");
+
+    // Add click handlers
+    searchDropdown.querySelectorAll(".stock-search-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const symbol = item.dataset.symbol;
+        this.selectStock(symbol);
+      });
+    });
+  }
+
+  renderNoResults() {
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+    if (!searchDropdown) return;
+
+    searchDropdown.innerHTML = `
+      <div class="stock-search-no-results">
+        ${languageService.get("noResultsFound")}
+      </div>
+    `;
+    searchDropdown.classList.add("show");
+  }
+
+  renderSearchError() {
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+    if (!searchDropdown) return;
+
+    searchDropdown.innerHTML = `
+      <div class="stock-search-no-results">
+        <i class="fas fa-exclamation-triangle"></i> ${languageService.get(
+          "error"
+        )}
+      </div>
+    `;
+    searchDropdown.classList.add("show");
+  }
+
+  updateSearchHighlight(items, highlightedIndex) {
+    items.forEach((item, index) => {
+      if (index === highlightedIndex) {
+        item.classList.add("highlighted");
+      } else {
+        item.classList.remove("highlighted");
+      }
+    });
+  }
+
+  hideSearchDropdown() {
+    const searchDropdown = document.getElementById("stock-search-dropdown");
+    if (searchDropdown) {
+      searchDropdown.classList.remove("show");
+    }
+  }
+
+  async selectStock(symbol) {
+    const searchInput = document.getElementById("stock-search-input");
+
+    // Update search input with selected symbol
+    if (searchInput) {
+      searchInput.value = symbol;
+    }
+
+    // Hide dropdown
+    this.hideSearchDropdown();
+
+    // Load the selected stock data
+    if (symbol !== this.currentStockSymbol) {
+      this.currentStockSymbol = symbol;
+
+      // Load stock data with current interval
+      const activeIntervalBtn = document.querySelector(".interval-btn.active");
+      const interval = activeIntervalBtn
+        ? activeIntervalBtn.dataset.interval
+        : "1M";
+      const limit = this.computeLimitFromInterval(interval);
+      await this.loadStockDetailData(symbol, limit);
+    }
   }
 }
 
