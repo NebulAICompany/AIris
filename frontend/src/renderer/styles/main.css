@@ -562,6 +562,9 @@ input:checked + .slider:before {
   overflow-y: auto;
   display: none;
   margin: 0;
+  /* Fix scroll behavior to prevent content shifting */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
 
 /* Specific handling for calculator tab to prevent double scrolling */
@@ -579,6 +582,14 @@ input:checked + .slider:before {
   padding: 0;
   overflow: hidden;
   margin: 0;
+}
+
+/* Special layout for verification tab - prevent content shifting */
+#verification-tab {
+  overflow-y: auto;
+  /* Ensure proper scroll behavior without content shifting */
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
 }
 
 /* Special layout for news tab - full page scrolling */

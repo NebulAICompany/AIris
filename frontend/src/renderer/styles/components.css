@@ -4411,17 +4411,17 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .stock-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .stock-price-info {
     text-align: left;
   }
-  
+
   .financial-metrics {
     grid-template-columns: 1fr;
   }
@@ -4433,17 +4433,17 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .stock-search-container {
     max-width: none;
     margin-left: 0;
     width: 100%;
   }
-  
+
   .stock-chart-intervals {
     justify-content: center;
   }
-  
+
   .interval-btn {
     padding: 6px 12px;
     font-size: 12px;
@@ -5006,6 +5006,10 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  /* Ensure proper height and prevent content shifting */
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
 }
 
 .verification-header {
@@ -5135,6 +5139,10 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   padding: 32px;
   border: 1px solid var(--border-color);
   animation: slideUp 0.5s ease-out;
+  /* Prevent content shifting and ensure proper layout */
+  flex: 1;
+  margin-bottom: 0;
+  position: relative;
 }
 
 @keyframes slideUp {
@@ -5503,6 +5511,9 @@ body.dark-theme .toggle-switch input:checked + .slider:before {
   justify-content: center;
   padding-top: 24px;
   border-top: 1px solid var(--border-color);
+  /* Ensure buttons stay at bottom and don't create extra space */
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 /* Progress indicators for verification */
