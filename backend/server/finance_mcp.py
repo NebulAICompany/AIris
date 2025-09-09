@@ -17,7 +17,7 @@ sys.path.insert(0, str(project_root))
 from backend.shared.constants import (
     CHARTS_DIR,
     CHART_DATA_FILE,
-    MARKETSTACK_EOD_API_KEY,
+    MARKETSTACK_API_KEY,
     MARKETSTACK_BASE_URL,
 )
 
@@ -29,7 +29,7 @@ async def make_request(
     endpoint: str, params: Dict[str, Any], retries: int = 3, timeout: float = 10.0
 ) -> Dict[str, Any]:
     """Sends an asynchronous request to the Marketstack API."""
-    params["access_key"] = MARKETSTACK_EOD_API_KEY
+    params["access_key"] = MARKETSTACK_API_KEY
     url = f"{MARKETSTACK_BASE_URL}/{endpoint}"
 
     attempt = 0
