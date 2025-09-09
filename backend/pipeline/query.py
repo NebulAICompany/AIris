@@ -337,28 +337,26 @@ async def run_news_chat_orchestration(
     logger.info(f"   - Session ID: {session_id}")
 
     # Handle chat history and session management
-    if not session_id:
+    if session_id:
+        # Add user message to chat history
+        chat_history_manager.add_message(session_id, MessageRole.USER, query)
+
+        # Get conversation context
+        conversation_context = chat_history_manager.get_conversation_context(
+            session_id, max_messages=10
+        )
+        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
+
+        # Reduce history if too long
+        session = chat_history_manager.get_session(session_id)
+        if session and len(session.messages) > 30:
+            logger.info(
+                f"   - Reducing chat history from {len(session.messages)} messages"
+            )
+            chat_history_manager.reduce_history(session, target_messages=20)
+    else:
+        conversation_context = []
         logger.debug(f"   - No session ID provided, processing as standalone query")
-        return {
-            "response": "Session ID gerekli. Lütfen geçerli bir session ile tekrar deneyin.",
-            "images": [],
-            "session_id": session_id,
-        }
-
-    # Add user message to chat history
-    chat_history_manager.add_message(session_id, MessageRole.USER, query)
-
-    # Get conversation context
-    conversation_context = chat_history_manager.get_conversation_context(
-        session_id, max_messages=10
-    )
-    logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
-
-    # Reduce history if too long
-    session = chat_history_manager.get_session(session_id)
-    if session and len(session.messages) > 30:
-        logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
-        chat_history_manager.reduce_history(session, target_messages=20)
 
     # Preprocess query
     preprocessed_query, lang = preprocess_query(query)
@@ -384,9 +382,10 @@ async def run_news_chat_orchestration(
     images = get_image_datas()
 
     # Add assistant response to chat history
-    metadata = {"images": images} if images else None
-    chat_history_manager.add_message(
-        session_id, MessageRole.ASSISTANT, answer, metadata
-    )
+    if session_id:
+        metadata = {"images": images} if images else None
+        chat_history_manager.add_message(
+            session_id, MessageRole.ASSISTANT, answer, metadata
+        )
 
     return {"response": answer, "images": images, "session_id": session_id}

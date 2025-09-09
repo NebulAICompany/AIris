@@ -60,17 +60,21 @@
 
 html {
   height: 100%;
+  width: 100%;
   font-size: 14px;
+  overflow-x: hidden;
 }
 
 body {
   height: 100%;
+  width: 100%;
   font-family: var(--font-primary);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 /* Scrollbar Styles - Best Practices */
@@ -98,17 +102,18 @@ body {
   background: var(--bg-secondary);
 }
 
-/* Ensure scrollbars are always positioned at the right edge */
-* {
-  scrollbar-gutter: stable;
-}
+/* Remove global scrollbar gutter to prevent white space */
 
 /* App Container */
 .app-container {
   height: 100vh;
+  width: 100vw;
+  max-width: 100vw;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -388,6 +393,10 @@ input:checked + .slider:before {
   overflow: hidden;
   margin: 0;
   padding: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Sidebar */
@@ -560,8 +569,12 @@ input:checked + .slider:before {
   height: 100%;
   padding: 24px;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal overflow */
   display: none;
   margin: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   /* Fix scroll behavior to prevent content shifting */
   scroll-behavior: smooth;
   overscroll-behavior: contain;
@@ -1832,9 +1845,13 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
   position: relative;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .chat-header {
@@ -1852,7 +1869,11 @@ input:checked + .slider:before {
   flex: 1;
   padding: 16px 24px;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-input-container {
