@@ -70,6 +70,9 @@ class AIrisApp {
       show: false,
     });
 
+    // Maximize window on startup
+    this.mainWindow.maximize();
+
     // Load the main HTML file
     logger.debug("Loading main HTML file");
     this.mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
