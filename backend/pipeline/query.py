@@ -92,8 +92,9 @@ async def run_orchestration(
     skip_retrieval = not selected_files or len(selected_files) == 0
     if skip_retrieval:
         logger.info(
-            "   - No files selected, skipping retrieval and continuing with empty local context"
+            "   - No files selected, skipping retrieval and continuing with informational local context"
         )
+        logger.debug(f"   - Selected files: {selected_files}")
 
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
@@ -215,32 +216,6 @@ async def run_orchestration(
                 preprocessed_query, doc_contents, with_score=False, top_n=5
             )
 
-    # Check if no documents were found
-    if not reranked_docs:
-        if skip_retrieval:
-            logger.info(
-                "   - No documents retrieved (no files selected), continuing with empty local context"
-            )
-        else:
-            logger.warning("No retrieved docs")
-            error_message = (
-                f"Üzgünüm, seçilen dosyalarda ({', '.join(selected_files)}) sorgunuzla ilgili bilgi bulamadım."
-                if selected_files
-                else "Üzgünüm, sorgunuzla ilgili belgede bilgi bulamadım."
-            )
-
-            # Add assistant response to chat history
-            chat_history_manager.add_message(
-                session_id, MessageRole.ASSISTANT, error_message
-            )
-
-            return {
-                "response": error_message,
-                "images": [],
-                "charts": [],
-                "generatedFiles": [],
-            }
-
     context_entries = []
 
     if reranked_docs:
@@ -276,9 +251,19 @@ async def run_orchestration(
             )
 
         local_context = "\n\n---\n\n".join(context_entries)
+        logger.info(f"   - Local context created with {len(context_entries)} documents")
     else:
-        local_context = ""
-        logger.info("   - Using empty local context")
+        # Determine the reason for empty context and provide appropriate message
+        if skip_retrieval:
+            local_context = "Lokal İçerik Durumu: Hiçbir dosya seçilmediği için lokal belgelerden içerik alınamadı."
+            logger.info(
+                "   - No files selected, using informational message for empty context"
+            )
+        else:
+            local_context = "Lokal İçerik Durumu: Seçilen dosyalarda sorgunuzla ilgili uygun içerik bulunamadı."
+            logger.info(
+                "   - No relevant documents found, using informational message for empty context"
+            )
     logger.info(f"In Query, Pre-embedding process: {pre_embedding_process}")
     logger.debug(f"   - Local Context: {local_context}")
     logger.info(f"using web search ?= {web_search_enabled}")
