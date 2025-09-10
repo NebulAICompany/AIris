@@ -38,7 +38,32 @@ async def parse_document(file_path: str) -> str:
             if os.path.exists(new_file_path):
                 os.remove(new_file_path)
                 logger.info(f"Deleted temporary file: {new_file_path}")
+        elif file_extension == ".doc":
+            # Convert .doc to .docx format using an external library
+            from win32com import client as wc
             
+            # Create a temporary .docx file path
+            new_file_path = Path(UPLOADS_PATH) / f"{Path(file_path).stem}.docx"
+            
+            # Use win32com to convert .doc to .docx
+            try:
+                word = wc.Dispatch('Word.Application')
+                doc = word.Documents.Open(file_path)
+                doc.SaveAs(str(new_file_path), 16)  # 16 represents the value for .docx format
+                doc.Close()
+                word.Quit()
+                logger.info(f"Converted {file_path} to {new_file_path}")
+                
+                # Parse the new docx file
+                extracted_text = await AzureParser(str(new_file_path))
+                
+                # Delete the temporary docx file after processing
+                if os.path.exists(new_file_path):
+                    os.remove(new_file_path)
+                    logger.info(f"Deleted temporary file: {new_file_path}")
+            except Exception as e:
+                logger.error(f"Error converting .doc to .docx: {str(e)}")
+                raise e
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 

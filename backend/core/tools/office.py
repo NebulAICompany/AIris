@@ -424,6 +424,19 @@ def modify_excel_cells(
 
         # Select sheet
         if sheet_name:
+            # Check if the specified sheet exists in the workbook
+            if sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+            else:
+                return {
+                    "success": False,
+                    "error": f"Worksheet '{sheet_name}' does not exist in the workbook. Available sheets: {', '.join(wb.sheetnames)}"
+                }
+        else:
+            ws = wb.active
+
+        # Select sheet
+        if sheet_name:
             ws = wb[sheet_name]
         else:
             ws = wb.active
