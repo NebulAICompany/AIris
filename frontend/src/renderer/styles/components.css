@@ -1333,32 +1333,47 @@ body.dark-theme .image-caption {
 }
 
 .web-search-button.active {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border: 2px solid #059669;
+  background: transparent;
+  border: 2px solid transparent;
   color: white;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3),
-    0 6px 20px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
   transform: scale(1.002);
+  position: relative;
+  z-index: 2;
+}
+
+.web-search-button.active::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #a855f7, #3b82f6);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 2s linear infinite;
+  opacity: 1;
 }
 
 .web-search-button.active::after {
   content: "";
   position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  background: conic-gradient(from 0deg, #10b981, #3b82f6, #8b5cf6, #10b981);
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #10b981, #059669);
   border-radius: 50%;
-  z-index: -1;
-  animation: rotate 2s linear infinite;
-  opacity: 0.8;
+  z-index: 0;
 }
 
 .web-search-button.active i {
   animation: webSearchPulse 1.5s ease-in-out infinite;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
   font-size: 1.1em;
+  position: relative;
+  z-index: 2;
 }
 
 /* Web Search Button Normal State Enhancement */
