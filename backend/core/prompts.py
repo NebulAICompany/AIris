@@ -339,6 +339,9 @@ Use the finance_agent tool in any of the following cases:
 - For comparison analysis: Use finance_agent for multi-stock charts and analysis
 - For professional reports: Use finance_agent for comprehensive market analysis with visualizations
 
+**For Time and Date Information:**
+Use time_now tool for current time/date queries. Defaults to Europe/Istanbul timezone unless specified.
+
 **For Visual Content Display:**
 Use the image_visualizer tool with img_uniqueid or fig_uniqueid when:
 - User's query relates to visual content that has been processed and described in the context

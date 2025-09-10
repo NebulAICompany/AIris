@@ -2,6 +2,29 @@ import requests
 import xml.etree.ElementTree as ET
 from agents import function_tool
 from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+@function_tool
+async def time_now(tz: str = "Europe/Istanbul") -> str:
+    """
+    Get the current date and time in ISO 8601 format for a specified timezone.
+
+    Args:
+        tz: IANA timezone identifier (e.g., 'Europe/Istanbul', 'America/New_York', 'UTC').
+            Defaults to 'Europe/Istanbul' if not specified.
+
+    Returns:
+        Current datetime as ISO 8601 formatted string (e.g., '2024-01-15T14:30:45+03:00').
+
+    Examples:
+        - time_now() -> '2024-01-15T14:30:45+03:00' (Istanbul time)
+        - time_now('UTC') -> '2024-01-15T11:30:45+00:00'
+        - time_now('America/New_York') -> '2024-01-15T06:30:45-05:00'
+    """
+    return datetime.now(ZoneInfo(tz)).isoformat()
+
 
 @function_tool
 def wolfram_alpha_query(query: str) -> str:
@@ -70,6 +93,6 @@ def web_search_tool(query: str, max_results: int = 5) -> list:
     """
     try:
         response = tavily_client.search(query, max_results=max_results)
-        return response['results']
+        return response["results"]
     except Exception as e:
         return [{"error": str(e)}]

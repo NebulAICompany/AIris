@@ -1,7 +1,7 @@
 from agents import Agent
 from .prompts import wolfram_instructions, rag_agent_instructions
 from typing import List
-from .tools.api import web_search_tool, wolfram_alpha_query
+from .tools.api import web_search_tool, wolfram_alpha_query, time_now
 from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
@@ -10,6 +10,7 @@ rag_agent_as_tools = [
     finance_agent_tool,
     office_agent_tool,
     wolfram_alpha_query,
+    time_now,
     image_visualizer,
     redescribe_image_content,
 ]
@@ -64,6 +65,7 @@ def create_rag_agent(
 
     return agent
 
+
 def create_news_summarization_agent(
     instructions: str,
     web_search_enabled: bool,
@@ -91,13 +93,14 @@ def create_news_summarization_agent(
     )
     return agent
 
+
 def create_clustering_agent(instructions: str) -> Agent:
     """Create specialized clustering agent"""
     agent = Agent(
         name="Turkish_Financial_News_Clusterer",
         instructions=instructions,
         model="gpt-4o-mini",
-        tools=[]  # No tools needed, pure text analysis
+        tools=[],  # No tools needed, pure text analysis
     )
     return agent
 
@@ -216,6 +219,7 @@ Now analyze the news and answer the user's question comprehensively! """
     )
 
     return agent
+
 
 def create_translation_agent(instructions: str) -> Agent:
     """Create a specialized translation agent"""
