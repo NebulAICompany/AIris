@@ -4427,16 +4427,17 @@ class UIComponents {
     // Determine stage status
     let stageStatus = "warning";
     let statusIcon = "fas fa-exclamation-triangle";
-
+    console.log(stageName);
+    console.log(stageData.passed, stageData.valid, stageData.consistent, stageData.risk_level, stageData.failed, stageData.score, stageData.confidence, stageData.quality_score);
     if (
       stageData.passed ||
       stageData.valid ||
       stageData.consistent ||
-      stageData.risk_level === "low"
+      stageData.risk_level === "low" || stageData.risk_level === "düşük"
     ) {
       stageStatus = "passed";
       statusIcon = "fas fa-check";
-    } else if (stageData.failed || stageData.risk_level === "high") {
+    } else if (stageData.failed || stageData.risk_level === "high" || stageData.risk_level === "yüksek") {
       stageStatus = "failed";
       statusIcon = "fas fa-times";
     }
