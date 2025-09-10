@@ -289,6 +289,15 @@ class UIComponents {
 
         // Only intercept links with href attributes
         if (link.href) {
+          // Do NOT intercept application-generated download links or blob URLs
+          // - Anchors with download attribute should be allowed to proceed
+          // - blob: URLs are handled by the browser/Electron automatically
+          const hasDownloadAttr = link.hasAttribute("download");
+          const isBlobUrl = link.href.startsWith("blob:");
+          if (hasDownloadAttr || isBlobUrl) {
+            return; // allow default behavior
+          }
+
           e.preventDefault();
           e.stopPropagation();
 
