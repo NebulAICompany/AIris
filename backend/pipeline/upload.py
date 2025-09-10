@@ -4,6 +4,8 @@ import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
 from backend.utils.parser import AzureParser, TxtParser, ImageParser
 from backend.pipeline.vector import PreEmbeddingProcess
+import pandas as pd
+from backend.shared.constants import UPLOADS_PATH
 
 logger = get_logger("UPLOAD")
 
@@ -18,13 +20,25 @@ async def parse_document(file_path: str) -> str:
     """
     try:
         file_extension = Path(file_path).suffix.lower()
-
         if file_extension in (".pdf", ".docx", ".xlsx"):
             extracted_text = await AzureParser(file_path)
         elif file_extension == ".txt":
             extracted_text = await TxtParser(file_path)
         elif file_extension in (".jpg", ".jpeg", ".gif", ".bmp", ".png"):
             extracted_text = await ImageParser(file_path)
+        elif file_extension == ".xls":
+            # Read the old .xls and create a new file in .xlsx format
+            df = pd.read_excel(file_path)
+            new_file_path = Path(UPLOADS_PATH) / f"{Path(file_path).stem}.xlsx"
+            df.to_excel(str(new_file_path), index=False)
+            logger.info(f"Converted {file_path} to {new_file_path}")
+            # Parse the new xlsx file
+            extracted_text = await AzureParser(str(new_file_path))
+            # Delete the temporary xlsx file after processing
+            if os.path.exists(new_file_path):
+                os.remove(new_file_path)
+                logger.info(f"Deleted temporary file: {new_file_path}")
+            
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
