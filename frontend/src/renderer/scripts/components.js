@@ -289,6 +289,15 @@ class UIComponents {
 
         // Only intercept links with href attributes
         if (link.href) {
+          // Do NOT intercept application-generated download links or blob URLs
+          // - Anchors with download attribute should be allowed to proceed
+          // - blob: URLs are handled by the browser/Electron automatically
+          const hasDownloadAttr = link.hasAttribute("download");
+          const isBlobUrl = link.href.startsWith("blob:");
+          if (hasDownloadAttr || isBlobUrl) {
+            return; // allow default behavior
+          }
+
           e.preventDefault();
           e.stopPropagation();
 
@@ -3164,7 +3173,7 @@ class UIComponents {
               <i class="fas fa-building"></i>
               ${Utils.escapeHtml(article.source)}
             </span>
-            <span class="news-hero-time">~${timeAgo}</span>
+            <span class="news-hero-time">${timeAgo}</span>
           </div>
         </div>
       </div>
@@ -3245,7 +3254,7 @@ class UIComponents {
               <i class="fas fa-building"></i>
               ${Utils.escapeHtml(article.source)}
             </span>
-            <span class="news-time">~${timeAgo}</span>
+            <span class="news-time">${timeAgo}</span>
           </div>
         </div>
       </div>
@@ -4375,11 +4384,27 @@ class UIComponents {
     }
 
     if (fraudRisk) {
-      const fraudLevel = result.stages?.fraud_analysis?.risk_level || "unknown";
-      // Fraud level is already translated from backend, but translate again for consistency
-      const translatedLevel = t(fraudLevel.toLowerCase()) || fraudLevel;
+      const stages = result.stages || {};
+
+      // Support multiple possible keys for fraud analysis stage (EN/TR)
+      const fraudStage =
+        stages.fraud_analysis ||
+        stages["sahtekarlık analizi"] ||
+        stages["sahtekarlik analizi"] ||
+        stages["fraud analysis"] ||
+        stages.fraud || null;
+
+      let fraudLevel = (fraudStage && fraudStage.risk_level) || "unknown";
+
+      // Normalize to EN keys for class names; translate text for UI
+      let normalized = String(fraudLevel).toLowerCase();
+      if (normalized === "düşük") normalized = "low";
+      if (normalized === "yüksek") normalized = "high";
+      if (normalized === "orta") normalized = "medium";
+
+      const translatedLevel = t(normalized) || fraudLevel;
       fraudRisk.textContent = translatedLevel;
-      fraudRisk.className = `detail-value risk-${fraudLevel.toLowerCase()}`;
+      fraudRisk.className = `detail-value risk-${normalized}`;
     }
   }
 
@@ -4418,16 +4443,17 @@ class UIComponents {
     // Determine stage status
     let stageStatus = "warning";
     let statusIcon = "fas fa-exclamation-triangle";
-
+    // console.log(stageName);
+    // console.log(stageData.passed, stageData.valid, stageData.consistent, stageData.risk_level, stageData.failed, stageData.score, stageData.confidence, stageData.quality_score);
     if (
       stageData.passed ||
       stageData.valid ||
       stageData.consistent ||
-      stageData.risk_level === "low"
+      stageData.risk_level === "low" || stageData.risk_level === "düşük"
     ) {
       stageStatus = "passed";
       statusIcon = "fas fa-check";
-    } else if (stageData.failed || stageData.risk_level === "high") {
+    } else if (stageData.failed || stageData.risk_level === "high" || stageData.risk_level === "yüksek") {
       stageStatus = "failed";
       statusIcon = "fas fa-times";
     }
