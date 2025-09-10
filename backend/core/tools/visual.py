@@ -146,7 +146,7 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
 
         # Call OpenAI Vision API with error handling
         response = openai_client.chat.completions.create(
-            model="gpt-5", messages=messages, max_tokens=1500, temperature=0.1
+            model="gpt-4o", messages=messages, max_tokens=1500, temperature=0.1
         )
 
         # Validate response

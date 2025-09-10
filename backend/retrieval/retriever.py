@@ -74,12 +74,14 @@ def retrieve_top_k(
                     ]
                 ),
                 limit=k,
+                score_threshold=0.5,
             ).points
         else:
             docs_with_scores = client.query_points(
                 collection_name="test_collection",
                 query=_get_embeddings().embed_query(query),
                 limit=k,
+                score_threshold=0.5,
             ).points
         logger.info(f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore")
 
@@ -89,6 +91,7 @@ def retrieve_top_k(
             doc = d.payload
             score = d.score
             logger.info(f"file name: {doc['metadata'].get('file_name')}")
+            logger.info(f"score: {score}")
             contains_image = doc["metadata"].get("contains_image", False)
 
             if contains_image:
