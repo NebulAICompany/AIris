@@ -4384,11 +4384,27 @@ class UIComponents {
     }
 
     if (fraudRisk) {
-      const fraudLevel = result.stages?.fraud_analysis?.risk_level || "unknown";
-      // Fraud level is already translated from backend, but translate again for consistency
-      const translatedLevel = t(fraudLevel.toLowerCase()) || fraudLevel;
+      const stages = result.stages || {};
+
+      // Support multiple possible keys for fraud analysis stage (EN/TR)
+      const fraudStage =
+        stages.fraud_analysis ||
+        stages["sahtekarlık analizi"] ||
+        stages["sahtekarlik analizi"] ||
+        stages["fraud analysis"] ||
+        stages.fraud || null;
+
+      let fraudLevel = (fraudStage && fraudStage.risk_level) || "unknown";
+
+      // Normalize to EN keys for class names; translate text for UI
+      let normalized = String(fraudLevel).toLowerCase();
+      if (normalized === "düşük") normalized = "low";
+      if (normalized === "yüksek") normalized = "high";
+      if (normalized === "orta") normalized = "medium";
+
+      const translatedLevel = t(normalized) || fraudLevel;
       fraudRisk.textContent = translatedLevel;
-      fraudRisk.className = `detail-value risk-${fraudLevel.toLowerCase()}`;
+      fraudRisk.className = `detail-value risk-${normalized}`;
     }
   }
 
@@ -4427,8 +4443,8 @@ class UIComponents {
     // Determine stage status
     let stageStatus = "warning";
     let statusIcon = "fas fa-exclamation-triangle";
-    console.log(stageName);
-    console.log(stageData.passed, stageData.valid, stageData.consistent, stageData.risk_level, stageData.failed, stageData.score, stageData.confidence, stageData.quality_score);
+    // console.log(stageName);
+    // console.log(stageData.passed, stageData.valid, stageData.consistent, stageData.risk_level, stageData.failed, stageData.score, stageData.confidence, stageData.quality_score);
     if (
       stageData.passed ||
       stageData.valid ||
