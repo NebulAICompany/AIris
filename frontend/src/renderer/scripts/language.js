@@ -58,6 +58,9 @@ class LanguageService {
         uploadDocuments: "Upload Documents",
         uploadForAnalysis: "Upload financial documents for AI analysis",
         dragDropFiles: "Drag & Drop Files Here",
+        dropFilesToChat: "Drop files to chat",
+        dropFilesDescription:
+          "Drop your files here to add them to the conversation",
         or: "or",
         browseFiles: "browse files",
         supportedFormats: "Supported: PDF, DOCX, XLSX, Images",
@@ -296,14 +299,14 @@ class LanguageService {
           "Enable advanced mathematical verification for calculations, fraud detection, and currency validation",
         // Verification stage names
         qualityControl: "Quality Control",
-        documentClassification: "Document Classification", 
+        documentClassification: "Document Classification",
         textExtraction: "Text Extraction",
         templateValidation: "Template Validation",
         dataConsistency: "Data Consistency",
         fraudAnalysis: "Fraud Analysis",
         // Verification status values
         verified: "Verified",
-        reviewRequired: "Review Required", 
+        reviewRequired: "Review Required",
         rejected: "Rejected",
         passed: "Passed",
         failed: "Failed",
@@ -316,7 +319,7 @@ class LanguageService {
         selected: "Selected",
         // Risk levels
         low: "Low",
-        medium: "Medium", 
+        medium: "Medium",
         high: "High",
         // Quality levels
         good: "Good",
@@ -456,6 +459,9 @@ class LanguageService {
         uploadDocuments: "Belge Yükle",
         uploadForAnalysis: "AI analizi için finansal belgeler yükleyin",
         dragDropFiles: "Dosyaları Buraya Sürükleyip Bırakın",
+        dropFilesToChat: "Dosyaları sohbete bırak",
+        dropFilesDescription:
+          "Konuşmaya eklemek için dosyalarınızı buraya bırakın",
         or: "veya",
         browseFiles: "dosyalara göz atın",
         supportedFormats: "Desteklenen: PDF, DOCX, XLSX, Resimler",
@@ -678,14 +684,14 @@ class LanguageService {
           "Hesaplamalar, sahtekarlık tespiti ve para birimi doğrulaması için gelişmiş matematiksel doğrulamayı etkinleştir",
         // Verification stage names
         qualityControl: "Kalite Kontrol",
-        documentClassification: "Belge Sınıflandırma", 
+        documentClassification: "Belge Sınıflandırma",
         textExtraction: "Metin Çıkarma",
         templateValidation: "Şablon Doğrulama",
         dataConsistency: "Veri Tutarlılığı",
         fraudAnalysis: "Sahtekarlık Analizi",
         // Verification status values
         verified: "Doğrulandı",
-        reviewRequired: "İnceleme Gerekli", 
+        reviewRequired: "İnceleme Gerekli",
         rejected: "Reddedildi",
         passed: "Geçti",
         failed: "Başarısız",
@@ -698,7 +704,7 @@ class LanguageService {
         selected: "Seçildi",
         // Risk levels
         low: "Düşük",
-        medium: "Orta", 
+        medium: "Orta",
         high: "Yüksek",
         // Quality levels
         good: "İyi",

@@ -231,6 +231,21 @@ class UIComponents {
       );
     }
 
+    // Drag and drop for entire chat container
+    const chatContainer = document.querySelector(".chat-container");
+    if (chatContainer) {
+      chatContainer.addEventListener("dragover", (e) =>
+        this.handleChatAreaDragOver(e)
+      );
+      chatContainer.addEventListener("dragleave", (e) =>
+        this.handleChatAreaDragLeave(e)
+      );
+      chatContainer.addEventListener("drop", (e) => this.handleChatAreaDrop(e));
+      chatContainer.addEventListener("dragenter", (e) =>
+        this.handleChatAreaDragEnter(e)
+      );
+    }
+
     // File attachment button (paperclip)
     const fileAttachmentBtn = document.getElementById("file-attachment-btn");
     if (fileAttachmentBtn) {
@@ -1858,16 +1873,25 @@ class UIComponents {
     uploadArea?.classList.remove("drag-over");
 
     const files = Array.from(e.dataTransfer.files);
-    this.addFilesToChat(files);
+    const addedCount = this.addFilesToChat(files);
+
+    // Show success feedback
+    if (addedCount > 0) {
+      this.showNotification(`${addedCount} file(s) added to chat`, "success");
+    }
   }
 
   handleChatFileSelect(e) {
     const files = Array.from(e.target.files);
-    this.addFilesToChat(files);
+    this.addFilesToChat(files, true); // Show notification for manual file selection
     e.target.value = ""; // Clear input
   }
 
-  addFilesToChat(files) {
+  addFilesToChat(files, showNotification = false) {
+    if (!this.chatUploadedFiles) {
+      this.chatUploadedFiles = [];
+    }
+
     const validFiles = files.filter((file) => Utils.validateFile(file));
 
     validFiles.forEach((file) => {
@@ -1879,12 +1903,15 @@ class UIComponents {
 
     this.updateChatFilesPreview();
 
-    if (validFiles.length > 0) {
+    // Only show notification if explicitly requested (for non-drag-drop operations)
+    if (showNotification && validFiles.length > 0) {
       this.showNotification(
         `${validFiles.length} file(s) attached to chat`,
         "success"
       );
     }
+
+    return validFiles.length;
   }
 
   updateChatFilesPreview() {
@@ -1926,12 +1953,18 @@ class UIComponents {
   // Updated file upload handlers for chat input drag & drop
   handleNewFileSelect(event) {
     const files = Array.from(event.target.files);
-    this.addFilesToChat(files);
+    this.addFilesToChat(files, true); // Show notification for manual file selection
   }
 
   handleChatInputDragOver(event) {
     event.preventDefault();
     event.stopPropagation();
+
+    // Set dropEffect to indicate files can be dropped
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
+
     const chatInput = document.getElementById("chat-input");
     chatInput.classList.add("drag-over");
   }
@@ -1948,25 +1981,117 @@ class UIComponents {
   handleChatInputDrop(event) {
     event.preventDefault();
     event.stopPropagation();
+
     const chatInput = document.getElementById("chat-input");
     chatInput.classList.remove("drag-over");
 
-    const files = Array.from(event.dataTransfer.files);
-    this.addFilesToChat(files);
+    // Handle files if any
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      const files = Array.from(event.dataTransfer.files);
+      const addedCount = this.addFilesToChat(files);
+
+      // Show success feedback
+      if (addedCount > 0) {
+        this.showNotification(`${addedCount} file(s) added to chat`, "success");
+      }
+    }
   }
 
-  addFilesToChat(files) {
-    if (!this.chatUploadedFiles) {
-      this.chatUploadedFiles = [];
+  // Chat area drag and drop handlers (for entire chat container)
+  handleChatAreaDragEnter(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Show drag overlay immediately when entering
+    this.showChatDragOverlay();
+  }
+
+  handleChatAreaDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Set dropEffect to indicate files can be dropped
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
     }
 
-    // Add files to the upload queue
-    files.forEach((file) => {
-      this.chatUploadedFiles.push(file);
-    });
+    // Show drag overlay (in case dragenter was missed)
+    this.showChatDragOverlay();
+  }
 
-    // Update the preview
-    this.updateChatFilesPreview();
+  handleChatAreaDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Only hide if leaving the chat container entirely
+    const chatContainer = document.querySelector(".chat-container");
+    if (!chatContainer.contains(event.relatedTarget)) {
+      this.hideChatDragOverlay();
+    }
+  }
+
+  handleChatAreaDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Hide drag overlay
+    this.hideChatDragOverlay();
+
+    // Handle files if any
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      const files = Array.from(event.dataTransfer.files);
+      const addedCount = this.addFilesToChat(files);
+
+      // Show success feedback
+      if (addedCount > 0) {
+        this.showNotification(`${addedCount} file(s) added to chat`, "success");
+      }
+    }
+  }
+
+  // Chat drag overlay management
+  showChatDragOverlay() {
+    let overlay = document.getElementById("chat-drag-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "chat-drag-overlay";
+      overlay.className = "chat-drag-overlay";
+      overlay.innerHTML = `
+        <div class="drag-overlay-content">
+          <div class="drag-overlay-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="drag-overlay-text">
+            <h3 data-i18n="dropFilesToChat">Drop files to chat</h3>
+            <p data-i18n="dropFilesDescription">Drop your files here to add them to the conversation</p>
+          </div>
+        </div>
+      `;
+
+      const chatContainer = document.querySelector(".chat-container");
+      if (chatContainer) {
+        chatContainer.appendChild(overlay);
+
+        // Update translations for the newly added overlay
+        if (window.languageService) {
+          window.languageService.updatePageTexts();
+        }
+      }
+    }
+    overlay.classList.add("visible");
+  }
+
+  hideChatDragOverlay() {
+    const overlay = document.getElementById("chat-drag-overlay");
+    if (overlay) {
+      overlay.classList.remove("visible");
+      // Remove after animation
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.remove();
+        }
+      }, 300);
+    }
   }
 
   // File status message methods
@@ -3742,19 +3867,19 @@ class UIComponents {
 
   cleanDescriptionForCard(description) {
     if (!description) return "";
-    
+
     // Remove template expressions like {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, etc.
     let cleaned = description.replace(/\{\{[^}]+\}\}/g, "");
-    
+
     // Convert markdown-style bold formatting (** or ****)
     cleaned = cleaned.replace(/\*{2,4}([^*]+)\*{2,4}/g, "<strong>$1</strong>");
-    
+
     // Convert markdown-style italic formatting (single *)
     cleaned = cleaned.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    
+
     // Clean up extra whitespace and line breaks for card display
     cleaned = cleaned.replace(/\s+/g, " ").trim();
-    
+
     return cleaned;
   }
 
@@ -4392,7 +4517,8 @@ class UIComponents {
         stages["sahtekarlık analizi"] ||
         stages["sahtekarlik analizi"] ||
         stages["fraud analysis"] ||
-        stages.fraud || null;
+        stages.fraud ||
+        null;
 
       let fraudLevel = (fraudStage && fraudStage.risk_level) || "unknown";
 
@@ -4449,11 +4575,16 @@ class UIComponents {
       stageData.passed ||
       stageData.valid ||
       stageData.consistent ||
-      stageData.risk_level === "low" || stageData.risk_level === "düşük"
+      stageData.risk_level === "low" ||
+      stageData.risk_level === "düşük"
     ) {
       stageStatus = "passed";
       statusIcon = "fas fa-check";
-    } else if (stageData.failed || stageData.risk_level === "high" || stageData.risk_level === "yüksek") {
+    } else if (
+      stageData.failed ||
+      stageData.risk_level === "high" ||
+      stageData.risk_level === "yüksek"
+    ) {
       stageStatus = "failed";
       statusIcon = "fas fa-times";
     }
