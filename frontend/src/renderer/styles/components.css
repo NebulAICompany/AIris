@@ -2746,8 +2746,8 @@ body.dark-theme .progress-bar {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
 }
 
 .preview-excel::before {
@@ -2778,9 +2778,11 @@ body.dark-theme .progress-bar {
 }
 
 .excel-data {
-  height: 100%;
+  flex: 1;
+  overflow: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .excel-data table {
@@ -2790,7 +2792,7 @@ body.dark-theme .progress-bar {
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  height: 100%;
+  min-height: fit-content;
 }
 
 .excel-data th,
@@ -2820,6 +2822,31 @@ body.dark-theme .progress-bar {
 .excel-data tr:hover td {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
+}
+
+/* Excel scroll styling */
+.excel-data::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.excel-data::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.excel-data::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.excel-data::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+.excel-data::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Dark theme adjustments */
@@ -2871,6 +2898,10 @@ body.dark-theme .excel-data th {
     max-height: 220px;
   }
 
+  .excel-data {
+    max-height: 180px;
+  }
+
   .preview-header {
     font-size: 11px;
     padding: 5px 8px;
@@ -2888,6 +2919,10 @@ body.dark-theme .excel-data th {
     padding: 4px;
     display: flex;
     flex-direction: column;
+  }
+
+  .excel-data {
+    max-height: 160px;
   }
 }
 
