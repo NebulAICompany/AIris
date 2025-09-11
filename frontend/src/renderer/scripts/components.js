@@ -1583,7 +1583,7 @@ class UIComponents {
         this.updateChatSessionsUI();
 
         console.log("Loaded chat session:", sessionId);
-        this.showNotification("Chat loaded", "success");
+        // Chat loaded successfully - no notification needed
         return true;
       } else {
         console.error("Failed to load chat session:", response.error);
@@ -1633,7 +1633,7 @@ class UIComponents {
         // Reload sessions list
         await this.loadChatSessions();
 
-        this.showNotification("Chat session deleted", "success");
+        // Chat session deleted successfully - no notification needed
         return true;
       } else {
         this.showNotification("Failed to delete chat", "error");
@@ -1655,7 +1655,7 @@ class UIComponents {
 
     if (sessionId) {
       console.log("New chat session created:", sessionId);
-      this.showNotification("New chat started", "success");
+      // New chat started - no notification needed
     } else {
       console.error("Failed to create new chat session");
       this.showNotification("Failed to create new chat", "error");
@@ -1875,10 +1875,7 @@ class UIComponents {
     const files = Array.from(e.dataTransfer.files);
     const addedCount = this.addFilesToChat(files);
 
-    // Show success feedback
-    if (addedCount > 0) {
-      this.showNotification(`${addedCount} file(s) added to chat`, "success");
-    }
+    // Files added to chat - no notification needed for drag & drop
   }
 
   handleChatFileSelect(e) {
@@ -1903,12 +1900,10 @@ class UIComponents {
 
     this.updateChatFilesPreview();
 
-    // Only show notification if explicitly requested (for non-drag-drop operations)
+    // Only show notification for manual file selection (not drag & drop)
     if (showNotification && validFiles.length > 0) {
-      this.showNotification(
-        `${validFiles.length} file(s) attached to chat`,
-        "success"
-      );
+      // Show minimal feedback for manual file selection
+      console.log(`${validFiles.length} file(s) attached to chat`);
     }
 
     return validFiles.length;
@@ -1990,10 +1985,7 @@ class UIComponents {
       const files = Array.from(event.dataTransfer.files);
       const addedCount = this.addFilesToChat(files);
 
-      // Show success feedback
-      if (addedCount > 0) {
-        this.showNotification(`${addedCount} file(s) added to chat`, "success");
-      }
+      // Files added to chat - no notification needed for drag & drop
     }
   }
 
@@ -2042,10 +2034,7 @@ class UIComponents {
       const files = Array.from(event.dataTransfer.files);
       const addedCount = this.addFilesToChat(files);
 
-      // Show success feedback
-      if (addedCount > 0) {
-        this.showNotification(`${addedCount} file(s) added to chat`, "success");
-      }
+      // Files added to chat - no notification needed for drag & drop
     }
   }
 
@@ -2644,7 +2633,7 @@ class UIComponents {
       if (window.airisAPI && window.airisAPI.openFile) {
         try {
           await window.airisAPI.openFile(fileName);
-          this.showNotification(`${t("openedFile")} ${fileName}`, "success");
+          // File opened successfully - no notification needed
           return;
         } catch (electronError) {
           console.warn(
@@ -2669,7 +2658,7 @@ class UIComponents {
           window.open(downloadUrl, "_blank", "noopener,noreferrer");
         }
 
-        this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
+        // File download started - no notification needed
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
 
@@ -2679,12 +2668,7 @@ class UIComponents {
         );
         if (response.ok) {
           const fileInfo = await response.json();
-          this.showNotification(
-            `${fileName} (${Utils.formatFileSize(fileInfo.size || 0)}) - ${t(
-              "unableToOpenDirectly"
-            )}`,
-            "warning"
-          );
+          // File info displayed - no notification needed
         } else {
           throw new Error("Unable to access file");
         }
@@ -2708,7 +2692,7 @@ class UIComponents {
       if (window.airisAPI && window.airisAPI.openFile) {
         try {
           await window.airisAPI.openFile(fileName);
-          this.showNotification(`${t("openedFile")} ${fileName}`, "success");
+          // File opened successfully - no notification needed
           return;
         } catch (electronError) {
           console.warn(
@@ -2733,7 +2717,7 @@ class UIComponents {
           window.open(downloadUrl, "_blank", "noopener,noreferrer");
         }
 
-        this.showNotification(`${t("downloadingFile")} ${fileName}...`, "info");
+        // File download started - no notification needed
       } catch (downloadError) {
         console.error("Download failed:", downloadError);
 
@@ -2745,12 +2729,7 @@ class UIComponents {
         );
         if (response.ok) {
           const fileInfo = await response.json();
-          this.showNotification(
-            `${fileName} (${Utils.formatFileSize(fileInfo.size || 0)}) - ${t(
-              "unableToOpenDirectly"
-            )}`,
-            "warning"
-          );
+          // File info displayed - no notification needed
         } else {
           throw new Error("Unable to access file");
         }
@@ -2785,7 +2764,7 @@ class UIComponents {
       const t = window.languageService
         ? window.languageService.t.bind(window.languageService)
         : (key) => key;
-      this.showNotification(t("deletingFile"), "info");
+      // File deletion in progress - no notification needed
 
       console.log("🚀 Frontend: Calling API to delete file:", fileName);
 
@@ -2808,7 +2787,7 @@ class UIComponents {
 
       if (response.success) {
         console.log("✅ Frontend: Deletion completed, showing success message");
-        this.showNotification(`File "${fileName}" deleted`, "success");
+        // File deleted successfully - no notification needed
         // Refresh the file list
         console.log("🔄 Frontend: Refreshing file list");
         this.loadFileLibrary();
@@ -2850,7 +2829,7 @@ class UIComponents {
       const t = window.languageService
         ? window.languageService.t.bind(window.languageService)
         : (key) => key;
-      this.showNotification(t("deletingFile"), "info");
+      // File deletion in progress - no notification needed
 
       console.log(
         "🚀 Frontend: Calling IPC to delete created document:",
@@ -2870,7 +2849,7 @@ class UIComponents {
 
       if (response.success) {
         console.log("✅ Frontend: Deletion completed, showing success message");
-        this.showNotification(`Document "${fileName}" deleted`, "success");
+        // Document deleted successfully - no notification needed
         // Refresh the created documents list
         console.log("🔄 Frontend: Refreshing created documents list");
         this.loadCreatedDocumentsLibrary();
@@ -3002,7 +2981,7 @@ class UIComponents {
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
       : (key) => key;
-    this.showNotification(t("settingsSavedSuccessfully"), "success");
+    // Settings saved successfully - no notification needed
   }
 
   loadSettings() {
@@ -4372,7 +4351,7 @@ class UIComponents {
         const t = window.languageService
           ? window.languageService.t.bind(window.languageService)
           : (key) => key;
-        this.showNotification(t("verificationCompleted"), "success");
+        // Verification completed successfully - no notification needed
       } else {
         throw new Error(result.error);
       }
@@ -4739,7 +4718,7 @@ class UIComponents {
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
       : (key) => key;
-    this.showNotification(t("reportDownloaded"), "success");
+    // Report downloaded successfully - no notification needed
   }
 
   // Initialize verification when tab loads
@@ -5170,8 +5149,7 @@ class UIComponents {
         annualRate: interestRate,
       });
 
-      // Show success notification
-      this.showNotification("Hesaplama başarıyla tamamlandı", "success");
+      // Calculation completed successfully - no notification needed
     } catch (error) {
       this.showNotification(error.message, "error");
     }
