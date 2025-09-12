@@ -289,6 +289,9 @@ class PreviewGenerator:
                     "data": "Excel file is empty or has no readable data.",
                 }
 
+            # Replace NaN values with empty strings for better display
+            df = df.fillna('')
+
             # Convert to HTML table for preview
             html_table = df.to_html(
                 classes="excel-preview", table_id="excel-preview-table", escape=False
