@@ -3193,6 +3193,27 @@ code {
   color: #4b5563 !important;
 }
 
+/* Mathematical expressions styling */
+.katex {
+  font-size: 1.1em !important;
+  line-height: 1.4 !important;
+}
+
+.katex-display {
+  margin: 0.5em 0 !important;
+  text-align: center !important;
+}
+
+.message-text .katex,
+.message-content .katex {
+  color: #2563eb !important;
+}
+
+[data-theme="dark"] .message-text .katex,
+[data-theme="dark"] .message-content .katex {
+  color: #60a5fa !important;
+}
+
 /* Dark theme with higher specificity */
 [data-theme="dark"] .message-text pre,
 [data-theme="dark"] .message-content pre,

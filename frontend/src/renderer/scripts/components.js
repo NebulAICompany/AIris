@@ -833,6 +833,15 @@ class UIComponents {
       // Simple content processing
       let processedContent = content || "No response received";
 
+      // Debug: Log the original content
+      console.log("Original content:", processedContent);
+
+      // Process mathematical expressions first, before markdown parsing
+      processedContent = Utils.processMathExpressions(processedContent);
+      
+      // Debug: Log content after math processing
+      console.log("After math processing:", processedContent);
+
       // Safely parse markdown content, fallback to escaped HTML if marked fails
       let parsedContent;
       try {
@@ -844,6 +853,9 @@ class UIComponents {
         console.warn("Markdown parsing failed:", error);
         parsedContent = Utils.escapeHtml(processedContent);
       }
+
+      // Debug: Log final parsed content
+      console.log("Final parsed content:", parsedContent);
 
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -5588,6 +5600,9 @@ class UIComponents {
   formatNewsChatMessage(content) {
     // Enhanced markdown formatting
     let formatted = content;
+
+    // Process mathematical expressions first
+    formatted = Utils.processMathExpressions(formatted);
 
     // Convert bold text (**text**)
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
