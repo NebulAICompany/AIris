@@ -86,7 +86,7 @@ async def get_most_changed_quotes(request: dict):
         symbols = request.get("symbols", [])
         limit = request.get("limit", 30)
         chart_num = request.get("chart_num", 8)
-        
+
         data = store.get_most_changed_quotes(symbols, limit, chart_num)
         return {"data": data}
     except Exception as e:
@@ -108,6 +108,7 @@ async def get_gainers_losers_active(request: dict):
         logger.error(f"Error getting gainers/losers/active: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/market/search-symbols")
 async def search_symbols(query: str = ""):
     logger.info("Searching symbols")
@@ -117,6 +118,7 @@ async def search_symbols(query: str = ""):
     except Exception as e:
         logger.error(f"Error searching symbols: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
@@ -213,9 +215,12 @@ async def handle_upload(file: UploadFile = File(...)):
 
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
+
         pre_embedding_process = "pdr"
 
-        result = await process_file(str(file_path), pre_embedding_process=pre_embedding_process)
+        result = await process_file(
+            str(file_path), pre_embedding_process=pre_embedding_process
+        )
 
         logger.info(f"File processed successfully: {file.filename}")
 
@@ -246,7 +251,9 @@ def list_chat_sessions():
     except Exception as e:
         error_message = str(e)
         logger.error(f"Error listing chat sessions: {error_message}")
-        raise HTTPException(status_code=500, detail=f"Error listing chat sessions: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error listing chat sessions: {error_message}"
+        )
 
 
 @router.get("/chat/sessions/{session_id}")
@@ -257,7 +264,9 @@ def get_chat_session(session_id: str):
     try:
         session = chat_history_manager.get_session(session_id)
         if not session:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
 
         return {
             "session": {
@@ -305,14 +314,18 @@ def delete_chat_session(session_id: str):
     try:
         success = chat_history_manager.delete_session(session_id)
         if not success:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
         return {"message": f"Session {session_id} deleted successfully"}
     except HTTPException:
         raise
     except Exception as e:
         error_message = str(e)
         logger.error(f"Error deleting chat session {session_id}: {error_message}")
-        raise HTTPException(status_code=500, detail=f"Error deleting chat session: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error deleting chat session: {error_message}"
+        )
 
 
 @router.get("/files")
@@ -365,9 +378,16 @@ def list_created_documents():
         if not created_documents_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
+        # Import the temporary file check function
+        from backend.utils.preview import PreviewGenerator
+
         files = []
         for file in created_documents_dir.iterdir():
             if file.is_file():
+                # Skip temporary files
+                if PreviewGenerator._is_temporary_file(str(file)):
+                    continue
+
                 files.append(
                     {
                         "name": file.name,
@@ -462,7 +482,9 @@ def delete_file(filename: str):
         try:
             from backend.retrieval.keyword_search import get_keyword_search
 
-            logger.info(f"🔍 Removing documents from keyword search index for file: {base_filename}")
+            logger.info(
+                f"🔍 Removing documents from keyword search index for file: {base_filename}"
+            )
             keyword_search = get_keyword_search()
             keyword_search.remove_documents_by_file(base_filename)
             keyword_search.save_index()
