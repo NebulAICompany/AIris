@@ -838,7 +838,7 @@ class UIComponents {
 
       // Process mathematical expressions first, before markdown parsing
       processedContent = Utils.processMathExpressions(processedContent);
-      
+
       // Debug: Log content after math processing
       console.log("After math processing:", processedContent);
 
@@ -4185,26 +4185,61 @@ class UIComponents {
     }
   }
 
+  // Map backend verification type keys to i18n keys
+  getVerificationTypeI18nKey(type) {
+    const mapping = {
+      bank_statement: "bankStatement",
+      tax_declaration: "taxDeclaration",
+      // Keep others as-is
+    };
+    return mapping[type] || type;
+  }
+
   updateVerificationTypeSelect(types) {
     const select = document.getElementById("verification-type");
     if (!select || !types) return;
 
-    // Clear existing options except the first one (Auto Detect)
-    const autoOption = select.querySelector('option[value="auto"]');
-    select.innerHTML = "";
-    if (autoOption) {
-      select.appendChild(autoOption);
-    }
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
 
-    // Add options for each verification type
-    Object.entries(types).forEach(([key, value]) => {
-      if (key !== "auto") {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = `${value} (${key})`;
-        select.appendChild(option);
-      }
+    // Preserve current selection
+    const previousValue = select.value;
+
+    // Ensure Auto Detect option exists and is translated
+    let autoOption = select.querySelector('option[value="auto"]');
+    if (!autoOption) {
+      autoOption = document.createElement("option");
+      autoOption.value = "auto";
+    }
+    autoOption.setAttribute("data-i18n", "autoDetect");
+    autoOption.textContent = t("autoDetect");
+
+    // Clear and re-append auto option
+    select.innerHTML = "";
+    select.appendChild(autoOption);
+
+    // Normalize types into a string array
+    const typeList = Array.isArray(types) ? types : Object.keys(types);
+
+    // Add options for each verification type using translations
+    typeList.forEach((type) => {
+      if (type === "auto") return;
+      const i18nKey = this.getVerificationTypeI18nKey(type);
+      const option = document.createElement("option");
+      option.value = type;
+      option.setAttribute("data-i18n", i18nKey);
+      option.textContent = t(i18nKey) || type;
+      select.appendChild(option);
     });
+
+    // Restore previous selection if still available
+    if (
+      previousValue &&
+      Array.from(select.options).some((o) => o.value === previousValue)
+    ) {
+      select.value = previousValue;
+    }
   }
 
   handleVerificationDragOver(e) {
@@ -4489,8 +4524,9 @@ class UIComponents {
 
     if (detectedType) {
       const docType = result.verification_type || "unknown";
-      // Try to translate the document type, fall back to original if no translation
-      const translatedType = t(docType) || docType;
+      const i18nKey = this.getVerificationTypeI18nKey(docType);
+      // Try to translate using mapped key, fall back to original key, then raw text
+      const translatedType = t(i18nKey) || t(docType) || docType;
       detectedType.textContent = translatedType;
     }
 
