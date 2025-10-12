@@ -12,6 +12,7 @@ from backend.shared.constants import (
     MASKED_MAP_JSON_PATH,
     CREATED_DOCUMENTS_PATH,
     DEFAULT_SEARCH_METHOD,
+    IMAGES_PATH_STR,
 )
 import shutil
 from pathlib import Path
@@ -23,6 +24,53 @@ from qdrant_client import models
 
 logger = get_logger("ROUTER")
 router = APIRouter()
+
+
+def delete_document_image_folder(filename: str) -> dict:
+    """
+    Delete the image folder corresponding to a document.
+    
+    Args:
+        filename: The document filename (with or without extension)
+    
+    Returns:
+        dict: Information about the deletion operation
+    """
+    try:
+        # Extract document name without extension
+        document_name = Path(filename).stem
+        
+        # Construct image folder path
+        image_folder_path = Path(IMAGES_PATH_STR) / document_name
+        
+        if image_folder_path.exists() and image_folder_path.is_dir():
+            # Count images before deletion
+            image_files = list(image_folder_path.glob("*.png"))
+            image_count = len(image_files)
+            
+            # Delete the entire folder
+            shutil.rmtree(image_folder_path)
+            
+            logger.info(f"🗂️ Deleted image folder: {image_folder_path} ({image_count} images)")
+            return {
+                "folder_deleted": True,
+                "folder_path": str(image_folder_path),
+                "images_deleted": image_count
+            }
+        else:
+            logger.info(f"📁 No image folder found for document: {document_name}")
+            return {
+                "folder_deleted": False,
+                "folder_path": str(image_folder_path),
+                "images_deleted": 0
+            }
+    except Exception as e:
+        logger.error(f"❌ Error deleting image folder for {filename}: {e}")
+        return {
+            "folder_deleted": False,
+            "error": str(e),
+            "images_deleted": 0
+        }
 
 
 class QueryRequest(BaseModel):
@@ -430,8 +478,14 @@ def delete_file(filename: str):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
+            
+            # Delete corresponding image folder
+            image_folder_result = delete_document_image_folder(filename)
+            
             return {
-                "message": f"File '{filename}' deleted successfully (no vector store found)"
+                "message": f"File '{filename}' deleted successfully (no vector store found)",
+                "image_folder_deleted": image_folder_result["folder_deleted"],
+                "images_deleted": image_folder_result["images_deleted"],
             }
 
         # Load existing vector store
@@ -495,11 +549,16 @@ def delete_file(filename: str):
         # Delete the actual file
         file_path.unlink()
 
+        # Delete corresponding image folder
+        image_folder_result = delete_document_image_folder(filename)
+
         result = {
             "message": f"File '{filename}' deleted successfully",
             "chunks_deleted": len(chunk_ids_to_delete),
             "pii_entries_removed": pii_delete_count,
             "file_path": str(file_path),
+            "image_folder_deleted": image_folder_result["folder_deleted"],
+            "images_deleted": image_folder_result["images_deleted"],
         }
         logger.info(f"🎉 Deletion completed successfully: {result}")
         return result
@@ -688,11 +747,16 @@ def delete_created_document(filename: str):
         # Delete the file
         file_path.unlink()
 
+        # Delete corresponding image folder
+        image_folder_result = delete_document_image_folder(filename)
+
         logger.info(f"Created document deleted successfully: {filename}")
 
         return {
             "message": f"Created document '{filename}' deleted successfully",
             "success": True,
+            "image_folder_deleted": image_folder_result["folder_deleted"],
+            "images_deleted": image_folder_result["images_deleted"],
         }
     except Exception as e:
         error_message = str(e)

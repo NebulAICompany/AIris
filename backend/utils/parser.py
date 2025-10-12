@@ -3,6 +3,7 @@ import io
 import base64
 import uuid
 import os
+import hashlib
 from azure.ai.documentintelligence.models import (
     AnalyzeResult,
     DocumentContentFormat,
@@ -84,11 +85,15 @@ async def AzureParser(file_path: str):
     image_bytes_batch = []
     figure_order = []
 
-    os.makedirs(IMAGES_PATH_STR, exist_ok=True)
+    # Create document-specific folder based on filename
+    document_name = os.path.splitext(os.path.basename(file_path))[0]
+    document_images_path = os.path.join(IMAGES_PATH_STR, document_name)
+    os.makedirs(document_images_path, exist_ok=True)
+    
+    logger.info(f"Created/using document folder: {document_images_path}")
 
     if result.figures:
         for figure in result.figures:
-            figure_id = f"fig_{uuid.uuid4().hex[:8]}"
             caption = figure.caption.content if figure.caption else ""
             if not figure.id:
                 continue
@@ -100,11 +105,25 @@ async def AzureParser(file_path: str):
             )
             img_data = b"".join(response)
             img_base64 = base64.b64encode(img_data).decode()
+            
+            # Generate consistent hash-based ID from image content
+            content_hash = hashlib.sha256(img_base64.encode()).hexdigest()[:16]
+            figure_id = f"fig_{content_hash}"
+            
+            logger.info(f"Figure hash-based ID: {figure_id}")
+            logger.info(f"Original figure ID: {figure.id}")
+            logger.info(f"Content hash: {content_hash}")
 
             image_filename = f"{figure_id}.png"
-            image_path = os.path.join(IMAGES_PATH_STR, image_filename)
-            with open(image_path, "wb") as w:
-                w.write(img_data)
+            image_path = os.path.join(document_images_path, image_filename)
+            
+            # Only save the image if it doesn't already exist
+            if not os.path.exists(image_path):
+                with open(image_path, "wb") as w:
+                    w.write(img_data)
+                logger.info(f"Saved new image: {document_name}/{image_filename}")
+            else:
+                logger.info(f"Image already exists, skipping save: {document_name}/{image_filename}")
 
             figure_images[figure_id] = {
                 "base64": img_base64,

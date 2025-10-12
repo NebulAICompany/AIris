@@ -74,14 +74,14 @@ def retrieve_top_k(
                     ]
                 ),
                 limit=k,
-                score_threshold=0.5,
+                score_threshold=0.4,
             ).points
         else:
             docs_with_scores = client.query_points(
                 collection_name="test_collection",
                 query=_get_embeddings().embed_query(query),
                 limit=k,
-                score_threshold=0.5,
+                score_threshold=0.4,
             ).points
         logger.info(f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore")
 
