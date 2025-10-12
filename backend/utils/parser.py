@@ -4,6 +4,7 @@ import base64
 import uuid
 import os
 import hashlib
+import json
 from azure.ai.documentintelligence.models import (
     AnalyzeResult,
     DocumentContentFormat,
@@ -18,8 +19,46 @@ from backend.shared.constants import (
 from pathlib import Path
 
 from backend.shared.logger import get_logger
+from backend.utils.table_clipper import extract_table_images_from_pdf, create_table_regions_from_azure_result
 
 logger = get_logger("PARSER")
+
+# JSON mapping file path
+IMAGE_MAPPING_FILE = os.path.join(IMAGES_PATH_STR, "image_document_mapping.json")
+
+
+def load_image_mapping() -> dict:
+    """Load the image-to-document mapping from JSON file."""
+    if os.path.exists(IMAGE_MAPPING_FILE):
+        try:
+            with open(IMAGE_MAPPING_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            logger.warning(f"Error loading image mapping file: {e}")
+    return {}
+
+
+def save_image_mapping(mapping: dict):
+    """Save the image-to-document mapping to JSON file."""
+    try:
+        os.makedirs(IMAGES_PATH_STR, exist_ok=True)
+        with open(IMAGE_MAPPING_FILE, 'w', encoding='utf-8') as f:
+            json.dump(mapping, f, indent=2, ensure_ascii=False)
+    except IOError as e:
+        logger.error(f"Error saving image mapping file: {e}")
+
+
+def add_image_to_mapping(image_filename: str, document_name: str, image_type: str = "figure"):
+    """Add an image to the document mapping."""
+    mapping = load_image_mapping()
+    
+    if image_filename not in mapping:
+        mapping[image_filename] = {
+            "document": document_name,
+            "type": image_type
+        }
+        save_image_mapping(mapping)
+        logger.info(f"Added {image_filename} to mapping for document {document_name}")
 
 
 async def build_messages_for_image(image_bytes: bytes):
@@ -85,12 +124,13 @@ async def AzureParser(file_path: str):
     image_bytes_batch = []
     figure_order = []
 
-    # Create document-specific folder based on filename
+    # Get document name for mapping
     document_name = os.path.splitext(os.path.basename(file_path))[0]
-    document_images_path = os.path.join(IMAGES_PATH_STR, document_name)
-    os.makedirs(document_images_path, exist_ok=True)
     
-    logger.info(f"Created/using document folder: {document_images_path}")
+    # Ensure images directory exists
+    os.makedirs(IMAGES_PATH_STR, exist_ok=True)
+    
+    logger.info(f"Processing document: {document_name}")
 
     if result.figures:
         for figure in result.figures:
@@ -115,15 +155,17 @@ async def AzureParser(file_path: str):
             logger.info(f"Content hash: {content_hash}")
 
             image_filename = f"{figure_id}.png"
-            image_path = os.path.join(document_images_path, image_filename)
+            image_path = os.path.join(IMAGES_PATH_STR, image_filename)
             
             # Only save the image if it doesn't already exist
             if not os.path.exists(image_path):
                 with open(image_path, "wb") as w:
                     w.write(img_data)
-                logger.info(f"Saved new image: {document_name}/{image_filename}")
+                logger.info(f"Saved new image: {image_filename}")
+                # Add to mapping
+                add_image_to_mapping(image_filename, document_name, "figure")
             else:
-                logger.info(f"Image already exists, skipping save: {document_name}/{image_filename}")
+                logger.info(f"Image already exists, skipping save: {image_filename}")
 
             figure_images[figure_id] = {
                 "base64": img_base64,
@@ -142,7 +184,69 @@ async def AzureParser(file_path: str):
     else:
         logger.info("No figures found.")
 
+    def _format_polygon(polygon):
+        if not polygon:
+            return "N/A"
+        return ", ".join([f"[{polygon[i]}, {polygon[i + 1]}]" for i in range(0, len(polygon), 2)])
+
+    if result.tables:
+        for table_idx, table in enumerate(result.tables):
+            logger.info(f"Table # {table_idx} has {table.row_count} rows and " f"{table.column_count} columns")
+            if table.bounding_regions:
+                for region in table.bounding_regions:
+                    logger.info(
+                        f"Table # {table_idx} location on page: {region.page_number} is {_format_polygon(region.polygon)}"
+                    )
+            for cell in table.cells:
+                logger.info(f"...Cell[{cell.row_index}][{cell.column_index}] has text '{cell.content}'")
+                if cell.bounding_regions:
+                    for region in cell.bounding_regions:
+                        logger.info(
+                            f"...content on page {region.page_number} is within bounding polygon '{_format_polygon(region.polygon)}'"
+                        )
+    else:
+        logger.info("No tables found.")
+
+    # Extract table images if tables are found
+    table_images = {}
+    if result.tables:
+        try:
+            table_regions = create_table_regions_from_azure_result(result)
+            if table_regions:
+                # Save table images directly to images directory
+                table_image_paths = extract_table_images_from_pdf(
+                    pdf_path=file_path,
+                    table_regions=table_regions,
+                    output_dir=IMAGES_PATH_STR,
+                    padding_inches=0.1  # Add 0.1 inch padding around tables
+                )
+                
+                # Create table images dictionary with IDs and descriptions
+                for i, (region_info, table_image_path) in enumerate(zip(table_regions, table_image_paths)):
+                    table_filename = os.path.basename(table_image_path)
+                    table_id_region = region_info["table_id"]
+                    
+                    
+                    # Add to mapping
+                    add_image_to_mapping(table_filename, document_name, "table")
+                    table_unique_id = table_filename.split(".")[0]
+                    # Store table info
+                    table_images[table_unique_id] = {
+                        "filename": table_filename,
+                        "table_id_region": table_id_region,
+                        "page_number": region_info["page_number"],
+                        "row_count": region_info["row_count"],
+                        "column_count": region_info["column_count"],
+                        "description": f"Table with {region_info['row_count']} rows and {region_info['column_count']} columns from page {region_info['page_number']}"
+                    }
+                
+                logger.info(f"Extracted {len(table_image_paths)} table images")
+        except Exception as e:
+            logger.error(f"Error extracting table images: {str(e)}")
+
     content = result.content
+    
+    # Process figures
     for figure_id, data in figure_images.items():
         start = content.find("<figure>")
         if start != -1:
@@ -151,6 +255,13 @@ async def AzureParser(file_path: str):
             desc = data.get("description", "Açıklama alınamadı.")
             figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
             content = content[:start] + figure_md + content[end:]
+    
+    # Add table references to content (without removing table content)
+    for table_unique_id, data in table_images.items():
+        start = content.find("<table>")
+        if start != -1:
+            table_reference = f"\n\n**[Table ID:{table_unique_id}]**\n\n{data['description']}\n"
+            content = content[:start] + table_reference + content[start+len(table_reference):]
 
     return content
 
@@ -173,6 +284,10 @@ async def ImageParser(file_path: str):
     image_filename = f"{image_id}.png"
     saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
     image.save(saved_image_path, format="PNG")
+    
+    # Add to mapping
+    document_name = os.path.splitext(os.path.basename(file_path))[0]
+    add_image_to_mapping(image_filename, document_name, "image")
 
     descriptions = await describe_images([image_bytes])
     description = descriptions[0] if descriptions else "Açıklama alınamadı."

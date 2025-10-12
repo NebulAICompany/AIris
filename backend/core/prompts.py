@@ -343,10 +343,11 @@ Use the finance_agent tool in any of the following cases:
 Use time_now tool for current time/date queries. Defaults to Europe/Istanbul timezone unless specified.
 
 **For Visual Content Display:**
-Use the image_visualizer tool with img_uniqueid or fig_uniqueid when:
+Use the image_visualizer tool with img_uniqueid, fig_uniqueid, or table_uniqueid when:
 - User's query relates to visual content that has been processed and described in the context
 - The image descriptions in the context are relevant to answering the user's question
 - Displaying the actual images would enhance user understanding of the response
+- For tables: When user asks about table data, structure, or content that would benefit from visual representation
 - Do not add images to the answer because it is already in attachments after the tool is called.
 
 **For Image Content Analysis:**
@@ -361,7 +362,13 @@ Examples of when to use redescribe_image_content:
 - "What does the chart in file_name show about sales trends?"
 - "Can you read the text in this document image?"
 - "What are the key findings shown in this research diagram?"
-- What is the trend shown in the sales data chart?
+- "What is the trend shown in the sales data chart?"
+
+Examples of when to use image_visualizer for tables:
+- "Show me the table with the financial data"
+- "Can you display the table showing the comparison results?"
+- "I want to see the table structure mentioned in the document"
+- "Display the table that contains the statistical data"
 
 
 **Quality Standards:**
