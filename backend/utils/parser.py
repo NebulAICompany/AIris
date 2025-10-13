@@ -184,29 +184,6 @@ async def AzureParser(file_path: str):
     else:
         logger.info("No figures found.")
 
-    def _format_polygon(polygon):
-        if not polygon:
-            return "N/A"
-        return ", ".join([f"[{polygon[i]}, {polygon[i + 1]}]" for i in range(0, len(polygon), 2)])
-
-    if result.tables:
-        for table_idx, table in enumerate(result.tables):
-            logger.info(f"Table # {table_idx} has {table.row_count} rows and " f"{table.column_count} columns")
-            if table.bounding_regions:
-                for region in table.bounding_regions:
-                    logger.info(
-                        f"Table # {table_idx} location on page: {region.page_number} is {_format_polygon(region.polygon)}"
-                    )
-            for cell in table.cells:
-                logger.info(f"...Cell[{cell.row_index}][{cell.column_index}] has text '{cell.content}'")
-                if cell.bounding_regions:
-                    for region in cell.bounding_regions:
-                        logger.info(
-                            f"...content on page {region.page_number} is within bounding polygon '{_format_polygon(region.polygon)}'"
-                        )
-    else:
-        logger.info("No tables found.")
-
     # Extract table images if tables are found
     table_images = {}
     if result.tables:
@@ -226,7 +203,6 @@ async def AzureParser(file_path: str):
                     table_filename = os.path.basename(table_image_path)
                     table_id_region = region_info["table_id"]
                     
-                    
                     # Add to mapping
                     add_image_to_mapping(table_filename, document_name, "table")
                     table_unique_id = table_filename.split(".")[0]
@@ -235,8 +211,6 @@ async def AzureParser(file_path: str):
                         "filename": table_filename,
                         "table_id_region": table_id_region,
                         "page_number": region_info["page_number"],
-                        "row_count": region_info["row_count"],
-                        "column_count": region_info["column_count"],
                         "description": f"Table with {region_info['row_count']} rows and {region_info['column_count']} columns from page {region_info['page_number']}"
                     }
                 
@@ -252,7 +226,7 @@ async def AzureParser(file_path: str):
         if start != -1:
             end = content.find("</figure>", start) + 9
             caption = data["caption"] if data["caption"] else "no caption figure"
-            desc = data.get("description", "Açıklama alınamadı.")
+            desc = data.get("description", "No description")
             figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
             content = content[:start] + figure_md + content[end:]
     

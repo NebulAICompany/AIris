@@ -9,6 +9,7 @@ from typing import List, Tuple
 from PIL import Image
 import fitz
 from pathlib import Path
+import hashlib
 try:
     from backend.shared.logger import get_logger
 except ImportError:
@@ -50,7 +51,6 @@ def clip_table_from_page_image(
     # Find bounding box
     x_coords = [coord[0] for coord in polygon_coordinates]
     y_coords = [coord[1] for coord in polygon_coordinates]
-    
     min_x, max_x = min(x_coords), max(x_coords)
     min_y, max_y = min(y_coords), max(y_coords)
     
@@ -92,11 +92,8 @@ def extract_table_images_from_pdf(
         polygon_coords = parse_polygon_coordinates(polygon_str)
         table_image = clip_table_from_page_image(page_image, polygon_coords, padding_inches=padding_inches)
         
-        # Save image with unique filename to avoid conflicts
-        import hashlib
-        import time
         # Create unique identifier for table
-        unique_id = hashlib.sha256(f"{pdf_name}_{page_number}_{table_id}_{time.time()}".encode()).hexdigest()[:8]
+        unique_id = hashlib.sha256(f"{pdf_name}_{page_number}_{table_id}".encode()).hexdigest()[:8]
         output_filename = f"table_{unique_id}.png"
         output_path = os.path.join(output_dir, output_filename)
         table_image.save(output_path, "PNG")
