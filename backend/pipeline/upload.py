@@ -92,8 +92,6 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
         # Convert string to enum
         if pre_embedding_process.lower() == "cch":
             process_enum = PreEmbeddingProcess.CCH
-        elif pre_embedding_process.lower() == "pdr":
-            process_enum = PreEmbeddingProcess.PDR
         else:
             process_enum = PreEmbeddingProcess.NONE
         logger.info(f"Pre-embedding process: {process_enum}")

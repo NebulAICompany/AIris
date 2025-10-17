@@ -90,11 +90,6 @@ async def run_orchestration(
 
     # 0. Selected files control - skip retrieval if no files selected
     skip_retrieval = not selected_files or len(selected_files) == 0
-    if skip_retrieval:
-        logger.info(
-            "   - No files selected, skipping retrieval and continuing with informational local context"
-        )
-        logger.debug(f"   - Selected files: {selected_files}")
 
     # 1. Temizlik + analiz
     preprocessed_query, lang = preprocess_query(query)
@@ -221,31 +216,11 @@ async def run_orchestration(
     if reranked_docs:
         included_parent_chunk_ids = []
         for doc in reranked_docs:
-            if (
-                pre_embedding_process == "pdr"
-                and doc["metadata"].get("content_type") == "child"
-            ):
-                if doc["metadata"].get("parent_chunk_id") in included_parent_chunk_ids:
-                    continue
-                else:
-                    content = doc["metadata"].get("parent_content")
-                    included_parent_chunk_ids.append(
-                        doc["metadata"].get("parent_chunk_id")
-                    )
-
-            else:
-                included_parent_chunk_ids.append(doc["metadata"].get("chunk_id"))
-                content = doc["content"]
-
+            included_parent_chunk_ids.append(doc["metadata"].get("chunk_id"))
+            content = doc["content"]
             metadata = doc["metadata"]
-
             metadata_str = ""
             metadata_str += f"Source: {metadata.get('file_name')}\n"
-            if (
-                pre_embedding_process == "pdr"
-                and doc["metadata"].get("content_type") == "child"
-            ):
-                metadata_str += f"Parent Chunk ID: {metadata.get('parent_chunk_id')}\n"
             context_entries.append(
                 f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
             )
