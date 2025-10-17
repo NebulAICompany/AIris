@@ -28,7 +28,7 @@ router = APIRouter()
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
-    preEmbeddingProcess: str = "pdr"
+    preEmbeddingProcess: str = "none"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
@@ -43,7 +43,7 @@ class NewsChatRequest(BaseModel):
 
 class UploadRequest(BaseModel):
     file: str
-    preEmbeddingProcess: str = "pdr"  # "none", "cch"
+    preEmbeddingProcess: str = "none"  # "none", "cch"
 
 
 @router.get("/market/eod")
@@ -216,7 +216,7 @@ async def handle_upload(file: UploadFile = File(...)):
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
 
-        pre_embedding_process = "pdr"
+        pre_embedding_process = "none"
 
         result = await process_file(
             str(file_path), pre_embedding_process=pre_embedding_process

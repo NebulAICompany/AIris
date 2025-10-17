@@ -2,6 +2,7 @@ from qdrant_client import QdrantClient, models
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, Language
 from langchain_core.documents import Document
 from backend.retrieval.autocontext import apply_autocontext
 from backend.retrieval.keyword_search import get_keyword_search
@@ -12,16 +13,15 @@ from typing import List
 from enum import Enum
 import time
 import asyncio
+import tiktoken
 
 logger = get_logger("VECTOR_PIPELINE")
-
+enc = tiktoken.get_encoding("cl100k_base")
 
 class PreEmbeddingProcess(Enum):
     """Enum for pre-embedding process options"""
-
     NONE = "none"
     CCH = "cch"  # Contextual Chunk Headers (AutoContext)
-    PDR = "pdr"  # Parent Document Retrieval (PDR)
 
 class VectorStorePipeline:
     """
@@ -33,36 +33,17 @@ class VectorStorePipeline:
         self, pre_embedding_process: PreEmbeddingProcess = PreEmbeddingProcess.NONE
     ):
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        self.text_splitter = TokenTextSplitter(
-            chunk_size=768, #middle 512 and 1024 to prevent too large chunks
-            chunk_overlap=115, # 15% of chunk size
-            encoding_name="cl100k_base",  # OpenAI Embedding modellerini kapsıyor
+        self.text_splitter = RecursiveCharacterTextSplitter.from_language(
+            Language.MARKDOWN,
+            chunk_size=1000, 
+            chunk_overlap=250,
+            length_function=self.length_function,
         )
         self.pre_embedding_process = pre_embedding_process
 
-    def create_parent_child_documents(
-        self, original_docs: List[Document], file_name: str
-    ) -> List[Document]:
-        """
-        Create parent-child documents 
-        """
-        parent_child_docs = []
-        recursive_text_splitter = RecursiveCharacterTextSplitter(chunk_size=350, chunk_overlap=50)
-        for doc in original_docs:
-            parent_child_docs.append(doc)
-            chunks = recursive_text_splitter.split_text(doc.page_content)
-            for i,chunk in enumerate(chunks):
-                child_metadata = {
-                    **doc.metadata,
-                    "content_type": "child",
-                    "parent_chunk_id": doc.metadata.get("chunk_id"),
-                    "parent_content": doc.page_content,
-                    "file_name": file_name,
-                }
-                child_metadata["chunk_id"] = f"{doc.metadata.get('chunk_id')}__child_{i}"
-                parent_child_docs.append(Document(page_content=chunk, metadata=child_metadata))
+    def length_function(self, text: str) -> int:
+        return len(enc.encode(text))
 
-        return parent_child_docs
 
     def apply_pre_embedding_process(
         self, docs: List[Document], file_name: str
@@ -116,12 +97,6 @@ class VectorStorePipeline:
                 logger.warning(f"⚠️ AutoContext processing failed for {file_name}: {e}")
                 logger.warning("   Continuing with original chunks...")
                 return docs
-        elif self.pre_embedding_process == PreEmbeddingProcess.PDR:
-            logger.info(
-                f"❓ Applying PDR (Personalized Document Retrieval) to {file_name}..."
-            )
-            parent_child_docs = self.create_parent_child_documents(docs, file_name)
-            return parent_child_docs
         else:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
@@ -143,7 +118,6 @@ class VectorStorePipeline:
 
             chunk_idx = 0
 
-            logger.info(f"🚀 Processing text content with pre-embedding process: {self.pre_embedding_process.value}")
             logger.info(f"📖 Processing {len(text_content)} characters from {document_name}")
 
             # Split the text into semantic chunks
@@ -153,7 +127,7 @@ class VectorStorePipeline:
                 logger.warning(f"⚠️ Warning: No chunks were created for {document_name}.")
                 return
 
-            logger.info(f"✅ Document '{document_name}' split into {len(docs)} semantic chunks")
+            logger.info(f"✅ Document '{document_name}' split into {len(docs)} chunks")
 
             # Add basic metadata to original chunks
             for doc in docs:
@@ -163,10 +137,6 @@ class VectorStorePipeline:
                 doc.metadata["file_name"] = f"{document_name}"  # Keep compatibility with existing code
                 doc.metadata["content_type"] = "original"
                 doc.metadata["contains_image"] = False
-                
-                if '(Image)' in doc.page_content:
-                    doc.metadata["contains_image"] = True
-                
                 chunk_idx += 1
 
             logger.info(f"🔍 {len(docs)} documents before pre-embedding process")
