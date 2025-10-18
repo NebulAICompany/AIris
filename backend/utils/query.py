@@ -1,5 +1,5 @@
 from backend.shared.logger import get_logger
-from backend.shared.constants import openai_client, ZEMBEREK_JAR_PATH_STR, OPENAI_MODEL
+from backend.shared.constants import openai_client, OPENAI_MODEL
 from typing import List
 from typing import Optional
 from pydantic import BaseModel
@@ -12,63 +12,6 @@ class RefinedQuery(BaseModel):
 
     refined_query: str
     keywords: List[str]
-
-
-try:
-    import jpype
-    from jpype import JClass, getDefaultJVMPath, startJVM
-
-    if not jpype.isJVMStarted():
-        jvmPath = getDefaultJVMPath()
-        logger.debug(f"JVM Path: {jvmPath}")
-        startJVM(jvmPath, "-ea", f"-Djava.class.path={ZEMBEREK_JAR_PATH_STR}")
-
-    TurkishMorphology = JClass("zemberek.morphology.TurkishMorphology")
-    turkish_morphology = TurkishMorphology.createWithDefaults()
-
-    TurkishSpellChecker = JClass("zemberek.normalization.TurkishSpellChecker")
-    turkish_spell_checker = TurkishSpellChecker(turkish_morphology)
-
-    ZEMBEREK_AVAILABLE = True
-
-except ImportError as e:
-    turkish_spell_checker = None
-    ZEMBEREK_AVAILABLE = False
-    logger.error(f"Zemberek library not found: {e}")
-
-
-def spell_check(query: str) -> str:
-    if not query or not isinstance(query, str):
-        return ""
-
-    if not ZEMBEREK_AVAILABLE:
-        return query
-
-    try:
-        words = query.split()
-        corrected = []
-
-        for word in words:
-            # Sadece noktalama işaretlerinden oluşan kelimeleri atla
-            if all(c in ",.?!;:()[]{}'\"-" for c in word):
-                corrected.append(word)
-                continue
-
-            normalized_word = normalize_repeated_chars(word)
-
-            # Yazım hatası kontrolü ve düzeltme önerisi
-            if not turkish_spell_checker.check(normalized_word):
-                suggestions = turkish_spell_checker.suggestForWord(normalized_word)
-                if suggestions and len(suggestions) > 0:
-                    corrected.append(str(suggestions[0]))
-                else:
-                    corrected.append(normalized_word)
-            else:
-                corrected.append(normalized_word)
-        return " ".join(corrected)
-
-    except Exception as e:
-        return query
 
 
 def detect_language(query: str) -> str:

@@ -12,7 +12,6 @@ from backend.retrieval.retriever import (
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import (
-    spell_check,
     detect_language,
     filter_docs_by_selected_files,
     refine_query,
@@ -31,9 +30,6 @@ logger = get_logger("QUERY_PIPELINE")
 def preprocess_query(query: str):
     lang = detect_language(query)
     logger.debug(f"Detected Language: {lang}")
-    # if lang=="Turkish":
-    #     corrected = spell_check(query)
-    #     return corrected, lang
     return query, lang
 
 
