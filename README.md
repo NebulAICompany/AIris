@@ -4,7 +4,7 @@
 
 ### Gereksinimler
 
-- Python 3.8+ (tercihen 3.11)
+- Python 3.11+ (tercihen 3.11)
 - Node.js 16+
 - .env dosyası (ana dizinde)
 - ARDA İÇİN --- Python 3.11 versiyonlarından birini indir kur.
