@@ -143,6 +143,7 @@ class VectorStorePipeline:
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
             logger.info(f"✅ {len(processed_docs)} documents processed")
+            logger.info(f"Processed documents: {processed_docs}")
 
             # Apply PII masking to processed documents in batches
             await self._apply_pii_masking(processed_docs, document_name)
