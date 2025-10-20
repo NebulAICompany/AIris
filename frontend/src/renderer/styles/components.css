@@ -1167,7 +1167,7 @@ body.dark-theme .image-caption {
 .message.user-message {
   flex-direction: row-reverse;
   justify-content: flex-start;
-  margin-left: auto;
+  margin-left: 0;
   margin-right: 0;
 }
 
@@ -1195,13 +1195,13 @@ body.dark-theme .image-caption {
 }
 
 .message-content {
-  flex: 1;
+  flex: 0 1 auto;
   max-width: 70%;
   min-width: 0;
 }
 
 .message.user-message .message-content {
-  text-align: right;
+  text-align: left;
 }
 
 .message.assistant-message .message-content {
@@ -1216,6 +1216,8 @@ body.dark-theme .image-caption {
   word-wrap: break-word;
   display: inline-block;
   max-width: 100%;
+  width: fit-content;
+  min-width: 120px;
 }
 
 .message.user-message .message-text {
@@ -1238,7 +1240,7 @@ body.dark-theme .image-caption {
 }
 
 .message.user-message .message-time {
-  text-align: right;
+  text-align: left;
   color: rgba(255, 255, 255, 0.7);
 }
 
