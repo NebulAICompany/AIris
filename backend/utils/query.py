@@ -1,7 +1,6 @@
 from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, OPENAI_MODEL
 from typing import List
-from typing import Optional
 from pydantic import BaseModel
 
 logger = get_logger("QUERY_UTILS")
@@ -25,57 +24,6 @@ def detect_language(query: str) -> str:
 
     except Exception as err:
         logger.error("Encountered exception. {}".format(err))
-
-
-def normalize_repeated_chars(word: str) -> str:
-    if not word or not isinstance(word, str):
-        return word
-
-    result = []
-    i = 0
-
-    while i < len(word):
-        char = word[i]
-        result.append(char)
-        repeat_count = 1
-
-        j = i + 1
-        while j < len(word) and word[j] == char:
-            repeat_count += 1
-            j += 1
-
-            if repeat_count == 2:
-                result.append(char)
-
-        i = j
-
-    return "".join(result)
-
-
-def filter_docs_by_selected_files(
-    docs: List, selected_files: Optional[List[str]]
-) -> List:
-    """
-    Filter retrieved documents to only include those from selected files.
-    If selected_files is None or empty, return all documents.
-    """
-
-    if not selected_files or len(selected_files) == 0:
-        return docs
-
-    filtered_docs = []
-    for doc in docs:
-        metadata = doc.get("metadata", {})
-        file_name = metadata.get("file_name", "")
-
-        # Check if this document's file is in the selected files list
-        if file_name in selected_files:
-            filtered_docs.append(doc)
-
-    logger.debug(
-        f"   - Filtered {len(docs)} docs to {len(filtered_docs)} based on selected files"
-    )
-    return filtered_docs
 
 
 def refine_query(user_query, lang: str = "Turkish") -> RefinedQuery:
