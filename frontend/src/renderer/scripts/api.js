@@ -35,11 +35,11 @@ class APIService {
 
   async makeRequest(url, method = "GET", data = null, config = {}) {
     let fullUrl = url.startsWith("http") ? url : `${this.baseURL}${url}`;
-    
+
     // Handle query parameters
     if (config.params) {
       const urlObj = new URL(fullUrl);
-      Object.keys(config.params).forEach(key => {
+      Object.keys(config.params).forEach((key) => {
         urlObj.searchParams.set(key, config.params[key]);
       });
       fullUrl = urlObj.toString();
@@ -545,9 +545,9 @@ class APIService {
     try {
       // Use much longer timeout for finance news (5 minutes) since we now do comprehensive AI summarization
       const params = forceRefresh ? { force_refresh: true } : {};
-      const response = await this.api.get("/api/finance-news", { 
+      const response = await this.api.get("/api/finance-news", {
         timeout: 300000,
-        params: params
+        params: params,
       });
 
       return {
@@ -564,7 +564,9 @@ class APIService {
       console.error("[API] Finance news error:", error);
       return {
         success: false,
-        error: error.message.includes("aborted") ? "İstek zaman aşımına uğradı - lütfen tekrar deneyın" : error.message,
+        error: error.message.includes("aborted")
+          ? "İstek zaman aşımına uğradı - lütfen tekrar deneyın"
+          : error.message,
         articles: [],
       };
     }
@@ -585,20 +587,24 @@ class APIService {
   }
 
   async getMostChangedQuotes(symbols, limit = 30, chart_num = 8) {
-    console.log(`[API] Getting most changed quotes for ${symbols.length} symbols`);
+    console.log(
+      `[API] Getting most changed quotes for ${symbols.length} symbols`
+    );
     return this.makeRequest(`/api/market/most-changed`, "POST", {
       symbols,
       limit,
-      chart_num
+      chart_num,
     });
   }
 
   async getGainersLosersActive(symbols, limit = 30, chart_num = 8) {
-    console.log(`[API] Getting gainers/losers/active for ${symbols.length} symbols`);
+    console.log(
+      `[API] Getting gainers/losers/active for ${symbols.length} symbols`
+    );
     return this.makeRequest(`/api/market/gainers-losers-active`, "POST", {
       symbols,
       limit,
-      chart_num
+      chart_num,
     });
   }
 
@@ -610,59 +616,53 @@ class APIService {
   }
 
   async searchSymbols(query = "") {
-    const response = await this.makeRequest(`/api/market/search-symbols`, "GET", null, { params: { query } });
-    console.log(`[API] Searching symbols for ${query} response:`, response.data);
+    const response = await this.makeRequest(
+      `/api/market/search-symbols`,
+      "GET",
+      null,
+      { params: { query } }
+    );
+    console.log(
+      `[API] Searching symbols for ${query} response:`,
+      response.data
+    );
     return response.data;
   }
 
   // News Chat API method
   async sendNewsChatQuery(message, newsContext) {
     try {
-      const response = await this.api.post("/api/news-chat", {
-        query: message,
-        news_context: newsContext,
-        web_search_enabled: true
-      }, {
-        timeout: 120000 // 2 minutes timeout for news chat
-      });
+      const response = await this.api.post(
+        "/api/news-chat",
+        {
+          query: message,
+          news_context: newsContext,
+          web_search_enabled: true,
+        },
+        {
+          timeout: 120000, // 2 minutes timeout for news chat
+        }
+      );
 
       return {
         success: response.data.status === "success",
         response: response.data.response,
         images: response.data.images || [],
-        sessionId: response.data.sessionId
+        sessionId: response.data.sessionId,
       };
     } catch (error) {
       console.error("[API] News chat error:", error);
       return {
         success: false,
-        error: error.message.includes("aborted") ? "Request timed out - please try again" : error.message,
-        response: null
+        error: error.message.includes("aborted")
+          ? "Request timed out - please try again"
+          : error.message,
+        response: null,
       };
     }
   }
 
   // Document Verification API methods
-  async getVerificationTypes() {
-    try {
-      const response = await this.api.get("/api/verification-types");
-      return {
-        success: true,
-        data: response.data,
-        verificationTypes: response.data.verification_types || {},
-        supportedFormats: response.data.supported_formats || [],
-        defaultType: response.data.default_type || "auto",
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        verificationTypes: {},
-        supportedFormats: [],
-        defaultType: "auto",
-      };
-    }
-  }
 
   async verifyDocument(file, verificationType = "auto", progressCallback) {
     try {
