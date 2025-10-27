@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
@@ -29,19 +29,19 @@ router = APIRouter()
 def delete_document_images(filename: str) -> dict:
     """
     Delete all images associated with a document using the JSON mapping.
-    
+
     Args:
         filename: The document filename (with or without extension)
-    
+
     Returns:
         dict: Information about the deletion operation
     """
     try:
         import json
-        
+
         # Extract document name without extension
         document_name = Path(filename).stem
-        
+
         # Load image mapping
         mapping_file = Path(IMAGES_PATH_STR) / "image_document_mapping.json"
         if not mapping_file.exists():
@@ -49,18 +49,18 @@ def delete_document_images(filename: str) -> dict:
             return {
                 "images_deleted": 0,
                 "mapping_updated": False,
-                "message": "No image mapping file found"
+                "message": "No image mapping file found",
             }
-        
-        with open(mapping_file, 'r', encoding='utf-8') as f:
+
+        with open(mapping_file, "r", encoding="utf-8") as f:
             mapping = json.load(f)
-        
+
         # Find images associated with this document
         images_to_delete = []
         for image_filename, image_info in mapping.items():
             if image_info.get("document") == document_name:
                 images_to_delete.append(image_filename)
-        
+
         # Delete the image files
         deleted_count = 0
         for image_filename in images_to_delete:
@@ -69,29 +69,25 @@ def delete_document_images(filename: str) -> dict:
                 image_path.unlink()
                 deleted_count += 1
                 logger.info(f"🗑️ Deleted image: {image_filename}")
-        
+
         # Remove entries from mapping
         for image_filename in images_to_delete:
             mapping.pop(image_filename, None)
-        
+
         # Save updated mapping
-        with open(mapping_file, 'w', encoding='utf-8') as f:
+        with open(mapping_file, "w", encoding="utf-8") as f:
             json.dump(mapping, f, indent=2, ensure_ascii=False)
-        
+
         logger.info(f"🗂️ Deleted {deleted_count} images for document: {document_name}")
         return {
             "images_deleted": deleted_count,
             "mapping_updated": True,
-            "message": f"Deleted {deleted_count} images for document {document_name}"
+            "message": f"Deleted {deleted_count} images for document {document_name}",
         }
-        
+
     except Exception as e:
         logger.error(f"❌ Error deleting images for {filename}: {e}")
-        return {
-            "images_deleted": 0,
-            "mapping_updated": False,
-            "error": str(e)
-        }
+        return {"images_deleted": 0, "mapping_updated": False, "error": str(e)}
 
 
 class QueryRequest(BaseModel):
@@ -499,10 +495,10 @@ def delete_file(filename: str):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
-            
+
             # Delete corresponding images
             image_deletion_result = delete_document_images(filename)
-            
+
             return {
                 "message": f"File '{filename}' deleted successfully (no vector store found)",
                 "images_deleted": image_deletion_result["images_deleted"],

@@ -2,6 +2,7 @@ import sys
 import asyncio
 import os
 from datetime import datetime
+from contextlib import asynccontextmanager
 
 if sys.platform == "win32":
     # Use ProactorEventLoop for Windows subprocess support
@@ -24,21 +25,15 @@ from backend.shared.constants import (
 
 logger = get_logger("MAIN")
 
-# Fast API app start
-app = FastAPI(
-    title="AIris Yerel RAG API",
-    version="0.1.0",
-    description="Generative AI for Local Data",
-)
 
-logger.info("Starting AIris Backend API...")
-
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    Uygulama başlangıcında vektör deposunu yükle ve MCP sunucularına bağlan.
+    Lifespan event handler for startup and shutdown.
+    Load vector store on startup and connect to MCP servers.
+    Disconnect from MCP servers on shutdown.
     """
+    # Startup
     try:
         if not os.path.exists(VECTORSTORE_PATH_STR):
             os.makedirs(VECTORSTORE_PATH_STR)
@@ -72,12 +67,9 @@ async def startup_event():
         # to prevent the app from starting with a misconfigured state.
         # raise e
 
+    yield
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Uygulama kapanırken MCP sunucularından bağlantıyı kes.
-    """
+    # Shutdown
     try:
         logger.info("Disconnecting MCP servers...")
         from backend.core.tools.mcp import disconnect_mcp_servers
@@ -88,7 +80,18 @@ async def shutdown_event():
         logger.error(f"Error during shutdown: {e}")
 
 
-# UI statik dosyalarını sun
+logger.info("Starting AIris Backend API...")
+
+# Fast API app start
+app = FastAPI(
+    title="AIris Yerel RAG API",
+    version="0.1.0",
+    description="Generative AI for Local Data",
+    lifespan=lifespan,
+)
+
+
+# Serve UI static files
 app.mount(
     "/static",
     StaticFiles(directory=str(FRONTEND_RENDERER_DIR)),
@@ -98,7 +101,7 @@ app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="asse
 
 # expose_metrics()
 
-# Geliştirme sırasında frontend bu api rahat erişmesi için
+# Allow frontend to easily access this API during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins for development
@@ -126,5 +129,5 @@ async def health_check():
     }
 
 
-# API rotalarını bağla
+# Connect API routes
 app.include_router(query_router, prefix="/api")
