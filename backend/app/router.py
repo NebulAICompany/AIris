@@ -10,7 +10,6 @@ from backend.shared.constants import (
     VERIFICATION_UPLOADS_PATH,
     MASKED_MAP_JSON_PATH,
     CREATED_DOCUMENTS_PATH,
-    DEFAULT_SEARCH_METHOD,
     IMAGES_PATH_STR,
 )
 import shutil
@@ -195,8 +194,6 @@ async def handle_query(request: QueryRequest):
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
-        # Use system-level default search method
-        search_method = DEFAULT_SEARCH_METHOD
 
         answer = await run_orchestration(
             query,
@@ -204,7 +201,6 @@ async def handle_query(request: QueryRequest):
             pre_embedding_process,
             session_id,
             selected_files,
-            search_method,
         )
         api_requests_total.labels(status="success").inc()
 

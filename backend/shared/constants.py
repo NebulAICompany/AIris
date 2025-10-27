@@ -119,9 +119,6 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff"}
 # Document extensions
 DOCUMENT_EXTENSIONS = {".pdf", ".txt", ".docx", ".xlsx", ".xls", ".doc"}
 
-# Search configuration
-DEFAULT_SEARCH_METHOD = "vector_keyword_helping"  # "vector", "keyword", "vector_keyword_helping", or "hybrid"
-
 # Convert Path objects to strings for backward compatibility
 UPLOADS_PATH_STR = str(UPLOADS_PATH)
 CREATED_DOCUMENTS_PATH_STR = str(CREATED_DOCUMENTS_PATH)
@@ -141,12 +138,36 @@ OPENAI_MODEL = "gpt-4o"
 ANTHROPIC_MODEL = "litellm/anthropic/claude-sonnet-4-20250514"
 
 
-
 # Marketstack tickers
 MARKETSTACK_TICKERS = [
-    "AEFES.IS", "AKBNK.IS", "ASELS.IS", "ASTOR.IS", "BIMAS.IS", "CIMSA.IS", 
-    "EKGYO.IS", "ENKAI.IS", "EREGL.IS", "FROTO.IS", "GARAN.IS", "GUBRF.IS", 
-    "ISCTR.IS", "KCHOL.IS", "KOZAL.IS", "KRDMD.IS", "MGROS.IS", "PETKM.IS", 
-    "PGSUS.IS", "SAHOL.IS", "SASA.IS", "SISE.IS", "TAVHL.IS", "TCELL.IS", 
-    "THYAO.IS", "TOASO.IS", "TTKOM.IS", "TUPRS.IS", "ULKER.IS", "YKBNK.IS"
+    "AEFES.IS",
+    "AKBNK.IS",
+    "ASELS.IS",
+    "ASTOR.IS",
+    "BIMAS.IS",
+    "CIMSA.IS",
+    "EKGYO.IS",
+    "ENKAI.IS",
+    "EREGL.IS",
+    "FROTO.IS",
+    "GARAN.IS",
+    "GUBRF.IS",
+    "ISCTR.IS",
+    "KCHOL.IS",
+    "KOZAL.IS",
+    "KRDMD.IS",
+    "MGROS.IS",
+    "PETKM.IS",
+    "PGSUS.IS",
+    "SAHOL.IS",
+    "SASA.IS",
+    "SISE.IS",
+    "TAVHL.IS",
+    "TCELL.IS",
+    "THYAO.IS",
+    "TOASO.IS",
+    "TTKOM.IS",
+    "TUPRS.IS",
+    "ULKER.IS",
+    "YKBNK.IS",
 ]
