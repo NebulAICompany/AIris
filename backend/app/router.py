@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
 from backend.core.chat import chat_history_manager
@@ -68,7 +67,6 @@ def delete_document_images(filename: str) -> dict:
             if image_path.exists():
                 image_path.unlink()
                 deleted_count += 1
-                logger.info(f"🗑️ Deleted image: {image_filename}")
 
         # Remove entries from mapping
         for image_filename in images_to_delete:
@@ -559,7 +557,6 @@ def delete_file(filename: str):
             keyword_search = get_keyword_search()
             keyword_search.remove_documents_by_file(base_filename)
             keyword_search.save_index()
-            logger.info(f"✅ Documents removed from keyword search index")
         except Exception as e:
             logger.error(f"Error deleting documents from keyword search index: {e}")
 
@@ -590,28 +587,6 @@ def delete_file(filename: str):
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
 
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
-
-
-@router.get("/files/{filename}/download")
-def download_file(filename: str):
-    """
-    Download a file from uploads directory.
-    """
-    try:
-        file_path = Path(UPLOADS_PATH) / filename
-
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        return FileResponse(
-            path=file_path, filename=filename, media_type="application/octet-stream"
-        )
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error downloading file {filename}: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error downloading file: {error_message}"
-        )
 
 
 @router.get("/files/{filename}")
@@ -668,28 +643,6 @@ def get_file_preview(filename: str):
         logger.error(f"Error generating preview for {filename}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error generating preview: {str(e)}"
-        )
-
-
-@router.get("/created-documents/{filename}/download")
-def download_created_document(filename: str):
-    """
-    Download a file from created_documents directory.
-    """
-    try:
-        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
-
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        return FileResponse(
-            path=file_path, filename=filename, media_type="application/octet-stream"
-        )
-    except Exception as e:
-        logger.error(f"Error downloading created document {filename}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error downloading created document: {str(e)}",
         )
 
 
@@ -975,36 +928,4 @@ async def verify_document(
             pass
         raise HTTPException(
             status_code=500, detail=f"Document verification failed: {error_message}"
-        )
-
-
-@router.get("/verification-types")
-def get_verification_types():
-    """
-    Get available document verification types
-    """
-    try:
-        verification_types = [
-            "invoice",
-            "receipt",
-            "bank_statement",
-            "payslip",
-            "contract",
-            "tax_declaration",
-            "expense_voucher",
-            "other",
-            "auto",
-        ]
-
-        return {
-            "verification_types": verification_types,
-            "supported_formats": [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
-            "default_type": "auto",
-        }
-
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error getting verification types: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting verification types: {error_message}"
         )
