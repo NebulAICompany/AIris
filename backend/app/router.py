@@ -99,7 +99,6 @@ class QueryRequest(BaseModel):
 class NewsChatRequest(BaseModel):
     query: str
     news_context: dict
-    web_search_enabled: bool = True
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
@@ -231,19 +230,15 @@ async def handle_news_chat(request: NewsChatRequest):
     try:
         query = request.query
         news_context = request.news_context
-        web_search_enabled = request.web_search_enabled
         session_id = request.sessionId
 
         logger.info(f"📰 News Chat API Router received:")
         logger.info(f"   - Query: {query}")
         logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
-        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
         logger.info(f"   - Session ID: {session_id}")
 
         # Process news chat query
-        answer = await run_news_chat_orchestration(
-            query, news_context, web_search_enabled, session_id
-        )
+        answer = await run_news_chat_orchestration(query, news_context, session_id)
 
         logger.info("News chat query processed successfully")
         api_requests_total.labels(status="success").inc()
