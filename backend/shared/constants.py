@@ -133,7 +133,6 @@ BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
 
 
 ### Model Names ###
-
 OPENAI_MODEL = "gpt-4o"
 ANTHROPIC_MODEL = "litellm/anthropic/claude-sonnet-4-20250514"
 
