@@ -1,9 +1,8 @@
-from typing import List, Dict
+from typing import List
 from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, IMAGES_PATH_STR
 import base64
 import os
-import openai
 from agents import function_tool
 from backend.core.prompts import redescribe_image_prompt
 

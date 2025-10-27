@@ -280,7 +280,6 @@ async def run_orchestration(
 async def run_news_chat_orchestration(
     query: str,
     news_context: dict,
-    web_search_enabled: bool,
     session_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -289,7 +288,6 @@ async def run_news_chat_orchestration(
     logger.info(f"📰 News Chat Orchestrator started:")
     logger.info(f"   - Query: {query}")
     logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
-    logger.info(f"   - Web Search Enabled: {web_search_enabled}")
     logger.info(f"   - Session ID: {session_id}")
 
     # Handle chat history and session management
@@ -325,7 +323,6 @@ async def run_news_chat_orchestration(
     # Create specialized news agent
     agent = create_news_chat_agent(
         news_context=news_context_str,
-        web_search_enabled=web_search_enabled,
         query=preprocessed_query,
         conversation_history=conversation_context,
     )
