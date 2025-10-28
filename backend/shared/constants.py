@@ -76,6 +76,9 @@ CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 # Market data database path
 MARKET_DATA_DB_PATH = DATABASE_DIR / "market_data.db"
 
+# Uploads tracking database path
+UPLOADS_DB_PATH = DATABASE_DIR / "uploads_tracking.db"
+
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 VERIFICATION_UPLOADS_PATH = DATABASE_DIR / "verification_uploads"
