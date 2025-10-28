@@ -5,7 +5,13 @@ from .prompts import (
     news_chat_agent_instructions,
 )
 from typing import List
-from .tools.api import web_search_tool, wolfram_alpha_query, time_now
+from .tools.api import (
+    web_search_tool,
+    wolfram_alpha_query,
+    time_now,
+    get_uploaded_files_count,
+    list_uploaded_files,
+)
 from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
@@ -17,6 +23,8 @@ rag_agent_as_tools = [
     time_now,
     image_visualizer,
     redescribe_image_content,
+    get_uploaded_files_count,
+    list_uploaded_files,
 ]
 
 
