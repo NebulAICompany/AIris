@@ -1832,24 +1832,7 @@ class UIComponents {
       return content;
     }
 
-    // Pattern to match download URLs and convert them to clickable links
-    const urlPattern =
-      /(http:\/\/localhost:8001\/api\/created-documents\/[^\/\s]+\/download)/g;
-
-    // Replace URLs with clickable download buttons
-    content = content.replace(urlPattern, (match, url) => {
-      // Extract filename from URL
-      const filename = decodeURIComponent(url.split("/").slice(-2, -1)[0]);
-      return `[📥 Download ${filename}](${url})`;
-    });
-
-    // Also handle direct file path mentions and convert them to download links
-    const filePathPattern =
-      /Download:\s*(http:\/\/localhost:8001\/api\/created-documents\/[^\/\s]+\/download)/g;
-    content = content.replace(filePathPattern, (match, url) => {
-      const filename = decodeURIComponent(url.split("/").slice(-2, -1)[0]);
-      return `**Download:** [📥 ${filename}](${url})`;
-    });
+    // URL conversion logic can be added here in the future
 
     return content;
   }
@@ -2643,47 +2626,10 @@ class UIComponents {
 
       // Try to open the file using Electron's API
       if (window.airisAPI && window.airisAPI.openFile) {
-        try {
-          await window.airisAPI.openFile(fileName);
-          // File opened successfully - no notification needed
-          return;
-        } catch (electronError) {
-          console.warn(
-            "Electron API failed, trying web fallback:",
-            electronError
-          );
-        }
-      }
-
-      // Fallback: Try to download the file through the web API
-      try {
-        const downloadUrl = `http://localhost:8001/api/files/${encodeURIComponent(
-          fileName
-        )}/download`;
-
-        // Use consistent external opening logic
-        if (window.airisAPI && window.airisAPI.openExternalUrl) {
-          window.airisAPI.openExternalUrl(downloadUrl).catch(() => {
-            window.open(downloadUrl, "_blank", "noopener,noreferrer");
-          });
-        } else {
-          window.open(downloadUrl, "_blank", "noopener,noreferrer");
-        }
-
-        // File download started - no notification needed
-      } catch (downloadError) {
-        console.error("Download failed:", downloadError);
-
-        // Last resort: Try to get file info
-        const response = await fetch(
-          `http://localhost:8001/api/files/${encodeURIComponent(fileName)}`
-        );
-        if (response.ok) {
-          const fileInfo = await response.json();
-          // File info displayed - no notification needed
-        } else {
-          throw new Error("Unable to access file");
-        }
+        await window.airisAPI.openFile(fileName);
+        // File opened successfully - no notification needed
+      } else {
+        throw new Error("Electron API not available");
       }
     } catch (error) {
       console.error("Error opening file:", error);
@@ -2702,49 +2648,10 @@ class UIComponents {
 
       // Try to open the file using Electron's API first
       if (window.airisAPI && window.airisAPI.openFile) {
-        try {
-          await window.airisAPI.openFile(fileName);
-          // File opened successfully - no notification needed
-          return;
-        } catch (electronError) {
-          console.warn(
-            "Electron API failed, trying web fallback:",
-            electronError
-          );
-        }
-      }
-
-      // Fallback: Try to download the file through the web API
-      try {
-        const downloadUrl = `http://localhost:8001/api/created-documents/${encodeURIComponent(
-          fileName
-        )}/download`;
-
-        // Use consistent external opening logic
-        if (window.airisAPI && window.airisAPI.openExternalUrl) {
-          window.airisAPI.openExternalUrl(downloadUrl).catch(() => {
-            window.open(downloadUrl, "_blank", "noopener,noreferrer");
-          });
-        } else {
-          window.open(downloadUrl, "_blank", "noopener,noreferrer");
-        }
-
-        // File download started - no notification needed
-      } catch (downloadError) {
-        console.error("Download failed:", downloadError);
-
-        // Last resort: Try to get file info
-        const response = await fetch(
-          `http://localhost:8001/api/created-documents/${encodeURIComponent(
-            fileName
-          )}`
-        );
-        if (response.ok) {
-          const fileInfo = await response.json();
-          // File info displayed - no notification needed
-        } else {
-          throw new Error("Unable to access file");
-        }
+        await window.airisAPI.openFile(fileName);
+        // File opened successfully - no notification needed
+      } else {
+        throw new Error("Electron API not available");
       }
     } catch (error) {
       console.error("Error opening created document:", error);
@@ -4170,19 +4077,22 @@ class UIComponents {
     }
   }
 
-  async loadVerificationTypes() {
-    try {
-      const result = await window.apiService.getVerificationTypes();
+  loadVerificationTypes() {
+    // Static verification types - no need to fetch from backend
+    const verificationTypes = [
+      "invoice",
+      "receipt",
+      "bank_statement",
+      "payslip",
+      "contract",
+      "tax_declaration",
+      "expense_voucher",
+      "other",
+      "auto",
+    ];
 
-      if (result.success) {
-        this.verificationTypes = result.verificationTypes;
-        this.updateVerificationTypeSelect(result.verificationTypes);
-      } else {
-        console.warn("Failed to load verification types:", result.error);
-      }
-    } catch (error) {
-      console.error("Error loading verification types:", error);
-    }
+    this.verificationTypes = verificationTypes;
+    this.updateVerificationTypeSelect(verificationTypes);
   }
 
   // Map backend verification type keys to i18n keys
@@ -4770,10 +4680,10 @@ class UIComponents {
   }
 
   // Initialize verification when tab loads
-  async loadVerificationTab() {
+  loadVerificationTab() {
     if (!this.verificationInitialized) {
       this.setupVerificationEventListeners();
-      await this.loadVerificationTypes();
+      this.loadVerificationTypes();
       this.verificationInitialized = true;
     }
   }
