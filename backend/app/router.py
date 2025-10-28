@@ -191,14 +191,12 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
-        pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
         answer = await run_orchestration(
             query,
             web_search_enabled,
-            pre_embedding_process,
             session_id,
             selected_files,
         )
