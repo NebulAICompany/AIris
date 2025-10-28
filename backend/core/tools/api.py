@@ -96,3 +96,63 @@ def web_search_tool(query: str, max_results: int = 5) -> list:
         return response["results"]
     except Exception as e:
         return [{"error": str(e)}]
+
+
+@function_tool
+def get_uploaded_files_count() -> str:
+    """
+    Get the total count of files uploaded to the system.
+
+    Returns:
+        A string containing the total count of uploaded files and breakdown by file type.
+    """
+    try:
+        from backend.utils.uploads_database import uploads_db
+
+        total_count = uploads_db.count_uploads()
+        count_by_type = uploads_db.count_by_file_type()
+
+        result = f"Total uploaded files: {total_count}\n"
+
+        if count_by_type:
+            result += "\nBreakdown by file type:\n"
+            for file_type, count in count_by_type.items():
+                result += f"  {file_type}: {count} files\n"
+
+        return result
+    except Exception as e:
+        return f"Error retrieving upload count: {str(e)}"
+
+
+@function_tool
+def list_uploaded_files(limit: int = 10) -> str:
+    """
+    List recently uploaded files with their details.
+
+    Args:
+        limit: Maximum number of files to return (default: 10, max: 100)
+
+    Returns:
+        A formatted string containing information about uploaded files.
+    """
+    try:
+        from backend.utils.uploads_database import uploads_db
+
+        # Ensure limit is within reasonable bounds
+        limit = min(max(1, limit), 100)
+
+        uploads = uploads_db.get_all_uploads(limit=limit)
+
+        if not uploads:
+            return "No files have been uploaded yet."
+
+        result = f"Recently uploaded files (showing {len(uploads)} most recent):\n\n"
+
+        for upload in uploads:
+            result += f"📄 {upload['file_name']}\n"
+            result += f"   Type: {upload['file_type']}\n"
+            result += f"   Uploaded: {upload['upload_date']}\n\n"
+
+        return result
+    except Exception as e:
+        return f"Error retrieving uploaded files: {str(e)}"
