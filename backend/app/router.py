@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
 from backend.core.chat import chat_history_manager
@@ -11,7 +10,6 @@ from backend.shared.constants import (
     VERIFICATION_UPLOADS_PATH,
     MASKED_MAP_JSON_PATH,
     CREATED_DOCUMENTS_PATH,
-    DEFAULT_SEARCH_METHOD,
     IMAGES_PATH_STR,
 )
 import shutil
@@ -29,19 +27,19 @@ router = APIRouter()
 def delete_document_images(filename: str) -> dict:
     """
     Delete all images associated with a document using the JSON mapping.
-    
+
     Args:
         filename: The document filename (with or without extension)
-    
+
     Returns:
         dict: Information about the deletion operation
     """
     try:
         import json
-        
+
         # Extract document name without extension
         document_name = Path(filename).stem
-        
+
         # Load image mapping
         mapping_file = Path(IMAGES_PATH_STR) / "image_document_mapping.json"
         if not mapping_file.exists():
@@ -49,18 +47,18 @@ def delete_document_images(filename: str) -> dict:
             return {
                 "images_deleted": 0,
                 "mapping_updated": False,
-                "message": "No image mapping file found"
+                "message": "No image mapping file found",
             }
-        
-        with open(mapping_file, 'r', encoding='utf-8') as f:
+
+        with open(mapping_file, "r", encoding="utf-8") as f:
             mapping = json.load(f)
-        
+
         # Find images associated with this document
         images_to_delete = []
         for image_filename, image_info in mapping.items():
             if image_info.get("document") == document_name:
                 images_to_delete.append(image_filename)
-        
+
         # Delete the image files
         deleted_count = 0
         for image_filename in images_to_delete:
@@ -68,30 +66,25 @@ def delete_document_images(filename: str) -> dict:
             if image_path.exists():
                 image_path.unlink()
                 deleted_count += 1
-                logger.info(f"🗑️ Deleted image: {image_filename}")
-        
+
         # Remove entries from mapping
         for image_filename in images_to_delete:
             mapping.pop(image_filename, None)
-        
+
         # Save updated mapping
-        with open(mapping_file, 'w', encoding='utf-8') as f:
+        with open(mapping_file, "w", encoding="utf-8") as f:
             json.dump(mapping, f, indent=2, ensure_ascii=False)
-        
+
         logger.info(f"🗂️ Deleted {deleted_count} images for document: {document_name}")
         return {
             "images_deleted": deleted_count,
             "mapping_updated": True,
-            "message": f"Deleted {deleted_count} images for document {document_name}"
+            "message": f"Deleted {deleted_count} images for document {document_name}",
         }
-        
+
     except Exception as e:
         logger.error(f"❌ Error deleting images for {filename}: {e}")
-        return {
-            "images_deleted": 0,
-            "mapping_updated": False,
-            "error": str(e)
-        }
+        return {"images_deleted": 0, "mapping_updated": False, "error": str(e)}
 
 
 class QueryRequest(BaseModel):
@@ -105,7 +98,6 @@ class QueryRequest(BaseModel):
 class NewsChatRequest(BaseModel):
     query: str
     news_context: dict
-    web_search_enabled: bool = True
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
@@ -202,8 +194,6 @@ async def handle_query(request: QueryRequest):
         pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
-        # Use system-level default search method
-        search_method = DEFAULT_SEARCH_METHOD
 
         answer = await run_orchestration(
             query,
@@ -211,7 +201,6 @@ async def handle_query(request: QueryRequest):
             pre_embedding_process,
             session_id,
             selected_files,
-            search_method,
         )
         api_requests_total.labels(status="success").inc()
 
@@ -237,19 +226,15 @@ async def handle_news_chat(request: NewsChatRequest):
     try:
         query = request.query
         news_context = request.news_context
-        web_search_enabled = request.web_search_enabled
         session_id = request.sessionId
 
         logger.info(f"📰 News Chat API Router received:")
         logger.info(f"   - Query: {query}")
         logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
-        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
         logger.info(f"   - Session ID: {session_id}")
 
         # Process news chat query
-        answer = await run_news_chat_orchestration(
-            query, news_context, web_search_enabled, session_id
-        )
+        answer = await run_news_chat_orchestration(query, news_context, session_id)
 
         logger.info("News chat query processed successfully")
         api_requests_total.labels(status="success").inc()
@@ -499,10 +484,10 @@ def delete_file(filename: str):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
-            
+
             # Delete corresponding images
             image_deletion_result = delete_document_images(filename)
-            
+
             return {
                 "message": f"File '{filename}' deleted successfully (no vector store found)",
                 "images_deleted": image_deletion_result["images_deleted"],
@@ -563,7 +548,6 @@ def delete_file(filename: str):
             keyword_search = get_keyword_search()
             keyword_search.remove_documents_by_file(base_filename)
             keyword_search.save_index()
-            logger.info(f"✅ Documents removed from keyword search index")
         except Exception as e:
             logger.error(f"Error deleting documents from keyword search index: {e}")
 
@@ -594,28 +578,6 @@ def delete_file(filename: str):
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
 
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
-
-
-@router.get("/files/{filename}/download")
-def download_file(filename: str):
-    """
-    Download a file from uploads directory.
-    """
-    try:
-        file_path = Path(UPLOADS_PATH) / filename
-
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        return FileResponse(
-            path=file_path, filename=filename, media_type="application/octet-stream"
-        )
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error downloading file {filename}: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error downloading file: {error_message}"
-        )
 
 
 @router.get("/files/{filename}")
@@ -672,28 +634,6 @@ def get_file_preview(filename: str):
         logger.error(f"Error generating preview for {filename}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error generating preview: {str(e)}"
-        )
-
-
-@router.get("/created-documents/{filename}/download")
-def download_created_document(filename: str):
-    """
-    Download a file from created_documents directory.
-    """
-    try:
-        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
-
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        return FileResponse(
-            path=file_path, filename=filename, media_type="application/octet-stream"
-        )
-    except Exception as e:
-        logger.error(f"Error downloading created document {filename}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error downloading created document: {str(e)}",
         )
 
 
@@ -979,36 +919,4 @@ async def verify_document(
             pass
         raise HTTPException(
             status_code=500, detail=f"Document verification failed: {error_message}"
-        )
-
-
-@router.get("/verification-types")
-def get_verification_types():
-    """
-    Get available document verification types
-    """
-    try:
-        verification_types = [
-            "invoice",
-            "receipt",
-            "bank_statement",
-            "payslip",
-            "contract",
-            "tax_declaration",
-            "expense_voucher",
-            "other",
-            "auto",
-        ]
-
-        return {
-            "verification_types": verification_types,
-            "supported_formats": [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
-            "default_type": "auto",
-        }
-
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error getting verification types: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting verification types: {error_message}"
         )

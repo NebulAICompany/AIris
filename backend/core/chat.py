@@ -1,18 +1,17 @@
 """
 Chat functionality for managing chat sessions and messages.
 """
+
 import uuid
-import os
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from backend.shared.constants import CHAT_HISTORY_DB_PATH_STR, DATABASE_DIR
 from backend.shared.logger import get_logger
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session as DbSession
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, JSON
@@ -26,19 +25,23 @@ logger = get_logger("CHAT_MANAGER")
 
 class DbChatSession(Base):
     """Database model for chat sessions"""
+
     __tablename__ = "chat_sessions"
-    
+
     session_id = Column(String, primary_key=True)
     title = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=False)
     meta_data = Column(JSON, nullable=True)
 
-    messages = relationship("DbChatMessage", back_populates="session", cascade="all, delete-orphan")
+    messages = relationship(
+        "DbChatMessage", back_populates="session", cascade="all, delete-orphan"
+    )
 
 
 class DbChatMessage(Base):
     """Database model for chat messages"""
+
     __tablename__ = "chat_messages"
 
     message_id = Column(String, primary_key=True)
@@ -47,8 +50,9 @@ class DbChatMessage(Base):
     content = Column(Text, nullable=False)
     timestamp = Column(DateTime, nullable=False)
     meta_data = Column(JSON, nullable=True)
-    
+
     session = relationship("DbChatSession", back_populates="messages")
+
 
 class MessageRole(Enum):
     USER = "user"
@@ -109,13 +113,23 @@ class ChatSession:
         self.updated_at = datetime.now()
         # Update title if it's the first user message
         if not self.title and message.role == MessageRole.USER:
-            self.title = message.content[:50] + "..." if len(message.content) > 50 else message.content
+            self.title = (
+                message.content[:50] + "..."
+                if len(message.content) > 50
+                else message.content
+            )
 
     def get_context_for_llm(self, max_messages: int = 20) -> List[Dict[str, str]]:
         """Get formatted messages for LLM context"""
         # Get recent messages, prioritizing the most recent ones
-        recent_messages = self.messages[-max_messages:] if len(self.messages) > max_messages else self.messages
-        return [{"role": msg.role.value, "content": msg.content} for msg in recent_messages]
+        recent_messages = (
+            self.messages[-max_messages:]
+            if len(self.messages) > max_messages
+            else self.messages
+        )
+        return [
+            {"role": msg.role.value, "content": msg.content} for msg in recent_messages
+        ]
 
     def to_dict(self) -> Dict[str, Any]:
         data = asdict(self)
@@ -129,13 +143,15 @@ class ChatSession:
         # Make a copy to avoid modifying the original data
         data_copy = data.copy()
         messages_data = data_copy.pop("messages", [])
-        
+
         # Create session with empty messages list first
         data_copy["messages"] = []
         session = cls(**data_copy)
-        
+
         # Then populate the messages
-        session.messages = [ChatMessage.from_dict(msg_data) for msg_data in messages_data]
+        session.messages = [
+            ChatMessage.from_dict(msg_data) for msg_data in messages_data
+        ]
         return session
 
 
@@ -147,16 +163,18 @@ class ChatHistoryManager:
         DATABASE_DIR.mkdir(parents=True, exist_ok=True)
 
         # Initialize database connection
-        self.engine = create_engine(f"sqlite:///{CHAT_HISTORY_DB_PATH_STR}",
-                                   connect_args={"check_same_thread": False},
-                                   poolclass=StaticPool)
-        
+        self.engine = create_engine(
+            f"sqlite:///{CHAT_HISTORY_DB_PATH_STR}",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+
         # Create tables if they don't exist
         Base.metadata.create_all(self.engine)
-        
+
         # Create session factory
         self.Session = sessionmaker(bind=self.engine)
-        
+
         self.active_sessions: Dict[str, ChatSession] = {}
         self.max_context_messages = 20
         self.max_tokens_per_message = 1000  # Approximate token limit per message
@@ -165,8 +183,12 @@ class ChatHistoryManager:
         """Save a ChatSession object to the database"""
         with self.Session() as db_session:
             # Check if session already exists
-            db_chat_session = db_session.query(DbChatSession).filter_by(session_id=session.session_id).first()
-            
+            db_chat_session = (
+                db_session.query(DbChatSession)
+                .filter_by(session_id=session.session_id)
+                .first()
+            )
+
             if not db_chat_session:
                 # Create new session
                 db_chat_session = DbChatSession(
@@ -174,7 +196,7 @@ class ChatHistoryManager:
                     title=session.title,
                     created_at=session.created_at,
                     updated_at=session.updated_at,
-                    meta_data=session.metadata
+                    meta_data=session.metadata,
                 )
                 db_session.add(db_chat_session)
             else:
@@ -182,10 +204,12 @@ class ChatHistoryManager:
                 db_chat_session.title = session.title
                 db_chat_session.updated_at = session.updated_at
                 db_chat_session.meta_data = session.metadata
-                
+
                 # Delete existing messages to avoid duplicates
-                db_session.query(DbChatMessage).filter_by(session_id=session.session_id).delete()
-            
+                db_session.query(DbChatMessage).filter_by(
+                    session_id=session.session_id
+                ).delete()
+
             # Add messages
             for message in session.messages:
                 db_message = DbChatMessage(
@@ -194,25 +218,29 @@ class ChatHistoryManager:
                     role=message.role.value,
                     content=message.content,
                     timestamp=message.timestamp,
-                    meta_data=message.metadata
+                    meta_data=message.metadata,
                 )
                 db_session.add(db_message)
-                
+
             # Commit changes
             db_session.commit()
-            
+
     def load_session_from_db(self, session_id: str) -> Optional[ChatSession]:
         """Load a ChatSession object from the database"""
         with self.Session() as db_session:
             # Query session
-            db_chat_session = db_session.query(DbChatSession).filter_by(session_id=session_id).first()
-            
+            db_chat_session = (
+                db_session.query(DbChatSession).filter_by(session_id=session_id).first()
+            )
+
             if not db_chat_session:
                 return None
-                
+
             # Query messages
-            db_messages = db_session.query(DbChatMessage).filter_by(session_id=session_id).all()
-            
+            db_messages = (
+                db_session.query(DbChatMessage).filter_by(session_id=session_id).all()
+            )
+
             # Create ChatMessage objects
             messages = [
                 ChatMessage(
@@ -220,11 +248,11 @@ class ChatHistoryManager:
                     content=msg.content,
                     timestamp=msg.timestamp,
                     metadata=msg.meta_data,
-                    message_id=msg.message_id
+                    message_id=msg.message_id,
                 )
                 for msg in db_messages
             ]
-            
+
             # Create ChatSession object
             return ChatSession(
                 session_id=db_chat_session.session_id,
@@ -232,7 +260,7 @@ class ChatHistoryManager:
                 created_at=db_chat_session.created_at,
                 updated_at=db_chat_session.updated_at,
                 metadata=db_chat_session.meta_data,
-                messages=messages
+                messages=messages,
             )
 
     def create_session(self, session_id: Optional[str] = None) -> ChatSession:
@@ -301,13 +329,15 @@ class ChatHistoryManager:
             return session
 
         # Extract system messages and recent messages
-        system_messages = [msg for msg in session.messages if msg.role == MessageRole.SYSTEM]
+        system_messages = [
+            msg for msg in session.messages if msg.role == MessageRole.SYSTEM
+        ]
         recent_messages = session.messages[-target_messages:]
-        
+
         # Combine and deduplicate messages
         seen_ids = set()
         final_messages = []
-        
+
         for msg in system_messages + recent_messages:
             if msg.message_id not in seen_ids:
                 final_messages.append(msg)
@@ -316,26 +346,31 @@ class ChatHistoryManager:
         session.messages = final_messages
         return session
 
-
     def list_sessions(self, limit: int = 50) -> List[Dict[str, Any]]:
         """List all available chat sessions"""
         sessions = []
-        
+
         # Get sessions from database
         with self.Session() as db_session:
             db_chat_sessions = db_session.query(DbChatSession).all()
-            
+
             for db_chat_session in db_chat_sessions:
                 # Count messages for this session
-                message_count = db_session.query(DbChatMessage).filter_by(session_id=db_chat_session.session_id).count()
-                
-                sessions.append({
-                    "session_id": db_chat_session.session_id,
-                    "title": db_chat_session.title or "Untitled Chat",
-                    "created_at": db_chat_session.created_at.isoformat(),
-                    "updated_at": db_chat_session.updated_at.isoformat(),
-                    "message_count": message_count,
-                })
+                message_count = (
+                    db_session.query(DbChatMessage)
+                    .filter_by(session_id=db_chat_session.session_id)
+                    .count()
+                )
+
+                sessions.append(
+                    {
+                        "session_id": db_chat_session.session_id,
+                        "title": db_chat_session.title or "Untitled Chat",
+                        "created_at": db_chat_session.created_at.isoformat(),
+                        "updated_at": db_chat_session.updated_at.isoformat(),
+                        "message_count": message_count,
+                    }
+                )
 
         # Sort by updated_at (most recent first)
         sessions.sort(key=lambda x: x["updated_at"], reverse=True)
@@ -347,15 +382,19 @@ class ChatHistoryManager:
             # Remove from active sessions if exists
             if session_id in self.active_sessions:
                 del self.active_sessions[session_id]
-                
+
             # Delete from database
             with self.Session() as db_session:
                 # Delete session (cascade will delete messages)
-                db_chat_session = db_session.query(DbChatSession).filter_by(session_id=session_id).first()
+                db_chat_session = (
+                    db_session.query(DbChatSession)
+                    .filter_by(session_id=session_id)
+                    .first()
+                )
                 if db_chat_session:
                     db_session.delete(db_chat_session)
                     db_session.commit()
-                
+
             return True
         except Exception as e:
             logger.error(f"Error deleting session {session_id}: {e}")
@@ -370,20 +409,22 @@ class ChatHistoryManager:
         try:
             with self.Session() as db_session:
                 # Find old sessions
-                old_sessions = db_session.query(DbChatSession).filter(
-                    DbChatSession.updated_at < cutoff_date
-                ).all()
-                
+                old_sessions = (
+                    db_session.query(DbChatSession)
+                    .filter(DbChatSession.updated_at < cutoff_date)
+                    .all()
+                )
+
                 # Get session IDs for active session cleanup
                 old_session_ids = [session.session_id for session in old_sessions]
-                
+
                 # Delete sessions from database
                 for session in old_sessions:
                     db_session.delete(session)
                     deleted_count += 1
-                
+
                 db_session.commit()
-                
+
                 # Remove from active sessions
                 for session_id in old_session_ids:
                     if session_id in self.active_sessions:
