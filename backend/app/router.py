@@ -19,6 +19,7 @@ from typing import List, Optional
 from backend.utils.news import get_aggregated_financial_news
 from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
+from backend.utils.preview import PreviewGenerator
 
 logger = get_logger("ROUTER")
 router = APIRouter()
@@ -233,8 +234,6 @@ async def handle_news_chat(request: NewsChatRequest):
 
         # Process news chat query
         answer = await run_news_chat_orchestration(query, news_context, session_id)
-
-        logger.info("News chat query processed successfully")
         api_requests_total.labels(status="success").inc()
 
         return {
@@ -247,9 +246,7 @@ async def handle_news_chat(request: NewsChatRequest):
     except Exception as e:
         logger.error(f"Error processing news chat query: {str(e)}")
         api_requests_total.labels(status="error").inc()
-        raise HTTPException(
-            status_code=500, detail=f"Error processing news chat query: {str(e)}"
-        )
+        raise HTTPException( status_code=500, detail=f"Error processing news chat query: {str(e)}")
 
 
 @router.post("/upload")
@@ -332,11 +329,8 @@ def get_chat_session(session_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error getting chat session {session_id}: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting chat session: {error_message}"
-        )
+        logger.error(f"Error getting chat session {session_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting chat session: {str(e)}")
 
 
 @router.post("/chat/sessions")
@@ -390,9 +384,6 @@ def list_files():
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
-        # Import the temporary file check function
-        from backend.utils.preview import PreviewGenerator
-
         files = []
         for file in uploads_dir.iterdir():
             if file.is_file():
@@ -429,9 +420,6 @@ def list_created_documents():
         created_documents_dir = Path(CREATED_DOCUMENTS_PATH)
         if not created_documents_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
-
-        # Import the temporary file check function
-        from backend.utils.preview import PreviewGenerator
 
         files = []
         for file in created_documents_dir.iterdir():
@@ -617,8 +605,6 @@ def get_file_preview(filename: str):
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
-        from backend.utils.preview import PreviewGenerator
-
         preview_generator = PreviewGenerator(str(file_path))
         preview_data = preview_generator.generate_preview()
 
@@ -671,8 +657,6 @@ def get_created_document_preview(filename: str):
 
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        from backend.utils.preview import PreviewGenerator
 
         preview_generator = PreviewGenerator(str(file_path))
         preview_data = preview_generator.generate_preview()

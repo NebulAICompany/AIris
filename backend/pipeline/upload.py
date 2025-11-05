@@ -7,9 +7,7 @@ from backend.pipeline.vector import PreEmbeddingProcess
 import pandas as pd
 from backend.shared.constants import UPLOADS_PATH
 from backend.utils.uploads_database import uploads_db
-
 logger = get_logger("UPLOAD")
-
 
 async def parse_document(file_path: str) -> str:
     """
@@ -42,7 +40,6 @@ async def parse_document(file_path: str) -> str:
         elif file_extension == ".doc":
             # Convert .doc to .docx format using an external library
             from win32com import client as wc
-
             # Create a temporary .docx file path
             new_file_path = Path(UPLOADS_PATH) / f"{Path(file_path).stem}.docx"
 
@@ -50,9 +47,7 @@ async def parse_document(file_path: str) -> str:
             try:
                 word = wc.Dispatch("Word.Application")
                 doc = word.Documents.Open(file_path)
-                doc.SaveAs(
-                    str(new_file_path), 16
-                )  # 16 represents the value for .docx format
+                doc.SaveAs(str(new_file_path), 16)  # 16 represents the value for .docx format
                 doc.Close()
                 word.Quit()
                 logger.info(f"Converted {file_path} to {new_file_path}")
