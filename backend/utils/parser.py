@@ -6,7 +6,6 @@ import os
 import hashlib
 import json
 from azure.ai.documentintelligence.models import (
-    AnalyzeResult,
     DocumentContentFormat,
     AnalyzeOutputOption,
 )
@@ -14,10 +13,8 @@ from backend.shared.constants import (
     document_intelligence_client,
     IMAGES_PATH_STR,
     concurrent_client,
-    OPENAI_MODEL,
 )
 from pathlib import Path
-
 from backend.shared.logger import get_logger
 from backend.utils.table_clipper import (
     extract_table_images_from_pdf,
@@ -152,10 +149,6 @@ async def AzureParser(file_path: str):
             content_hash = hashlib.sha256(img_base64.encode()).hexdigest()[:16]
             figure_id = f"fig_{content_hash}"
 
-            logger.info(f"Figure hash-based ID: {figure_id}")
-            logger.info(f"Original figure ID: {figure.id}")
-            logger.info(f"Content hash: {content_hash}")
-
             image_filename = f"{figure_id}.png"
             image_path = os.path.join(IMAGES_PATH_STR, image_filename)
 
@@ -238,9 +231,7 @@ async def AzureParser(file_path: str):
     for table_unique_id, data in table_images.items():
         start = content.find("<table>")
         if start != -1:
-            table_reference = (
-                f"\n\n**[Table ID:{table_unique_id}]**\n\n{data['description']}\n"
-            )
+            table_reference = (f"\n\n**[Table ID:{table_unique_id}]**\n\n{data['description']}\n")
             content = (
                 content[:start]
                 + table_reference
@@ -260,9 +251,7 @@ async def ImageParser(file_path: str):
         image_bytes = f.read()
 
     image = Image.open(io.BytesIO(image_bytes))
-
     os.makedirs(IMAGES_PATH_STR, exist_ok=True)
-
     image_id = f"img_{uuid.uuid4().hex[:8]}"
 
     image_filename = f"{image_id}.png"
@@ -277,10 +266,6 @@ async def ImageParser(file_path: str):
     description = descriptions[0] if descriptions else "Açıklama alınamadı."
 
     content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
-
-    logger.info(
-        f"Image text extraction completed. Total length: {len(content)} characters"
-    )
     return content
 
 

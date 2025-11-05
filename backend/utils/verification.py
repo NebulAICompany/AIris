@@ -7,7 +7,6 @@ from backend.core.prompts import verification_agent_prompt
 from agents import Agent, Runner, AgentOutputSchema
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from backend.shared.logger import get_logger
 from backend.pipeline.upload import parse_document

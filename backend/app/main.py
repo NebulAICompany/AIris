@@ -3,17 +3,11 @@ import asyncio
 import os
 from datetime import datetime
 from contextlib import asynccontextmanager
-
-if sys.platform == "win32":
-    # Use ProactorEventLoop for Windows subprocess support
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
-from fastapi import FastAPI, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
 from backend.utils.market_data import init_market_data
 from backend.shared.logger import get_logger
-
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
 from backend.shared.constants import (
@@ -21,10 +15,10 @@ from backend.shared.constants import (
     FRONTEND_RENDERER_DIR,
     FRONTEND_ASSETS_DIR,
 )
-
-
+if sys.platform == "win32":
+    # Use ProactorEventLoop for Windows subprocess support
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 logger = get_logger("MAIN")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
