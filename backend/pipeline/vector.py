@@ -1,7 +1,6 @@
 from qdrant_client import QdrantClient, models
 from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.text_splitter import RecursiveCharacterTextSplitter, Language
+from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 from langchain_core.documents import Document
 from backend.retrieval.autocontext import apply_autocontext
 from backend.retrieval.keyword_search import get_keyword_search
@@ -10,7 +9,6 @@ from backend.shared.logger import get_logger
 from backend.security.pii import mask_text
 from typing import List
 from enum import Enum
-import time
 import asyncio
 import tiktoken
 
@@ -20,10 +18,8 @@ enc = tiktoken.get_encoding("cl100k_base")
 
 class PreEmbeddingProcess(Enum):
     """Enum for pre-embedding process options"""
-
     NONE = "none"
     CCH = "cch"  # Contextual Chunk Headers (AutoContext)
-
 
 class VectorStorePipeline:
     """
@@ -71,12 +67,7 @@ class VectorStorePipeline:
 
                             with concurrent.futures.ThreadPoolExecutor() as executor:
                                 future = executor.submit(
-                                    lambda: asyncio.run(
-                                        apply_autocontext(
-                                            docs, file_name=file_name, enabled=True
-                                        )
-                                    )
-                                )
+                                    lambda: asyncio.run(apply_autocontext(docs, file_name=file_name, enabled=True)))
                                 return future.result()
                         else:
                             return loop.run_until_complete(
@@ -86,24 +77,17 @@ class VectorStorePipeline:
                             )
                     except RuntimeError:
                         # No event loop exists, create a new one
-                        return asyncio.run(
-                            apply_autocontext(docs, file_name=file_name, enabled=True)
-                        )
+                        return asyncio.run(apply_autocontext(docs, file_name=file_name, enabled=True))
 
                 processed_docs = run_autocontext()
-                logger.info(
-                    f"✅ Contextual Chunk Headers applied to {len(processed_docs)} chunks"
-                )
+                logger.info(f"✅ Contextual Chunk Headers applied to {len(processed_docs)} chunks")
                 return processed_docs
 
             except Exception as e:
                 logger.warning(f"⚠️ AutoContext processing failed for {file_name}: {e}")
-                logger.warning("   Continuing with original chunks...")
                 return docs
         else:
-            logger.warning(
-                f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}"
-            )
+            logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
     async def run(self, text_content: str, document_name: str):
@@ -124,9 +108,7 @@ class VectorStorePipeline:
             # Split the text into semantic chunks
             docs = self.text_splitter.create_documents([text_content])
             if not docs:
-                logger.warning(
-                    f"⚠️ Warning: No chunks were created for {document_name}."
-                )
+                logger.warning(f"⚠️ Warning: No chunks were created for {document_name}.")
                 return
 
             logger.info(f"✅ Document '{document_name}' split into {len(docs)} chunks")
@@ -139,13 +121,11 @@ class VectorStorePipeline:
                 doc.metadata["file_name"] = (
                     f"{document_name}"  # Keep compatibility with existing code
                 )
-                doc.metadata["contains_image"] = False
                 chunk_idx += 1
 
             # Apply selected pre-embedding process
             processed_docs = self.apply_pre_embedding_process(docs, document_name)
             logger.info(f"✅ {len(processed_docs)} documents processed")
-            logger.info(f"Processed documents: {processed_docs}")
 
             # Apply PII masking to processed documents in batches
             await self._apply_pii_masking(processed_docs, document_name)
@@ -189,10 +169,6 @@ class VectorStorePipeline:
         Create embeddings in batches and upload to Qdrant for better performance
         """
         batch_size = 10
-        logger.info(
-            f"🔄 Creating embeddings for {len(processed_docs)} documents in batches of {batch_size}..."
-        )
-
         all_points = []
 
         for i in range(0, len(processed_docs), batch_size):
@@ -200,16 +176,13 @@ class VectorStorePipeline:
             logger.info(
                 f"⚡ Processing embedding batch {i//batch_size + 1}/{(len(processed_docs) + batch_size - 1)//batch_size} ({len(batch_docs)} documents)"
             )
-
             # Extract text content for batch embedding
             batch_texts = [doc.page_content for doc in batch_docs]
 
             # Create embeddings for the batch
             try:
                 # Use embed_documents for batch processing instead of embed_query for single documents
-                batch_embeddings = await asyncio.to_thread(
-                    self.embeddings.embed_documents, batch_texts
-                )
+                batch_embeddings = await asyncio.to_thread(self.embeddings.embed_documents, batch_texts)
 
                 # Create points for this batch
                 for idx, (doc, embedding) in enumerate(
@@ -225,7 +198,7 @@ class VectorStorePipeline:
                     )
                     all_points.append(point)
 
-            except Exception as e:
+            except Exception:
                 # Fallback to individual embedding creation for this batch
                 for idx, doc in enumerate(batch_docs):
                     try:
@@ -242,9 +215,7 @@ class VectorStorePipeline:
                         )
                         all_points.append(point)
                     except Exception as individual_error:
-                        logger.error(
-                            f"❌ Error creating embedding for document {i + idx}: {str(individual_error)}"
-                        )
+                        logger.error(f"❌ Error creating embedding for document {i + idx}: {str(individual_error)}")
                         continue
 
         # Upload all points to Qdrant
