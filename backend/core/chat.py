@@ -1,7 +1,6 @@
 """
 Chat functionality for managing chat sessions and messages.
 """
-
 import uuid
 from datetime import datetime, timedelta
 from enum import Enum
@@ -9,17 +8,11 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from backend.shared.constants import CHAT_HISTORY_DB_PATH_STR, DATABASE_DIR
 from backend.shared.logger import get_logger
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, String, DateTime, ForeignKey, Text, JSON
+from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.pool import StaticPool
-
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-
 Base = declarative_base()
-
 logger = get_logger("CHAT_MANAGER")
 
 

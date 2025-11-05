@@ -120,15 +120,12 @@ def retrieve_top_k(
 def retrieve_with_keyword_search(
     query_terms: List[str], k: int = 10, selected_files: Optional[List[str]] = None
 ) -> List[Dict[str, Any]]:
+    
     try:
-        logger.info(f"🔍 Keyword search for terms: {query_terms} (limit: {k})")
-
         # Perform keyword search
         results = keyword_search(query_terms, k=k, selected_files=selected_files)
-
-        logger.info(f"✅ Retrieved {len(results)} documents via keyword search")
         return results
-
+    
     except Exception as e:
         logger.error(f"❌ Error during keyword search: {e}")
         return []
@@ -145,9 +142,7 @@ def retrieve_with_keyword_helping(
         logger.info(f"🔍 Vector + keyword search helping for: '{query}' (limit: {k}+3)")
 
         # Perform keyword search
-        vector_results = retrieve_top_k(
-            client, query, k=k, selected_files=selected_files
-        )
+        vector_results = retrieve_top_k(client, query, k=k, selected_files=selected_files)
         results = keyword_search(query_terms, k=3, selected_files=selected_files)
         results = vector_results + results
         logger.info(f"✅ Retrieved {len(results)} documents via vector + keyword search helping")
@@ -198,9 +193,7 @@ def retrieve_hybrid(
             max_vector_score = max(result["score"] for result in vector_results)
             for result in vector_results:
                 doc_key = result["metadata"].get("chunk_id", "")
-                normalized_score = (
-                    result["score"] / max_vector_score if max_vector_score > 0 else 0
-                )
+                normalized_score = (result["score"] / max_vector_score if max_vector_score > 0 else 0)
                 combined_results[doc_key] = {
                     **result,
                     "score": normalized_score * vector_weight,
@@ -214,9 +207,7 @@ def retrieve_hybrid(
             max_keyword_score = max(result["score"] for result in keyword_results)
             for result in keyword_results:
                 doc_key = result["metadata"].get("chunk_id", "")
-                normalized_score = (
-                    result["score"] / max_keyword_score if max_keyword_score > 0 else 0
-                )
+                normalized_score = (result["score"] / max_keyword_score if max_keyword_score > 0 else 0)
 
                 if doc_key in combined_results:
                     # Document found in both - combine scores
@@ -239,13 +230,7 @@ def retrieve_hybrid(
                     }
 
         # Sort by combined score and return top k
-        final_results = sorted(
-            combined_results.values(), key=lambda x: x["score"], reverse=True
-        )[:k]
-
-        logger.info(
-            f"✅ Hybrid search: {len(vector_results)} vector + {len(keyword_results)} keyword → {len(final_results)} final results"
-        )
+        final_results = sorted(combined_results.values(), key=lambda x: x["score"], reverse=True)[:k]
         return final_results
 
     except Exception as e:
