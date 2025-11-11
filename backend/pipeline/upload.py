@@ -9,7 +9,7 @@ from backend.shared.constants import UPLOADS_PATH
 from backend.utils.uploads_database import uploads_db
 logger = get_logger("UPLOAD")
 
-async def parse_document(file_path: str) -> str:
+async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
     """
     Parse document and extract text based on file type.
     Args:
@@ -20,11 +20,11 @@ async def parse_document(file_path: str) -> str:
     try:
         file_extension = Path(file_path).suffix.lower()
         if file_extension in (".pdf", ".docx", ".xlsx"):
-            extracted_text = await AzureParser(file_path)
+            extracted_text = await AzureParser(file_path, photo_less_mode=photo_less_mode)
         elif file_extension == ".txt":
             extracted_text = await TxtParser(file_path)
         elif file_extension in (".jpg", ".jpeg", ".gif", ".bmp", ".png"):
-            extracted_text = await ImageParser(file_path)
+            extracted_text = await ImageParser(file_path, photo_less_mode=photo_less_mode)
         elif file_extension == ".xls":
             # Read the old .xls and create a new file in .xlsx format
             df = pd.read_excel(file_path)
@@ -32,7 +32,7 @@ async def parse_document(file_path: str) -> str:
             df.to_excel(str(new_file_path), index=False)
             logger.info(f"Converted {file_path} to {new_file_path}")
             # Parse the new xlsx file
-            extracted_text = await AzureParser(str(new_file_path))
+            extracted_text = await AzureParser(str(new_file_path), photo_less_mode=photo_less_mode)
             # Delete the temporary xlsx file after processing
             if os.path.exists(new_file_path):
                 os.remove(new_file_path)
@@ -53,7 +53,7 @@ async def parse_document(file_path: str) -> str:
                 logger.info(f"Converted {file_path} to {new_file_path}")
 
                 # Parse the new docx file
-                extracted_text = await AzureParser(str(new_file_path))
+                extracted_text = await AzureParser(str(new_file_path), photo_less_mode=photo_less_mode)
 
                 # Delete the temporary docx file after processing
                 if os.path.exists(new_file_path):
@@ -72,7 +72,11 @@ async def parse_document(file_path: str) -> str:
         raise e
 
 
-async def process_file(file_path: str, pre_embedding_process: str = "none") -> dict:
+async def process_file(
+    file_path: str,
+    pre_embedding_process: str = "none",
+    photo_less_mode: bool = False,
+) -> dict:
     """
     Process an uploaded file synchronously.
     Args:
@@ -85,7 +89,9 @@ async def process_file(file_path: str, pre_embedding_process: str = "none") -> d
 
     try:
         # Parse document using the new method
-        extracted_text = await parse_document(file_path)
+        extracted_text = await parse_document(
+            file_path, photo_less_mode=photo_less_mode
+        )
 
         # Convert string to enum
         if pre_embedding_process.lower() == "cch":
