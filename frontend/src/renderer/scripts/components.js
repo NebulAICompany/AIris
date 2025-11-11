@@ -8,63 +8,310 @@ class UIComponents {
     this.currentTab = "chat";
     this.chatHistory = [];
     this.uploadedFiles = [];
-    this.chatUploadedFiles = []; // Add this property for chat uploads
+    this.chatUploadedFiles = [];
     this.isProcessing = false;
     this.isDarkMode = false;
-    // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
 
-    // Finance news properties
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
 
-    // Chat session management
     this.currentSessionId = null;
     this.chatSessions = [];
 
-    // File selection management
     this.selectedFiles = [];
     this.allFiles = [];
     this.fileSelectionModal = null;
-    this.hasInitializedFiles = false; // Flag to track if files have been initialized
+    this.hasInitializedFiles = false;
+
+    // Profile modal state
+    this.selectedProfileFiles = []; // Sadece profile modal için
+    this.profileModal = null;
 
     this.init();
-
-    // Subscribe to language changes
     if (window.languageService) {
-      window.languageService.subscribe(() => {
-        this.updateDynamicTexts();
-      });
+      window.languageService.subscribe(() => this.updateDynamicTexts());
     }
   }
 
   init() {
     this.setupEventListeners();
-    // Theme loading moved to AIrisApp class to load before loading screen
-    // this.loadTheme();
     this.initializeComponents();
-
-    // Load files and select all by default
     this.loadAndSelectAllFiles();
+    this.setupFileSearch();
 
-    // Set toggle state on load
+    this.loadProfiles();
+
+    // Profile modal setup
+    this.setupProfileModal();
+    this.setupProfileSelect();
+    this.setupPhotoLessButton();
+
     const webSearchToggle = document.getElementById("web-search-toggle");
-    if (webSearchToggle) {
-      if (this.webSearchEnabled) {
-        webSearchToggle.classList.add("active");
-      }
-    }
+    if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
 
-    // Set language setting on load
     if (window.languageService) {
       const languageSetting = document.getElementById("language-setting");
-      if (languageSetting) {
-        languageSetting.value = window.languageService.getCurrentLanguage();
-      }
-      // Update texts with current language
+      if (languageSetting) languageSetting.value = window.languageService.getCurrentLanguage();
       window.languageService.updatePageTexts();
     }
   }
+
+
+  // ---------------- Profile Modal ----------------
+  loadProfiles() {
+    const storedProfiles = localStorage.getItem("savedProfiles");
+    this.allProfiles = storedProfiles ? JSON.parse(storedProfiles) : [];
+  }
+
+  setupPhotoLessButton() {
+    this.photoLessBtn = document.getElementById("photo-less-toggle");
+    if (!this.photoLessBtn) return;
+
+    this.photoLessBtn.addEventListener("click", () => {
+      this.photoLessBtn.classList.toggle("active");
+
+      // Dil kontrolü
+      const lang = window.languageService?.getCurrentLanguage() || "tr";
+
+      let activeMsg = lang === "en"
+        ? "Files will be processed without photos."
+        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
+
+      let inactiveMsg = lang === "en"
+        ? "Photo-less mode is deactivated."
+        : "Photo-less mod kapatıldı.";
+
+      if (this.photoLessBtn.classList.contains("active")) {
+        Utils.showSnackbar(activeMsg, "info", 4000);
+      } else {
+        Utils.showSnackbar(inactiveMsg, "warning", 3000);
+      }
+    });
+  }
+
+
+  setupProfileModal() {
+    this.profileModal = document.getElementById("create-profile-selection");
+    if (!this.allProfiles) this.allProfiles = [];
+    this.setupProfileSelect();
+
+    // Butonlar
+    document.getElementById("open-profile-popup")?.addEventListener("click", () => this.showProfileModal());
+    document.getElementById("close-profile-selection")?.addEventListener("click", () => this.hideProfileModal());
+    document.getElementById("cancel-profile-popup")?.addEventListener("click", () => this.hideProfileModal());
+    document.getElementById("save-profile-popup")?.addEventListener("click", () => this.saveProfiles());
+
+    document.getElementById("select-all-profile-files")?.addEventListener("click", () => this.selectAllProfiles());
+    document.getElementById("deselect-all-profile-files")?.addEventListener("click", () => this.deselectAllProfiles());
+
+    // Arama input
+    const input = document.getElementById("file-profile-selection-search");
+    const clearBtn = document.getElementById("file-profile-selection-search-clear");
+
+    input?.addEventListener("input", (e) => this.renderProfileFiles(e.target.value.trim().toLowerCase()));
+    input?.addEventListener("keypress", (e) => { if (e.key === "Escape") this.clearProfileSearch(); });
+    clearBtn?.addEventListener("click", () => this.clearProfileSearch());
+
+    // Escape tuşu modal kapatma
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.profileModal.classList.contains("show")) this.hideProfileModal();
+    });
+
+    // İlk render
+    this.renderProfileFiles();
+  }
+
+  showProfileModal() {
+    if (!this.profileModal) return;
+    this.profileModal.classList.add("show");
+
+    // Dosyaları modalda göster
+    this.renderProfileFiles();
+  }
+
+  hideProfileModal() {
+    if (!this.profileModal) return;
+    this.profileModal.classList.remove("show");
+  }
+
+  renderProfileFiles(filter = "") {
+    const container = document.getElementById("files-profile-list");
+    if (!container || !this.allFiles) return;
+
+    let visibleFiles = filter
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
+      : this.allFiles;
+
+    // Seçili dosyaları en üste taşı
+    visibleFiles.sort((a, b) => {
+      const aSelected = this.selectedProfileFiles.includes(a.name);
+      const bSelected = this.selectedProfileFiles.includes(b.name);
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+
+    container.innerHTML = visibleFiles.map(file => `
+    <div class="file-selection-item profile-item ${this.selectedProfileFiles.includes(file.name) ? "selected" : ""}" data-name="${file.name}">
+      <div class="file-checkbox ${this.selectedProfileFiles.includes(file.name) ? "checked" : ""}">
+        <i class="fas fa-check"></i>
+      </div>
+      <div class="file-item-icon ${file.name.split(".").pop().toLowerCase()}">
+        <i class="${this.getFileIcon(file.name.split(".").pop())}"></i>
+      </div>
+      <div class="file-item-info">
+        <div class="file-item-name" title="${file.name}">${file.name}</div>
+        <div class="file-item-size">${this.formatFileSize(file.size)}</div>
+      </div>
+    </div>
+  `).join("");
+
+    // Click eventleri
+    container.querySelectorAll(".profile-item").forEach(item => {
+      const name = item.dataset.name;
+      const checkbox = item.querySelector(".file-checkbox");
+
+      item.onclick = () => this.toggleProfileFile(name);
+      checkbox.onclick = (e) => { e.stopPropagation(); this.toggleProfileFile(name); };
+    });
+  }
+
+  toggleProfileFile(name) {
+    const index = this.selectedProfileFiles.indexOf(name);
+    if (index > -1) this.selectedProfileFiles.splice(index, 1);
+    else this.selectedProfileFiles.push(name);
+
+    this.renderProfileFiles(document.getElementById("file-profile-selection-search")?.value?.trim().toLowerCase() || "");
+  }
+
+  selectAllProfiles() {
+    const filter = document.getElementById("file-profile-selection-search")?.value?.trim().toLowerCase() || "";
+    const visibleFiles = filter
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
+      : this.allFiles;
+
+    this.selectedProfileFiles = visibleFiles.map(f => f.name);
+    this.renderProfileFiles(filter);
+  }
+
+  deselectAllProfiles() {
+    const filter = document.getElementById("file-profile-selection-search")?.value?.trim().toLowerCase() || "";
+    const visibleFiles = filter
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
+      : this.allFiles;
+
+    this.selectedProfileFiles = this.selectedProfileFiles.filter(name => !visibleFiles.some(f => f.name === name));
+    this.renderProfileFiles(filter);
+  }
+
+
+  saveProfiles() {
+    const profileNameInput = document.getElementById("profile-name");
+    const fileList = document.getElementById("files-profile-list");
+
+    try {
+      if (!this.selectedProfileFiles || this.selectedProfileFiles.length === 0) {
+        if (fileList) fileList.scrollIntoView({ behavior: "smooth", block: "center" });
+        return Utils.showSnackbar(window.languageService.t("noFilesSelected"), "error");
+      }
+
+      const profileName = profileNameInput.value.trim();
+      if (!profileName) {
+        profileNameInput.focus();
+        return Utils.showSnackbar(window.languageService.t("profileNameRequired"), "warning");
+      }
+
+      const exists = this.allProfiles.some(p => p.name.toLowerCase() === profileName.toLowerCase());
+      if (exists) {
+        profileNameInput.select();
+        profileNameInput.focus();
+        return Utils.showSnackbar(window.languageService.t("profileNameExists"), "error");
+      }
+
+      const newProfile = {
+        name: profileName,
+        files: [...this.selectedProfileFiles],
+      };
+
+      this.allProfiles.push(newProfile);
+      localStorage.setItem("savedProfiles", JSON.stringify(this.allProfiles));
+      this.updateProfileSelectOptions();
+
+      Utils.showSnackbar(window.languageService.t("profileSaved"), "success");
+
+      this.selectedProfileFiles = [];
+      profileNameInput.value = "";
+      this.hideProfileModal();
+    } catch (err) {
+      console.error("SaveProfiles Error:", err);
+      Utils.showSnackbar(window.languageService.t("unknownError"), "error");
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+  setupProfileSelect() {
+    const select = document.getElementById("file-profile-select");
+    if (!select) return;
+
+    // Dropdown seçeneklerini güncelle
+    this.updateProfileSelectOptions();
+
+    // Profil seçildiğinde
+    select.addEventListener("change", () => {
+      const selectedProfileName = select.value;
+      if (!selectedProfileName) {
+        this.selectedFiles = [];
+      } else {
+        const profile = this.allProfiles.find(p => p.name === selectedProfileName);
+        if (profile) {
+          this.selectedFiles = [...profile.files]; // profile’dan gelen dosyalar seçili olacak
+        }
+      }
+
+      // File selection modal'ı güncelle
+      this.renderFileSelectionList();
+      this.updateFileSelectionButton();
+    });
+  }
+
+
+  updateProfileSelectOptions() {
+    const select = document.getElementById("file-profile-select");
+    if (!select) return;
+
+    // Önce tüm seçenekleri temizle
+    select.innerHTML = `<option value="" data-i18n="selectProfile">Select Profile</option>`;
+
+    this.allProfiles.forEach(profile => {
+      const opt = document.createElement("option");
+      opt.value = profile.name;
+      opt.textContent = profile.name;
+      select.appendChild(opt);
+    });
+  }
+
+
+
+  clearProfileSearch() {
+    const input = document.getElementById("file-profile-selection-search");
+    if (input) input.value = "";
+    this.renderProfileFiles();
+    input?.focus();
+  }
+
+  // -------------------------------------------------
+
+
 
   async loadAndSelectAllFiles() {
     try {
@@ -873,8 +1120,8 @@ class UIComponents {
                 </div>
                 <div class="message-content">
                     <div class="message-text error">${Utils.escapeHtml(
-                      content
-                    )}</div>
+        content
+      )}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
@@ -947,16 +1194,14 @@ class UIComponents {
         }
         if (chart.chart_type) {
           chartInfo.push(
-            `Type: ${
-              chart.chart_type.charAt(0).toUpperCase() +
-              chart.chart_type.slice(1)
+            `Type: ${chart.chart_type.charAt(0).toUpperCase() +
+            chart.chart_type.slice(1)
             }`
           );
         }
         if (chart.period) {
           chartInfo.push(
-            `Period: ${
-              chart.period.charAt(0).toUpperCase() + chart.period.slice(1)
+            `Period: ${chart.period.charAt(0).toUpperCase() + chart.period.slice(1)
             }`
           );
         }
@@ -990,8 +1235,7 @@ class UIComponents {
       (generatedFiles && generatedFiles.length > 0)
     ) {
       console.log(
-        `Adding ${(images || []).length} images and ${
-          (generatedFiles || []).length
+        `Adding ${(images || []).length} images and ${(generatedFiles || []).length
         } generated files to message`
       );
 
@@ -1004,8 +1248,7 @@ class UIComponents {
       attachmentsHeader.className = "images-header";
       attachmentsHeader.innerHTML = `
         <i class="fas fa-paperclip" style="font-size: 0.9em; opacity: 0.7;"></i>
-        <span style="font-size: 1em; opacity: 0.9;">${
-          (images || []).length + (generatedFiles || []).length
+        <span style="font-size: 1em; opacity: 0.9;">${(images || []).length + (generatedFiles || []).length
         } attachment</span>
         <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
       `;
@@ -1774,15 +2017,14 @@ class UIComponents {
 
     sessionItem.innerHTML = `
       <div class="chat-session-title">${Utils.escapeHtml(
-        session.title || "Untitled Chat"
-      )}</div>
+      session.title || "Untitled Chat"
+    )}</div>
       <div class="chat-session-meta">
         <span class="chat-session-date">${formattedDate}</span>
         <span class="chat-session-count">${session.message_count}</span>
         <div class="chat-session-actions">
-          <button class="chat-session-delete" data-session-id="${
-            session.session_id
-          }" title="Delete session">
+          <button class="chat-session-delete" data-session-id="${session.session_id
+      }" title="Delete session">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -2110,8 +2352,8 @@ class UIComponents {
       <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
-          fileName
-        )}</span>: ${statusText}
+      fileName
+    )}</span>: ${statusText}
       </div>
     `;
 
@@ -2149,8 +2391,8 @@ class UIComponents {
       <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
-          fileName
-        )}</span>: ${statusText}
+      fileName
+    )}</span>: ${statusText}
       </div>
     `;
   }
@@ -2242,85 +2484,30 @@ class UIComponents {
 
   async loadFileLibrary() {
     try {
-      // Fetch the file list from the backend
       const response = await fetch("http://localhost:8001/api/files");
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
-      const files = data.files || [];
+      this.allFiles = data.files || [];
 
-      // Get the file library container
-      const fileLibrary = document.getElementById("files-grid");
-      if (!fileLibrary) return;
-      fileLibrary.innerHTML = "";
+      // İlk listeleme
+      this.displayFilteredFiles();
 
-      if (files.length === 0) {
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        fileLibrary.innerHTML = `<div class="empty-state">
-          <i class="fas fa-folder-open"></i>
-          <h3>${t("noDocuments")}</h3>
-          <p>${t("uploadToGetStarted")}</p>
-          <button class="cta-button" data-tab="chat">${t(
-            "uploadFilesBtn"
-          )}</button>
-        </div>`;
-        return;
+      // 🔍 Arama olayları
+      const searchInput = document.getElementById("file-tab-search");
+      const clearBtn = document.getElementById("file-tab-search-clear");
+
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          this.displayFilteredFiles(searchInput.value.trim().toLowerCase());
+        });
       }
 
-      // Render each file
-      files.forEach((file) => {
-        const fileItem = document.createElement("div");
-        fileItem.className = "file-card";
-        fileItem.style.cursor = "pointer";
-        fileItem.dataset.fileName = file.name;
-        fileItem.innerHTML = `
-          <div class="file-card-header">
-            <div class="file-card-main">
-              <div class="file-card-icon">
-                <i class="${Utils.getFileIcon(file.name)}"></i>
-              </div>
-              <div class="file-card-info">
-                <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
-                <div class="file-card-details">${Utils.formatFileSize(
-                  file.size
-                )} • ${Utils.formatDate(file.created_at)}</div>
-              </div>
-            </div>
-            <div class="file-card-actions">
-              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
-                file.name
-              )}" title="Delete file">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="file-card-preview" id="preview-${Utils.escapeHtml(
-            file.name
-          ).replace(/[^a-zA-Z0-9]/g, "_")}">
-            <div class="preview-loading">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span data-i18n="previewLoading">Loading preview...</span>
-            </div>
-          </div>
-        `;
-
-        // Add click handler to open file (but not on action buttons)
-        fileItem.addEventListener("click", (e) => {
-          // Don't open file if clicking on action buttons or preview area
-          if (
-            !e.target.closest(".file-card-actions") &&
-            !e.target.closest(".file-card-preview")
-          ) {
-            this.openFile(file.name);
-          }
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          this.displayFilteredFiles();
         });
-
-        fileLibrary.appendChild(fileItem);
-
-        // Load preview for this file
-        this.loadFilePreview(file.name);
-      });
+      }
     } catch (error) {
       const fileLibrary = document.getElementById("files-grid");
       if (fileLibrary) {
@@ -2328,14 +2515,91 @@ class UIComponents {
           ? window.languageService.t.bind(window.languageService)
           : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <h3>${t("error")}</h3>
-          <p>${t("networkError")}</p>
-        </div>`;
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>${t("error")}</h3>
+        <p>${t("networkError")}</p>
+      </div>`;
       }
       console.error("Error loading file library:", error);
     }
   }
+
+  displayFilteredFiles(searchTerm = "") {
+    const fileLibrary = document.getElementById("files-grid");
+    if (!fileLibrary) return;
+    fileLibrary.innerHTML = "";
+
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    const filteredFiles = this.allFiles.filter((f) =>
+      f.name.toLowerCase().includes(searchTerm)
+    );
+
+    if (filteredFiles.length === 0) {
+      fileLibrary.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h3>${t("noDocuments")}</h3>
+        <p>${t("uploadToGetStarted")}</p>
+      </div>`;
+      return;
+    }
+
+    filteredFiles.forEach((file) => {
+      const safeName = Utils.escapeHtml(file.name);
+      const previewId = `preview-${safeName.replace(/[^a-zA-Z0-9]/g, "_")}`;
+
+      const fileItem = document.createElement("div");
+      fileItem.className = "file-card";
+      fileItem.style.cursor = "pointer";
+      fileItem.dataset.fileName = file.name;
+
+      fileItem.innerHTML = `
+      <div class="file-card-header">
+        <div class="file-card-main">
+          <div class="file-card-icon">
+            <i class="${Utils.getFileIcon(file.name)}"></i>
+          </div>
+          <div class="file-card-info">
+            <div class="file-card-name">${safeName}</div>
+            <div class="file-card-details">${Utils.formatFileSize(
+        file.size
+      )} • ${Utils.formatDate(file.created_at)}</div>
+          </div>
+        </div>
+        <div class="file-card-actions">
+          <button class="file-action-btn delete-btn" data-filename="${safeName}" title="Delete file">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      <div class="file-card-preview" id="${previewId}">
+        <div class="preview-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span data-i18n="previewLoading">Loading preview...</span>
+        </div>
+      </div>
+    `;
+
+      // 📂 Dosyaya tıklayınca aç
+      fileItem.addEventListener("click", (e) => {
+        if (
+          !e.target.closest(".file-card-actions") &&
+          !e.target.closest(".file-card-preview")
+        ) {
+          this.openFile(file.name);
+        }
+      });
+
+      fileLibrary.appendChild(fileItem);
+
+      // ✅ Önizlemeyi yükle
+      this.loadFilePreview(file.name);
+    });
+  }
+
 
   async loadCreatedDocumentsLibrary() {
     try {
@@ -2364,8 +2628,8 @@ class UIComponents {
           <h3>${t("noCreatedDocuments")}</h3>
           <p>${t("askAiToCreateDocuments")}</p>
           <button class="cta-button" data-tab="chat">${t(
-            "startChatBtn"
-          )}</button>
+          "startChatBtn"
+        )}</button>
         </div>`;
         return;
       }
@@ -2385,21 +2649,21 @@ class UIComponents {
               <div class="file-card-info">
                 <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
                 <div class="file-card-details">${Utils.formatFileSize(
-                  file.size
-                )} • ${Utils.formatDate(file.created_at)}</div>
+          file.size
+        )} • ${Utils.formatDate(file.created_at)}</div>
               </div>
             </div>
             <div class="file-card-actions">
               <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
-                file.name
-              )}" title="Delete file">
+          file.name
+        )}" title="Delete file">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
           <div class="file-card-preview" id="created-preview-${Utils.escapeHtml(
-            file.name
-          ).replace(/[^a-zA-Z0-9]/g, "_")}">
+          file.name
+        ).replace(/[^a-zA-Z0-9]/g, "_")}">
             <div class="preview-loading">
               <i class="fas fa-spinner fa-spin"></i>
               <span data-i18n="previewLoading">Loading preview...</span>
@@ -2468,8 +2732,8 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Connection error"
-          )}</span>
+        error.message || "Connection error"
+      )}</span>
         </div>
       `;
     }
@@ -2481,8 +2745,8 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview error: ${Utils.escapeHtml(
-            previewData.error || "Error occurred"
-          )}</span>
+        previewData.error || "Error occurred"
+      )}</span>
         </div>
       `;
       return;
@@ -2611,8 +2875,8 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Connection error"
-          )}</span>
+        error.message || "Connection error"
+      )}</span>
         </div>
       `;
     }
@@ -2809,19 +3073,17 @@ class UIComponents {
                 <div class="file-meta">
                     <span class="file-size">${fileSize}</span>
                     <span class="file-date">${t(
-                      "uploadedOn"
-                    )} ${uploadDate}</span>
+      "uploadedOn"
+    )} ${uploadDate}</span>
                 </div>
             </div>
             <div class="file-actions">
-                <button class="action-btn" onclick="window.uiComponents.downloadFile('${
-                  file.id
-                }')" title="${t("downloadFile")}">
+                <button class="action-btn" onclick="window.uiComponents.downloadFile('${file.id
+      }')" title="${t("downloadFile")}">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${
-                  file.id
-                }')" title="${t("deleteFile")}">
+                <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${file.id
+      }')" title="${t("deleteFile")}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -2934,13 +3196,12 @@ class UIComponents {
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
     notification.innerHTML = `
-            <i class="fas fa-${
-              type === "success"
-                ? "check"
-                : type === "error"
-                ? "exclamation-triangle"
-                : "info"
-            }"></i>
+            <i class="fas fa-${type === "success"
+        ? "check"
+        : type === "error"
+          ? "exclamation-triangle"
+          : "info"
+      }"></i>
             <span>${Utils.escapeHtml(message)}</span>
         `;
 
@@ -3189,8 +3450,8 @@ class UIComponents {
         <div class="news-hero-content">
           <h2 class="news-hero-title">${Utils.escapeHtml(article.title)}</h2>
           <p class="news-hero-description">${this.cleanDescriptionForCard(
-            article.summary || ""
-          )}</p>
+      article.summary || ""
+    )}</p>
           <div class="news-hero-meta">
             <span class="news-hero-sources">
               <i class="fas fa-building"></i>
@@ -3270,8 +3531,8 @@ class UIComponents {
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
           <p class="news-description">${this.cleanDescriptionForCard(
-            article.summary || ""
-          )}</p>
+      article.summary || ""
+    )}</p>
           <div class="news-meta">
             <span class="news-sources">
               <i class="fas fa-building"></i>
@@ -3703,8 +3964,8 @@ class UIComponents {
                loading="lazy"
                onerror="this.style.display='none'" />
           <div class="image-caption">Image from ${Utils.escapeHtml(
-            img.source
-          )}</div>
+        img.source
+      )}</div>
         </div>
       `;
       content = content.replace("{{IMAGE_LEAD}}", imageHtml);
@@ -3724,8 +3985,8 @@ class UIComponents {
                  loading="lazy"
                  onerror="this.style.display='none'" />
             <div class="image-caption">Image from ${Utils.escapeHtml(
-              img.source
-            )}</div>
+          img.source
+        )}</div>
           </div>
         `;
         content = content.replace(marker, imageHtml);
@@ -3836,8 +4097,8 @@ class UIComponents {
           source.url
         )}" target="_blank" rel="noopener noreferrer" class="news-source-link" 
            data-source-name="${Utils.escapeHtml(
-             source.name
-           )}" data-source-url="${Utils.escapeHtml(source.url)}">
+          source.name
+        )}" data-source-url="${Utils.escapeHtml(source.url)}">
           <div class="source-icon">${icon}</div>
           <div class="source-info">
             <div class="source-name">${Utils.escapeHtml(source.name)}</div>
@@ -4536,10 +4797,10 @@ class UIComponents {
     const details = Array.isArray(issues)
       ? issues.join(", ")
       : stageData.assessment ||
-        stageData.reasoning ||
-        (window.languageService
-          ? window.languageService.t("noDetailsAvailable")
-          : "No details available");
+      stageData.reasoning ||
+      (window.languageService
+        ? window.languageService.t("noDetailsAvailable")
+        : "No details available");
 
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
@@ -4688,29 +4949,52 @@ class UIComponents {
     }
   }
 
+  setupFileSearch() {
+    const input = document.getElementById("file-selection-search");
+    const clearBtn = document.getElementById("file-selection-search-clear");
+
+    if (!input) return;
+
+    input.addEventListener("input", (e) => {
+      this.fileSelectionFilter = e.target.value.trim().toLowerCase();
+      this.renderFileSelectionList();
+    });
+
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Escape") this.clearFileSearch();
+    });
+
+    clearBtn?.addEventListener("click", () => this.clearFileSearch());
+  }
+
+  clearFileSearch() {
+    const input = document.getElementById("file-selection-search");
+    if (input) input.value = "";
+    this.fileSelectionFilter = "";
+    this.renderFileSelectionList();
+    input?.focus();
+  }
+
   // File Selection Modal Methods
   async showFileSelectionModal() {
     const modal = document.getElementById("file-selection-modal");
     if (!modal) return;
 
-    // Store reference to modal
     this.fileSelectionModal = modal;
 
     // Load files if not already loaded
     await this.loadFilesForSelection();
 
-    // Show modal with animation
+    // Show modal
     modal.classList.add("show");
 
-    // Update file selection display
+    // Update display
     this.updateFileSelectionDisplay();
   }
 
   hideFileSelectionModal() {
     const modal = document.getElementById("file-selection-modal");
-    if (modal) {
-      modal.classList.remove("show");
-    }
+    if (modal) modal.classList.remove("show");
     this.fileSelectionModal = null;
   }
 
@@ -4718,21 +5002,17 @@ class UIComponents {
     const filesList = document.getElementById("files-selection-list");
     if (!filesList) return;
 
-    // Show loading state
     filesList.innerHTML = `
-      <div class="loading-files">
-        <i class="fas fa-spinner fa-spin"></i>
-        <span>Loading files...</span>
-      </div>
-    `;
+        <div class="loading-files">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading files...</span>
+        </div>`;
 
     try {
-      // Fetch files from API
       const result = await window.apiService.getFiles();
 
       if (result.success && result.files) {
         this.allFiles = result.files;
-
         this.renderFileSelectionList();
         this.updateFileSelectionButton();
       } else {
@@ -4741,11 +5021,10 @@ class UIComponents {
     } catch (error) {
       console.error("Error loading files for selection:", error);
       filesList.innerHTML = `
-        <div class="loading-files">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span>Error loading files: ${error.message}</span>
-        </div>
-      `;
+            <div class="loading-files">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Error loading files: ${error.message}</span>
+            </div>`;
     }
   }
 
@@ -4753,41 +5032,63 @@ class UIComponents {
     const filesList = document.getElementById("files-selection-list");
     if (!filesList || !this.allFiles) return;
 
-    if (this.allFiles.length === 0) {
-      filesList.innerHTML = `
-        <div class="loading-files">
-          <i class="fas fa-folder-open"></i>
-          <span>No files available. Upload some files first.</span>
-        </div>
-      `;
-      return;
-    }
+    const q = this.fileSelectionFilter;
 
-    filesList.innerHTML = this.allFiles
-      .map((file) => {
-        const isSelected = this.selectedFiles.includes(file.name);
-        const fileExtension = file.name.split(".").pop().toLowerCase();
-        const fileIcon = this.getFileIcon(fileExtension);
-        const fileSize = this.formatFileSize(file.size);
+    let visibleFiles = q
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
+      : this.allFiles;
 
-        return `
-        <div class="file-selection-item ${
-          isSelected ? "selected" : ""
-        }" data-filename="${file.name}">
-          <div class="file-checkbox ${isSelected ? "checked" : ""}">
-            <i class="fas fa-check"></i>
-          </div>
-          <div class="file-item-icon ${fileExtension}">
-            <i class="${fileIcon}"></i>
-          </div>
-          <div class="file-item-info">
-            <div class="file-item-name" title="${file.name}">${file.name}</div>
-            <div class="file-item-size">${fileSize}</div>
-          </div>
-        </div>
-      `;
-      })
-      .join("");
+    // Seçili dosyaları en üste taşı
+    visibleFiles.sort((a, b) => {
+      const aSelected = this.selectedFiles.includes(a.name);
+      const bSelected = this.selectedFiles.includes(b.name);
+
+      if (aSelected && !bSelected) return -1; // a seçiliyse b'nin üstüne al
+      if (!aSelected && bSelected) return 1;  // b seçiliyse a'nın üstüne al
+      return 0; // ikisi de aynı seçili durumdaysa sıralamayı bozma
+    });
+
+
+
+    filesList.innerHTML = visibleFiles.map(file => {
+      const isSelected = this.selectedFiles.includes(file.name);
+      const fileExtension = file.name.split(".").pop().toLowerCase();
+      const fileIcon = this.getFileIcon(fileExtension);
+      const fileSize = this.formatFileSize(file.size);
+
+      return `
+        <div class="file-selection-item ${isSelected ? "selected" : ""}" data-filename="${file.name}">
+            <div class="file-checkbox ${isSelected ? "checked" : ""}">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="file-item-icon ${fileExtension}">
+                <i class="${fileIcon}"></i>
+            </div>
+            <div class="file-item-info">
+                <div class="file-item-name" title="${file.name}">${file.name}</div>
+                <div class="file-item-size">${fileSize}</div>
+            </div>
+        </div>`;
+    }).join("");
+
+    // Click eventlerini bağla (item veya checkbox farketmez)
+    const items = filesList.querySelectorAll(".file-selection-item");
+    items.forEach(item => {
+      const fileName = item.dataset.filename;
+      const checkbox = item.querySelector(".file-checkbox");
+
+      // Container click
+      item.onclick = (e) => {
+        e.stopPropagation(); // çakışmaları önle
+        this.toggleFileSelection(fileName);
+      };
+
+      // Checkbox click
+      checkbox.onclick = (e) => {
+        e.stopPropagation(); // parent click ile çakışmayı önle
+        this.toggleFileSelection(fileName);
+      };
+    });
   }
 
   getFileIcon(extension) {
@@ -4816,39 +5117,52 @@ class UIComponents {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
+
   toggleFileSelection(fileName) {
     const index = this.selectedFiles.indexOf(fileName);
 
-    if (index > -1) {
-      // File is selected, remove it
-      this.selectedFiles.splice(index, 1);
-    } else {
-      // File is not selected, add it
-      this.selectedFiles.push(fileName);
-    }
+    if (index > -1) this.selectedFiles.splice(index, 1);
+    else this.selectedFiles.push(fileName);
 
-    // Update display
-    this.updateFileSelectionDisplay();
+    // Listeyi yeniden render et ve seçili dosyaları en üste taşı
+    this.renderFileSelectionList();
     this.updateFileSelectionButton();
   }
 
   selectAllFiles() {
-    this.selectedFiles = [...this.allFiles.map((file) => file.name)];
+    const q = this.fileSelectionFilter;
+    const visibleFiles = q
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
+      : this.allFiles;
+
+    const visibleNames = visibleFiles.map(f => f.name);
+
+    const set = new Set(this.selectedFiles);
+    visibleNames.forEach(n => set.add(n));
+    this.selectedFiles = Array.from(set);
+
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
   }
 
   deselectAllFiles() {
-    this.selectedFiles = [];
+    const q = this.fileSelectionFilter;
+    const visibleFiles = q
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
+      : this.allFiles;
+
+    const visibleNames = visibleFiles.map(f => f.name);
+
+    this.selectedFiles = this.selectedFiles.filter(n => !visibleNames.includes(n));
+
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
   }
 
   updateFileSelectionDisplay() {
-    // Update checkboxes and selection state
     const fileItems = document.querySelectorAll(".file-selection-item");
 
-    fileItems.forEach((item) => {
+    fileItems.forEach(item => {
       const fileName = item.dataset.filename;
       const isSelected = this.selectedFiles.includes(fileName);
       const checkbox = item.querySelector(".file-checkbox");
@@ -5002,9 +5316,8 @@ class UIComponents {
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--accent-success, #10b981)";
       } else {
-        uploadStatus.textContent = `❌ ${
-          errorMessage || window.languageService?.get("failed") || "Failed"
-        }`;
+        uploadStatus.textContent = `❌ ${errorMessage || window.languageService?.get("failed") || "Failed"
+          }`;
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--error-color, #ef4444)";
       }
@@ -5414,9 +5727,9 @@ class UIComponents {
           <div class="message-content">
             <div class="message-text">${Utils.escapeHtml(message)}</div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</div>
+        hour: "2-digit",
+        minute: "2-digit",
+      })}</div>
           </div>
         </div>
         <div class="message assistant-message">
@@ -5435,9 +5748,9 @@ class UIComponents {
               </div>
             </div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</div>
+        hour: "2-digit",
+        minute: "2-digit",
+      })}</div>
           </div>
         </div>
       `;
@@ -5886,9 +6199,8 @@ class UIComponents {
       priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(
         2
       )} (${isPositive ? "+" : ""}${changePercent.toFixed(2)}%)`;
-      priceChange.className = `stock-price-change ${
-        isPositive ? "positive" : "negative"
-      }`;
+      priceChange.className = `stock-price-change ${isPositive ? "positive" : "negative"
+        }`;
     }
     if (priceTime) {
       const date = new Date(latest.date);
@@ -5973,32 +6285,32 @@ class UIComponents {
     const volume = latest.volume
       ? latest.volume.toLocaleString("tr-TR")
       : previous
-      ? previous.volume.toLocaleString("tr-TR")
-      : "--";
+        ? previous.volume.toLocaleString("tr-TR")
+        : "--";
 
     metricsContainer.innerHTML = `
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "prevClose"
-        )}</span>
+      "prevClose"
+    )}</span>
         <span class="financial-metric-value">₺${previousClose}</span>
       </div>
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "open"
-        )}</span>
+      "open"
+    )}</span>
         <span class="financial-metric-value">₺${open}</span>
       </div>
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "dayRange"
-        )}</span>
+      "dayRange"
+    )}</span>
         <span class="financial-metric-value">₺${dayRange}</span>
       </div>
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "volume"
-        )}</span>
+      "volume"
+    )}</span>
         <span class="financial-metric-value">${volume}</span>
       </div>
     `;
@@ -6022,26 +6334,26 @@ class UIComponents {
     // Show loading placeholder immediately
     detailsContainer.innerHTML = `
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "fulltimeEmployees"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "fulltimeEmployees"
+    )}</span><span class="company-detail-value">${languageService.get(
       "loading"
     )}</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "sector"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "sector"
+    )}</span><span class="company-detail-value">${languageService.get(
       "loading"
     )}</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "industry"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "industry"
+    )}</span><span class="company-detail-value">${languageService.get(
       "loading"
     )}</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "country"
-      )}</span><span class="company-detail-value">TR</span></div>
+      "country"
+    )}</span><span class="company-detail-value">TR</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "exchange"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "exchange"
+    )}</span><span class="company-detail-value">${languageService.get(
       "istanbulStockExchange"
     )}</span></div>
       <div class="company-description"><p class="description-text">Fetching description…</p></div>
@@ -6081,14 +6393,12 @@ class UIComponents {
         const isLong = description.length > 240;
         descriptionHtml = `
           <div class="company-description">
-            <p class="description-text ${
-              isLong ? "" : "expanded"
-            }">${description}</p>
-            ${
-              isLong
-                ? '<button class="read-more-btn" id="company-read-more">Read More</button>'
-                : ""
-            }
+            <p class="description-text ${isLong ? "" : "expanded"
+          }">${description}</p>
+            ${isLong
+            ? '<button class="read-more-btn" id="company-read-more">Read More</button>'
+            : ""
+          }
           </div>
         `;
       } else {
@@ -6104,35 +6414,35 @@ class UIComponents {
       detailsContainer.innerHTML = `
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "fulltimeEmployees"
-          )}</span>
+        "fulltimeEmployees"
+      )}</span>
           <span class="company-detail-value">${fulltimeEmployees}</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "sector"
-          )}</span>
+        "sector"
+      )}</span>
           <span class="company-detail-value">${sector}</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "industry"
-          )}</span>
+        "industry"
+      )}</span>
           <span class="company-detail-value">${industry}</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "country"
-          )}</span>
+        "country"
+      )}</span>
           <span class="company-detail-value">TR</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "exchange"
-          )}</span>
+        "exchange"
+      )}</span>
           <span class="company-detail-value">${languageService.get(
-            "istanbulStockExchange"
-          )}</span>
+        "istanbulStockExchange"
+      )}</span>
         </div>
         ${descriptionHtml}
       `;
@@ -6155,32 +6465,32 @@ class UIComponents {
       detailsContainer.innerHTML = `
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "fulltimeEmployees"
-          )}</span>
+        "fulltimeEmployees"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "sector"
-          )}</span>
+        "sector"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "industry"
-          )}</span>
+        "industry"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "country"
-          )}</span>
+        "country"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "exchange"
-          )}</span>
+        "exchange"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-description">
@@ -6270,64 +6580,58 @@ class UIComponents {
         <!-- Grid lines and axes -->
         <g class="chart-grid" stroke="#e5e7eb" stroke-width="0.5" opacity="0.6">
           ${yAxisLabels
-            .map(
-              (label) => `
-            <line x1="${padding}" y1="${label.y}" x2="${
-                padding + chartWidth
-              }" y2="${label.y}" />
+        .map(
+          (label) => `
+            <line x1="${padding}" y1="${label.y}" x2="${padding + chartWidth
+            }" y2="${label.y}" />
           `
-            )
-            .join("")}
+        )
+        .join("")}
           ${xAxisLabels
-            .map(
-              (label) => `
-            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${
-                padding + chartHeight
-              }" />
+        .map(
+          (label) => `
+            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${padding + chartHeight
+            }" />
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </g>
         
         <!-- Y-axis labels (prices) -->
         <g class="y-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
           ${yAxisLabels
-            .map(
-              (label) => `
-            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${
-                label.text
-              }</text>
+        .map(
+          (label) => `
+            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${label.text
+            }</text>
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </g>
         
         <!-- X-axis labels (dates) -->
         <g class="x-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
           ${xAxisLabels
-            .map(
-              (label) => `
-            <text x="${label.x}" y="${
-                padding + chartHeight + 20
-              }" text-anchor="middle">${label.text}</text>
+        .map(
+          (label) => `
+            <text x="${label.x}" y="${padding + chartHeight + 20
+            }" text-anchor="middle">${label.text}</text>
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </g>
         
         <!-- Main chart area -->
         <g class="chart-area">
           <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="${pathData} L ${points[points.length - 1].x},${
-      padding + chartHeight
-    } L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
+          <path d="${pathData} L ${points[points.length - 1].x},${padding + chartHeight
+      } L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
         </g>
         
         <!-- Interactive elements -->
         <g id="hover-group">
-          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${
-      padding + chartHeight
-    }" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
+          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${padding + chartHeight
+      }" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
           <circle id="hover-dot" r="3" fill="${color}" stroke="#fff" stroke-width="1.5" style="display:none" />
         </g>
         <rect id="selection-rect" x="0" y="${padding}" width="0" height="${chartHeight}" fill="#3b82f6" opacity="0.15" style="display:none" />
@@ -6411,9 +6715,8 @@ class UIComponents {
       const d2 = sortedData[b];
       const change = d2.close - d1.close;
       const pct = d1.close ? (change / d1.close) * 100 : 0;
-      const priceStr = `₺${change.toFixed(2)} (${
-        pct >= 0 ? "+" : ""
-      }${pct.toFixed(2)}%)`;
+      const priceStr = `₺${change.toFixed(2)} (${pct >= 0 ? "+" : ""
+        }${pct.toFixed(2)}%)`;
       rangeTooltip.querySelector("#range-price").textContent = priceStr;
       rangeTooltip.querySelector("#range-dates").textContent = `${formatDate(
         d1
@@ -6551,10 +6854,10 @@ class UIComponents {
     try {
       const date = new Date(
         dataPoint.date ||
-          dataPoint.time ||
-          dataPoint.datetime ||
-          dataPoint.Date ||
-          dataPoint.DATE
+        dataPoint.time ||
+        dataPoint.datetime ||
+        dataPoint.Date ||
+        dataPoint.DATE
       );
 
       // Format based on current language
@@ -6636,8 +6939,7 @@ class UIComponents {
         return `
         <div class="mover-item" data-symbol="${item.symbol}">
           <span class="mover-symbol">${item.symbol}</span>
-          <span class="mover-change ${
-            positive ? "positive" : "negative"
+          <span class="mover-change ${positive ? "positive" : "negative"
           }">${formatted}</span>
         </div>
       `;
@@ -6773,8 +7075,8 @@ class UIComponents {
       searchDropdown.innerHTML = `
         <div class="stock-search-no-results">
           <i class="fas fa-spinner fa-spin"></i> ${languageService.get(
-            "loading"
-          )}
+        "loading"
+      )}
         </div>
       `;
       searchDropdown.classList.add("show");
@@ -6853,8 +7155,8 @@ class UIComponents {
     searchDropdown.innerHTML = `
       <div class="stock-search-no-results">
         <i class="fas fa-exclamation-triangle"></i> ${languageService.get(
-          "error"
-        )}
+      "error"
+    )}
       </div>
     `;
     searchDropdown.classList.add("show");

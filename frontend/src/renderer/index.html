@@ -274,6 +274,14 @@
                     >
                       <i class="fas fa-file"></i>
                     </button>
+                    <button
+                        id="photo-less-toggle"
+                        class="file-photoless-button"
+                        title="Photo-less file processing"
+                      >
+                        <i class="fas fa-file-alt"></i>
+                    </button>
+
                     <textarea
                       id="chat-input"
                       class="chat-input"
@@ -302,13 +310,30 @@
                 <div class="file-selection-content">
                   <div class="file-selection-header">
                     <h3 data-i18n="selectFiles">Select Files</h3>
+              
                     <button id="close-file-selection" class="btn-icon">
                       <i class="fas fa-times"></i>
                     </button>
                   </div>
-
+              
                   <div class="file-selection-body">
                     <div class="file-selection-controls">
+                      <!-- Search input for filtering files in the modal -->
+                      <div class="file-selection-search-wrapper theme-search">
+                        <div class="search-input-inner">
+                          <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                          <input type="text" id="file-selection-search" class="file-selection-search" placeholder="Ara dosyalarda..."
+                            aria-label="Search files" autocomplete="off" data-i18n-placeholder="searchFiles" />
+                          <button type="button" id="file-selection-search-clear" class="search-clear-btn" title="Clear search"
+                            aria-label="Clear search">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <select id="file-profile-select" class="file-profile-select">
+                        <option value="" data-i18n="selectProfile">Select Profile</option>
+                        <!-- Profiller JS ile eklenecek -->
+                      </select>
                       <button id="select-all-files" class="file-control-btn">
                         <i class="fas fa-check-double"></i>
                         <span data-i18n="selectAll">Select All</span>
@@ -318,7 +343,7 @@
                         <span data-i18n="deselectAll">Deselect All</span>
                       </button>
                     </div>
-
+              
                     <div class="files-list" id="files-selection-list">
                       <div class="loading-files">
                         <i class="fas fa-spinner fa-spin"></i>
@@ -326,24 +351,18 @@
                       </div>
                     </div>
                   </div>
-
+              
                   <div class="file-selection-footer">
                     <div class="prompt-buttons">
                       <button id="prompt-report" class="prompt-btn btn-primary">
                         <i class="fas fa-file-alt"></i>
                         <span data-i18n="writeReport">Write Report</span>
                       </button>
-                      <button
-                        id="prompt-analyze"
-                        class="prompt-btn btn-primary"
-                      >
+                      <button id="prompt-analyze" class="prompt-btn btn-primary">
                         <i class="fas fa-chart-line"></i>
                         <span data-i18n="analyzeData">Analyze Data</span>
                       </button>
-                      <button
-                        id="prompt-summarize"
-                        class="prompt-btn btn-primary"
-                      >
+                      <button id="prompt-summarize" class="prompt-btn btn-primary">
                         <i class="fas fa-list"></i>
                         <span data-i18n="summarize">Summarize</span>
                       </button>
@@ -351,19 +370,98 @@
                   </div>
                 </div>
               </div>
+              </div>
+              </div>
+
+          <!-- Create Profile Modal -->
+          <div id="create-profile-selection" class="create-profile-modal">
+            <div class="file-selection-content">
+              <div class="file-selection-header">
+                <h3 data-i18n="selectFiles">Select Files</h3>
+                <button id="close-profile-selection" class="btn-icon">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="file-selection-body">
+                <div class="file-selection-controls">
+                  <!-- Search input for filtering files in the modal -->
+                  <div class="file-selection-search-wrapper theme-search">
+                    <div class="search-input-inner">
+                      <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                      <input type="text" id="file-profile-selection-search" class="file-selection-search"
+                        placeholder="Ara dosyalarda..." aria-label="Search files" autocomplete="off"
+                        data-i18n-placeholder="searchFiles" />
+                      <button type="button" id="file-profile-selection-search-clear" class="search-clear-btn" title="Clear search"
+                        aria-label="Clear search">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <button id="select-all-profile-files" class="file-control-btn">
+                    <i class="fas fa-check-double"></i>
+                    <span data-i18n="selectAll">Select All</span>
+                  </button>
+                  <button id="deselect-all-profile-files" class="file-control-btn">
+                    <i class="fas fa-times"></i>
+                    <span data-i18n="deselectAll">Deselect All</span>
+                  </button>
+                </div>
+          
+                <div class="files-list" id="files-profile-list">
+                  <div class="loading-files">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span data-i18n="loadingFiles">Loading files...</span>
+                  </div>
+                </div>
+                 <div class="profile-name-input">
+                    <label for="profile-name" data-i18n="profileName">Profile Name:</label>
+                    <input type="text" id="profile-name" class="file-selection-search"
+                    data-i18n-placeholder="enterProfileName" />
+                  </div>
+              </div>
+          
+              <div class="file-selection-footer">
+                <div class="prompt-buttons">
+                  <button id="cancel-profile-popup" class="prompt-btn btn-secondary btn-danger">
+                    <i class="fas fa-times"></i>
+                    <span data-i18n="cancel">Cancel</span>
+                  </button>
+                  <button id="save-profile-popup" class="prompt-btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span data-i18n="save">Save</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
           <!-- Files Tab -->
           <div id="files-tab" class="tab-content">
             <div class="files-container">
               <div class="files-header">
-                <h2 data-i18n="documentLibrary">Document Library</h2>
-                <p data-i18n="manageDocuments">
-                  Manage your uploaded financial documents
-                </p>
+                <div class="file-header-text">
+                  <h2 data-i18n="documentLibrary">Document Library</h2>
+                  <p data-i18n="manageDocuments">
+                    Manage your uploaded financial documents
+                  </p>
+                </div>
+                <div class="create-profile-container" style="margin-left: 10px;">
+                  <button id="open-profile-popup" class="btn btn-primary" style="height: -webkit-fill-available;">
+                    <i class="fas fa-user-plus"></i>
+                    <span data-i18n="createNewProfile">Create New Profile</span>
+                  </button>
+                </div>
               </div>
-
+              <div class="file-selection-search-wrapper theme-search files-tab-search">
+                <div class="search-input-inner">
+                  <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                  <input type="text" id="file-tab-search" class="file-selection-search" placeholder="Ara dosyalarda..."
+                    aria-label="Search files" autocomplete="off" data-i18n-placeholder="searchFiles" />
+                  <button type="button" id="file-tab-search-clear" class="search-clear-btn" title="Clear search"
+                    aria-label="Clear search">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
               <div class="files-grid" id="files-grid">
                 <div class="empty-state">
                   <i class="fas fa-folder-open"></i>
@@ -371,11 +469,7 @@
                   <p data-i18n="uploadToGetStarted">
                     Upload some documents to get started using the chat area
                   </p>
-                  <button
-                    class="cta-button"
-                    data-tab="chat"
-                    data-i18n="goToChat"
-                  >
+                  <button class="cta-button" data-tab="chat" data-i18n="goToChat">
                     Go to Chat
                   </button>
                 </div>
@@ -1074,6 +1168,7 @@
       integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx"
       crossorigin="anonymous"
     ></script>
+    <div id="snackbar-container"></div>
 
     <!-- Application Scripts -->
     <script src="scripts/renderer-logger.js"></script>
