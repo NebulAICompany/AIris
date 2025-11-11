@@ -879,7 +879,9 @@ class UIComponents {
       for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         try {
-          const response = await window.apiService.uploadFile(file);
+          const response = await window.apiService.uploadFile(file, {
+            photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
+          });
           if (response.success) {
             uploadedFiles.push({
               name: file.name,

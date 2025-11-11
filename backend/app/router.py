@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
 from backend.core.chat import chat_history_manager
@@ -250,7 +250,10 @@ async def handle_news_chat(request: NewsChatRequest):
 
 
 @router.post("/upload")
-async def handle_upload(file: UploadFile = File(...)):
+async def handle_upload(
+    file: UploadFile = File(...),
+    photoLessMode: bool = Form(False),
+):
     try:
 
         # Ensure uploads directory exists (use absolute path)
@@ -268,7 +271,9 @@ async def handle_upload(file: UploadFile = File(...)):
         pre_embedding_process = "none"
 
         result = await process_file(
-            str(file_path), pre_embedding_process=pre_embedding_process
+            str(file_path),
+            pre_embedding_process=pre_embedding_process,
+            photo_less_mode=photoLessMode,
         )
 
         logger.info(f"File processed successfully: {file.filename}")
@@ -280,6 +285,7 @@ async def handle_upload(file: UploadFile = File(...)):
             "message": "Dosya başarıyla yüklendi ve işlendi",
             "result": result,
             "preEmbeddingProcess": pre_embedding_process,
+            "photoLessMode": photoLessMode,
         }
     except Exception as e:
         error_message = str(e)
