@@ -369,6 +369,75 @@ class APIService {
     }
   }
 
+  async getBalanceCalendar(months = 3, endDate = null) {
+    try {
+      const params = { months };
+      if (endDate) {
+        params.endDate = endDate;
+      }
+
+      const response = await this.api.get(
+        "/api/balance-of-payments/calendar",
+        { params }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error fetching balance calendar:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async processBalanceWorkbook(fileName, replaceExisting = true) {
+    try {
+      const response = await this.api.post(
+        "/api/balance-of-payments/process",
+        {
+          fileName,
+          replaceExisting,
+        },
+        {
+          timeout: 300000,
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error processing balance workbook:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async getBalanceTransactions(date) {
+    try {
+      const response = await this.api.get(
+        `/api/balance-of-payments/transactions/${date}`
+      );
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error fetching balance transactions:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   // Get system metrics (Prometheus endpoint)
   async getMetrics() {
     try {

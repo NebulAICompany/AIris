@@ -517,6 +517,12 @@ class UIComponents {
       case "news":
         await this.loadFinanceNews();
         break;
+
+      case "balance-heatmap":
+        if (window.balanceCalendarApp?.refreshOnActivate) {
+          await window.balanceCalendarApp.refreshOnActivate();
+        }
+        break;
       case "verification":
         await this.loadVerificationTab();
         break;

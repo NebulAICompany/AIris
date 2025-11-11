@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
+from backend.core.tools.balance import process_balance_of_payments
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
@@ -11,15 +12,18 @@ from backend.shared.constants import (
     MASKED_MAP_JSON_PATH,
     CREATED_DOCUMENTS_PATH,
     IMAGES_PATH_STR,
+    ALLOWED_FILE_EXTENSIONS,
 )
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
+from dateutil.relativedelta import relativedelta
 from backend.utils.news import get_aggregated_financial_news
 from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
 from backend.utils.preview import PreviewGenerator
+from backend.utils.balance_payments_database import balance_payments_db
 
 logger = get_logger("ROUTER")
 router = APIRouter()
@@ -106,6 +110,11 @@ class NewsChatRequest(BaseModel):
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "none"  # "none", "cch"
+
+
+class BalanceProcessRequest(BaseModel):
+    fileName: str
+    replaceExisting: bool = True
 
 
 @router.get("/market/eod")
@@ -708,6 +717,96 @@ def delete_created_document(filename: str):
             status_code=500,
             detail=f"Error deleting created document: {error_message}",
         )
+
+
+@router.post("/balance-of-payments/process")
+async def trigger_balance_of_payments_process(request: BalanceProcessRequest):
+    file_path = Path(UPLOADS_PATH) / request.fileName
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"File {request.fileName} not found in uploads directory",
+        )
+
+    suffix = file_path.suffix.lower()
+    if suffix not in ALLOWED_FILE_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Balance of payments processing currently supports files with extensions: "
+                + ", ".join(sorted(ALLOWED_FILE_EXTENSIONS))
+            ),
+        )
+
+    try:
+        result = await process_balance_of_payments(
+            file_path=str(file_path))
+        
+        return result
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to process balance of payments workbook",
+        )
+
+
+@router.get("/balance-of-payments/calendar")
+def get_balance_of_payments_calendar(
+    months: int = 3,
+    endDate: Optional[str] = None,
+):
+    months = max(1, min(months, 12))
+
+    if endDate:
+        try:
+            end_date = datetime.fromisoformat(endDate).date()
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="Invalid endDate format. Use YYYY-MM-DD"
+            )
+    else:
+        end_date = datetime.today().date()
+
+    start_date = end_date - relativedelta(months=months) + timedelta(days=1)
+    start_date = start_date - timedelta(days=start_date.weekday())
+
+    end_weekday = end_date.weekday()
+    if end_weekday != 6:  # extend to Sunday for full week display
+        end_date = end_date + timedelta(days=(6 - end_weekday))
+
+    if start_date > end_date:
+        start_date = end_date
+
+    daily_balances = balance_payments_db.get_daily_balances(start_date, end_date)
+    max_absolute = max((abs(day["net"]) for day in daily_balances), default=0.0)
+
+    return {
+        "startDate": start_date.isoformat(),
+        "endDate": end_date.isoformat(),
+        "days": daily_balances,
+        "maxAbsoluteNet": max_absolute,
+        "latestActivity": balance_payments_db.latest_activity_date(),
+    }
+
+
+@router.get("/balance-of-payments/transactions/{date_str}")
+def get_balance_transactions_for_day(date_str: str):
+    try:
+        target_date = datetime.fromisoformat(date_str).date()
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid date format. Use YYYY-MM-DD",
+        )
+
+    transactions = balance_payments_db.get_transactions_for_date(target_date)
+    return {
+        "date": target_date.isoformat(),
+        "transactions": transactions,
+    }
 
 
 @router.get("/finance-news")
