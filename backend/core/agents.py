@@ -3,6 +3,7 @@ from .prompts import (
     wolfram_instructions,
     rag_agent_instructions,
     news_chat_agent_instructions,
+    balance_of_payments_agent_prompt,
 )
 from typing import List
 from .tools.api import (
@@ -14,7 +15,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from backend.shared.constants import OPENAI_MODEL
 
 rag_agent_as_tools = [
     finance_agent_tool,
@@ -26,7 +27,6 @@ rag_agent_as_tools = [
     get_uploaded_files_count,
     list_uploaded_files,
 ]
-
 
 def create_rag_agent(
     local_context: str,
@@ -162,5 +162,18 @@ def create_translation_agent(instructions: str) -> Agent:
         instructions=instructions,
         model="gpt-4o-mini",
         tools=[],
+    )
+    return agent
+
+
+def create_balance_payments_agent() -> Agent:
+    """Create agent that ingests balance of payments Excel files."""
+    instructions = (f"{balance_of_payments_agent_prompt}\n\n")
+
+    agent = Agent(
+        name="Balance_of_Payments_Agent",
+        instructions=instructions,
+        model=OPENAI_MODEL,
+        tools=[*balance_agent_tools],
     )
     return agent
