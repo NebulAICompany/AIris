@@ -1085,16 +1085,12 @@ class UIComponents {
       // Simple content processing
       let processedContent = content || "No response received";
 
-      // Debug: Log the original content
-      console.log("Original content:", processedContent);
-
-      // Process mathematical expressions first, before markdown parsing
+      // Process mathematical expressions BEFORE markdown parsing
+      // KaTeX generates HTML which marked will preserve
       processedContent = Utils.processMathExpressions(processedContent);
 
-      // Debug: Log content after math processing
-      console.log("After math processing:", processedContent);
-
       // Safely parse markdown content, fallback to escaped HTML if marked fails
+      // marked preserves HTML by default, so KaTeX output will be kept
       let parsedContent;
       try {
         parsedContent =
@@ -1105,9 +1101,6 @@ class UIComponents {
         console.warn("Markdown parsing failed:", error);
         parsedContent = Utils.escapeHtml(processedContent);
       }
-
-      // Debug: Log final parsed content
-      console.log("Final parsed content:", parsedContent);
 
       // Build sources display if sources are available
       let sourcesHTML = "";

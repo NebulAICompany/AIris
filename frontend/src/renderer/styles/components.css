@@ -3329,22 +3329,96 @@ code {
 /* Mathematical expressions styling */
 .katex {
   font-size: 1.1em !important;
-  line-height: 1.4 !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
 }
 
+/* Inline math - use primary text color for better visibility */
+.message-text .katex,
+.message-content .katex,
+.message-text .katex *,
+.message-content .katex * {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+
+/* Display math - left aligned, proper spacing */
 .katex-display {
-  margin: 0.5em 0 !important;
-  text-align: center !important;
+  margin: 0.75em 0 !important;
+  text-align: left !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.message-text .katex-display,
+.message-content .katex-display {
+  margin: 0.75em 0 !important;
+  text-align: left !important;
+}
+
+.message-text .katex-display *,
+.message-content .katex-display * {
+  color: var(--text-primary) !important;
+}
+
+/* Dark theme - use lighter text color for visibility */
+[data-theme="dark"] .message-text .katex,
+[data-theme="dark"] .message-content .katex,
+[data-theme="dark"] .message-text .katex *,
+[data-theme="dark"] .message-content .katex * {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .message-text .katex-display *,
+[data-theme="dark"] .message-content .katex-display * {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure proper spacing around math in paragraphs */
+.message-text p .katex,
+.message-content p .katex {
+  margin: 0 2px !important;
+  vertical-align: baseline !important;
+}
+
+/* Fix layout for fractions and complex expressions */
+.katex .frac-line {
+  border-bottom-width: 0.04em !important;
+}
+
+.katex .vlist-t {
+  display: inline-table !important;
+  table-layout: fixed !important;
+}
+
+/* Ensure math doesn't break message layout */
+.message-text,
+.message-content {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
 }
 
 .message-text .katex,
 .message-content .katex {
-  color: #2563eb !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
 }
 
-[data-theme="dark"] .message-text .katex,
-[data-theme="dark"] .message-content .katex {
-  color: #60a5fa !important;
+/* Better spacing for display math blocks */
+.message-text .katex-display {
+  margin: 0.75em 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure inline math aligns properly with text */
+.katex {
+  vertical-align: -0.1em !important;
+}
+
+.katex-display .katex {
+  vertical-align: 0 !important;
 }
 
 /* Dark theme with higher specificity */
