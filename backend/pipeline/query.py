@@ -88,9 +88,13 @@ async def run_orchestration(
 
     # 4. Enhanced Retrieval using vector + keyword helping
     reranked_docs = None
+    unique_file_names = []
 
     if skip_retrieval:
         reranked_docs = []
+        logger.info(
+            f"📄 No documents used in retrieval for query '{query}' (no files selected)"
+        )
     else:
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
@@ -110,6 +114,14 @@ async def run_orchestration(
                 preprocessed_query, doc_contents, with_score=False, top_n=5
             )
 
+            if reranked_docs:
+                unique_file_names_set = set()
+                for doc in reranked_docs:
+                    file_name = doc.get("metadata", {}).get("file_name")
+                    if file_name:
+                        unique_file_names_set.add(file_name)
+
+                unique_file_names = sorted(list(unique_file_names_set))
     context_entries = []
 
     if reranked_docs:
@@ -153,6 +165,8 @@ async def run_orchestration(
         metadata["charts"] = charts
     if generated_files:
         metadata["generatedFiles"] = generated_files
+    if unique_file_names:
+        metadata["sources"] = unique_file_names
 
     metadata = metadata if metadata else None
     chat_history_manager.add_message(
@@ -164,6 +178,7 @@ async def run_orchestration(
         "images": images,
         "charts": charts,
         "generatedFiles": generated_files,
+        "sources": unique_file_names,
     }
 
 
