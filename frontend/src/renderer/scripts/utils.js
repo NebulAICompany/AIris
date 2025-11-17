@@ -177,111 +177,53 @@ class Utils {
     }
 
     try {
-      console.log('Processing math expressions in:', content);
-
-      // First, protect existing HTML and markdown from being processed
+      // Protect code blocks and inline code from math processing
       const protectedContent = [];
-      let contentWithPlaceholders = content;
+      let processedContent = content;
 
-      // Protect code blocks
-      contentWithPlaceholders = contentWithPlaceholders.replace(/```[\s\S]*?```/g, (match) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+      // Protect code blocks (markdown and HTML)
+      processedContent = processedContent.replace(/```[\s\S]*?```/g, (match) => {
+        const placeholder = `__PROTECTED_CODE_${protectedContent.length}__`;
         protectedContent.push(match);
         return placeholder;
       });
 
       // Protect inline code
-      contentWithPlaceholders = contentWithPlaceholders.replace(/`[^`]+`/g, (match) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+      processedContent = processedContent.replace(/`[^`]+`/g, (match) => {
+        const placeholder = `__PROTECTED_INLINE_${protectedContent.length}__`;
         protectedContent.push(match);
         return placeholder;
       });
 
-      // Handle display math blocks first (between $$ ... $$)
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+      // Process display math blocks ($$ ... $$) - must come before inline math
+      processedContent = processedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
         try {
-          console.log('Processing display math:', math);
           return katex.renderToString(math.trim(), { displayMode: true });
         } catch (e) {
-          console.warn('KaTeX rendering failed for display math:', match);
+          console.warn('KaTeX rendering failed for display math:', e);
           return match;
         }
       });
 
-      // Handle inline math blocks (between $ ... $)
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\$([^$\n]+)\$/g, (match, math) => {
+      // Process inline math ($ ... $) - avoid matching $$ by checking for single $
+      // Match $...$ but not $$...$$ by ensuring the $ is not preceded or followed by another $
+      processedContent = processedContent.replace(/([^$]|^)\$([^$\n]+?)\$([^$]|$)/g, (match, before, math, after) => {
         try {
-          console.log('Processing inline math:', math);
-          return katex.renderToString(math.trim(), { displayMode: false });
+          const rendered = katex.renderToString(math.trim(), { displayMode: false });
+          return (before || '') + rendered + (after || '');
         } catch (e) {
-          console.warn('KaTeX rendering failed for inline math:', match);
+          console.warn('KaTeX rendering failed for inline math:', e);
           return match;
         }
-      });
-
-      // Handle fractions like \frac{numerator}{denominator} - with more robust regex
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\\frac\s*\{\s*([^{}]+(?:\{[^{}]*\}[^{}]*)*)\s*\}\s*\{\s*([^{}]+(?:\{[^{}]*\}[^{}]*)*)\s*\}/g, (match, num, den) => {
-        try {
-          console.log('Processing fraction:', match, 'num:', num, 'den:', den);
-          return katex.renderToString(`\\frac{${num.trim()}}{${den.trim()}}`, { displayMode: false });
-        } catch (e) {
-          console.warn('KaTeX rendering failed for fraction:', match, e);
-          return `${num.trim()}/${den.trim()}`; // Fallback to simple fraction
-        }
-      });
-
-      // Handle text expressions like \text{...}
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\\text\s*\{\s*([^{}]+(?:\{[^{}]*\}[^{}]*)*)\s*\}/g, (match, text) => {
-        try {
-          console.log('Processing text:', match);
-          return katex.renderToString(`\\text{${text.trim()}}`, { displayMode: false });
-        } catch (e) {
-          console.warn('KaTeX rendering failed for text:', match);
-          return text.trim(); // Fallback to plain text
-        }
-      });
-
-      // Handle simple fractions like 180/12 = with equals sign
-      contentWithPlaceholders = contentWithPlaceholders.replace(/(\d+)\/(\d+)\s*=\s*(\d+(?:\.\d+)?)/g, (match, num, den, result) => {
-        try {
-          console.log('Processing simple fraction with result:', match);
-          return `${katex.renderToString(`\\frac{${num}}{${den}}`, { displayMode: false })} = ${result}`;
-        } catch (e) {
-          return match;
-        }
-      });
-
-      // Handle simple fractions like 180/12
-      contentWithPlaceholders = contentWithPlaceholders.replace(/(\d+)\/(\d+)/g, (match, num, den) => {
-        try {
-          console.log('Processing simple fraction:', match);
-          return katex.renderToString(`\\frac{${num}}{${den}}`, { displayMode: false });
-        } catch (e) {
-          return match;
-        }
-      });
-
-      // Handle other specific LaTeX commands
-      const latexCommands = ['sqrt', 'sum', 'int', 'lim', 'log', 'ln', 'sin', 'cos', 'tan'];
-      latexCommands.forEach(cmd => {
-        const regex = new RegExp(`\\\\${cmd}\\s*(?:\\{([^}]*)\\})?`, 'g');
-        contentWithPlaceholders = contentWithPlaceholders.replace(regex, (match, arg) => {
-          try {
-            return katex.renderToString(match, { displayMode: false });
-          } catch (e) {
-            console.warn(`KaTeX rendering failed for ${cmd}:`, match);
-            return match;
-          }
-        });
       });
 
       // Restore protected content
       protectedContent.forEach((content, index) => {
-        contentWithPlaceholders = contentWithPlaceholders.replace(`__PROTECTED_${index}__`, content);
+        processedContent = processedContent.replace(`__PROTECTED_CODE_${index}__`, content);
+        processedContent = processedContent.replace(`__PROTECTED_INLINE_${index}__`, content);
       });
 
-      console.log('Final processed content:', contentWithPlaceholders);
-      return contentWithPlaceholders;
+      return processedContent;
     } catch (error) {
       console.error('Error processing math expressions:', error);
       return content;
