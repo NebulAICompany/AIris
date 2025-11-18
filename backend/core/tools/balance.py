@@ -62,8 +62,6 @@ async def process_balance_of_payments(file_path: str) -> dict:
         raise FileNotFoundError(f"Balance workbook not found: {file_path}")
 
     file_name = path.name
-    parsed_content: Optional[str] = None
-
     try:
         parsed_content = await parse_document(str(path))
     except Exception as exc:

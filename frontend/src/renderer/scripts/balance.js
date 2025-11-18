@@ -6,8 +6,6 @@
       this.api = window.apiService || new APIService();
       this.timeframeSelect = document.getElementById("balance-timeframe");
       this.refreshButton = document.getElementById("balance-refresh");
-      this.fileSelect = document.getElementById("balance-file-select");
-      this.replaceCheckbox = document.getElementById("balance-replace-checkbox");
       this.processButton = document.getElementById("balance-process-btn");
       this.feedbackBox = document.getElementById("balance-process-feedback");
       this.loadingIndicator = document.getElementById("balance-loading");
@@ -19,12 +17,12 @@
       this.uploadInput = document.getElementById("balance-file-input");
       this.latestData = null;
       this.selectedDate = null;
+      this.currentFileName = null;
       this.init();
     }
 
     init() {
       this.bindEvents();
-      this.loadFileOptions();
       this.refreshCalendar();
     }
 
@@ -54,42 +52,6 @@
         this.uploadInput.addEventListener("change", (event) =>
           this.handleUploadSelection(event)
         );
-      }
-    }
-
-    async loadFileOptions() {
-      if (!this.fileSelect) return;
-      try {
-        const result = await this.api.getFiles();
-        if (!result.success || !Array.isArray(result.files)) {
-          throw new Error(result.error || "Unable to fetch uploads");
-        }
-
-        const options = result.files
-          .filter((file) => BALANCE_FILE_REGEX.test(file.name))
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        if (!options.length) {
-          this.fileSelect.innerHTML =
-            '<option value="" disabled selected>No balance documents found</option>';
-          return;
-        }
-
-        const fragments = [
-          '<option value="" disabled selected>Select a balance document…</option>',
-          ...options.map(
-            (file) =>
-              `<option value="${file.name}">${Utils.escapeHtml(
-                file.name
-              )}</option>`
-          ),
-        ];
-
-        this.fileSelect.innerHTML = fragments.join("");
-      } catch (error) {
-        this.fileSelect.innerHTML =
-          '<option value="" disabled selected>Failed to load documents</option>';
-        logger.error(`Failed to load balance document list: ${error}`, "BALANCE");
       }
     }
 
@@ -451,9 +413,9 @@
     }
 
     async handleProcess(fileNameOverride = null, replaceOverride = null) {
-      const selectedFile = fileNameOverride || this.fileSelect?.value;
+      const selectedFile = fileNameOverride || this.currentFileName;
       if (!selectedFile) {
-        this.setFeedback("Please select a balance document first.", "error");
+        this.setFeedback("Please upload a balance document first.", "error");
         return;
       }
 
@@ -463,14 +425,14 @@
           this.setFeedback("Running agent…", "info");
         }
 
-        if (this.fileSelect && fileNameOverride) {
-          this.fileSelect.value = selectedFile;
+        if (fileNameOverride) {
+          this.currentFileName = fileNameOverride;
         }
 
         const replaceExisting =
           typeof replaceOverride === "boolean"
             ? replaceOverride
-            : Boolean(this.replaceCheckbox?.checked);
+            : false;
         const result = await this.api.processBalanceWorkbook(
           selectedFile,
           replaceExisting
@@ -482,6 +444,7 @@
 
         const message = result.data?.message || "Agent completed successfully.";
         this.setFeedback(message, "success");
+        this.currentFileName = selectedFile;
         await this.refreshCalendar();
       } catch (error) {
         logger.error(`Balance process error: ${error}`, "BALANCE");
@@ -514,7 +477,6 @@
     }
 
     async refreshOnActivate() {
-      await this.loadFileOptions();
       await this.refreshCalendar();
     }
 
@@ -546,14 +508,7 @@
           uploadResult.data?.file_name ||
           file.name;
 
-        await this.loadFileOptions();
-        if (this.fileSelect) {
-          this.fileSelect.value = uploadedName;
-        }
-
-        if (this.replaceCheckbox) {
-          this.replaceCheckbox.checked = true;
-        }
+        this.currentFileName = uploadedName;
 
         this.setFeedback(
           `Uploaded ${uploadedName}. Running agent…`,
