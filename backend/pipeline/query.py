@@ -9,7 +9,6 @@ from backend.retrieval.retriever import (
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import (
-    detect_language,
     refine_query,
 )
 from backend.core.chat import chat_history_manager, MessageRole
@@ -21,11 +20,6 @@ from backend.core.tools.office import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
 
 logger = get_logger("QUERY_PIPELINE")
-
-
-def preprocess_query(query: str):
-    lang = detect_language(query)
-    return query, lang
 
 
 async def run_orchestration(
@@ -59,9 +53,7 @@ async def run_orchestration(
     skip_retrieval = not selected_files or len(selected_files) == 0
 
     # 1. Preprocessing and analysis
-    preprocessed_query, lang = preprocess_query(query)
-
-    refined_result = refine_query(preprocessed_query, lang)
+    refined_result = refine_query(query)
     preprocessed_query = refined_result.refined_query
     query_keywords = refined_result.keywords
 
@@ -208,21 +200,18 @@ async def run_news_chat_orchestration(
     else:
         conversation_context = []
 
-    # Preprocess query
-    preprocessed_query, lang = preprocess_query(query)
-
     # Create news context string
     news_context_str = format_news_context(news_context)
 
     # Create specialized news agent
     agent = create_news_chat_agent(
         news_context=news_context_str,
-        query=preprocessed_query,
+        query=query,
         conversation_history=conversation_context,
     )
 
     # Generate answer
-    answer = await generate_answer(prompt=preprocessed_query, agent=agent)
+    answer = await generate_answer(prompt=query, agent=agent)
 
     # Get images
     images = get_image_datas()

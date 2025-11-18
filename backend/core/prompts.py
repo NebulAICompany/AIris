@@ -558,9 +558,18 @@ Your Response: "[person-a6ee25dc] maintains a bank account [usbankaccountnumber-
 
 **Web Search Status:** {web_context_part}
 {conversation_context_part}
-**Current Query:**
-{query}{instruction_part}
 
+**Current Query:**
+{query}
+
+**Language Requirements:**
+- CRITICAL: Always respond in the same language as the user's query
+- If the user asks in Turkish, respond in Turkish
+- If the user asks in English, respond in English
+- Match the language of the query exactly (technical terms may remain in their original language)
+- Maintain consistency in language throughout your entire response
+
+{instruction_part}
 **Task Definition and Responsibilities:**
 
 **Main Tasks:**
