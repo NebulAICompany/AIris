@@ -373,6 +373,67 @@ class LanguageService {
         unknown: "Unknown",
         failed: "Failed",
 
+        // Balance Calendar
+        balanceCalendar: {
+          navLabel: "Balance Calendar",
+          title: "Balance of Payments",
+          subtitle:
+            "Track daily cash positions derived from processed Excel workbooks.",
+          timeframeLabel: "Timeframe",
+          timeframes: {
+            last3Months: "Last 3 months",
+            last6Months: "Last 6 months",
+            last9Months: "Last 9 months",
+            last12Months: "Last 12 months",
+          },
+          refresh: "Refresh",
+          processTitle: "Process Balance Document",
+          processDescription:
+            "Upload or select a balance of payments document (Excel, PDF, image, etc.). The parser extracts the ledger and the agent will normalize transactions automatically.",
+          uploadButton: "Upload & Process",
+          uploadNote:
+            "Uses parser.py to extract ledger details before running the agent.",
+          fileSelectPlaceholder: "Select a balance document from uploads...",
+          selectPlaceholder: "Select a balance document...",
+          replaceLabel: "Replace previous data for this file",
+          runAgent: "Run Agent",
+          loading: "Loading calendar...",
+          selectDayPrompt: "Select a day to view transaction details.",
+          noDocuments: "No balance documents found",
+          fetchDocumentsError: "Failed to load documents",
+          retry: "Retry",
+          summaryPeriodLabel: "Period",
+          latestActivity: "Latest activity: {date}",
+          noActivity: "No activity recorded yet",
+          totalIncome: "Total Income",
+          totalExpense: "Total Expense",
+          netChange: "Net Change",
+          legendTitle: "Net balance intensity",
+          incomeLabel: "Income",
+          expenseLabel: "Expense",
+          netLabel: "Net",
+          tooltipNoTransactions: "No transactions",
+          dayNoTransactions: "No transactions recorded for this day.",
+          transactionsLoadError: "Unable to load transactions",
+          calendarLoadError: "Unable to load calendar",
+          calendarFetchError: "Unable to fetch calendar data",
+          selectFilePrompt: "Please select a balance document first.",
+          runningAgent: "Running agent...",
+          agentRunFailed: "Agent run failed",
+          agentRequestFailed: "Failed to run the agent.",
+          agentSuccess: "Agent completed successfully.",
+          unsupportedFileType: "Unsupported file type for balance processing.",
+          uploadingFile: "Uploading {filename}...",
+          uploadSuccess: "Uploaded {filename}. Running agent...",
+          uploadFailed: "Failed to upload balance document.",
+          transactionSingular: "{count} transaction",
+          transactionPlural: "{count} transactions",
+          direction: {
+            income: "Income",
+            expense: "Expense",
+          },
+        },
+
         // Navigation
         goToChat: "Go to Chat",
 
@@ -743,6 +804,67 @@ class LanguageService {
         unknown: "Bilinmeyen",
         failed: "Başarısız",
 
+        // Balance Calendar
+        balanceCalendar: {
+          navLabel: "Bakiye Takvimi",
+          title: "Ödemeler Dengesi",
+          subtitle:
+            "İşlenen Excel çalışma kitaplarından türetilen günlük nakit pozisyonlarını takip edin.",
+          timeframeLabel: "Zaman Aralığı",
+          timeframes: {
+            last3Months: "Son 3 ay",
+            last6Months: "Son 6 ay",
+            last9Months: "Son 9 ay",
+            last12Months: "Son 12 ay",
+          },
+          refresh: "Yenile",
+          processTitle: "Bakiye Belgesini İşle",
+          processDescription:
+            "Bir ödemeler dengesi belgesi (Excel, PDF, görsel vb.) yükleyin veya seçin. Ayrıştırıcı defteri çıkarır ve ajan işlemleri otomatik olarak normalleştirir.",
+          uploadButton: "Yükle ve İşle",
+          uploadNote:
+            "Ajanı çalıştırmadan önce defter detaylarını çıkarmak için parser.py kullanır.",
+          fileSelectPlaceholder: "Yüklemelerden bir bakiye belgesi seçin...",
+          selectPlaceholder: "Bir bakiye belgesi seçin...",
+          replaceLabel: "Bu dosya için önceki verileri değiştir",
+          runAgent: "Ajanı Çalıştır",
+          loading: "Takvim yükleniyor...",
+          selectDayPrompt: "İşlem detaylarını görmek için bir gün seçin.",
+          noDocuments: "Bakiye belgesi bulunamadı",
+          fetchDocumentsError: "Belgeler yüklenemedi",
+          retry: "Tekrar dene",
+          summaryPeriodLabel: "Dönem",
+          latestActivity: "Son işlem: {date}",
+          noActivity: "Henüz kayıtlı işlem yok",
+          totalIncome: "Toplam Gelir",
+          totalExpense: "Toplam Gider",
+          netChange: "Net Değişim",
+          legendTitle: "Net bakiye yoğunluğu",
+          incomeLabel: "Gelir",
+          expenseLabel: "Gider",
+          netLabel: "Net",
+          tooltipNoTransactions: "İşlem yok",
+          dayNoTransactions: "Bu gün için kayıtlı işlem yok.",
+          transactionsLoadError: "İşlemler yüklenemedi",
+          calendarLoadError: "Takvim yüklenemedi",
+          calendarFetchError: "Takvim verileri alınamadı",
+          selectFilePrompt: "Lütfen önce bir bakiye belgesi seçin.",
+          runningAgent: "Ajan çalıştırılıyor...",
+          agentRunFailed: "Ajan çalışması başarısız oldu",
+          agentRequestFailed: "Ajan çalıştırılamadı.",
+          agentSuccess: "Ajan başarıyla tamamlandı.",
+          unsupportedFileType: "Bakiye işlemesi için desteklenmeyen dosya türü.",
+          uploadingFile: "{filename} yükleniyor...",
+          uploadSuccess: "{filename} yüklendi. Ajan çalıştırılıyor...",
+          uploadFailed: "Bakiye belgesi yüklenemedi.",
+          transactionSingular: "{count} işlem",
+          transactionPlural: "{count} işlem",
+          direction: {
+            income: "Gelir",
+            expense: "Gider",
+          },
+        },
+
         // Navigation
         goToChat: "Sohbete Git",
 
@@ -888,6 +1010,18 @@ class LanguageService {
       const key = element.getAttribute("data-i18n-placeholder");
       const text = this.get(key);
       element.placeholder = text;
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-title");
+      element.title = this.get(key);
+    });
+
+    document.querySelectorAll("[data-i18n-tooltip]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-tooltip");
+      const text = this.get(key);
+      element.setAttribute("data-tooltip", text);
+      element.setAttribute("aria-label", text);
     });
 
     // Update title
