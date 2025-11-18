@@ -408,7 +408,7 @@ body.dark-theme .chart-caption {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .process-upload {
@@ -416,10 +416,11 @@ body.dark-theme .chart-caption {
   flex-direction: column;
   gap: 6px;
   min-width: 200px;
+  align-items: center;
 }
 
 .process-upload .btn {
-  align-self: flex-start;
+  align-self: center;
 }
 
 .process-upload-note {
