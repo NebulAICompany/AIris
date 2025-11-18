@@ -140,9 +140,10 @@
               class="nav-item"
               data-tab="balance-heatmap"
               data-tooltip="Balance Calendar"
+              data-i18n-tooltip="balanceCalendar.navLabel"
             >
               <i class="fas fa-calendar-day"></i>
-              <span>Balance Calendar</span>
+              <span data-i18n="balanceCalendar.navLabel">Balance Calendar</span>
             </button>
 
             <button
@@ -977,24 +978,48 @@
             <div class="balance-app">
               <header class="balance-header">
                 <div class="header-text">
-                  <h1>Balance of Payments</h1>
-                  <p class="subtitle">
+                  <h1 data-i18n="balanceCalendar.title">Balance of Payments</h1>
+                  <p
+                    class="subtitle"
+                    data-i18n="balanceCalendar.subtitle"
+                  >
                     Track daily cash positions derived from processed Excel workbooks.
                   </p>
                 </div>
                 <div class="header-actions">
                   <label class="timeframe-select">
-                    <span>Timeframe</span>
+                    <span data-i18n="balanceCalendar.timeframeLabel">Timeframe</span>
                     <select id="balance-timeframe">
-                      <option value="3" selected>Last 3 months</option>
-                      <option value="6">Last 6 months</option>
-                      <option value="9">Last 9 months</option>
-                      <option value="12">Last 12 months</option>
+                      <option
+                        value="3"
+                        selected
+                        data-i18n="balanceCalendar.timeframes.last3Months"
+                      >
+                        Last 3 months
+                      </option>
+                      <option
+                        value="6"
+                        data-i18n="balanceCalendar.timeframes.last6Months"
+                      >
+                        Last 6 months
+                      </option>
+                      <option
+                        value="9"
+                        data-i18n="balanceCalendar.timeframes.last9Months"
+                      >
+                        Last 9 months
+                      </option>
+                      <option
+                        value="12"
+                        data-i18n="balanceCalendar.timeframes.last12Months"
+                      >
+                        Last 12 months
+                      </option>
                     </select>
                   </label>
                   <button id="balance-refresh" class="btn btn-secondary">
                     <i class="fas fa-rotate"></i>
-                    Refresh
+                    <span data-i18n="balanceCalendar.refresh">Refresh</span>
                   </button>
                 </div>
               </header>
@@ -1003,9 +1028,11 @@
                 <div class="panel-header">
                   <h2>
                     <i class="fas fa-file-excel"></i>
-                    Process Balance Document
+                    <span data-i18n="balanceCalendar.processTitle">
+                      Process Balance Document
+                    </span>
                   </h2>
-                  <p>
+                  <p data-i18n="balanceCalendar.processDescription">
                     Upload or select a balance of payments document (Excel, PDF, image, etc.).
                     The parser extracts the ledger and the agent will normalize transactions automatically.
                   </p>
@@ -1024,16 +1051,26 @@
                       type="button"
                     >
                       <i class="fas fa-upload"></i>
-                      Upload &amp; Process
+                      <span data-i18n="balanceCalendar.uploadButton">
+                        Upload &amp; Process
+                      </span>
                     </button>
-                    <span class="process-upload-note">
+                    <span
+                      class="process-upload-note"
+                      data-i18n="balanceCalendar.uploadNote"
+                    >
                       Uses parser.py to extract ledger details before running the agent.
                     </span>
                   </div>
                   <div class="process-inputs">
                     <select id="balance-file-select" class="process-select">
-                      <option value="" disabled selected>
-                        Select a balance document from uploads…
+                      <option
+                        value=""
+                        disabled
+                        selected
+                        data-i18n="balanceCalendar.fileSelectPlaceholder"
+                      >
+                        Select a balance document from uploads...
                       </option>
                     </select>
                     <label class="checkbox-inline">
@@ -1042,12 +1079,14 @@
                         id="balance-replace-checkbox"
                         checked
                       />
-                      Replace previous data for this file
+                      <span data-i18n="balanceCalendar.replaceLabel">
+                        Replace previous data for this file
+                      </span>
                     </label>
                   </div>
                   <button id="balance-process-btn" class="btn btn-primary" type="button">
                     <i class="fas fa-play"></i>
-                    Run Agent
+                    <span data-i18n="balanceCalendar.runAgent">Run Agent</span>
                   </button>
                 </div>
                 <div id="balance-process-feedback" class="process-feedback"></div>
@@ -1060,7 +1099,7 @@
                 </div>
                 <div id="balance-loading" class="balance-loading" hidden>
                   <i class="fas fa-spinner fa-spin"></i>
-                  Loading calendar…
+                  <span data-i18n="balanceCalendar.loading">Loading calendar...</span>
                 </div>
                 <div id="balance-heatmap" class="balance-heatmap"></div>
               </section>
@@ -1068,7 +1107,9 @@
               <section id="balance-detail" class="balance-detail-panel">
                 <div class="detail-empty">
                   <i class="fas fa-hand-pointer"></i>
-                  <p>Select a day to view transaction details.</p>
+                  <p data-i18n="balanceCalendar.selectDayPrompt">
+                    Select a day to view transaction details.
+                  </p>
                 </div>
               </section>
             </div>
