@@ -3,7 +3,12 @@ from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news
 from backend.core.tools.mcp import finance_mcp_server
 from .office import *
 from backend.shared.constants import OPENAI_MODEL
-from backend.utils.plotting import get_suitable_plot_types, create_html_plot
+from backend.core.tools.plotting import (
+    get_suitable_plot_types, 
+    create_html_plot,
+    extract_data_from_text,
+    convert_to_plottable_format
+)
 
 office_tools = [
     create_excel_file,
@@ -41,7 +46,12 @@ plotting_agent = Agent(
     name="Plotting Agent",
     instructions=plotting_prompt,
     model=OPENAI_MODEL,
-    tools=[get_suitable_plot_types, create_html_plot],
+    tools=[
+        extract_data_from_text,
+        convert_to_plottable_format,
+        get_suitable_plot_types,
+        create_html_plot
+    ],
 )
 
 office_agent_tool = office_agent.as_tool(
@@ -79,18 +89,30 @@ news_summarization_tool = news_summarization_agent.as_tool(
 
 plotting_agent_tool = plotting_agent.as_tool(
     tool_name="plotting_agent",
-    tool_description="""Use this tool for creating necessary configurations for interactive HTML plots from data:
-    - Output should be a JSON object with the following fields:
-        - title: str - The title of the plot
-        - x_label: str - The label of the x-axis
-        - y_label: str - The label of the y-axis
-        - column_names: list[str] - The names of the columns
-        - x_values: list[str] - The values of the x-axis
-        - colors: list[str] - The colors of the plot
-        - width: int - The width of the plot
-        - height: int - The height of the plot
-        - stacked: bool - Whether the plot is stacked
-        - orientation: str - The orientation of the plot
-    - Create necessary configurations for the plot
-    - Do not add chart HTML or chart content to the answer""",
+    tool_description="""Use this tool for creating interactive HTML plots from various data sources:
+    
+    **Capabilities:**
+    - Extract structured data from text, tables, JSON, CSV-like formats, markdown tables
+    - Convert data into plottable formats (lists, numpy arrays, pandas DataFrames)
+    - Determine the most suitable plot types for given data
+    - Create professional interactive HTML plots with Plotly
+    - Save charts to disk for display
+    
+    **Supported Plot Types:**
+    line, bar, scatter, pie, histogram, box, heatmap, area, violin, bubble, 
+    waterfall, radar, funnel, candlestick, treemap, scatter_3d
+    
+    **Input Data Formats:**
+    - Markdown tables (| Col1 | Col2 | ...)
+    - CSV/TSV text (comma or tab separated)
+    - JSON objects or arrays
+    - Python lists, dictionaries
+    - Key-value pairs (Key: Value format)
+    - Natural language descriptions with numbers
+    
+    **Important:**
+    - Charts are automatically displayed above the response after creation
+    - Do NOT add chart HTML or chart content to the answer
+    - Focus on explaining the visualization and insights
+    - This tool handles the complete workflow: data extraction → formatting → plot creation → saving""",
 )
