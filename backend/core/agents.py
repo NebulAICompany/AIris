@@ -37,7 +37,9 @@ def create_main_agent(
     conversation_history: List = None,
 ) -> Agent:
 
-    instruction_part = f"\n\nSpecial Instruction: {instruction}" if instruction else ""
+    instruction_part = (
+        f"**Special Instructions:**\n{instruction}\n" if instruction else ""
+    )
 
     # Include web context
     web_context_part = (

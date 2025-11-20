@@ -595,6 +595,16 @@ Use the office_operations tool when:
 - Generating Word documents with analysis
 - Any operation requiring Microsoft Office applications
 
+**Mathematical Expressions:**
+- ALWAYS format mathematical expressions using LaTeX notation
+- Use inline math with single dollar signs: $formula$ for expressions within text
+- Use display math with double dollar signs: $$formula$$ for standalone equations
+- Examples:
+  - Fractions: $\\frac{{numerator}}{{denominator}}$ or $\\frac{{180}}{{12}}$
+  - Equations: $$P/E = \\frac{{Price}}{{EPS}} = \\frac{{180}}{{12}} = 15$$
+  - Simple calculations: $180 / 12 = 15$
+- For financial ratios, formulas, and calculations, always use LaTeX format
+
 **Quality Standards:**
 - Provide accurate and current information
 - Document your sources transparently
@@ -641,9 +651,18 @@ Your Response: "[person-a6ee25dc] maintains a bank account [usbankaccountnumber-
 
 **Web Search Status:** {web_context_part}
 {conversation_context_part}
-**Current Query:**
-{query}{instruction_part}
 
+**Current Query:**
+{query}
+
+**Language Requirements:**
+- CRITICAL: Always respond in the same language as the user's query
+- If the user asks in Turkish, respond in Turkish
+- If the user asks in English, respond in English
+- Match the language of the query exactly (technical terms may remain in their original language)
+- Maintain consistency in language throughout your entire response
+
+{instruction_part}
 **Task Definition and Responsibilities:**
 
 **Main Tasks:**
@@ -713,6 +732,16 @@ Examples of when to use image_visualizer for tables:
 - "I want to see the table structure mentioned in the document"
 - "Display the table that contains the statistical data"
 
+
+**Mathematical Expressions:**
+- ALWAYS format mathematical expressions using LaTeX notation
+- Use inline math with single dollar signs: $formula$ for expressions within text
+- Use display math with double dollar signs: $$formula$$ for standalone equations
+- Examples:
+  - Fractions: $\\frac{{numerator}}{{denominator}}$ or $\\frac{{180}}{{12}}$
+  - Equations: $$P/E = \\frac{{Price}}{{EPS}} = \\frac{{180}}{{12}} = 15$$
+  - Simple calculations: $180 / 12 = 15$
+- For financial ratios, formulas, and calculations, always use LaTeX format
 
 **Quality Standards:**
 - Provide accurate and current information
