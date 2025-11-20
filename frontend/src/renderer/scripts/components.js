@@ -45,7 +45,7 @@ class UIComponents {
     // Profile modal setup
     this.setupProfileModal();
     this.setupProfileSelect();
-    this.setupPhotoLessButton();
+    this.setupSidebarToggle();
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
@@ -56,40 +56,110 @@ class UIComponents {
       window.languageService.updatePageTexts();
     }
   }
+initSidebar() {
+  const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
+  const collapsible = document.querySelector('.nav-item.collapsible');
+  const subMenu = document.querySelector('.sub-menu');
+  const subItems = document.querySelectorAll('.sub-item');
 
+  const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
+
+  // İlk yüklemede aktiflik olmasın
+  balanceSections.forEach(sec => sec.classList.remove('active'));
+  subItems.forEach(item => item.classList.remove('active'));
+
+  // Nav item click
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+
+      item.classList.add('active');
+
+      balanceSections.forEach(sec => sec.classList.remove('active'));
+
+      if (subMenu) {
+        subMenu.classList.remove('open');
+        subMenu.style.maxHeight = null;
+      }
+    });
+  });
+
+  // Collapsible tıklama — SADECE ELEMAN VARSA!
+  if (collapsible && subMenu) {
+    collapsible.addEventListener('click', () => {
+      subMenu.classList.toggle('open');
+      if (subMenu.classList.contains('open')) {
+        subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+      } else {
+        subMenu.style.maxHeight = null;
+      }
+    });
+  }
+
+  // Sub-item tıklama
+  subItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+
+      item.classList.add('active');
+
+      balanceSections.forEach(sec => sec.classList.remove('active'));
+
+      const sectionId = item.dataset.page.replace('#', '') + '-tab';
+      const section = document.getElementById(sectionId);
+      if (section) section.classList.add('active');
+      else console.warn("Bulunamadı:", sectionId);
+
+      if (subMenu) {
+        subMenu.classList.add('open');
+        subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+      }
+
+      location.hash = item.dataset.page;
+    });
+  });
+}
+
+
+
+
+  setupSidebarToggle() {
+      const sidebar = document.querySelector('.sidebar');
+      const toggleBtn = document.querySelector('.toggle-btn');
+
+      if (!sidebar || !toggleBtn) return;
+
+      const savedState = localStorage.getItem('sidebarState');
+      if (savedState === 'expanded') {
+          sidebar.classList.add('expanded');
+          sidebar.classList.remove('collapsed');
+      } else {
+          sidebar.classList.add('collapsed');
+          sidebar.classList.remove('expanded');
+      }
+
+      toggleBtn.addEventListener('click', () => {
+          const isCollapsed = sidebar.classList.contains('collapsed');
+
+          if (isCollapsed) {
+              sidebar.classList.remove('collapsed');
+              sidebar.classList.add('expanded');
+              localStorage.setItem('sidebarState', 'expanded');
+          } else {
+              sidebar.classList.remove('expanded');
+              sidebar.classList.add('collapsed');
+              localStorage.setItem('sidebarState', 'collapsed');
+          }
+      });
+  }
 
   // ---------------- Profile Modal ----------------
   loadProfiles() {
     const storedProfiles = localStorage.getItem("savedProfiles");
     this.allProfiles = storedProfiles ? JSON.parse(storedProfiles) : [];
   }
-
-  setupPhotoLessButton() {
-    this.photoLessBtn = document.getElementById("photo-less-toggle");
-    if (!this.photoLessBtn) return;
-
-    this.photoLessBtn.addEventListener("click", () => {
-      this.photoLessBtn.classList.toggle("active");
-
-      // Dil kontrolü
-      const lang = window.languageService?.getCurrentLanguage() || "tr";
-
-      let activeMsg = lang === "en"
-        ? "Files will be processed without photos."
-        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
-
-      let inactiveMsg = lang === "en"
-        ? "Photo-less mode is deactivated."
-        : "Photo-less mod kapatıldı.";
-
-      if (this.photoLessBtn.classList.contains("active")) {
-        Utils.showSnackbar(activeMsg, "info", 4000);
-      } else {
-        Utils.showSnackbar(inactiveMsg, "warning", 3000);
-      }
-    });
-  }
-
 
   setupProfileModal() {
     this.profileModal = document.getElementById("create-profile-selection");
@@ -494,12 +564,54 @@ class UIComponents {
     }
 
     // File attachment button (paperclip)
+    // Dropdown açıp kapatma
     const fileAttachmentBtn = document.getElementById("file-attachment-btn");
-    if (fileAttachmentBtn) {
-      fileAttachmentBtn.addEventListener("click", () => {
-        chatFileInput?.click();
-      });
-    }
+    const dropdown = document.getElementById("file-dropdown");
+
+    fileAttachmentBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // dışarı taşmasın
+      dropdown.style.display =
+        dropdown.style.display === "block" ? "none" : "block";
+    });
+
+    // Menü dışına tıklayınca kapansın
+    document.addEventListener("click", () => {
+      dropdown.style.display = "none";
+    });
+
+    // Normal attach seçeneği
+    const normalAttachBtn = document.getElementById("normal-file");
+
+    normalAttachBtn.addEventListener("click", () => {
+      chatFileInput?.click();  // ❗ ESKİ davranış buraya taşındı
+      dropdown.style.display = "none";
+    });
+
+    // Photo-less mode seçeneği
+    const photoLessBtn = document.getElementById("photoless-mode");
+
+    photoLessBtn.addEventListener("click", () => {
+      // Language
+      const lang = window.languageService?.getCurrentLanguage() || "tr";
+
+      // Photoless mod durumunu global bir değişkene kaydedelim
+      window.isPhotoLessMode = true;
+
+      let msg = lang === "en"
+        ? "Files will be processed without photos."
+        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
+
+      Utils.showSnackbar(msg, "info", 4000);
+
+      // Dosya seçimi aç
+      const chatFileInput = document.getElementById("chat-file-input");
+      chatFileInput?.click();
+
+      // Dropdown kapat
+      dropdown.style.display = "none";
+    });
+
+
 
     // File selection modal close
     const closeFileSelection = document.getElementById("close-file-selection");
@@ -2352,12 +2464,10 @@ class UIComponents {
         statusClass = "uploading";
         break;
       case "success":
-        statusIcon = "✅";
         statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
-        statusIcon = "❌";
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -2366,7 +2476,6 @@ class UIComponents {
     const messageElement = document.createElement("div");
     messageElement.className = `file-status-message ${statusClass}`;
     messageElement.innerHTML = `
-      <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
       fileName
@@ -2391,12 +2500,10 @@ class UIComponents {
 
     switch (status) {
       case "success":
-        statusIcon = "✅";
         statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
-        statusIcon = "❌";
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -2405,7 +2512,6 @@ class UIComponents {
     // Update the message
     statusMessage.className = `file-status-message ${statusClass}`;
     statusMessage.innerHTML = `
-      <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
       fileName
