@@ -35,7 +35,6 @@ python-dateutil==2.9.0.post0
 cohere==5.15.0
 python-dotenv==1.1.0
 httpx==0.28.1
-mcp==1.12.2
 opencv-python==4.11.0.86
 pytesseract==0.3.13
 reportlab==4.4.2
@@ -51,5 +50,5 @@ qdrant-client==1.15.1
 azure-ai-documentintelligence==1.0.2
 concurrent-openai==1.2.2
 plotly==6.3.0
-mcp==1.12.2
 rapidfuzz==3.14.0
+evds==0.3.2
