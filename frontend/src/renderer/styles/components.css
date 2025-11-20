@@ -7619,6 +7619,24 @@ body.nebula-theme .web-search-button:hover {
   font-size: 11px;
 }
 
+.calculator-subheader {
+  margin: 40px 0 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.calculator-subheader h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.calculator-subheader p {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 .calculator-form {
   background: var(--bg-secondary);
   border-radius: var(--border-radius);
