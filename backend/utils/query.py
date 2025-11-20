@@ -13,26 +13,12 @@ class RefinedQuery(BaseModel):
     keywords: List[str]
 
 
-def detect_language(query: str) -> str:
-    try:
-        from backend.shared.constants import text_analytics_client
-
-        response = text_analytics_client.detect_language(
-            documents=[query], country_hint="tr"
-        )[0]
-        return response.primary_language.name
-
-    except Exception as err:
-        logger.error("Encountered exception. {}".format(err))
-
-
-def refine_query(user_query, lang: str = "Turkish") -> RefinedQuery:
+def refine_query(user_query) -> RefinedQuery:
     """
     Refine user query and extract keywords for search optimization
 
     Args:
         user_query: Original user query
-        lang: Language for the response
 
     Returns:
         RefinedQuery: Structured output with refined query and keywords
@@ -45,7 +31,7 @@ def refine_query(user_query, lang: str = "Turkish") -> RefinedQuery:
             messages=[
                 {
                     "role": "system",
-                    "content": f"{refinement_prompt} Give your answer in {lang} language.",
+                    "content": f"{refinement_prompt}",
                 },
                 {"role": "user", "content": user_query},
             ],
