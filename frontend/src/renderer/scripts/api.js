@@ -299,10 +299,17 @@ class APIService {
   }
 
   // Upload file to backend
-  async uploadFile(file, progressCallback) {
+  async uploadFile(file, options = {}, progressCallback) {
     try {
       const formData = new FormData();
       formData.append("file", file);
+
+      if (options && options.photoLessMode !== undefined) {
+        formData.append(
+          "photoLessMode",
+          options.photoLessMode ? "true" : "false"
+        );
+      }
 
       const config = {
         timeout: 180000, // 3 minutes for file uploads (increased for larger files)

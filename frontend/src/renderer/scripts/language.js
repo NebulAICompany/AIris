@@ -355,6 +355,15 @@ class LanguageService {
         noFilesAvailable: "No files available. Upload some files first.",
         filesSelected: "files selected",
         allFilesSelected: "All files selected",
+        save: "Save",
+        cancel: "Cancel",
+        createNewProfile: "Create New Profile",
+        selectProfile: "Select Profile",
+        noFilesSelected: "Please select at least one file.",
+        profileNameRequired: "Please enter a profile name.",
+        profileNameExists: "A profile with this name already exists.",
+        profileSaved: "Profile saved successfully!",
+        unknownError: "An unexpected error occurred. Please try again.",
 
         // Currency labels
         gold: "Gold",
@@ -451,6 +460,9 @@ class LanguageService {
         noResultsFound: "No results found",
         searchForStocks: "Search for stocks",
         atClose: "At close",
+        searchFiles: "Search files...",
+        profileName: "Profile Name",
+        enterProfileName: "Enter profile name",
       },
 
       tr: {
@@ -783,6 +795,18 @@ class LanguageService {
         noFilesAvailable: "Dosya mevcut değil. Önce bazı dosyalar yükleyin.",
         filesSelected: "dosya seçildi",
         allFilesSelected: "Tüm dosyalar seçildi",
+        save: "Kaydet",
+        cancel: "İptal",
+        createNewProfile: "Yeni Profil Oluştur",
+        selectProfile: "Profil Seç",
+        searchFiles: "Dosyalarda ara...",
+        profileName: "Profil Adı",
+        enterProfileName: "Profil ismini girin",
+        noFilesSelected: "Lütfen en az bir dosya seçin.",
+        profileNameRequired: "Lütfen profil ismi girin.",
+        profileNameExists: "Bu isimle bir profil zaten mevcut.",
+        profileSaved: "Profil başarıyla kaydedildi!",
+        unknownError: "Beklenmeyen bir hata oluştu.",
 
         // Currency labels
         gold: "Altın",
