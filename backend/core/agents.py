@@ -12,7 +12,7 @@ from .tools.api import (
     get_uploaded_files_count,
     list_uploaded_files,
 )
-from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
+from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, tcmb_data_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 
@@ -25,6 +25,7 @@ rag_agent_as_tools = [
     redescribe_image_content,
     get_uploaded_files_count,
     list_uploaded_files,
+    tcmb_data_agent_tool,
 ]
 
 
