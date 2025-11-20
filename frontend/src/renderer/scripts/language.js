@@ -32,7 +32,11 @@ class LanguageService {
         createdDocuments: "Created Documents",
         interestCalculator: "Interest Calculator",
         financeNews: "Finance News",
-
+        balance: "Balance",
+        currentStatus: "Current Status",
+        sales: "Sales",
+        purchase: "Purchase",
+        cash: "Cash",
         settings: "Settings",
 
         // Chat Section
@@ -65,6 +69,8 @@ class LanguageService {
         browseFiles: "browse files",
         supportedFormats: "Supported: PDF, DOCX, XLSX, Images",
         uploadFilesAction: "Upload Files",
+        normalFile: "Normal File Attach",
+        photolessMode: "Photo-less Mode",
 
         // Files Section
         documentLibrary: "Document Library",
@@ -429,6 +435,11 @@ class LanguageService {
         createdDocuments: "Oluşturulan Belgeler",
         interestCalculator: "Kredi Hesaplama",
         financeNews: "Finans Haberleri",
+        balance: "Ödemeler Dengesi",
+        currentStatus: "Güncel Durum",
+        sales: "Satış",
+        purchase: "Alış",
+        cash: "Nakit",
 
         settings: "Ayarlar",
 
@@ -478,6 +489,8 @@ class LanguageService {
         browseFiles: "dosyalara göz atın",
         supportedFormats: "Desteklenen: PDF, DOCX, XLSX, Resimler",
         uploadFilesAction: "Dosyaları Yükle",
+        normalFile: "Normal Dosya Ekle",
+        photolessMode: "Fotoğrafsız Mod",
 
         // Files Section
         documentLibrary: "Belge Kütüphanesi",
