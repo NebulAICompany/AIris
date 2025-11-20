@@ -1382,14 +1382,8 @@ body.dark-theme .image-caption {
 
 /* Chat file upload styles */
 .chat-file-upload-area {
-  padding: 16px;
-  border: 2px dashed rgba(59, 130, 246, 0.3);
   border-radius: 12px;
-  background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.05),
-      rgba(139, 92, 246, 0.05));
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
   overflow: hidden;
 }
 
@@ -1420,48 +1414,65 @@ body.dark-theme .image-caption {
   align-items: flex-end;
   gap: 8px;
 }
-.file-photoless-button {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
+
+.dropdown-container {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: var(--text-secondary);
-  position: relative;
-  overflow: visible;
-  margin-right: 8px;
 }
 
-.file-photoless-button:hover {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-  color: white;
-}
+/* Yukarı açılan dropdown */
+.dropdown-menu {
+  display: none;
+  flex-direction: column;
 
-/* active durumu */
-.file-photoless-button.active {
-  background: var(--success); 
-  color: white;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-  transform: scale(1.02);
-  z-index: 2;
-}
-
-/* küçük yuvarlak göstergesi */
-.file-photoless-button.active::after {
-  content: '';
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-color);
-  border-radius: 50%;
+  bottom: 45px;       /* Yukarı açılması için */
+
+  min-width: 170px;       /* Chat-bar yapısına daha uygun */
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+
+  overflow: hidden;
+  z-index: 2000;
+
+  animation: dropdownFadeUp 0.15s ease-out;
+}
+
+/* Aktifken görünür */
+.dropdown-menu.show {
+  display: flex;
+}
+
+/* Dropdown item */
+.dropdown-item {
+  padding: 12px 14px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-primary); /* Tema ile uyumlu */
+  transition: background 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+/* Animasyon */
+@keyframes dropdownFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .file-attachment-button,
@@ -1573,7 +1584,7 @@ body.dark-theme .image-caption {
 .uploaded-files-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   padding: 8px 0;
 }
 
@@ -1584,7 +1595,7 @@ body.dark-theme .image-caption {
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 20px;
+  border-radius: 10px;
   font-size: 0.85em;
   font-weight: 500;
   color: var(--text-primary);
@@ -6543,13 +6554,6 @@ body.nebula-theme .file-selection-search:focus-visible {
 }
 
 /* Dark theme support for chat file uploads */
-body.dark-theme .chat-file-upload-area {
-  background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.08),
-      rgba(139, 92, 246, 0.08));
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
 body.dark-theme .chat-file-upload-area.drag-over {
   background: linear-gradient(135deg,
       rgba(59, 130, 246, 0.2),
@@ -6886,13 +6890,6 @@ body.nebula-theme .file-item-icon.jpg,
 body.nebula-theme .file-item-icon.png,
 body.nebula-theme .file-item-icon.jpeg {
   background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
-}
-
-/* Nebula theme chat file upload */
-body.nebula-theme .chat-file-upload-area {
-  background: rgba(13, 2, 33, 0.9) !important;
-  border: 2px dashed rgba(139, 92, 246, 0.4) !important;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1) !important;
 }
 
 body.nebula-theme .chat-file-upload-area.drag-over {
