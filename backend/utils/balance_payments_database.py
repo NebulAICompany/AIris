@@ -5,9 +5,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
 from backend.shared.constants import BALANCE_PAYMENTS_DB_PATH
 from backend.shared.logger import get_logger
-
 logger = get_logger("BALANCE_DB")
-
 
 @dataclass
 class BalanceTransaction:
@@ -78,14 +76,24 @@ class BalancePaymentsDatabase:
             with self._connect() as conn:
                 dates_to_update: List[str] = []
 
-                insert_rows = [
-                    (
-                        tx.transaction_date,
-                        tx.amount,
-                        tx.direction,
+                insert_rows: List[tuple[str, float, str]] = []
+                for tx in transactions:
+                    try:
+                        normalized_date = datetime.fromisoformat(
+                            tx.transaction_date
+                        ).date().isoformat()
+                    except ValueError as exc:
+                        raise ValueError(
+                            f"Transaction date must be ISO formatted YYYY-MM-DD, got '{tx.transaction_date}'."
+                        ) from exc
+
+                    insert_rows.append(
+                        (
+                            normalized_date,
+                            float(tx.amount),
+                            tx.direction,
+                        )
                     )
-                    for tx in transactions
-                ]
 
                 conn.executemany(
                     """
@@ -102,7 +110,8 @@ class BalancePaymentsDatabase:
                 self._recalculate_daily_balances(conn, set(dates_to_update))
 
                 conn.commit()
-                return len(transactions)
+                logger.info("Stored %d transaction(s)", len(insert_rows))
+                return len(insert_rows)
         except Exception as exc:
             logger.error("❌ Failed to store balance transactions: %s", exc)
             raise

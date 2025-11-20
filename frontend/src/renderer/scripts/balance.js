@@ -498,7 +498,7 @@
         this.setUploadBusy(true);
         this.setFeedback(`Uploading ${file.name}…`, "info");
 
-        const uploadResult = await this.api.uploadFile(file);
+        const uploadResult = await this.api.uploadBalanceDocument(file);
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || "Upload failed");
         }

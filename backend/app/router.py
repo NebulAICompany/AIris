@@ -16,7 +16,7 @@ from backend.shared.constants import (
 )
 import shutil
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 from dateutil.relativedelta import relativedelta
 from backend.utils.news import get_aggregated_financial_news
@@ -301,6 +301,49 @@ async def handle_upload(
         logger.error(f"File upload error for {file.filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
+        )
+
+
+@router.post("/balance-of-payments/upload")
+async def handle_balance_upload(
+    file: UploadFile = File(...),
+    photoLessMode: bool = Form(False),
+):
+    """Store balance-of-payments documents without triggering vector ingestion."""
+
+    filename = getattr(file, "filename", "unknown")
+
+    try:
+        uploads_dir = Path(UPLOADS_PATH)
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+
+        file_path = uploads_dir / filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        logger.info(
+            "Balance document stored for agent-only processing: %s (photoLessMode=%s)",
+            filename,
+            photoLessMode,
+        )
+
+        return {
+            "filename": filename,
+            "content_type": file.content_type,
+            "status": "success",
+            "message": "Balance document stored for agent processing",
+            "photoLessMode": photoLessMode,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(
+            "Balance document upload failed for %s: %s",
+            filename,
+            error_message,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Balance document upload failed: {error_message}",
         )
 
 
@@ -766,6 +809,17 @@ def get_balance_of_payments_calendar(
 ):
     months = max(1, min(months, 12))
 
+    latest_activity_str = balance_payments_db.latest_activity_date()
+    latest_activity: Optional[date] = None
+    if latest_activity_str:
+        try:
+            latest_activity = datetime.fromisoformat(latest_activity_str).date()
+        except ValueError:
+            logger.warning(
+                "Invalid latest activity date stored in database: %s",
+                latest_activity_str,
+            )
+
     if endDate:
         try:
             end_date = datetime.fromisoformat(endDate).date()
@@ -774,7 +828,10 @@ def get_balance_of_payments_calendar(
                 status_code=400, detail="Invalid endDate format. Use YYYY-MM-DD"
             )
     else:
-        end_date = datetime.today().date()
+        if latest_activity:
+            end_date = latest_activity
+        else:
+            end_date = datetime.today().date()
 
     start_date = end_date - relativedelta(months=months) + timedelta(days=1)
     start_date = start_date - timedelta(days=start_date.weekday())
@@ -794,7 +851,7 @@ def get_balance_of_payments_calendar(
         "endDate": end_date.isoformat(),
         "days": daily_balances,
         "maxAbsoluteNet": max_absolute,
-        "latestActivity": balance_payments_db.latest_activity_date(),
+        "latestActivity": latest_activity_str,
     }
 
 
