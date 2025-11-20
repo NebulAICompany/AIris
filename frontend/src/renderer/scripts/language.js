@@ -390,6 +390,7 @@ class LanguageService {
             "Track daily cash positions derived from processed Excel workbooks.",
           timeframeLabel: "Timeframe",
           timeframes: {
+            last1Month: "Last 1 month",
             last3Months: "Last 3 months",
             last6Months: "Last 6 months",
             last9Months: "Last 9 months",
@@ -403,7 +404,7 @@ class LanguageService {
           uploadNote:
             "Uses parser.py to extract ledger details before running the agent.",
           runAgent: "Run Agent",
-          loading: "Loading calendar...",
+          loading: undefined,
           selectDayPrompt: "Select a day to view transaction details.",
           noDocuments: "No balance documents found",
           fetchDocumentsError: "Failed to load documents",
@@ -414,6 +415,7 @@ class LanguageService {
           totalIncome: "Total Income",
           totalExpense: "Total Expense",
           netChange: "Net Change",
+          weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
           legendTitle: "Net balance intensity",
           incomeLabel: "Income",
           expenseLabel: "Expense",
@@ -833,6 +835,7 @@ class LanguageService {
             "İşlenen Excel çalışma kitaplarından türetilen günlük nakit pozisyonlarını takip edin.",
           timeframeLabel: "Zaman Aralığı",
           timeframes: {
+            last1Month: "Son 1 ay",
             last3Months: "Son 3 ay",
             last6Months: "Son 6 ay",
             last9Months: "Son 9 ay",
@@ -846,7 +849,7 @@ class LanguageService {
           uploadNote:
             "Ajanı çalıştırmadan önce defter detaylarını çıkarmak için parser.py kullanır.",
           runAgent: "Ajanı Çalıştır",
-          loading: "Takvim yükleniyor...",
+          loading: undefined,
           selectDayPrompt: "İşlem detaylarını görmek için bir gün seçin.",
           noDocuments: "Ödemeler dengesi belgesi bulunamadı",
           fetchDocumentsError: "Belgeler yüklenemedi",
@@ -857,6 +860,7 @@ class LanguageService {
           totalIncome: "Toplam Gelir",
           totalExpense: "Toplam Gider",
           netChange: "Net Değişim",
+          weekdays: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
           legendTitle: "Net ödeme yoğunluğu",
           incomeLabel: "Gelir",
           expenseLabel: "Gider",

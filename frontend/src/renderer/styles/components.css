@@ -620,44 +620,77 @@ body.dark-theme .chart-caption {
   font-size: 0.95rem;
 }
 
-.balance-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  overflow-x: auto;
+.balance-month-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
 }
 
-.balance-weekday-column {
+.balance-month-row {
   display: grid;
-  grid-template-rows: repeat(7, 32px);
-  gap: 6px;
-  font-size: 0.75rem;
+  gap: 32px;
+  width: 100%;
+}
+
+.balance-month-row.full {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.balance-month-row.partial {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  justify-content: center;
+  justify-items: center;
+}
+
+.balance-month-row.single {
+  grid-template-columns: minmax(320px, 520px);
+  justify-content: center;
+  justify-items: center;
+}
+
+.balance-month {
+  background: var(--bg-secondary, rgba(248, 250, 252, 0.4));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 24px;
+  padding: 28px 32px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow-sm, 0 10px 28px rgba(15, 23, 42, 0.08));
+  width: 100%;
+}
+
+.balance-month-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.balance-month-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 48px);
+  gap: 10px;
+  text-align: center;
+}
+
+.balance-weekday {
+  font-size: 0.78rem;
   color: var(--text-secondary, #94a3b8);
-  text-align: right;
-  padding-right: 12px;
+  line-height: 48px;
 }
 
-.balance-week {
+.balance-month-grid {
   display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 8px;
-}
-
-.balance-week-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary, #64748b);
-  padding-top: 6px;
-}
-
-.balance-week-days {
-  display: grid;
-  grid-template-columns: repeat(7, 32px);
-  gap: 6px;
+  grid-template-columns: repeat(7, 48px);
+  gap: 10px;
 }
 
 .balance-day {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: 8px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
@@ -667,6 +700,15 @@ body.dark-theme .chart-caption {
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border 0.15s ease;
   backdrop-filter: blur(6px);
+}
+
+.balance-day.placeholder {
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent !important;
+  pointer-events: none;
+  cursor: default;
 }
 
 .balance-day:hover {
@@ -686,8 +728,8 @@ body.dark-theme .chart-caption {
 }
 
 .balance-day .day-dot {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.7);
 }

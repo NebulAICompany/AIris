@@ -21,6 +21,49 @@
       this.init();
     }
 
+    t(key, args = {}) {
+      const service = window.languageService;
+      if (!service?.translations) {
+        return key;
+      }
+
+      const lang = service.currentLanguage || "en";
+      const fallbackLang = "en";
+      const resolve = (targetLang) => {
+        const segments = key.split(".");
+        let value = service.translations?.[targetLang];
+        for (const segment of segments) {
+          if (value?.[segment] === undefined) {
+            return undefined;
+          }
+          value = value[segment];
+        }
+        return value;
+      };
+
+      let raw = resolve(lang);
+      if (raw === undefined) {
+        raw = resolve(fallbackLang);
+      }
+
+      if (typeof raw === "string") {
+        return raw.replace(/\{(\w+)\}/g, (_, token) => {
+          return Object.prototype.hasOwnProperty.call(args, token)
+            ? args[token]
+            : `{${token}}`;
+        });
+      }
+      return raw !== undefined ? raw : key;
+    }
+
+    getWeekdayLabels() {
+      const service = window.languageService;
+      const lang = service?.currentLanguage || "en";
+      const fallback = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const labels = service?.translations?.[lang]?.balanceCalendar?.weekdays;
+      return Array.isArray(labels) && labels.length === 7 ? labels : fallback;
+    }
+
     init() {
       this.bindEvents();
       this.refreshCalendar();
@@ -118,37 +161,42 @@
         (acc, day) => {
           acc.income += day.income;
           acc.expense += day.expense;
-          acc.net += day.net;
           return acc;
         },
-        { income: 0, expense: 0, net: 0 }
+        { income: 0, expense: 0 }
       );
+
+      const finalNet = data.days.length
+        ? data.days[data.days.length - 1].net
+        : 0;
 
       const rangeText = `${this.formatDateLabel(
         data.startDate
       )} - ${this.formatDateLabel(data.endDate)}`;
 
       const latestText = data.latestActivity
-        ? `Latest activity: ${this.formatDateLabel(data.latestActivity)}`
-        : "No activity recorded yet";
+        ? this.t("balanceCalendar.latestActivity", {
+            date: this.formatDateLabel(data.latestActivity),
+          })
+        : this.t("balanceCalendar.noActivity");
 
       this.summaryContainer.innerHTML = `
         <div class="summary-range">
-          <div class="summary-label">Period</div>
+          <div class="summary-label">${this.t("balanceCalendar.summaryPeriodLabel")}</div>
           <div class="summary-value">${rangeText}</div>
           <div class="summary-subtext">${latestText}</div>
         </div>
         <div class="summary-metric positive">
-          <span class="label">Total Income</span>
+          <span class="label">${this.t("balanceCalendar.totalIncome")}</span>
           <span class="value">${this.formatCurrency(totals.income)}</span>
         </div>
         <div class="summary-metric negative">
-          <span class="label">Total Expense</span>
+          <span class="label">${this.t("balanceCalendar.totalExpense")}</span>
           <span class="value">${this.formatCurrency(totals.expense)}</span>
         </div>
         <div class="summary-metric neutral">
-          <span class="label">Net Change</span>
-          <span class="value">${this.formatCurrency(totals.net)}</span>
+          <span class="label">${this.t("balanceCalendar.netChange")}</span>
+          <span class="value">${this.formatCurrency(finalNet)}</span>
         </div>
       `;
     }
@@ -156,44 +204,8 @@
     renderLegend(maxAbsoluteNet) {
       if (!this.legendContainer) return;
 
-      if (!maxAbsoluteNet || maxAbsoluteNet <= 0) {
-        this.legendContainer.innerHTML = "";
-        return;
-      }
-
-      const steps = [0.2, 0.4, 0.6, 0.8, 1];
-      const segments = steps
-        .map((ratio) => {
-          const positiveColor = this.computeColor(
-            maxAbsoluteNet * ratio,
-            maxAbsoluteNet
-          );
-          const negativeColor = this.computeColor(
-            -maxAbsoluteNet * ratio,
-            maxAbsoluteNet
-          );
-
-          return `
-            <div class="legend-row">
-              <div class="legend-swatch" style="background:${negativeColor}"></div>
-              <span class="legend-label">-${Math.round(
-                ratio * 100
-              )}%</span>
-              <div class="legend-divider"></div>
-              <span class="legend-label">+${Math.round(ratio * 100)}%</span>
-              <div class="legend-swatch" style="background:${positiveColor}"></div>
-            </div>
-          `;
-        })
-        .join("");
-
-      this.legendContainer.innerHTML = `
-        <div class="legend-title">
-          <i class="fas fa-circle"></i>
-          Net balance intensity
-        </div>
-        ${segments}
-      `;
+      this.legendContainer.innerHTML = "";
+      this.legendContainer.hidden = true;
     }
 
     renderHeatmap(data) {
@@ -205,84 +217,107 @@
       data.days.forEach((day) => dayMap.set(day.date, day));
       const maxAbs = data.maxAbsoluteNet || 0;
 
-      const weeks = [];
-      let cursor = new Date(start);
-      while (cursor <= end) {
-        const week = [];
-        for (let i = 0; i < 7; i++) {
-          const dayKey = cursor.toISOString().slice(0, 10);
-          const entry = dayMap.get(dayKey);
-          week.push({
-            date: dayKey,
-            entry,
-            currentMonth: cursor.getMonth(),
-          });
-          cursor.setDate(cursor.getDate() + 1);
-        }
-        weeks.push(week);
+      const months = [];
+      const monthCursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+      while (monthCursor <= endMonth) {
+        months.push({
+          year: monthCursor.getFullYear(),
+          month: monthCursor.getMonth(),
+        });
+        monthCursor.setMonth(monthCursor.getMonth() + 1);
       }
 
-      const monthLabels = this.buildMonthLabels(start, weeks);
+      const monthsPerRow = 3;
+      const rows = [];
+      for (let i = 0; i < months.length; i += monthsPerRow) {
+        rows.push(months.slice(i, i + monthsPerRow));
+      }
 
-      const heatmapHtml = weeks
-        .map((week, weekIndex) => {
-          const monthLabel = monthLabels.get(weekIndex);
-          const cells = week
-            .map((day) => this.renderDayCell(day, maxAbs))
+      const layoutHtml = rows
+        .map((row) => {
+          const rowClass = ["balance-month-row"];
+          if (row.length === monthsPerRow) {
+            rowClass.push("full");
+          } else if (row.length === 1) {
+            rowClass.push("single");
+          } else {
+            rowClass.push("partial");
+          }
+
+          const monthHtml = row
+            .map((info) => this.renderMonthBlock(info, dayMap, maxAbs))
             .join("");
-          return `
-            <div class="balance-week">
-              <div class="balance-week-label">${monthLabel || ""}</div>
-              <div class="balance-week-days">
-                ${cells}
-              </div>
-            </div>
-          `;
+
+          return `<div class="${rowClass.join(" ")}">${monthHtml}</div>`;
         })
         .join("");
 
-      const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        .map((label) => `<div class="balance-weekday">${label}</div>`)
-        .join("");
-
       this.heatmapContainer.innerHTML = `
-        <div class="balance-grid">
-          <div class="balance-weekday-column">${weekdayLabels}</div>
-          <div class="balance-weeks">${heatmapHtml}</div>
+        <div class="balance-month-layout">
+          ${layoutHtml}
         </div>
       `;
 
       this.attachDayHandlers();
     }
 
-    buildMonthLabels(startDate, weeks) {
-      const labels = new Map();
-      let lastMonth = null;
-      weeks.forEach((week, index) => {
-        const firstDay = week[0];
-        const dateObj = new Date(firstDay.date);
-        const month = dateObj.getMonth();
-        if (month !== lastMonth) {
-          labels.set(
-            index,
-            dateObj.toLocaleString(undefined, {
-              month: "short",
-              year: dateObj.getFullYear() !== new Date(startDate).getFullYear()
-                ? "numeric"
-                : undefined,
-            })
-          );
-          lastMonth = month;
-        }
+    renderMonthBlock(monthInfo, dayMap, maxAbs) {
+      const { year, month } = monthInfo;
+      const monthDate = new Date(year, month, 1);
+      const label = monthDate.toLocaleDateString(undefined, {
+        month: "short",
+        year: "numeric",
       });
-      return labels;
+
+      const weekdayLabels = this.getWeekdayLabels()
+        .map((weekday) => `<div class="balance-weekday">${weekday}</div>`)
+        .join("");
+
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const leadingBlanks = (firstDay.getDay() + 6) % 7; // Monday-first calendar
+
+      const cells = [];
+      for (let i = 0; i < leadingBlanks; i++) {
+        cells.push(this.renderDayCell(null, null, maxAbs, true));
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+          day
+        ).padStart(2, "0")}`;
+        const entry = dayMap.get(dateKey);
+        cells.push(this.renderDayCell(dateKey, entry, maxAbs));
+      }
+
+      while (cells.length % 7 !== 0) {
+        cells.push(this.renderDayCell(null, null, maxAbs, true));
+      }
+
+      return `
+        <div class="balance-month" data-month="${year}-${String(month + 1).padStart(
+        2,
+        "0"
+      )}">
+          <div class="balance-month-header">${label}</div>
+          <div class="balance-month-weekdays">${weekdayLabels}</div>
+          <div class="balance-month-grid">
+            ${cells.join("")}
+          </div>
+        </div>
+      `;
     }
 
-    renderDayCell(day, maxAbs) {
-      const { date, entry } = day;
+    renderDayCell(date, entry, maxAbs, isPlaceholder = false) {
+      if (isPlaceholder || !date) {
+        return '<div class="balance-day placeholder" role="presentation"></div>';
+      }
+
       const isSelected = this.selectedDate === date;
       const value = entry ? entry.net : 0;
-  const color = entry ? this.computeColor(value, maxAbs) : "#e5e7eb";
+      const color = entry ? this.computeColor(value, maxAbs) : "#e5e7eb";
       const intensity = entry ? Math.min(1, Math.abs(value) / (maxAbs || 1)) : 0;
       const classNames = ["balance-day"];
       if (!entry) classNames.push("empty");
@@ -314,7 +349,7 @@
 
     attachDayHandlers() {
       this.heatmapContainer
-        .querySelectorAll(".balance-day")
+        .querySelectorAll(".balance-day[data-date]")
         .forEach((button) => {
           button.addEventListener("click", () => {
             const date = button.getAttribute("data-date");
@@ -327,7 +362,7 @@
     async selectDay(date, hasEntry) {
       this.selectedDate = date;
       this.heatmapContainer
-        .querySelectorAll(".balance-day")
+        .querySelectorAll(".balance-day[data-date]")
         .forEach((btn) => {
           btn.classList.toggle(
             "selected",
