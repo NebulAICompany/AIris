@@ -110,7 +110,6 @@ class BalancePaymentsDatabase:
                 self._recalculate_daily_balances(conn, set(dates_to_update))
 
                 conn.commit()
-                logger.info("Stored %d transaction(s)", len(insert_rows))
                 return len(insert_rows)
         except Exception as exc:
             logger.error("❌ Failed to store balance transactions: %s", exc)
@@ -170,15 +169,25 @@ class BalancePaymentsDatabase:
                 (start_date.isoformat(), end_date.isoformat()),
             ).fetchall()
 
-        return [
-            {
-                "date": row["calendar_date"],
-                "income": float(row["total_income"]),
-                "expense": float(row["total_expense"]),
-                "net": float(row["net"]),
-            }
-            for row in rows
-        ]
+        results: List[Dict[str, float]] = []
+        running_net = 0.0
+
+        for row in rows:
+            income = float(row["total_income"])
+            expense = float(row["total_expense"])
+            daily_net = income - expense
+            running_net += daily_net
+
+            results.append(
+                {
+                    "date": row["calendar_date"],
+                    "income": income,
+                    "expense": expense,
+                    "net": running_net,
+                }
+            )
+
+        return results
 
     def get_transactions_for_date(
         self, target_date: date

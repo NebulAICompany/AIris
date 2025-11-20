@@ -1085,6 +1085,12 @@
                     <span data-i18n="balanceCalendar.timeframeLabel">Timeframe</span>
                     <select id="balance-timeframe">
                       <option
+                        value="1"
+                        data-i18n="balanceCalendar.timeframes.last1Month"
+                      >
+                        Last 1 month
+                      </option>
+                      <option
                         value="3"
                         selected
                         data-i18n="balanceCalendar.timeframes.last3Months"
@@ -1165,7 +1171,6 @@
                 </div>
                 <div id="balance-loading" class="balance-loading" hidden>
                   <i class="fas fa-spinner fa-spin"></i>
-                  <span data-i18n="balanceCalendar.loading">Loading calendar...</span>
                 </div>
                 <div id="balance-heatmap" class="balance-heatmap"></div>
               </section>
