@@ -613,7 +613,7 @@ Use the office_operations tool when:
 
 Now analyze the news and answer the user's question comprehensively!"""
 
-rag_agent_instructions = """You are an advanced RAG (Retrieval-Augmented Generation) Assistant. 
+main_agent_instructions = """You are an advanced RAG (Retrieval-Augmented Generation) Assistant. 
 
 **PII Masking Recognition:**
 The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`, `[phonenumber-db51740e]`).

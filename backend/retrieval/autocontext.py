@@ -1,6 +1,6 @@
 from typing import List
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent
+from backend.core.agents import create_main_agent
 from backend.shared.logger import get_logger
 from langchain_core.documents import Document
 import re
@@ -46,7 +46,7 @@ class AutoContextProcessor:
 
         try:
             # Create a simple agent for title generation
-            agent = create_rag_agent(
+            agent = create_main_agent(
                 local_context="",
                 web_search_enabled=False,
                 query="Generate document title",
@@ -100,7 +100,7 @@ Generated title:"""
 
         try:
             # Create a simple agent for summary generation
-            agent = create_rag_agent(
+            agent = create_main_agent(
                 local_context="",
                 web_search_enabled=False,
                 query="Generate document summary",

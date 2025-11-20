@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent, create_news_chat_agent
+from backend.core.agents import create_main_agent, create_news_chat_agent
 from backend.retrieval.retriever import (
     load_vectorstore,
     retrieve_with_keyword_helping,
@@ -130,7 +130,7 @@ async def run_orchestration(
         else:
             local_context = "Local Content Status: No relevant content could be found for your query in the selected files."
 
-    agent = create_rag_agent(
+    agent = create_main_agent(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
