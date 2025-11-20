@@ -1,7 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
-from typing import List
-from backend.core.agents import create_balance_payments_agent
+from typing import List, Optional
 from agents import function_tool
 from backend.core.runner import generate_answer
 from backend.pipeline.upload import parse_document
@@ -16,6 +15,35 @@ from agents import Agent
 logger = get_logger("BALANCE_TOOLS")
 
 
+def _normalize_transaction_date(raw_date: Optional[str]) -> str:
+    """Validate and normalize incoming transaction date strings."""
+
+    if raw_date is None:
+        return date.today().isoformat()
+
+    cleaned = raw_date.strip()
+    if not cleaned:
+        return date.today().isoformat()
+
+    # Accept a few common ledger date formats in addition to ISO.
+    candidate_formats = ["%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%d-%m-%Y"]
+
+    for fmt in candidate_formats:
+        try:
+            return datetime.strptime(cleaned, fmt).date().isoformat()
+        except ValueError:
+            continue
+
+    # Finally, try Python's flexible ISO parser.
+    try:
+        return datetime.fromisoformat(cleaned).date().isoformat()
+    except ValueError as exc:
+        logger.warning("Received unrecognized transaction date format: %s", cleaned)
+        raise ValueError(
+            "Invalid transaction_date. Use ISO format YYYY-MM-DD."
+        ) from exc
+
+
 def _store_transactions(transactions: List[BalanceTransaction]) -> str:
     try:
         stored = balance_payments_db.store_transactions(
@@ -28,14 +56,24 @@ def _store_transactions(transactions: List[BalanceTransaction]) -> str:
 
 
 @function_tool
-def add_income_transaction(amount: float) -> str:
-    """Add an income transaction using today's date."""
+def add_income_transaction(amount: float, transaction_date: Optional[str] = None) -> str:
+    """Persist an income entry with the provided ISO date (defaults to today)."""
 
     if amount is None or amount <= 0:
         return "Amount must be a positive number."
 
+    try:
+        normalized_date = _normalize_transaction_date(transaction_date)
+    except ValueError as exc:
+        logger.warning("Income transaction rejected due to invalid date: %s", exc)
+        return str(exc)
+
+    logger.info(
+        f"Adding income transaction of amount {amount} for {normalized_date}"
+    )
+
     transaction = BalanceTransaction(
-        transaction_date=date.today().isoformat(),
+        transaction_date=normalized_date,
         amount=float(amount),
         direction="income",
     )
@@ -43,14 +81,24 @@ def add_income_transaction(amount: float) -> str:
 
 
 @function_tool
-def add_expense_transaction(amount: float) -> str:
-    """Add an expense transaction using today's date."""
+def add_expense_transaction(amount: float, transaction_date: Optional[str] = None) -> str:
+    """Persist an expense entry with the provided ISO date (defaults to today)."""
 
     if amount is None or amount <= 0:
         return "Amount must be a positive number."
 
+    try:
+        normalized_date = _normalize_transaction_date(transaction_date)
+    except ValueError as exc:
+        logger.warning("Expense transaction rejected due to invalid date: %s", exc)
+        return str(exc)
+
+    logger.info(
+        f"Adding expense transaction of amount {amount} for {normalized_date}"
+    )
+
     transaction = BalanceTransaction(
-        transaction_date=date.today().isoformat(),
+        transaction_date=normalized_date,
         amount=float(amount),
         direction="expense",
     )
