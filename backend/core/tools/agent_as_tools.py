@@ -1,8 +1,29 @@
 from agents import Agent
 from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news_summarization_prompt, tcmb_data_agent_prompt
-from backend.core.tools.mcp import finance_mcp_server
 from .office import *
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data, MAIN_CATEGORIES
+from .finance import (
+    get_eod_data,
+    get_eod_latest,
+    get_eod_date,
+    get_intraday_data,
+    get_intraday_latest,
+    get_exchanges,
+    get_exchange_info,
+    get_currencies,
+    get_timezones,
+    get_bond_list,
+    get_bond_info,
+    get_etf_list,
+    get_etf_holdings,
+    get_splits_data,
+    get_dividends_data,
+    get_index_list,
+    get_index_info,
+    get_tickers_list,
+    get_ticker_info_detailed,
+    create_stock_chart,
+)
 from backend.shared.constants import OPENAI_MODEL
 
 office_tools = [
@@ -21,11 +42,34 @@ tcmb_tools = [
     get_tcmb_data,
 ]
 
+finance_tools = [
+    get_eod_data,
+    get_eod_latest,
+    get_eod_date,
+    get_intraday_data,
+    get_intraday_latest,
+    get_exchanges,
+    get_exchange_info,
+    get_currencies,
+    get_timezones,
+    get_bond_list,
+    get_bond_info,
+    get_etf_list,
+    get_etf_holdings,
+    get_splits_data,
+    get_dividends_data,
+    get_index_list,
+    get_index_info,
+    get_tickers_list,
+    get_ticker_info_detailed,
+    create_stock_chart,
+]
+
 finance_agent = Agent(
     name="Finance Agent",
     instructions=finance_agent_prompt,
     model=OPENAI_MODEL,
-    mcp_servers=[finance_mcp_server],
+    tools=finance_tools,
 )
 
 office_agent = Agent(
@@ -68,7 +112,7 @@ finance_agent_tool = finance_agent.as_tool(
     - Professional stock chart creation (candlestick, line, area)
     - Multi-stock comparison charts with multiple layouts
     - Market trend analysis and volatility assessment
-    - Alpha Vantage API integration for market data
+    - Marketstack API integration for market data
     - Any financial data query requiring data retrieval or visualization""",
 )
 
