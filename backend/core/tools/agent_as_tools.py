@@ -1,7 +1,8 @@
 from agents import Agent
 from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news_summarization_prompt, tcmb_data_agent_prompt
 from .office import *
-from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data, MAIN_CATEGORIES
+from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
+from .api import time_now
 from .finance import (
     get_eod_data,
     get_eod_latest,
@@ -37,6 +38,7 @@ office_tools = [
 ]
 
 tcmb_tools = [
+    time_now,
     get_tcmb_subcategories,
     get_tcmb_series,
     get_tcmb_data,
