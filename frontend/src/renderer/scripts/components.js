@@ -925,6 +925,7 @@ class UIComponents {
           const responseCharts = response.charts || response.data?.charts || [];
           const responseGeneratedFiles =
             response.generatedFiles || response.data?.generatedFiles || [];
+          const responseSources = response.sources || response.data?.sources || [];
 
           if (responseContent) {
             this.addMessageToChat(
@@ -932,7 +933,8 @@ class UIComponents {
               responseContent,
               responseImages,
               responseCharts,
-              responseGeneratedFiles
+              responseGeneratedFiles,
+              responseSources
             );
           } else {
             console.warn("Empty response received:", response);
@@ -1058,7 +1060,8 @@ class UIComponents {
     content,
     images = [],
     charts = [],
-    generatedFiles = []
+    generatedFiles = [],
+    sources = []
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -1082,16 +1085,12 @@ class UIComponents {
       // Simple content processing
       let processedContent = content || "No response received";
 
-      // Debug: Log the original content
-      console.log("Original content:", processedContent);
-
-      // Process mathematical expressions first, before markdown parsing
+      // Process mathematical expressions BEFORE markdown parsing
+      // KaTeX generates HTML which marked will preserve
       processedContent = Utils.processMathExpressions(processedContent);
 
-      // Debug: Log content after math processing
-      console.log("After math processing:", processedContent);
-
       // Safely parse markdown content, fallback to escaped HTML if marked fails
+      // marked preserves HTML by default, so KaTeX output will be kept
       let parsedContent;
       try {
         parsedContent =
@@ -1103,18 +1102,59 @@ class UIComponents {
         parsedContent = Utils.escapeHtml(processedContent);
       }
 
-      // Debug: Log final parsed content
-      console.log("Final parsed content:", parsedContent);
+      // Build sources display if sources are available
+      let sourcesHTML = "";
+      if (sources && sources.length > 0) {
+        const sourcesList = sources.map(source => 
+          `<div class="source-item">
+            <i class="fas fa-file-pdf"></i>
+            <span>${Utils.escapeHtml(source)}</span>
+          </div>`
+        ).join("");
+        
+        sourcesHTML = `
+          <div class="sources-container">
+            <div class="sources-header">
+              <span class="sources-label">Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}</span>
+              <span class="sources-toggle">></span>
+            </div>
+            <div class="sources-list">
+              <div>${sourcesList}</div>
+            </div>
+          </div>
+        `;
+      }
 
       messageDiv.innerHTML = `
                 <div class="message-avatar">
                     <i class="fas fa-robot"></i>
                 </div>
                 <div class="message-content">
+                    ${sourcesHTML}
                     <div class="message-text">${parsedContent}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
+      
+      // Add click event listener for sources toggle if sources exist
+      if (sources && sources.length > 0) {
+        const sourcesHeader = messageDiv.querySelector('.sources-header');
+        if (sourcesHeader) {
+          sourcesHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
+        
+        // Make source items look clickable but prevent any action
+        const sourceItems = messageDiv.querySelectorAll('.source-item');
+        sourceItems.forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Visual feedback only - no actual action
+          });
+        });
+      }
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -1796,24 +1836,27 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images, charts, and generated files properly - they should be fresh for each message
+          // Extract images, charts, generated files, and sources properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
           const generatedFiles = msg.metadata?.generatedFiles || [];
+          const sources = msg.metadata?.sources || [];
 
-          // Ensure images, charts, and generated files are not accumulated from previous sessions
+          // Ensure images, charts, generated files, and sources are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
           const cleanGeneratedFiles = Array.isArray(generatedFiles)
             ? generatedFiles.slice()
             : [];
+          const cleanSources = Array.isArray(sources) ? sources.slice() : [];
 
           this.addMessageToChat(
             msg.role,
             msg.content,
             cleanImages,
             cleanCharts,
-            cleanGeneratedFiles
+            cleanGeneratedFiles,
+            cleanSources
           );
 
           // Update local chat history
