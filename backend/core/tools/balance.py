@@ -1,6 +1,6 @@
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from backend.core.agents import create_balance_payments_agent
 from agents import function_tool
 from backend.core.runner import generate_answer
@@ -10,6 +10,9 @@ from backend.utils.balance_payments_database import (
     BalanceTransaction,
     balance_payments_db,
 )
+from backend.core.prompts import balance_of_payments_agent_prompt
+from backend.shared.constants import OPENAI_MODEL
+from agents import Agent
 logger = get_logger("BALANCE_TOOLS")
 
 
@@ -53,6 +56,17 @@ def add_expense_transaction(amount: float) -> str:
     )
     return _store_transactions([transaction])
 
+def create_balance_payments_agent() -> Agent:
+    """Create agent that ingests balance of payments Excel files."""
+    instructions = (f"{balance_of_payments_agent_prompt}\n\n")
+
+    agent = Agent(
+        name="Balance_of_Payments_Agent",
+        instructions=instructions,
+        model=OPENAI_MODEL,
+        tools=[add_expense_transaction, add_income_transaction],
+    )
+    return agent
 
 async def process_balance_of_payments(file_path: str) -> dict:
     """Run the balance-of-payments ingestion agent for the given uploaded file."""
@@ -67,8 +81,8 @@ async def process_balance_of_payments(file_path: str) -> dict:
     except Exception as exc:
         logger.warning("Document parser failed for %s: %s", file_name, exc)
 
+    logger.info("Starting balance of payments agent for %s", file_name)
     agent = create_balance_payments_agent()
-
     initial_prompt = (
         "You are about to process a balance of payments document. "
         "Leverage the extracted ledger content below when available and use your tools to "
