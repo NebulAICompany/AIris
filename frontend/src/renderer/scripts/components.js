@@ -46,6 +46,7 @@ class UIComponents {
     this.setupProfileModal();
     this.setupProfileSelect();
     this.setupSidebarToggle();
+    this.initSidebar();
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
@@ -56,43 +57,78 @@ class UIComponents {
       window.languageService.updatePageTexts();
     }
   }
+
 initSidebar() {
   const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
   const collapsible = document.querySelector('.nav-item.collapsible');
   const subMenu = document.querySelector('.sub-menu');
   const subItems = document.querySelectorAll('.sub-item');
-
   const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
 
-  // İlk yüklemede aktiflik olmasın
-  balanceSections.forEach(sec => sec.classList.remove('active'));
+  // İlk yüklemede tüm aktiflikleri temizle
+  navItems.forEach(item => item.classList.remove('active'));
   subItems.forEach(item => item.classList.remove('active'));
+  if(collapsible) collapsible.classList.remove('active');
+  balanceSections.forEach(sec => sec.classList.remove('active'));
+
+  // Sayfa açıldığında chat nav varsayılan aktif olsun
+  const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
+  if (chatNav) {
+    chatNav.classList.add('active');
+    const chatTab = document.getElementById('chat-tab');
+    if (chatTab) chatTab.classList.add('active');
+  }
 
   // Nav item click
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       navItems.forEach(i => i.classList.remove('active'));
       subItems.forEach(i => i.classList.remove('active'));
+      if(collapsible) collapsible.classList.remove('active');
+      balanceSections.forEach(sec => sec.classList.remove('active'));
 
       item.classList.add('active');
 
-      balanceSections.forEach(sec => sec.classList.remove('active'));
-
-      if (subMenu) {
+      // Sidebar açıkken subMenu kapat
+      if (subMenu && !document.querySelector('.sidebar.collapsed')) {
         subMenu.classList.remove('open');
         subMenu.style.maxHeight = null;
       }
+
+      // Tab göster
+      const tabId = item.dataset.tab + '-tab';
+      const tab = document.getElementById(tabId);
+      if (tab) tab.classList.add('active');
     });
   });
 
-  // Collapsible tıklama — SADECE ELEMAN VARSA!
+  // Collapsible tıklama
   if (collapsible && subMenu) {
     collapsible.addEventListener('click', () => {
-      subMenu.classList.toggle('open');
-      if (subMenu.classList.contains('open')) {
-        subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+      const isCollapsed = document.querySelector('.sidebar.collapsed');
+
+      // Sidebar açık → normal toggle
+      if(!isCollapsed) {
+        subMenu.classList.toggle('open');
+        subMenu.style.maxHeight = subMenu.classList.contains('open')
+          ? subMenu.scrollHeight + 'px'
+          : null;
       } else {
-        subMenu.style.maxHeight = null;
+        // Sidebar kapalı → floating submenu sadece burada açılır
+        this.setupFloatingSubmenu(collapsible, subMenu);
+      }
+
+      // Collapsible kendisi tıklanabilir: active yap
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+      collapsible.classList.add('active');
+
+      // Tab göster
+      const tabId = collapsible.dataset.page.replace('#','') + '-tab';
+      const tab = document.getElementById(tabId);
+      if(tab) {
+        balanceSections.forEach(sec => sec.classList.remove('active'));
+        tab.classList.add('active');
       }
     });
   }
@@ -100,23 +136,80 @@ initSidebar() {
   // Sub-item tıklama
   subItems.forEach(item => {
     item.addEventListener('click', () => {
+      const isCollapsed = document.querySelector('.sidebar.collapsed');
+
+      // Aktiflikleri temizle
       navItems.forEach(i => i.classList.remove('active'));
       subItems.forEach(i => i.classList.remove('active'));
+      if(collapsible) collapsible.classList.remove('active');
+      balanceSections.forEach(sec => sec.classList.remove('active'));
 
       item.classList.add('active');
 
-      balanceSections.forEach(sec => sec.classList.remove('active'));
-
+      // Tab aç
       const sectionId = item.dataset.page.replace('#', '') + '-tab';
       const section = document.getElementById(sectionId);
       if (section) section.classList.add('active');
-      else console.warn("Bulunamadı:", sectionId);
 
-      if (subMenu) {
-        subMenu.classList.add('open');
-        subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+      if (!isCollapsed) {
+        // Sidebar açık → subMenu açık kalsın
+        if (subMenu) {
+          subMenu.classList.add('open');
+          subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+        }
+      } else {
+        // Sidebar kapalı → floating submenu zaten DOM’da yok
+        if (subMenu) {
+          subMenu.classList.remove('open');
+          subMenu.style.maxHeight = null;
+        }
       }
 
+      location.hash = item.dataset.page;
+    });
+  });
+}
+
+// Floating submenu sidebar kapalıyken açmak için
+setupFloatingSubmenu(collapsible, subMenu) {
+  // Sadece sidebar kapalıysa çalışmalı
+  if (!document.querySelector('.sidebar.collapsed')) return;
+
+  // Önce varsa eski floating submenuyi kaldır
+  const existing = document.querySelector('.floating-sub-menu');
+  if(existing) existing.remove();
+
+  // Yeni floating submenu klonla
+  const clone = subMenu.cloneNode(true);
+  clone.classList.add('floating-sub-menu');
+  clone.style.position = 'absolute';
+  clone.style.zIndex = 4000;
+  clone.style.display = 'flex';
+  clone.style.flexDirection = 'column';
+  clone.style.maxHeight = '500px';
+  clone.style.top = collapsible.offsetTop + 'px';
+  clone.style.left = (collapsible.offsetWidth + 8) + 'px';
+  document.querySelector('.sidebar').appendChild(clone);
+
+  // Hover efektleri için mouseleave
+  clone.addEventListener('mouseleave', () => {
+    clone.remove();
+  });
+
+  // Floating submenu içindeki sub-item click
+  clone.querySelectorAll('.sub-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item, .sub-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      collapsible.classList.add('active');
+
+      // Tab göster
+      const sectionId = item.dataset.page.replace('#','') + '-tab';
+      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
+      const tab = document.getElementById(sectionId);
+      if(tab) tab.classList.add('active');
+
+      clone.remove();
       location.hash = item.dataset.page;
     });
   });
@@ -125,35 +218,66 @@ initSidebar() {
 
 
 
-  setupSidebarToggle() {
-      const sidebar = document.querySelector('.sidebar');
-      const toggleBtn = document.querySelector('.toggle-btn');
 
-      if (!sidebar || !toggleBtn) return;
 
-      const savedState = localStorage.getItem('sidebarState');
-      if (savedState === 'expanded') {
-          sidebar.classList.add('expanded');
-          sidebar.classList.remove('collapsed');
-      } else {
-          sidebar.classList.add('collapsed');
-          sidebar.classList.remove('expanded');
-      }
 
-      toggleBtn.addEventListener('click', () => {
-          const isCollapsed = sidebar.classList.contains('collapsed');
 
-          if (isCollapsed) {
-              sidebar.classList.remove('collapsed');
-              sidebar.classList.add('expanded');
-              localStorage.setItem('sidebarState', 'expanded');
-          } else {
-              sidebar.classList.remove('expanded');
-              sidebar.classList.add('collapsed');
-              localStorage.setItem('sidebarState', 'collapsed');
-          }
-      });
-  }
+
+
+
+
+ setupSidebarToggle() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.querySelector('.toggle-btn');
+    // Sub-menu ve collapsible elemanlarını da seçelim
+    const subMenu = document.querySelector('.sub-menu');
+    const collapsible = document.querySelector('.nav-item.collapsible');
+
+    if (!sidebar || !toggleBtn) return;
+
+    // LocalStorage kontrolü (Mevcut kodun)
+    const savedState = localStorage.getItem('sidebarState');
+    if (savedState === 'expanded') {
+        sidebar.classList.add('expanded');
+        sidebar.classList.remove('collapsed');
+    } else {
+        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('expanded');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        if (isCollapsed) {
+            // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('expanded');
+            localStorage.setItem('sidebarState', 'expanded');
+            
+            // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
+            // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
+            
+        } else {
+            // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
+            sidebar.classList.remove('expanded');
+            sidebar.classList.add('collapsed');
+            localStorage.setItem('sidebarState', 'collapsed');
+
+            // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
+            // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
+            if (subMenu && subMenu.classList.contains('open')) {
+                subMenu.classList.remove('open');
+                subMenu.style.maxHeight = null; // Inline stili temizle
+            }
+
+            // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
+            // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
+            if (collapsible) {
+                collapsible.classList.remove('active');
+            }
+        }
+    });
+}
 
   // ---------------- Profile Modal ----------------
   loadProfiles() {
