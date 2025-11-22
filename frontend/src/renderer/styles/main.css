@@ -613,6 +613,15 @@ input:checked + .slider:before {
 .sub-menu.open {
   display: block; /* veya slide efekti istersen transition ile */
 }
+.sidebar.collapsed .sub-menu {
+    top: 37%;
+    max-width: 170px;
+    left: 60px;
+    position: absolute;
+    z-index: 1000;
+    padding-left: 0;
+}
+
 
 
 
@@ -2156,6 +2165,12 @@ body.nebula-theme .app-container {
 body.nebula-theme .main-content {
   position: relative;
   z-index: 1;
+}
+
+body.nebula-theme .sidebar.collapsed {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--bg-secondary) !important; /* Tema ile uyumlu */
 }
 
 /* Glassy header and sidebar with neon edge */
