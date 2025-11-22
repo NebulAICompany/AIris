@@ -1844,6 +1844,104 @@ body.dark-theme .image-caption {
   text-align: left;
 }
 
+/* Sources display styles */
+.sources-container {
+  margin-top: 0;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sources-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+
+.sources-header:hover {
+  opacity: 0.8;
+}
+
+.sources-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.sources-toggle {
+  font-size: 13px;
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.sources-container.expanded .sources-toggle {
+  transform: rotate(90deg);
+}
+
+.sources-list {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+  overflow: hidden;
+  background-color: transparent;
+  border: none;
+}
+
+.sources-container.expanded .sources-list {
+  grid-template-rows: 1fr;
+}
+
+.sources-list > div {
+  min-height: 0;
+  overflow: hidden;
+  padding: 8px 0 0 0;
+}
+
+.source-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  width: fit-content;
+}
+
+.source-item:hover {
+  background-color: var(--bg-tertiary);
+  transform: translateY(-1px);
+}
+
+.source-item:active {
+  transform: translateY(0);
+}
+
+.source-item i {
+  color: var(--text-secondary);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.source-item span {
+  color: var(--text-secondary);
+  word-break: break-word;
+  font-weight: 400;
+}
+
 .chat-input-container {
   background-color: var(--bg-primary);
   border-top: 1px solid var(--border-color);
@@ -1859,14 +1957,8 @@ body.dark-theme .image-caption {
 
 /* Chat file upload styles */
 .chat-file-upload-area {
-  padding: 16px;
-  border: 2px dashed rgba(59, 130, 246, 0.3);
   border-radius: 12px;
-  background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.05),
-      rgba(139, 92, 246, 0.05));
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
   overflow: hidden;
 }
 
@@ -1897,48 +1989,65 @@ body.dark-theme .image-caption {
   align-items: flex-end;
   gap: 8px;
 }
-.file-photoless-button {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
+
+.dropdown-container {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: var(--text-secondary);
-  position: relative;
-  overflow: visible;
-  margin-right: 8px;
 }
 
-.file-photoless-button:hover {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
-  color: white;
-}
+/* Yukarı açılan dropdown */
+.dropdown-menu {
+  display: none;
+  flex-direction: column;
 
-/* active durumu */
-.file-photoless-button.active {
-  background: var(--success); 
-  color: white;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-  transform: scale(1.02);
-  z-index: 2;
-}
-
-/* küçük yuvarlak göstergesi */
-.file-photoless-button.active::after {
-  content: '';
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent-color);
-  border-radius: 50%;
+  bottom: 45px;       /* Yukarı açılması için */
+
+  min-width: 170px;       /* Chat-bar yapısına daha uygun */
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+
+  overflow: hidden;
+  z-index: 2000;
+
+  animation: dropdownFadeUp 0.15s ease-out;
+}
+
+/* Aktifken görünür */
+.dropdown-menu.show {
+  display: flex;
+}
+
+/* Dropdown item */
+.dropdown-item {
+  padding: 12px 14px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-primary); /* Tema ile uyumlu */
+  transition: background 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+/* Animasyon */
+@keyframes dropdownFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .file-attachment-button,
@@ -2050,7 +2159,7 @@ body.dark-theme .image-caption {
 .uploaded-files-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   padding: 8px 0;
 }
 
@@ -2061,7 +2170,7 @@ body.dark-theme .image-caption {
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 20px;
+  border-radius: 10px;
   font-size: 0.85em;
   font-weight: 500;
   color: var(--text-primary);
@@ -3806,22 +3915,96 @@ code {
 /* Mathematical expressions styling */
 .katex {
   font-size: 1.1em !important;
-  line-height: 1.4 !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
 }
 
+/* Inline math - use primary text color for better visibility */
+.message-text .katex,
+.message-content .katex,
+.message-text .katex *,
+.message-content .katex * {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+
+/* Display math - left aligned, proper spacing */
 .katex-display {
-  margin: 0.5em 0 !important;
-  text-align: center !important;
+  margin: 0.75em 0 !important;
+  text-align: left !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.message-text .katex-display,
+.message-content .katex-display {
+  margin: 0.75em 0 !important;
+  text-align: left !important;
+}
+
+.message-text .katex-display *,
+.message-content .katex-display * {
+  color: var(--text-primary) !important;
+}
+
+/* Dark theme - use lighter text color for visibility */
+[data-theme="dark"] .message-text .katex,
+[data-theme="dark"] .message-content .katex,
+[data-theme="dark"] .message-text .katex *,
+[data-theme="dark"] .message-content .katex * {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .message-text .katex-display *,
+[data-theme="dark"] .message-content .katex-display * {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure proper spacing around math in paragraphs */
+.message-text p .katex,
+.message-content p .katex {
+  margin: 0 2px !important;
+  vertical-align: baseline !important;
+}
+
+/* Fix layout for fractions and complex expressions */
+.katex .frac-line {
+  border-bottom-width: 0.04em !important;
+}
+
+.katex .vlist-t {
+  display: inline-table !important;
+  table-layout: fixed !important;
+}
+
+/* Ensure math doesn't break message layout */
+.message-text,
+.message-content {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
 }
 
 .message-text .katex,
 .message-content .katex {
-  color: #2563eb !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
 }
 
-[data-theme="dark"] .message-text .katex,
-[data-theme="dark"] .message-content .katex {
-  color: #60a5fa !important;
+/* Better spacing for display math blocks */
+.message-text .katex-display {
+  margin: 0.75em 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Ensure inline math aligns properly with text */
+.katex {
+  vertical-align: -0.1em !important;
+}
+
+.katex-display .katex {
+  vertical-align: 0 !important;
 }
 
 /* Dark theme with higher specificity */
@@ -6948,13 +7131,6 @@ body.nebula-theme .file-selection-search:focus-visible {
 }
 
 /* Dark theme support for chat file uploads */
-body.dark-theme .chat-file-upload-area {
-  background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.08),
-      rgba(139, 92, 246, 0.08));
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
 body.dark-theme .chat-file-upload-area.drag-over {
   background: linear-gradient(135deg,
       rgba(59, 130, 246, 0.2),
@@ -7291,13 +7467,6 @@ body.nebula-theme .file-item-icon.jpg,
 body.nebula-theme .file-item-icon.png,
 body.nebula-theme .file-item-icon.jpeg {
   background: linear-gradient(135deg, #8b5cf6, #ec4899) !important;
-}
-
-/* Nebula theme chat file upload */
-body.nebula-theme .chat-file-upload-area {
-  background: rgba(13, 2, 33, 0.9) !important;
-  border: 2px dashed rgba(139, 92, 246, 0.4) !important;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1) !important;
 }
 
 body.nebula-theme .chat-file-upload-area.drag-over {

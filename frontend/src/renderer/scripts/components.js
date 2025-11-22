@@ -45,7 +45,7 @@ class UIComponents {
     // Profile modal setup
     this.setupProfileModal();
     this.setupProfileSelect();
-    this.setupPhotoLessButton();
+    this.setupSidebarToggle();
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
@@ -56,40 +56,110 @@ class UIComponents {
       window.languageService.updatePageTexts();
     }
   }
+initSidebar() {
+  const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
+  const collapsible = document.querySelector('.nav-item.collapsible');
+  const subMenu = document.querySelector('.sub-menu');
+  const subItems = document.querySelectorAll('.sub-item');
 
+  const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
+
+  // İlk yüklemede aktiflik olmasın
+  balanceSections.forEach(sec => sec.classList.remove('active'));
+  subItems.forEach(item => item.classList.remove('active'));
+
+  // Nav item click
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+
+      item.classList.add('active');
+
+      balanceSections.forEach(sec => sec.classList.remove('active'));
+
+      if (subMenu) {
+        subMenu.classList.remove('open');
+        subMenu.style.maxHeight = null;
+      }
+    });
+  });
+
+  // Collapsible tıklama — SADECE ELEMAN VARSA!
+  if (collapsible && subMenu) {
+    collapsible.addEventListener('click', () => {
+      subMenu.classList.toggle('open');
+      if (subMenu.classList.contains('open')) {
+        subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+      } else {
+        subMenu.style.maxHeight = null;
+      }
+    });
+  }
+
+  // Sub-item tıklama
+  subItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+
+      item.classList.add('active');
+
+      balanceSections.forEach(sec => sec.classList.remove('active'));
+
+      const sectionId = item.dataset.page.replace('#', '') + '-tab';
+      const section = document.getElementById(sectionId);
+      if (section) section.classList.add('active');
+      else console.warn("Bulunamadı:", sectionId);
+
+      if (subMenu) {
+        subMenu.classList.add('open');
+        subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+      }
+
+      location.hash = item.dataset.page;
+    });
+  });
+}
+
+
+
+
+  setupSidebarToggle() {
+      const sidebar = document.querySelector('.sidebar');
+      const toggleBtn = document.querySelector('.toggle-btn');
+
+      if (!sidebar || !toggleBtn) return;
+
+      const savedState = localStorage.getItem('sidebarState');
+      if (savedState === 'expanded') {
+          sidebar.classList.add('expanded');
+          sidebar.classList.remove('collapsed');
+      } else {
+          sidebar.classList.add('collapsed');
+          sidebar.classList.remove('expanded');
+      }
+
+      toggleBtn.addEventListener('click', () => {
+          const isCollapsed = sidebar.classList.contains('collapsed');
+
+          if (isCollapsed) {
+              sidebar.classList.remove('collapsed');
+              sidebar.classList.add('expanded');
+              localStorage.setItem('sidebarState', 'expanded');
+          } else {
+              sidebar.classList.remove('expanded');
+              sidebar.classList.add('collapsed');
+              localStorage.setItem('sidebarState', 'collapsed');
+          }
+      });
+  }
 
   // ---------------- Profile Modal ----------------
   loadProfiles() {
     const storedProfiles = localStorage.getItem("savedProfiles");
     this.allProfiles = storedProfiles ? JSON.parse(storedProfiles) : [];
   }
-
-  setupPhotoLessButton() {
-    this.photoLessBtn = document.getElementById("photo-less-toggle");
-    if (!this.photoLessBtn) return;
-
-    this.photoLessBtn.addEventListener("click", () => {
-      this.photoLessBtn.classList.toggle("active");
-
-      // Dil kontrolü
-      const lang = window.languageService?.getCurrentLanguage() || "tr";
-
-      let activeMsg = lang === "en"
-        ? "Files will be processed without photos."
-        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
-
-      let inactiveMsg = lang === "en"
-        ? "Photo-less mode is deactivated."
-        : "Photo-less mod kapatıldı.";
-
-      if (this.photoLessBtn.classList.contains("active")) {
-        Utils.showSnackbar(activeMsg, "info", 4000);
-      } else {
-        Utils.showSnackbar(inactiveMsg, "warning", 3000);
-      }
-    });
-  }
-
 
   setupProfileModal() {
     this.profileModal = document.getElementById("create-profile-selection");
@@ -494,12 +564,54 @@ class UIComponents {
     }
 
     // File attachment button (paperclip)
+    // Dropdown açıp kapatma
     const fileAttachmentBtn = document.getElementById("file-attachment-btn");
-    if (fileAttachmentBtn) {
-      fileAttachmentBtn.addEventListener("click", () => {
-        chatFileInput?.click();
-      });
-    }
+    const dropdown = document.getElementById("file-dropdown");
+
+    fileAttachmentBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // dışarı taşmasın
+      dropdown.style.display =
+        dropdown.style.display === "block" ? "none" : "block";
+    });
+
+    // Menü dışına tıklayınca kapansın
+    document.addEventListener("click", () => {
+      dropdown.style.display = "none";
+    });
+
+    // Normal attach seçeneği
+    const normalAttachBtn = document.getElementById("normal-file");
+
+    normalAttachBtn.addEventListener("click", () => {
+      chatFileInput?.click();  // ❗ ESKİ davranış buraya taşındı
+      dropdown.style.display = "none";
+    });
+
+    // Photo-less mode seçeneği
+    const photoLessBtn = document.getElementById("photoless-mode");
+
+    photoLessBtn.addEventListener("click", () => {
+      // Language
+      const lang = window.languageService?.getCurrentLanguage() || "tr";
+
+      // Photoless mod durumunu global bir değişkene kaydedelim
+      window.isPhotoLessMode = true;
+
+      let msg = lang === "en"
+        ? "Files will be processed without photos."
+        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
+
+      Utils.showSnackbar(msg, "info", 4000);
+
+      // Dosya seçimi aç
+      const chatFileInput = document.getElementById("chat-file-input");
+      chatFileInput?.click();
+
+      // Dropdown kapat
+      dropdown.style.display = "none";
+    });
+
+
 
     // File selection modal close
     const closeFileSelection = document.getElementById("close-file-selection");
@@ -1208,6 +1320,7 @@ class UIComponents {
           const responseCharts = response.charts || response.data?.charts || [];
           const responseGeneratedFiles =
             response.generatedFiles || response.data?.generatedFiles || [];
+          const responseSources = response.sources || response.data?.sources || [];
 
           if (responseContent) {
             this.addMessageToChat(
@@ -1215,7 +1328,8 @@ class UIComponents {
               responseContent,
               responseImages,
               responseCharts,
-              responseGeneratedFiles
+              responseGeneratedFiles,
+              responseSources
             );
           } else {
             console.warn("Empty response received:", response);
@@ -1341,7 +1455,8 @@ class UIComponents {
     content,
     images = [],
     charts = [],
-    generatedFiles = []
+    generatedFiles = [],
+    sources = []
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -1365,16 +1480,12 @@ class UIComponents {
       // Simple content processing
       let processedContent = content || "No response received";
 
-      // Debug: Log the original content
-      console.log("Original content:", processedContent);
-
-      // Process mathematical expressions first, before markdown parsing
+      // Process mathematical expressions BEFORE markdown parsing
+      // KaTeX generates HTML which marked will preserve
       processedContent = Utils.processMathExpressions(processedContent);
 
-      // Debug: Log content after math processing
-      console.log("After math processing:", processedContent);
-
       // Safely parse markdown content, fallback to escaped HTML if marked fails
+      // marked preserves HTML by default, so KaTeX output will be kept
       let parsedContent;
       try {
         parsedContent =
@@ -1386,18 +1497,59 @@ class UIComponents {
         parsedContent = Utils.escapeHtml(processedContent);
       }
 
-      // Debug: Log final parsed content
-      console.log("Final parsed content:", parsedContent);
+      // Build sources display if sources are available
+      let sourcesHTML = "";
+      if (sources && sources.length > 0) {
+        const sourcesList = sources.map(source => 
+          `<div class="source-item">
+            <i class="fas fa-file-pdf"></i>
+            <span>${Utils.escapeHtml(source)}</span>
+          </div>`
+        ).join("");
+        
+        sourcesHTML = `
+          <div class="sources-container">
+            <div class="sources-header">
+              <span class="sources-label">Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}</span>
+              <span class="sources-toggle">></span>
+            </div>
+            <div class="sources-list">
+              <div>${sourcesList}</div>
+            </div>
+          </div>
+        `;
+      }
 
       messageDiv.innerHTML = `
                 <div class="message-avatar">
                     <i class="fas fa-robot"></i>
                 </div>
                 <div class="message-content">
+                    ${sourcesHTML}
                     <div class="message-text">${parsedContent}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
+      
+      // Add click event listener for sources toggle if sources exist
+      if (sources && sources.length > 0) {
+        const sourcesHeader = messageDiv.querySelector('.sources-header');
+        if (sourcesHeader) {
+          sourcesHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
+        
+        // Make source items look clickable but prevent any action
+        const sourceItems = messageDiv.querySelectorAll('.source-item');
+        sourceItems.forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Visual feedback only - no actual action
+          });
+        });
+      }
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -2079,24 +2231,27 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images, charts, and generated files properly - they should be fresh for each message
+          // Extract images, charts, generated files, and sources properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
           const generatedFiles = msg.metadata?.generatedFiles || [];
+          const sources = msg.metadata?.sources || [];
 
-          // Ensure images, charts, and generated files are not accumulated from previous sessions
+          // Ensure images, charts, generated files, and sources are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
           const cleanGeneratedFiles = Array.isArray(generatedFiles)
             ? generatedFiles.slice()
             : [];
+          const cleanSources = Array.isArray(sources) ? sources.slice() : [];
 
           this.addMessageToChat(
             msg.role,
             msg.content,
             cleanImages,
             cleanCharts,
-            cleanGeneratedFiles
+            cleanGeneratedFiles,
+            cleanSources
           );
 
           // Update local chat history
@@ -2620,12 +2775,10 @@ class UIComponents {
         statusClass = "uploading";
         break;
       case "success":
-        statusIcon = "✅";
         statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
-        statusIcon = "❌";
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -2634,7 +2787,6 @@ class UIComponents {
     const messageElement = document.createElement("div");
     messageElement.className = `file-status-message ${statusClass}`;
     messageElement.innerHTML = `
-      <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
       fileName
@@ -2659,12 +2811,10 @@ class UIComponents {
 
     switch (status) {
       case "success":
-        statusIcon = "✅";
         statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
-        statusIcon = "❌";
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -2673,7 +2823,6 @@ class UIComponents {
     // Update the message
     statusMessage.className = `file-status-message ${statusClass}`;
     statusMessage.innerHTML = `
-      <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
       fileName
