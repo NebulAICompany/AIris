@@ -32,6 +32,9 @@
       <!-- Header -->
       <header class="header">
         <div class="header-content">
+         <button id="sidebarToggle" class="toggle-btn">
+           <i class="fas fa-bars"></i>
+          </button>
           <div class="header-left">
             <div class="logo">
               <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
@@ -90,7 +93,7 @@
 
       <!-- Main Content -->
       <main class="main-content">
-        <!-- Sidebar -->
+
         <aside class="sidebar">
           <nav class="sidebar-nav">
             <button class="nav-item active" data-tab="chat" data-tooltip="Chat">
@@ -122,10 +125,10 @@
             <button
               class="nav-item"
               data-tab="calculator"
-              data-tooltip="Interest Calculator"
+              data-tooltip="Calculations"
             >
               <i class="fas fa-calculator"></i>
-              <span data-i18n="interestCalculator">Interest Calculator</span>
+              <span data-i18n="interestCalculator">Calculations</span>
             </button>
             <button
               class="nav-item"
@@ -134,6 +137,40 @@
             >
               <i class="fas fa-newspaper"></i>
               <span data-i18n="financeNews">Finance News</span>
+            </button>
+
+            <div class="nav-item collapsible" data-page="#balance">
+              <i class="fas fa-wallet"></i>
+              <span data-i18n="balance">Ödemeler Dengesi</span>
+              <i class="fas fa-chevron-right submenu-icon"></i>
+            </div>
+            <div class="sub-menu">
+              <button class="sub-item" data-page="#currentStatus">
+                <i class="fas fa-chart-line"></i>
+                <span data-i18n="currentStatus">Güncel Durum</span>
+              </button>
+              <button class="sub-item" data-page="#sales">
+                <i class="fas fa-arrow-up"></i>
+                <span data-i18n="sales">Satış</span>
+              </button>
+              <button class="sub-item" data-page="#purchase">
+                <i class="fas fa-arrow-down"></i>
+                <span data-i18n="purchase">Alış</span>
+              </button>
+              <button class="sub-item" data-page="#cash">
+                <i class="fas fa-money-bill-wave"></i>
+                <span data-i18n="cash">Nakit</span>
+              </button>
+            </div>
+
+            <button
+              class="nav-item"
+              data-tab="balance-heatmap"
+              data-tooltip="Balance Calendar"
+              data-i18n-tooltip="balanceCalendar.navLabel"
+            >
+              <i class="fas fa-calendar-day"></i>
+              <span data-i18n="balanceCalendar.navLabel">Balance Calendar</span>
             </button>
 
             <button
@@ -237,73 +274,54 @@
                 </div>
               </div>
 
-              <div class="chat-input-container">
-                <div class="chat-input-wrapper">
-                  <!-- Chat file upload area (for showing selected files) -->
-                  <div
-                    class="chat-file-upload-area"
-                    id="chat-file-upload"
-                    style="display: none"
-                  >
-                    <div
-                      class="uploaded-files-preview"
-                      id="chat-uploaded-files"
-                    ></div>
-                  </div>
+             <div class="chat-input-container">
+              <div class="chat-input-wrapper">
 
-                  <div class="chat-input-controls">
-                    <button
-                      id="web-search-toggle"
-                      class="web-search-button"
-                      title=""
-                      data-i18n-title="toggleWebSearch"
-                    >
-                      <i class="fas fa-globe"></i>
-                    </button>
-                    <button
-                      id="file-attachment-btn"
-                      class="file-attachment-button"
-                      title="Attach files"
-                    >
+                <!-- Chat file upload area -->
+                <div class="chat-file-upload-area" id="chat-file-upload" style="display: none">
+                  <div class="uploaded-files-preview" id="chat-uploaded-files"></div>
+                </div>
+
+                <div class="chat-input-controls">
+                  <button id="web-search-toggle" class="web-search-button" title="" data-i18n-title="toggleWebSearch">
+                    <i class="fas fa-globe"></i>
+                  </button>
+
+                  <!-- File attachment dropdown -->
+                  <div class="dropdown-container">
+                    <button id="file-attachment-btn" class="file-attachment-button" title="Attach files">
                       <i class="fas fa-paperclip"></i>
                     </button>
-                    <button
-                      id="file-selection-btn"
-                      class="file-selection-button"
-                      title="Select files to include"
-                    >
-                      <i class="fas fa-file"></i>
-                    </button>
-                    <button
-                        id="photo-less-toggle"
-                        class="file-photoless-button"
-                        title="Photo-less file processing"
-                      >
-                        <i class="fas fa-file-alt"></i>
-                    </button>
 
-                    <textarea
-                      id="chat-input"
-                      class="chat-input"
-                      data-i18n="chatPlaceholder"
-                      placeholder="Drag files here or ask a question about your financial documents..."
-                      rows="1"
-                    ></textarea>
-                    <button id="send-button" class="send-button" disabled>
-                      <i class="fas fa-paper-plane"></i>
-                    </button>
+                    <div id="file-dropdown" class="dropdown-menu">
+                      <button id="normal-file" class="dropdown-item" data-i18n="normalFile">
+                        Normal File Attach
+                      </button>
+                      <button id="photoless-mode" class="dropdown-item" data-i18n="photolessMode">
+                        Photo-less Mode
+                      </button>
+                    </div>
                   </div>
+
+                  <button id="file-selection-btn" class="file-selection-button" title="Select files to include">
+                    <i class="fas fa-file"></i>
+                  </button>
+
+                  <textarea id="chat-input" class="chat-input" data-i18n="chatPlaceholder"
+                    placeholder="Drag files here or ask a question about your financial documents..." rows="1">
+                  </textarea>
+
+                  <button id="send-button" class="send-button" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
                 </div>
 
                 <!-- Hidden file input for chat uploads -->
-                <input
-                  type="file"
-                  id="chat-file-input"
-                  multiple
-                  accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
-                  style="display: none"
-                />
+                <input type="file" id="chat-file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" style="display: none" />
+
               </div>
+            </div>
+
 
               <!-- File Selection Modal -->
               <div id="file-selection-modal" class="file-selection-modal">
@@ -434,6 +452,9 @@
               </div>
             </div>
           </div>
+
+
+          
           <!-- Files Tab -->
           <div id="files-tab" class="tab-content">
             <div class="files-container">
@@ -705,7 +726,7 @@
           <div id="calculator-tab" class="tab-content">
             <div class="calculator-container">
               <div class="calculator-header">
-                <h2 data-i18n="interestCalculator">Interest Calculator</h2>
+                <h2 data-i18n="interestCalculator">Calculations</h2>
                 <p data-i18n="calculateLoanPayments">
                   Calculate your loan payments and total costs
                 </p>
@@ -815,6 +836,831 @@
                     </div>
                     <div class="result-value" id="total-interest">
                       23.781.084,80 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-subheader">
+                <h3 data-i18n="depositCalculatorTitle">Deposit Return</h3>
+                <p data-i18n="depositCalculatorDescription">
+                  Estimate the interest earned on a fixed-term deposit.
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="deposit-principal" data-i18n="depositPrincipal"
+                        >Anapara Tutarı</label
+                      >
+                      <input
+                        type="number"
+                        id="deposit-principal"
+                        class="form-input"
+                        placeholder="500000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="deposit-days" data-i18n="depositDays"
+                        >Vade (Gün)</label
+                      >
+                      <input
+                        type="number"
+                        id="deposit-days"
+                        class="form-input"
+                        placeholder="90"
+                        min="1"
+                        max="3650"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="deposit-annual-rate"
+                        data-i18n="depositAnnualRate"
+                        >Yıllık Faiz Oranı (%)</label
+                      >
+                      <input
+                        type="number"
+                        id="deposit-annual-rate"
+                        class="form-input"
+                        placeholder="45"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="deposit-calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="deposit-reset-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="deposit-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="depositResults">Mevduat Sonuçları</h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="depositInterest">
+                      Kazanç
+                    </div>
+                    <div class="result-value" id="deposit-interest">
+                      0,00 TL
+                    </div>
+                  </div>
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="depositFinalAmount">
+                      Vade Sonu Tutarı
+                    </div>
+                    <div class="result-value" id="deposit-final-amount">
+                      0,00 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-subheader">
+                <h3 data-i18n="compoundDepositTitle">Bileşik Mevduat</h3>
+                <p data-i18n="compoundDepositDescription">
+                  Farklı bileşik dönemleri için getiriyi hesaplayın.
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="compound-deposit-principal" data-i18n="compoundDepositPrincipal"
+                        >Anapara Tutarı</label
+                      >
+                      <input
+                        type="number"
+                        id="compound-deposit-principal"
+                        class="form-input"
+                        placeholder="500000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="compound-deposit-annual-rate" data-i18n="compoundDepositAnnualRate"
+                        >Yıllık Faiz Oranı (%)</label
+                      >
+                      <input
+                        type="number"
+                        id="compound-deposit-annual-rate"
+                        class="form-input"
+                        placeholder="45"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="compound-deposit-term" data-i18n="compoundDepositTerm"
+                        >Vade (Dönem Sayısı)</label
+                      >
+                      <input
+                        type="number"
+                        id="compound-deposit-term"
+                        class="form-input"
+                        placeholder="180"
+                        min="1"
+                        max="10000"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="compound-deposit-frequency" data-i18n="compoundDepositFrequency"
+                        >Bileşik Frekansı</label
+                      >
+                      <select
+                        id="compound-deposit-frequency"
+                        class="form-input"
+                      >
+                        <option value="daily" data-i18n="compoundDepositFrequencyDaily">
+                          Daily
+                        </option>
+                        <option value="monthly" data-i18n="compoundDepositFrequencyMonthly">
+                          Monthly
+                        </option>
+                        <option value="yearly" data-i18n="compoundDepositFrequencyYearly">
+                          Yearly
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="compound-deposit-calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="compound-deposit-reset-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="compound-deposit-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="compoundDepositResults">
+                    Bileşik Mevduat Sonuçları
+                  </h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="compoundDepositInterest">
+                      Kazanç
+                    </div>
+                    <div class="result-value" id="compound-deposit-interest">
+                      0,00 TL
+                    </div>
+                  </div>
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="compoundDepositFinalAmount">
+                      Vade Sonu Tutarı
+                    </div>
+                    <div class="result-value" id="compound-deposit-final-amount">
+                      0,00 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-subheader">
+                <h3 data-i18n="presentValueCalculatorTitle">Bugünkü Değer</h3>
+                <p data-i18n="presentValueCalculatorDescription">
+                  Gelecekteki bir tutarı bugünkü değere indirgeyin.
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-future-amount"
+                        data-i18n="presentValueFutureAmount"
+                        >Gelecekteki Tutar</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-future-amount"
+                        class="form-input"
+                        placeholder="150000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-annual-rate"
+                        data-i18n="presentValueAnnualRate"
+                        >Yıllık Faiz Oranı (%)</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-annual-rate"
+                        class="form-input"
+                        placeholder="12"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="present-value-years" data-i18n="presentValueYears"
+                        >Yıl</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-years"
+                        class="form-input"
+                        placeholder="5"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-months"
+                        data-i18n="presentValueMonths"
+                        >Ay</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-months"
+                        class="form-input"
+                        placeholder="6"
+                        min="0"
+                        max="1200"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="present-value-days" data-i18n="presentValueDays"
+                        >Gün</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-days"
+                        class="form-input"
+                        placeholder="45"
+                        min="0"
+                        max="3650"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="present-value-calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="present-value-reset-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="present-value-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="presentValueResults">Bugünkü Değer Sonuçları</h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="presentValueValue">
+                      Bugünkü Değer
+                    </div>
+                    <div class="result-value" id="present-value-amount">
+                      0,00 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-subheader">
+                <h3 data-i18n="futureValueCalculatorTitle">Gelecek Değer</h3>
+                <p data-i18n="futureValueCalculatorDescription">
+                  Bugünkü bir tutarı geleceğe projeksiyon yapın.
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-present-amount"
+                        data-i18n="futureValuePresentAmount"
+                        >Bugünkü Tutar</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-present-amount"
+                        class="form-input"
+                        placeholder="125000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-annual-rate"
+                        data-i18n="futureValueAnnualRate"
+                        >Yıllık Faiz Oranı (%)</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-annual-rate"
+                        class="form-input"
+                        placeholder="10"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="future-value-years" data-i18n="futureValueYears"
+                        >Yıl</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-years"
+                        class="form-input"
+                        placeholder="4"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-months"
+                        data-i18n="futureValueMonths"
+                        >Ay</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-months"
+                        class="form-input"
+                        placeholder="3"
+                        min="0"
+                        max="1200"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label for="future-value-days" data-i18n="futureValueDays"
+                        >Gün</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-days"
+                        class="form-input"
+                        placeholder="10"
+                        min="0"
+                        max="3650"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="future-value-calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="future-value-reset-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="future-value-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="futureValueResults">Gelecek Değer Sonuçları</h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div class="result-label" data-i18n="futureValueValue">
+                      Gelecek Değer
+                    </div>
+                    <div class="result-value" id="future-value-amount">
+                      0,00 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-subheader">
+                <h3 data-i18n="futureValueAnnuityCalculatorTitle">
+                  Eşit Ödemelerin Gelecek Değeri
+                </h3>
+                <p data-i18n="futureValueAnnuityCalculatorDescription">
+                  Eşit ödemelerin gelecekteki toplam değerini hesaplayın.
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-annuity-payment"
+                        data-i18n="futureValueAnnuityPayment"
+                        >Periyodik Ödeme</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-annuity-payment"
+                        class="form-input"
+                        placeholder="2000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-annuity-annual-rate"
+                        data-i18n="futureValueAnnuityAnnualRate"
+                        >Yıllık Faiz Oranı (%)</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-annuity-annual-rate"
+                        class="form-input"
+                        placeholder="15"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-annuity-years"
+                        data-i18n="futureValueAnnuityYears"
+                        >Yıl</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-annuity-years"
+                        class="form-input"
+                        placeholder="5"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-annuity-months"
+                        data-i18n="futureValueAnnuityMonths"
+                        >Ay</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-annuity-months"
+                        class="form-input"
+                        placeholder="60"
+                        min="0"
+                        max="1200"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="future-value-annuity-days"
+                        data-i18n="futureValueAnnuityDays"
+                        >Gün</label
+                      >
+                      <input
+                        type="number"
+                        id="future-value-annuity-days"
+                        class="form-input"
+                        placeholder="0"
+                        min="0"
+                        max="3650"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="future-value-annuity-calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="future-value-annuity-reset-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="future-value-annuity-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="futureValueAnnuityResults">
+                    Gelecek Değer Sonuçları
+                  </h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div
+                      class="result-label"
+                      data-i18n="futureValueAnnuityValue"
+                    >
+                      Gelecek Değer
+                    </div>
+                    <div
+                      class="result-value"
+                      id="future-value-annuity-amount"
+                    >
+                      0,00 TL
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-subheader">
+                <h3 data-i18n="presentValueAnnuityCalculatorTitle">
+                  Eşit Ödemelerin Bugünkü Değeri
+                </h3>
+                <p data-i18n="presentValueAnnuityCalculatorDescription">
+                  Eşit ödemelerin bugünkü toplam değerini hesaplayın.
+                </p>
+              </div>
+
+              <div class="calculator-form">
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-annuity-payment"
+                        data-i18n="presentValueAnnuityPayment"
+                        >Periyodik Ödeme</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-annuity-payment"
+                        class="form-input"
+                        placeholder="5000"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-annuity-annual-rate"
+                        data-i18n="presentValueAnnuityAnnualRate"
+                        >Yıllık Faiz Oranı (%)</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-annuity-annual-rate"
+                        class="form-input"
+                        placeholder="12"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-annuity-years"
+                        data-i18n="presentValueAnnuityYears"
+                        >Yıl</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-annuity-years"
+                        class="form-input"
+                        placeholder="5"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-annuity-months"
+                        data-i18n="presentValueAnnuityMonths"
+                        >Ay</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-annuity-months"
+                        class="form-input"
+                        placeholder="0"
+                        min="0"
+                        max="1200"
+                      />
+                    </div>
+                  </div>
+                  <div class="calculator-column">
+                    <div class="input-group">
+                      <label
+                        for="present-value-annuity-days"
+                        data-i18n="presentValueAnnuityDays"
+                        >Gün</label
+                      >
+                      <input
+                        type="number"
+                        id="present-value-annuity-days"
+                        class="form-input"
+                        placeholder="0"
+                        min="0"
+                        max="3650"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-row">
+                  <div class="calculator-column">
+                    <div class="button-group">
+                      <button
+                        id="present-value-annuity-calculate-btn"
+                        class="btn btn-primary"
+                        data-i18n="calculate"
+                      >
+                        Hesapla
+                      </button>
+                      <button
+                        id="present-value-annuity-reset-btn"
+                        class="btn btn-secondary"
+                        data-i18n="reset"
+                      >
+                        Sıfırla
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="calculator-results"
+                id="present-value-annuity-results"
+                style="display: none"
+              >
+                <div class="result-header">
+                  <h3 data-i18n="presentValueAnnuityResults">
+                    Bugünkü Değer Sonuçları
+                  </h3>
+                </div>
+
+                <div class="result-grid">
+                  <div class="result-item">
+                    <div
+                      class="result-label"
+                      data-i18n="presentValueAnnuityValue"
+                    >
+                      Bugünkü Değer
+                    </div>
+                    <div
+                      class="result-value"
+                      id="present-value-annuity-amount"
+                    >
+                      0,00 TL
                     </div>
                   </div>
                 </div>
@@ -1057,6 +1903,155 @@
             </div>
           </div>
 
+
+          <div id="balance-tab" class="tab-content">
+            <h2>Bilanço</h2>
+            <p>Şirket bilanço verileri burada.</p>
+          </div>
+          <!-- Balance Calendar Tab -->
+          <div id="balance-heatmap-tab" class="tab-content">
+            <div class="balance-app">
+              <header class="balance-header">
+                <div class="header-text">
+                  <h1 data-i18n="balanceCalendar.title">Balance of Payments</h1>
+                  <p
+                    class="subtitle"
+                    data-i18n="balanceCalendar.subtitle"
+                  >
+                    Track daily cash positions derived from processed Excel workbooks.
+                  </p>
+                </div>
+                <div class="header-actions">
+                  <label class="timeframe-select">
+                    <span data-i18n="balanceCalendar.timeframeLabel">Timeframe</span>
+                    <select id="balance-timeframe">
+                      <option
+                        value="1"
+                        data-i18n="balanceCalendar.timeframes.last1Month"
+                      >
+                        Last 1 month
+                      </option>
+                      <option
+                        value="3"
+                        selected
+                        data-i18n="balanceCalendar.timeframes.last3Months"
+                      >
+                        Last 3 months
+                      </option>
+                      <option
+                        value="6"
+                        data-i18n="balanceCalendar.timeframes.last6Months"
+                      >
+                        Last 6 months
+                      </option>
+                      <option
+                        value="9"
+                        data-i18n="balanceCalendar.timeframes.last9Months"
+                      >
+                        Last 9 months
+                      </option>
+                      <option
+                        value="12"
+                        data-i18n="balanceCalendar.timeframes.last12Months"
+                      >
+                        Last 12 months
+                      </option>
+                    </select>
+                  </label>
+                  <button id="balance-refresh" class="btn btn-secondary">
+                    <i class="fas fa-rotate"></i>
+                    <span data-i18n="balanceCalendar.refresh">Refresh</span>
+                  </button>
+                </div>
+              </header>
+
+              <section class="balance-process-panel">
+                <div class="panel-header">
+                  <h2>
+                    <i class="fas fa-file-excel"></i>
+                    <span data-i18n="balanceCalendar.processTitle">
+                      Process Balance Document
+                    </span>
+                  </h2>
+                  <p data-i18n="balanceCalendar.processDescription">
+                    Upload or select a balance of payments document (Excel, PDF, image, etc.).
+                    The parser extracts the ledger and the agent will normalize transactions automatically.
+                  </p>
+                </div>
+                <div class="process-controls">
+                  <div class="process-upload">
+                    <input
+                      type="file"
+                      id="balance-file-input"
+                      accept=".xlsx,.xls,.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif"
+                      style="display: none"
+                    />
+                    <button
+                      id="balance-upload-btn"
+                      class="btn btn-secondary"
+                      type="button"
+                    >
+                      <i class="fas fa-upload"></i>
+                      <span data-i18n="balanceCalendar.uploadButton">
+                        Upload &amp; Process
+                      </span>
+                    </button>
+                  </div>
+                  <button id="balance-process-btn" class="btn btn-primary" type="button">
+                    <i class="fas fa-play"></i>
+                    <span data-i18n="balanceCalendar.runAgent">Run Agent</span>
+                  </button>
+                </div>
+                <div id="balance-process-feedback" class="process-feedback"></div>
+              </section>
+
+              <section class="balance-calendar-section">
+                <div class="calendar-header">
+                  <div id="balance-summary" class="balance-summary"></div>
+                  <div class="calendar-legend" id="balance-legend"></div>
+                </div>
+                <div id="balance-loading" class="balance-loading" hidden>
+                  <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div id="balance-heatmap" class="balance-heatmap"></div>
+              </section>
+
+              <section id="balance-detail" class="balance-detail-panel">
+                <div class="detail-empty">
+                  <i class="fas fa-hand-pointer"></i>
+                  <p data-i18n="balanceCalendar.selectDayPrompt">
+                    Select a day to view transaction details.
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+
+         <!-- Güncel Durum Tab -->
+          <div id="currentStatus-tab" class="tab-content">
+            <h2>Güncel Durum</h2>
+            <p>Güncel ödemeler dengesi bilgileri burada.</p>
+          </div>
+
+          <!-- Satış Tab -->
+          <div id="sales-tab" class="tab-content">
+            <h2>Satış</h2>
+            <p>Satış verileri burada.</p>
+          </div>
+
+          <!-- Alış Tab -->
+          <div id="purchase-tab" class="tab-content">
+            <h2>Alış</h2>
+            <p>Alış verileri burada.</p>
+          </div>
+
+          <!-- Nakit Tab -->
+          <div id="cash-tab" class="tab-content">
+            <h2>Nakit</h2>
+            <p>Nakit akışı burada.</p>
+          </div>
+
+
           <!-- Settings Tab -->
           <div id="settings-tab" class="tab-content">
             <div class="settings-container">
@@ -1176,6 +2171,7 @@
     <script src="scripts/currency-service.js"></script>
     <script src="scripts/utils.js"></script>
     <script src="scripts/api.js"></script>
+    <script src="scripts/balance.js"></script>
     <script src="scripts/components.js"></script>
     <script src="scripts/app.js"></script>
   </body>
