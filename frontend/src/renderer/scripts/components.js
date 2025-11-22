@@ -806,6 +806,119 @@ initSidebar() {
     const loanAmountInput = document.getElementById("loan-amount");
     const loanTermInput = document.getElementById("loan-term");
     const interestRateInput = document.getElementById("interest-rate");
+    const depositCalculateBtn = document.getElementById(
+      "deposit-calculate-btn"
+    );
+    const depositResetBtn = document.getElementById("deposit-reset-btn");
+    const depositPrincipalInput = document.getElementById(
+      "deposit-principal"
+    );
+    const depositDaysInput = document.getElementById("deposit-days");
+    const depositAnnualRateInput = document.getElementById(
+      "deposit-annual-rate"
+    );
+    const presentValueCalculateBtn = document.getElementById(
+      "present-value-calculate-btn"
+    );
+    const presentValueResetBtn = document.getElementById(
+      "present-value-reset-btn"
+    );
+    const presentValueFutureAmountInput = document.getElementById(
+      "present-value-future-amount"
+    );
+    const presentValueAnnualRateInput = document.getElementById(
+      "present-value-annual-rate"
+    );
+    const presentValueYearsInput = document.getElementById(
+      "present-value-years"
+    );
+    const presentValueMonthsInput = document.getElementById(
+      "present-value-months"
+    );
+    const presentValueDaysInput = document.getElementById(
+      "present-value-days"
+    );
+    const futureValueCalculateBtn = document.getElementById(
+      "future-value-calculate-btn"
+    );
+    const futureValueResetBtn = document.getElementById(
+      "future-value-reset-btn"
+    );
+    const futureValuePresentAmountInput = document.getElementById(
+      "future-value-present-amount"
+    );
+    const futureValueAnnualRateInput = document.getElementById(
+      "future-value-annual-rate"
+    );
+    const futureValueYearsInput = document.getElementById(
+      "future-value-years"
+    );
+    const futureValueMonthsInput = document.getElementById(
+      "future-value-months"
+    );
+    const futureValueDaysInput = document.getElementById(
+      "future-value-days"
+    );
+    const futureValueAnnuityCalculateBtn = document.getElementById(
+      "future-value-annuity-calculate-btn"
+    );
+    const futureValueAnnuityResetBtn = document.getElementById(
+      "future-value-annuity-reset-btn"
+    );
+    const futureValueAnnuityPaymentInput = document.getElementById(
+      "future-value-annuity-payment"
+    );
+    const futureValueAnnuityAnnualRateInput = document.getElementById(
+      "future-value-annuity-annual-rate"
+    );
+    const futureValueAnnuityYearsInput = document.getElementById(
+      "future-value-annuity-years"
+    );
+    const futureValueAnnuityMonthsInput = document.getElementById(
+      "future-value-annuity-months"
+    );
+    const futureValueAnnuityDaysInput = document.getElementById(
+      "future-value-annuity-days"
+    );
+    const compoundDepositCalculateBtn = document.getElementById(
+      "compound-deposit-calculate-btn"
+    );
+    const compoundDepositResetBtn = document.getElementById(
+      "compound-deposit-reset-btn"
+    );
+    const compoundDepositPrincipalInput = document.getElementById(
+      "compound-deposit-principal"
+    );
+    const compoundDepositAnnualRateInput = document.getElementById(
+      "compound-deposit-annual-rate"
+    );
+    const compoundDepositTermInput = document.getElementById(
+      "compound-deposit-term"
+    );
+    const compoundDepositFrequencySelect = document.getElementById(
+      "compound-deposit-frequency"
+    );
+    const presentValueAnnuityCalculateBtn = document.getElementById(
+      "present-value-annuity-calculate-btn"
+    );
+    const presentValueAnnuityResetBtn = document.getElementById(
+      "present-value-annuity-reset-btn"
+    );
+    const presentValueAnnuityPaymentInput = document.getElementById(
+      "present-value-annuity-payment"
+    );
+    const presentValueAnnuityAnnualRateInput = document.getElementById(
+      "present-value-annuity-annual-rate"
+    );
+    const presentValueAnnuityYearsInput = document.getElementById(
+      "present-value-annuity-years"
+    );
+    const presentValueAnnuityMonthsInput = document.getElementById(
+      "present-value-annuity-months"
+    );
+    const presentValueAnnuityDaysInput = document.getElementById(
+      "present-value-annuity-days"
+    );
 
     if (calculateBtn) {
       calculateBtn.addEventListener("click", () => this.calculateLoan());
@@ -815,12 +928,176 @@ initSidebar() {
       resetCalcBtn.addEventListener("click", () => this.resetCalculator());
     }
 
+    if (depositCalculateBtn) {
+      depositCalculateBtn.addEventListener("click", () =>
+        this.calculateDepositReturn()
+      );
+    }
+
+    if (depositResetBtn) {
+      depositResetBtn.addEventListener("click", () =>
+        this.resetDepositCalculator()
+      );
+    }
+
+    if (compoundDepositCalculateBtn) {
+      compoundDepositCalculateBtn.addEventListener("click", () =>
+        this.calculateCompoundDepositReturn()
+      );
+    }
+
+    if (compoundDepositResetBtn) {
+      compoundDepositResetBtn.addEventListener("click", () =>
+        this.resetCompoundDepositCalculator()
+      );
+    }
+
+    if (presentValueAnnuityCalculateBtn) {
+      presentValueAnnuityCalculateBtn.addEventListener("click", () =>
+        this.calculatePresentValueAnnuity()
+      );
+    }
+
+    if (presentValueAnnuityResetBtn) {
+      presentValueAnnuityResetBtn.addEventListener("click", () =>
+        this.resetPresentValueAnnuityCalculator()
+      );
+    }
+
+    if (presentValueCalculateBtn) {
+      presentValueCalculateBtn.addEventListener("click", () =>
+        this.calculatePresentValue()
+      );
+    }
+
+    if (presentValueResetBtn) {
+      presentValueResetBtn.addEventListener("click", () =>
+        this.resetPresentValueCalculator()
+      );
+    }
+
+    if (futureValueCalculateBtn) {
+      futureValueCalculateBtn.addEventListener("click", () =>
+        this.calculateFutureValue()
+      );
+    }
+
+    if (futureValueResetBtn) {
+      futureValueResetBtn.addEventListener("click", () =>
+        this.resetFutureValueCalculator()
+      );
+    }
+
+    if (futureValueAnnuityCalculateBtn) {
+      futureValueAnnuityCalculateBtn.addEventListener("click", () =>
+        this.calculateFutureValueAnnuity()
+      );
+    }
+
+    if (futureValueAnnuityResetBtn) {
+      futureValueAnnuityResetBtn.addEventListener("click", () =>
+        this.resetFutureValueAnnuityCalculator()
+      );
+    }
+
     // Add Enter key support for calculator inputs
     [loanAmountInput, loanTermInput, interestRateInput].forEach((input) => {
       if (input) {
         input.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
             this.calculateLoan();
+          }
+        });
+      }
+    });
+
+    [
+      depositPrincipalInput,
+      depositDaysInput,
+      depositAnnualRateInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateDepositReturn();
+          }
+        });
+      }
+    });
+
+    [
+      compoundDepositPrincipalInput,
+      compoundDepositAnnualRateInput,
+      compoundDepositTermInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateCompoundDepositReturn();
+          }
+        });
+      }
+    });
+
+    [
+      presentValueFutureAmountInput,
+      presentValueAnnualRateInput,
+      presentValueYearsInput,
+      presentValueMonthsInput,
+      presentValueDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculatePresentValue();
+          }
+        });
+      }
+    });
+
+    [
+      futureValuePresentAmountInput,
+      futureValueAnnualRateInput,
+      futureValueYearsInput,
+      futureValueMonthsInput,
+      futureValueDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateFutureValue();
+          }
+        });
+      }
+    });
+
+    [
+      futureValueAnnuityPaymentInput,
+      futureValueAnnuityAnnualRateInput,
+      futureValueAnnuityYearsInput,
+      futureValueAnnuityMonthsInput,
+      futureValueAnnuityDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateFutureValueAnnuity();
+          }
+        });
+      }
+    });
+
+    [
+      presentValueAnnuityPaymentInput,
+      presentValueAnnuityAnnualRateInput,
+      presentValueAnnuityYearsInput,
+      presentValueAnnuityMonthsInput,
+      presentValueAnnuityDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculatePresentValueAnnuity();
           }
         });
       }
@@ -875,6 +1152,12 @@ initSidebar() {
 
       case "news":
         await this.loadFinanceNews();
+        break;
+
+      case "balance-heatmap":
+        if (window.balanceCalendarApp?.refreshOnActivate) {
+          await window.balanceCalendarApp.refreshOnActivate();
+        }
         break;
       case "verification":
         await this.loadVerificationTab();
@@ -5491,6 +5774,37 @@ initSidebar() {
   }
 
   // Credit Calculator Methods
+  computeLoanPayments(principal, termMonths, monthlyRatePercent) {
+    if (termMonths <= 0) {
+      throw new Error("Kredi vadesi 0'dan büyük olmalıdır");
+    }
+
+    const monthlyRate = monthlyRatePercent / 100;
+
+    if (monthlyRate === 0) {
+      const monthlyPayment = principal / termMonths;
+      return {
+        monthlyPayment,
+        totalPayment: monthlyPayment * termMonths,
+      };
+    }
+
+    const onePlusRate = 1 + monthlyRate;
+    const powerTerm = Math.pow(onePlusRate, termMonths);
+    const denominator = powerTerm - 1;
+
+    if (Math.abs(denominator) < 1e-9) {
+      throw new Error("Faiz oranı hesaplanamadı, lütfen girdileri kontrol edin");
+    }
+
+    const monthlyPayment = principal * ((monthlyRate * powerTerm) / denominator);
+
+    return {
+      monthlyPayment,
+      totalPayment: monthlyPayment * termMonths,
+    };
+  }
+
   calculateLoan() {
     try {
       // Get input values
@@ -5535,28 +5849,12 @@ initSidebar() {
         throw new Error("Faiz oranı %100'den küçük olmalıdır");
       }
 
-      // Convert annual interest rate to monthly rate
-      // r = Annual Rate / 12 / 100 (as shown in the formula image)
-      const r = interestRate / 100;
-
-      // Calculate monthly payment using the exact annuity formula from the image
-      // A = P × [r(1+r)^n] / [(1+r)^n - 1]
-      let monthlyPayment;
-      if (r === 0) {
-        // If no interest, simple division
-        monthlyPayment = loanAmount / loanTerm;
-      } else {
-        // Apply the exact annuity formula
-        const onePlusR = 1 + r; // (1+r)
-        const powerTerm = Math.pow(onePlusR, loanTerm); // (1+r)^n
-        const numerator = r * powerTerm; // r(1+r)^n
-        const denominator = powerTerm - 1; // (1+r)^n - 1
-
-        monthlyPayment = loanAmount * (numerator / denominator);
-      }
-
-      // Calculate total payment
-      const totalPayment = monthlyPayment * loanTerm;
+      // Calculate payments using monthly rate percentage provided by the user
+      const { monthlyPayment, totalPayment } = this.computeLoanPayments(
+        loanAmount,
+        loanTerm,
+        interestRate
+      );
 
       // Calculate total interest
       const totalInterest = totalPayment - loanAmount;
@@ -5572,6 +5870,450 @@ initSidebar() {
       });
 
       // Calculation completed successfully - no notification needed
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateDepositReturn() {
+    try {
+      const principalInput = document.getElementById("deposit-principal");
+      const daysInput = document.getElementById("deposit-days");
+      const annualRateInput = document.getElementById("deposit-annual-rate");
+
+      if (!principalInput || !daysInput || !annualRateInput) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const principal = this.parseNumber(principalInput.value);
+      const days = parseInt(daysInput.value, 10);
+      const annualRate = this.parseNumber(annualRateInput.value);
+
+      if (isNaN(principal) || principal <= 0) {
+        principalInput.focus();
+        throw new Error(
+          "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(days) || days <= 0) {
+        daysInput.focus();
+        throw new Error("Vade gün sayısı 0'dan büyük olmalıdır");
+      }
+
+      if (days > 3650) {
+        daysInput.focus();
+        throw new Error("Vade 3650 günden (10 yıl) uzun olamaz");
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      if (annualRate > 100) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+      }
+
+      const interest = principal * annualRate * (days / 36500);
+      const finalAmount = principal + interest;
+
+      const roundedInterest = Math.round(interest * 1000) / 1000;
+      const roundedFinalAmount = Math.round(finalAmount * 1000) / 1000;
+
+      this.displayDepositResults({
+        interest: roundedInterest,
+        finalAmount: roundedFinalAmount,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateCompoundDepositReturn() {
+    try {
+      const principalInput = document.getElementById(
+        "compound-deposit-principal"
+      );
+      const annualRateInput = document.getElementById(
+        "compound-deposit-annual-rate"
+      );
+      const termInput = document.getElementById("compound-deposit-term");
+      const frequencySelect = document.getElementById(
+        "compound-deposit-frequency"
+      );
+
+      if (!principalInput || !annualRateInput || !termInput || !frequencySelect) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const principal = this.parseNumber(principalInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const term = parseInt(termInput.value, 10);
+      const frequency = frequencySelect.value;
+
+      if (isNaN(principal) || principal <= 0) {
+        principalInput.focus();
+        throw new Error(
+          "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      if (annualRate > 100) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+      }
+
+      if (isNaN(term) || term <= 0) {
+        termInput.focus();
+        throw new Error("Vade dönem sayısı 0'dan büyük olmalıdır");
+      }
+
+      let periodsPerYear;
+      switch (frequency) {
+        case "daily":
+          periodsPerYear = 365;
+          break;
+        case "monthly":
+          periodsPerYear = 12;
+          break;
+        case "yearly":
+          periodsPerYear = 1;
+          break;
+        default:
+          throw new Error(
+            "Frekans 'daily', 'monthly' veya 'yearly' olmalıdır"
+          );
+      }
+
+      const rateDecimal = annualRate / 100;
+      const periodicRate = rateDecimal / periodsPerYear;
+      const finalAmount = principal * Math.pow(1 + periodicRate, term);
+      const interest = finalAmount - principal;
+
+      const roundedInterest = Math.round(interest * 1000) / 1000;
+      const roundedFinalAmount = Math.round(finalAmount * 1000) / 1000;
+
+      this.displayCompoundDepositResults({
+        interest: roundedInterest,
+        finalAmount: roundedFinalAmount,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculatePresentValue() {
+    try {
+      const futureAmountInput = document.getElementById(
+        "present-value-future-amount"
+      );
+      const annualRateInput = document.getElementById(
+        "present-value-annual-rate"
+      );
+      const yearsInput = document.getElementById("present-value-years");
+      const monthsInput = document.getElementById("present-value-months");
+      const daysInput = document.getElementById("present-value-days");
+
+      if (
+        !futureAmountInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const futureAmount = this.parseNumber(futureAmountInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(futureAmount) || futureAmount <= 0) {
+        futureAmountInput.focus();
+        throw new Error(
+          "Gelecekteki tutar 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const totalYears =
+        (Number.isNaN(years) ? 0 : Math.max(years, 0)) +
+        (Number.isNaN(months) ? 0 : Math.max(months, 0) / 12) +
+        (Number.isNaN(days) ? 0 : Math.max(days, 0) / 365);
+
+      if (totalYears <= 0) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      const presentValue =
+        futureAmount / Math.pow(1 + rateDecimal, totalYears);
+      const roundedPresentValue = Math.round(presentValue * 100) / 100;
+
+      this.displayPresentValueResults({
+        presentValue: roundedPresentValue,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateFutureValue() {
+    try {
+      const presentAmountInput = document.getElementById(
+        "future-value-present-amount"
+      );
+      const annualRateInput = document.getElementById(
+        "future-value-annual-rate"
+      );
+      const yearsInput = document.getElementById("future-value-years");
+      const monthsInput = document.getElementById("future-value-months");
+      const daysInput = document.getElementById("future-value-days");
+
+      if (
+        !presentAmountInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const presentAmount = this.parseNumber(presentAmountInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(presentAmount) || presentAmount <= 0) {
+        presentAmountInput.focus();
+        throw new Error(
+          "Bugünkü tutar 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const totalYears =
+        (Number.isNaN(years) ? 0 : Math.max(years, 0)) +
+        (Number.isNaN(months) ? 0 : Math.max(months, 0) / 12) +
+        (Number.isNaN(days) ? 0 : Math.max(days, 0) / 365);
+
+      if (totalYears <= 0) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      const futureValue =
+        presentAmount * Math.pow(1 + rateDecimal, totalYears);
+      const roundedFutureValue = Math.round(futureValue * 100) / 100;
+
+      this.displayFutureValueResults({
+        futureValue: roundedFutureValue,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateFutureValueAnnuity() {
+    try {
+      const paymentInput = document.getElementById(
+        "future-value-annuity-payment"
+      );
+      const annualRateInput = document.getElementById(
+        "future-value-annuity-annual-rate"
+      );
+      const yearsInput = document.getElementById(
+        "future-value-annuity-years"
+      );
+      const monthsInput = document.getElementById(
+        "future-value-annuity-months"
+      );
+      const daysInput = document.getElementById(
+        "future-value-annuity-days"
+      );
+
+      if (
+        !paymentInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const payment = this.parseNumber(paymentInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(payment) || payment <= 0) {
+        paymentInput.focus();
+        throw new Error(
+          "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const hasYears = !Number.isNaN(years) && years > 0;
+      const hasMonths = !Number.isNaN(months) && months > 0;
+      const hasDays = !Number.isNaN(days) && days > 0;
+
+      if (!hasYears && !hasMonths && !hasDays) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      let periods;
+      let periodRate;
+
+      if (hasYears) {
+        periods = Math.max(years, 0);
+        periodRate = rateDecimal;
+      } else if (hasMonths) {
+        periods = Math.max(months, 0);
+        periodRate = rateDecimal / 12;
+      } else {
+        periods = Math.max(days, 0);
+        periodRate = rateDecimal / 365;
+      }
+
+      let futureValue;
+      if (periodRate === 0) {
+        futureValue = payment * periods;
+      } else {
+        const growthFactor = Math.pow(1 + periodRate, periods);
+        futureValue = payment * ((growthFactor - 1) / periodRate);
+      }
+
+      const roundedFutureValue = Math.round(futureValue * 100) / 100;
+
+      this.displayFutureValueAnnuityResults({
+        futureValue: roundedFutureValue,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculatePresentValueAnnuity() {
+    try {
+      const paymentInput = document.getElementById(
+        "present-value-annuity-payment"
+      );
+      const annualRateInput = document.getElementById(
+        "present-value-annuity-annual-rate"
+      );
+      const yearsInput = document.getElementById(
+        "present-value-annuity-years"
+      );
+      const monthsInput = document.getElementById(
+        "present-value-annuity-months"
+      );
+      const daysInput = document.getElementById(
+        "present-value-annuity-days"
+      );
+
+      if (
+        !paymentInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const payment = this.parseNumber(paymentInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(payment) || payment <= 0) {
+        paymentInput.focus();
+        throw new Error(
+          "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const hasYears = !Number.isNaN(years) && years > 0;
+      const hasMonths = !Number.isNaN(months) && months > 0;
+      const hasDays = !Number.isNaN(days) && days > 0;
+
+      if (!hasYears && !hasMonths && !hasDays) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      let periods;
+      let periodRate;
+
+      if (hasYears) {
+        periods = Math.max(years, 0);
+        periodRate = rateDecimal;
+      } else if (hasMonths) {
+        periods = Math.max(months, 0);
+        periodRate = rateDecimal / 12;
+      } else {
+        periods = Math.max(days, 0);
+        periodRate = rateDecimal / 365;
+      }
+
+      let presentValue;
+      if (periodRate === 0) {
+        presentValue = payment * periods;
+      } else {
+        const discountFactor = Math.pow(1 + periodRate, -periods);
+        presentValue = payment * ((1 - discountFactor) / periodRate);
+      }
+
+      const roundedPresentValue = Math.round(presentValue * 100) / 100;
+
+      this.displayPresentValueAnnuityResults({
+        presentValue: roundedPresentValue,
+      });
     } catch (error) {
       this.showNotification(error.message, "error");
     }
@@ -5622,6 +6364,300 @@ initSidebar() {
     }, 100);
   }
 
+  displayDepositResults(results) {
+    const resultsContainer = document.getElementById("deposit-results");
+    const interestEl = document.getElementById("deposit-interest");
+    const finalAmountEl = document.getElementById("deposit-final-amount");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (interestEl) {
+      interestEl.textContent = this.formatCurrency(results.interest, 3);
+    }
+
+    if (finalAmountEl) {
+      finalAmountEl.textContent = this.formatCurrency(
+        results.finalAmount,
+        3
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayCompoundDepositResults(results) {
+    const resultsContainer = document.getElementById(
+      "compound-deposit-results"
+    );
+    const interestEl = document.getElementById("compound-deposit-interest");
+    const finalAmountEl = document.getElementById(
+      "compound-deposit-final-amount"
+    );
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (interestEl) {
+      interestEl.textContent = this.formatCurrency(results.interest, 3);
+    }
+
+    if (finalAmountEl) {
+      finalAmountEl.textContent = this.formatCurrency(
+        results.finalAmount,
+        3
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayPresentValueResults(results) {
+    const resultsContainer = document.getElementById(
+      "present-value-results"
+    );
+    const presentValueEl = document.getElementById("present-value-amount");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (presentValueEl) {
+      presentValueEl.textContent = this.formatCurrency(
+        results.presentValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayFutureValueResults(results) {
+    const resultsContainer = document.getElementById("future-value-results");
+    const futureValueEl = document.getElementById("future-value-amount");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (futureValueEl) {
+      futureValueEl.textContent = this.formatCurrency(
+        results.futureValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayFutureValueAnnuityResults(results) {
+    const resultsContainer = document.getElementById(
+      "future-value-annuity-results"
+    );
+    const futureValueEl = document.getElementById(
+      "future-value-annuity-amount"
+    );
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (futureValueEl) {
+      futureValueEl.textContent = this.formatCurrency(
+        results.futureValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayPresentValueAnnuityResults(results) {
+    const resultsContainer = document.getElementById(
+      "present-value-annuity-results"
+    );
+    const presentValueEl = document.getElementById(
+      "present-value-annuity-amount"
+    );
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (presentValueEl) {
+      presentValueEl.textContent = this.formatCurrency(
+        results.presentValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
   resetCalculator() {
     // Clear input fields
     const loanAmountInput = document.getElementById("loan-amount");
@@ -5634,6 +6670,152 @@ initSidebar() {
 
     // Hide results
     const resultsContainer = document.getElementById("calculator-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetDepositCalculator() {
+    const principalInput = document.getElementById("deposit-principal");
+    const daysInput = document.getElementById("deposit-days");
+    const annualRateInput = document.getElementById("deposit-annual-rate");
+
+    if (principalInput) principalInput.value = "";
+    if (daysInput) daysInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+
+    const resultsContainer = document.getElementById("deposit-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetCompoundDepositCalculator() {
+    const principalInput = document.getElementById(
+      "compound-deposit-principal"
+    );
+    const annualRateInput = document.getElementById(
+      "compound-deposit-annual-rate"
+    );
+    const termInput = document.getElementById("compound-deposit-term");
+    const frequencySelect = document.getElementById(
+      "compound-deposit-frequency"
+    );
+
+    if (principalInput) principalInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (termInput) termInput.value = "";
+    if (frequencySelect) frequencySelect.value = "daily";
+
+    const resultsContainer = document.getElementById(
+      "compound-deposit-results"
+    );
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetPresentValueCalculator() {
+    const futureAmountInput = document.getElementById(
+      "present-value-future-amount"
+    );
+    const annualRateInput = document.getElementById(
+      "present-value-annual-rate"
+    );
+    const yearsInput = document.getElementById("present-value-years");
+    const monthsInput = document.getElementById("present-value-months");
+    const daysInput = document.getElementById("present-value-days");
+
+    if (futureAmountInput) futureAmountInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById(
+      "present-value-results"
+    );
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetFutureValueCalculator() {
+    const presentAmountInput = document.getElementById(
+      "future-value-present-amount"
+    );
+    const annualRateInput = document.getElementById(
+      "future-value-annual-rate"
+    );
+    const yearsInput = document.getElementById("future-value-years");
+    const monthsInput = document.getElementById("future-value-months");
+    const daysInput = document.getElementById("future-value-days");
+
+    if (presentAmountInput) presentAmountInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById("future-value-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetFutureValueAnnuityCalculator() {
+    const paymentInput = document.getElementById(
+      "future-value-annuity-payment"
+    );
+    const annualRateInput = document.getElementById(
+      "future-value-annuity-annual-rate"
+    );
+    const yearsInput = document.getElementById("future-value-annuity-years");
+    const monthsInput = document.getElementById(
+      "future-value-annuity-months"
+    );
+    const daysInput = document.getElementById("future-value-annuity-days");
+
+    if (paymentInput) paymentInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById(
+      "future-value-annuity-results"
+    );
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetPresentValueAnnuityCalculator() {
+    const paymentInput = document.getElementById(
+      "present-value-annuity-payment"
+    );
+    const annualRateInput = document.getElementById(
+      "present-value-annuity-annual-rate"
+    );
+    const yearsInput = document.getElementById(
+      "present-value-annuity-years"
+    );
+    const monthsInput = document.getElementById(
+      "present-value-annuity-months"
+    );
+    const daysInput = document.getElementById(
+      "present-value-annuity-days"
+    );
+
+    if (paymentInput) paymentInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById(
+      "present-value-annuity-results"
+    );
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
@@ -5665,12 +6847,12 @@ initSidebar() {
   }
 
   // Helper method to format currency
-  formatCurrency(amount) {
+  formatCurrency(amount, fractionDigits = 2) {
     return new Intl.NumberFormat("tr-TR", {
       style: "currency",
       currency: "TRY",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
   }
 

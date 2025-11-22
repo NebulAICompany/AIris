@@ -14,7 +14,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from backend.shared.constants import OPENAI_MODEL
 
 rag_agent_as_tools = [
     finance_agent_tool,
@@ -26,7 +26,6 @@ rag_agent_as_tools = [
     get_uploaded_files_count,
     list_uploaded_files,
 ]
-
 
 def create_rag_agent(
     local_context: str,
