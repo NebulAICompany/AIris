@@ -1,7 +1,7 @@
 from agents import Agent
 from .prompts import (
     wolfram_instructions,
-    rag_agent_instructions,
+    main_agent_instructions,
     news_chat_agent_instructions,
 )
 from typing import List
@@ -12,11 +12,11 @@ from .tools.api import (
     get_uploaded_files_count,
     list_uploaded_files,
 )
-from .tools.agent_as_tools import finance_agent_tool, office_agent_tool
+from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, tcmb_data_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL
 
-rag_agent_as_tools = [
+main_agent_as_tools = [
     finance_agent_tool,
     office_agent_tool,
     wolfram_alpha_query,
@@ -25,9 +25,11 @@ rag_agent_as_tools = [
     redescribe_image_content,
     get_uploaded_files_count,
     list_uploaded_files,
+    tcmb_data_agent_tool,
 ]
 
-def create_rag_agent(
+
+def create_main_agent(
     local_context: str,
     web_search_enabled: bool,
     query: str,
@@ -56,11 +58,11 @@ def create_rag_agent(
         conversation_context_part += "\n"
 
     # Start with a fresh list to avoid mutating the module-level list
-    tools = [*rag_agent_as_tools]
+    tools = [*main_agent_as_tools]
     if web_search_enabled:
         tools.append(web_search_tool)
 
-    agent_instructions = rag_agent_instructions.format(
+    agent_instructions = main_agent_instructions.format(
         wolfram_instructions=wolfram_instructions,
         local_context=local_context,
         web_context_part=web_context_part,
@@ -70,7 +72,7 @@ def create_rag_agent(
     )
 
     agent = Agent(
-        name="RAG_Assistant",
+        name="Main_Assistant",
         instructions=agent_instructions,
         model=OPENAI_MODEL,
         tools=tools,
@@ -136,7 +138,7 @@ def create_news_chat_agent(
         conversation_context_part += "\n"
 
     # Start with a fresh list to avoid mutating the module-level list
-    tools = [*rag_agent_as_tools]
+    tools = [*main_agent_as_tools]
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
