@@ -24,8 +24,6 @@ logger = get_logger("MAIN")
 async def lifespan(app: FastAPI):
     """
     Lifespan event handler for startup and shutdown.
-    Load vector store on startup and connect to MCP servers.
-    Disconnect from MCP servers on shutdown.
     """
     # Startup
     try:
@@ -45,13 +43,6 @@ async def lifespan(app: FastAPI):
         # Initialize company info once (skips if already present)
         await init_market_data()
 
-        # Connect MCP servers using best practices
-        logger.info("Connecting MCP servers...")
-        from backend.core.tools.mcp import connect_mcp_servers
-
-        await connect_mcp_servers()
-        logger.info("MCP servers connected successfully.")
-
     except Exception as e:
         import traceback
 
@@ -65,11 +56,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     try:
-        logger.info("Disconnecting MCP servers...")
-        from backend.core.tools.mcp import disconnect_mcp_servers
-
-        await disconnect_mcp_servers()
-        logger.info("MCP servers disconnected successfully.")
+        logger.info("Shutting down AIris Backend API...")
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
 
