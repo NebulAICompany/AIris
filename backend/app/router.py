@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
+from backend.core.tools.balance import process_balance_of_payments
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
@@ -11,18 +11,85 @@ from backend.shared.constants import (
     VERIFICATION_UPLOADS_PATH,
     MASKED_MAP_JSON_PATH,
     CREATED_DOCUMENTS_PATH,
-    DEFAULT_SEARCH_METHOD,
+    IMAGES_PATH_STR,
+    ALLOWED_FILE_EXTENSIONS,
 )
 import shutil
 from pathlib import Path
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import List, Optional
+from dateutil.relativedelta import relativedelta
 from backend.utils.news import get_aggregated_financial_news
 from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
+from backend.utils.preview import PreviewGenerator
+from backend.utils.balance_payments_database import balance_payments_db
 
 logger = get_logger("ROUTER")
 router = APIRouter()
+
+
+def delete_document_images(filename: str) -> dict:
+    """
+    Delete all images associated with a document using the JSON mapping.
+
+    Args:
+        filename: The document filename (with or without extension)
+
+    Returns:
+        dict: Information about the deletion operation
+    """
+    try:
+        import json
+
+        # Extract document name without extension
+        document_name = Path(filename).stem
+
+        # Load image mapping
+        mapping_file = Path(IMAGES_PATH_STR) / "image_document_mapping.json"
+        if not mapping_file.exists():
+            logger.info(f"📁 No image mapping file found for document: {document_name}")
+            return {
+                "images_deleted": 0,
+                "mapping_updated": False,
+                "message": "No image mapping file found",
+            }
+
+        with open(mapping_file, "r", encoding="utf-8") as f:
+            mapping = json.load(f)
+
+        # Find images associated with this document
+        images_to_delete = []
+        for image_filename, image_info in mapping.items():
+            if image_info.get("document") == document_name:
+                images_to_delete.append(image_filename)
+
+        # Delete the image files
+        deleted_count = 0
+        for image_filename in images_to_delete:
+            image_path = Path(IMAGES_PATH_STR) / image_filename
+            if image_path.exists():
+                image_path.unlink()
+                deleted_count += 1
+
+        # Remove entries from mapping
+        for image_filename in images_to_delete:
+            mapping.pop(image_filename, None)
+
+        # Save updated mapping
+        with open(mapping_file, "w", encoding="utf-8") as f:
+            json.dump(mapping, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"🗂️ Deleted {deleted_count} images for document: {document_name}")
+        return {
+            "images_deleted": deleted_count,
+            "mapping_updated": True,
+            "message": f"Deleted {deleted_count} images for document {document_name}",
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Error deleting images for {filename}: {e}")
+        return {"images_deleted": 0, "mapping_updated": False, "error": str(e)}
 
 
 class QueryRequest(BaseModel):
@@ -36,7 +103,6 @@ class QueryRequest(BaseModel):
 class NewsChatRequest(BaseModel):
     query: str
     news_context: dict
-    web_search_enabled: bool = True
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
 
@@ -44,6 +110,11 @@ class NewsChatRequest(BaseModel):
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "none"  # "none", "cch"
+
+
+class BalanceProcessRequest(BaseModel):
+    fileName: str
+    replaceExisting: bool = True
 
 
 @router.get("/market/eod")
@@ -130,19 +201,14 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
-        pre_embedding_process = request.preEmbeddingProcess
         session_id = request.sessionId
         selected_files = request.selectedFiles
-        # Use system-level default search method
-        search_method = DEFAULT_SEARCH_METHOD
 
         answer = await run_orchestration(
             query,
             web_search_enabled,
-            pre_embedding_process,
             session_id,
             selected_files,
-            search_method,
         )
         api_requests_total.labels(status="success").inc()
 
@@ -151,6 +217,7 @@ async def handle_query(request: QueryRequest):
             "images": answer.get("images", []),
             "charts": answer.get("charts", []),
             "generatedFiles": answer.get("generatedFiles", []),
+            "sources": answer.get("sources", []),
             "sessionId": answer.get("session_id", session_id),
         }
 
@@ -168,21 +235,15 @@ async def handle_news_chat(request: NewsChatRequest):
     try:
         query = request.query
         news_context = request.news_context
-        web_search_enabled = request.web_search_enabled
         session_id = request.sessionId
 
         logger.info(f"📰 News Chat API Router received:")
         logger.info(f"   - Query: {query}")
         logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
-        logger.info(f"   - Web Search Enabled: {web_search_enabled}")
         logger.info(f"   - Session ID: {session_id}")
 
         # Process news chat query
-        answer = await run_news_chat_orchestration(
-            query, news_context, web_search_enabled, session_id
-        )
-
-        logger.info("News chat query processed successfully")
+        answer = await run_news_chat_orchestration(query, news_context, session_id)
         api_requests_total.labels(status="success").inc()
 
         return {
@@ -195,13 +256,14 @@ async def handle_news_chat(request: NewsChatRequest):
     except Exception as e:
         logger.error(f"Error processing news chat query: {str(e)}")
         api_requests_total.labels(status="error").inc()
-        raise HTTPException(
-            status_code=500, detail=f"Error processing news chat query: {str(e)}"
-        )
+        raise HTTPException( status_code=500, detail=f"Error processing news chat query: {str(e)}")
 
 
 @router.post("/upload")
-async def handle_upload(file: UploadFile = File(...)):
+async def handle_upload(
+    file: UploadFile = File(...),
+    photoLessMode: bool = Form(False),
+):
     try:
 
         # Ensure uploads directory exists (use absolute path)
@@ -219,7 +281,9 @@ async def handle_upload(file: UploadFile = File(...)):
         pre_embedding_process = "none"
 
         result = await process_file(
-            str(file_path), pre_embedding_process=pre_embedding_process
+            str(file_path),
+            pre_embedding_process=pre_embedding_process,
+            photo_less_mode=photoLessMode,
         )
 
         logger.info(f"File processed successfully: {file.filename}")
@@ -231,12 +295,56 @@ async def handle_upload(file: UploadFile = File(...)):
             "message": "Dosya başarıyla yüklendi ve işlendi",
             "result": result,
             "preEmbeddingProcess": pre_embedding_process,
+            "photoLessMode": photoLessMode,
         }
     except Exception as e:
         error_message = str(e)
         logger.error(f"File upload error for {file.filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
+        )
+
+
+@router.post("/balance-of-payments/upload")
+async def handle_balance_upload(
+    file: UploadFile = File(...),
+    photoLessMode: bool = Form(False),
+):
+    """Store balance-of-payments documents without triggering vector ingestion."""
+
+    filename = getattr(file, "filename", "unknown")
+
+    try:
+        uploads_dir = Path(UPLOADS_PATH)
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+
+        file_path = uploads_dir / filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        logger.info(
+            "Balance document stored for agent-only processing: %s (photoLessMode=%s)",
+            filename,
+            photoLessMode,
+        )
+
+        return {
+            "filename": filename,
+            "content_type": file.content_type,
+            "status": "success",
+            "message": "Balance document stored for agent processing",
+            "photoLessMode": photoLessMode,
+        }
+    except Exception as e:
+        error_message = str(e)
+        logger.error(
+            "Balance document upload failed for %s: %s",
+            filename,
+            error_message,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Balance document upload failed: {error_message}",
         )
 
 
@@ -280,11 +388,8 @@ def get_chat_session(session_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error getting chat session {session_id}: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting chat session: {error_message}"
-        )
+        logger.error(f"Error getting chat session {session_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error getting chat session: {str(e)}")
 
 
 @router.post("/chat/sessions")
@@ -338,9 +443,6 @@ def list_files():
         if not uploads_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
 
-        # Import the temporary file check function
-        from backend.utils.preview import PreviewGenerator
-
         files = []
         for file in uploads_dir.iterdir():
             if file.is_file():
@@ -377,9 +479,6 @@ def list_created_documents():
         created_documents_dir = Path(CREATED_DOCUMENTS_PATH)
         if not created_documents_dir.exists():
             return {"files": []}  # Return an empty list if the directory doesn't exist
-
-        # Import the temporary file check function
-        from backend.utils.preview import PreviewGenerator
 
         files = []
         for file in created_documents_dir.iterdir():
@@ -430,8 +529,14 @@ def delete_file(filename: str):
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
             file_path.unlink()
+
+            # Delete corresponding images
+            image_deletion_result = delete_document_images(filename)
+
             return {
-                "message": f"File '{filename}' deleted successfully (no vector store found)"
+                "message": f"File '{filename}' deleted successfully (no vector store found)",
+                "images_deleted": image_deletion_result["images_deleted"],
+                "mapping_updated": image_deletion_result["mapping_updated"],
             }
 
         # Load existing vector store
@@ -488,18 +593,22 @@ def delete_file(filename: str):
             keyword_search = get_keyword_search()
             keyword_search.remove_documents_by_file(base_filename)
             keyword_search.save_index()
-            logger.info(f"✅ Documents removed from keyword search index")
         except Exception as e:
             logger.error(f"Error deleting documents from keyword search index: {e}")
 
         # Delete the actual file
         file_path.unlink()
 
+        # Delete corresponding images
+        image_deletion_result = delete_document_images(filename)
+
         result = {
             "message": f"File '{filename}' deleted successfully",
             "chunks_deleted": len(chunk_ids_to_delete),
             "pii_entries_removed": pii_delete_count,
             "file_path": str(file_path),
+            "images_deleted": image_deletion_result["images_deleted"],
+            "mapping_updated": image_deletion_result["mapping_updated"],
         }
         logger.info(f"🎉 Deletion completed successfully: {result}")
         return result
@@ -514,28 +623,6 @@ def delete_file(filename: str):
         logger.error(f"❌ Traceback: {traceback.format_exc()}")
 
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
-
-
-@router.get("/files/{filename}/download")
-def download_file(filename: str):
-    """
-    Download a file from uploads directory.
-    """
-    try:
-        file_path = Path(UPLOADS_PATH) / filename
-
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        return FileResponse(
-            path=file_path, filename=filename, media_type="application/octet-stream"
-        )
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error downloading file {filename}: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error downloading file: {error_message}"
-        )
 
 
 @router.get("/files/{filename}")
@@ -577,8 +664,6 @@ def get_file_preview(filename: str):
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
-        from backend.utils.preview import PreviewGenerator
-
         preview_generator = PreviewGenerator(str(file_path))
         preview_data = preview_generator.generate_preview()
 
@@ -592,28 +677,6 @@ def get_file_preview(filename: str):
         logger.error(f"Error generating preview for {filename}: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error generating preview: {str(e)}"
-        )
-
-
-@router.get("/created-documents/{filename}/download")
-def download_created_document(filename: str):
-    """
-    Download a file from created_documents directory.
-    """
-    try:
-        file_path = Path(CREATED_DOCUMENTS_PATH) / filename
-
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
-
-        return FileResponse(
-            path=file_path, filename=filename, media_type="application/octet-stream"
-        )
-    except Exception as e:
-        logger.error(f"Error downloading created document {filename}: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error downloading created document: {str(e)}",
         )
 
 
@@ -654,8 +717,6 @@ def get_created_document_preview(filename: str):
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
-        from backend.utils.preview import PreviewGenerator
-
         preview_generator = PreviewGenerator(str(file_path))
         preview_data = preview_generator.generate_preview()
 
@@ -688,11 +749,16 @@ def delete_created_document(filename: str):
         # Delete the file
         file_path.unlink()
 
+        # Delete corresponding images
+        image_deletion_result = delete_document_images(filename)
+
         logger.info(f"Created document deleted successfully: {filename}")
 
         return {
             "message": f"Created document '{filename}' deleted successfully",
             "success": True,
+            "images_deleted": image_deletion_result["images_deleted"],
+            "mapping_updated": image_deletion_result["mapping_updated"],
         }
     except Exception as e:
         error_message = str(e)
@@ -701,6 +767,110 @@ def delete_created_document(filename: str):
             status_code=500,
             detail=f"Error deleting created document: {error_message}",
         )
+
+
+@router.post("/balance-of-payments/process")
+async def trigger_balance_of_payments_process(request: BalanceProcessRequest):
+    file_path = Path(UPLOADS_PATH) / request.fileName
+
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"File {request.fileName} not found in uploads directory",
+        )
+
+    suffix = file_path.suffix.lower()
+    if suffix not in ALLOWED_FILE_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Balance of payments processing currently supports files with extensions: "
+                + ", ".join(sorted(ALLOWED_FILE_EXTENSIONS))
+            ),
+        )
+
+    try:
+        result = await process_balance_of_payments(
+            file_path=str(file_path))
+        
+        return result
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to process balance of payments workbook",
+        )
+
+
+@router.get("/balance-of-payments/calendar")
+def get_balance_of_payments_calendar(
+    months: int = 3,
+    endDate: Optional[str] = None,
+):
+    months = max(1, min(months, 12))
+
+    latest_activity_str = balance_payments_db.latest_activity_date()
+    latest_activity: Optional[date] = None
+    if latest_activity_str:
+        try:
+            latest_activity = datetime.fromisoformat(latest_activity_str).date()
+        except ValueError:
+            logger.warning(
+                "Invalid latest activity date stored in database: %s",
+                latest_activity_str,
+            )
+
+    if endDate:
+        try:
+            end_date = datetime.fromisoformat(endDate).date()
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="Invalid endDate format. Use YYYY-MM-DD"
+            )
+    else:
+        if latest_activity:
+            end_date = latest_activity
+        else:
+            end_date = datetime.today().date()
+
+    start_date = end_date - relativedelta(months=months - 1)
+    start_date = start_date - timedelta(days=start_date.weekday())
+
+    end_weekday = end_date.weekday()
+    if end_weekday != 6:  # extend to Sunday for full week display
+        end_date = end_date + timedelta(days=(6 - end_weekday))
+
+    if start_date > end_date:
+        start_date = end_date
+
+    daily_balances = balance_payments_db.get_daily_balances(start_date, end_date)
+    max_absolute = max((abs(day["net"]) for day in daily_balances), default=0.0)
+
+    return {
+        "startDate": start_date.isoformat(),
+        "endDate": end_date.isoformat(),
+        "days": daily_balances,
+        "maxAbsoluteNet": max_absolute,
+        "latestActivity": latest_activity_str,
+    }
+
+
+@router.get("/balance-of-payments/transactions/{date_str}")
+def get_balance_transactions_for_day(date_str: str):
+    try:
+        target_date = datetime.fromisoformat(date_str).date()
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid date format. Use YYYY-MM-DD",
+        )
+
+    transactions = balance_payments_db.get_transactions_for_date(target_date)
+    return {
+        "date": target_date.isoformat(),
+        "transactions": transactions,
+    }
 
 
 @router.get("/finance-news")
@@ -894,36 +1064,4 @@ async def verify_document(
             pass
         raise HTTPException(
             status_code=500, detail=f"Document verification failed: {error_message}"
-        )
-
-
-@router.get("/verification-types")
-def get_verification_types():
-    """
-    Get available document verification types
-    """
-    try:
-        verification_types = [
-            "invoice",
-            "receipt",
-            "bank_statement",
-            "payslip",
-            "contract",
-            "tax_declaration",
-            "expense_voucher",
-            "other",
-            "auto",
-        ]
-
-        return {
-            "verification_types": verification_types,
-            "supported_formats": [".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".bmp"],
-            "default_type": "auto",
-        }
-
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Error getting verification types: {error_message}")
-        raise HTTPException(
-            status_code=500, detail=f"Error getting verification types: {error_message}"
         )

@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Tuple
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent
+from backend.core.agents import create_main_agent
 from backend.retrieval.retriever import retrieve_top_k
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
@@ -24,7 +24,7 @@ async def generate_fusion_queries(
     """
     try:
         # Create a simple agent for query generation
-        agent = create_rag_agent(
+        agent = create_main_agent(
             local_context="",
             web_search_enabled=False,
             query=original_query,

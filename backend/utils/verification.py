@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Literal
 from backend.shared.logger import get_logger
 from backend.pipeline.upload import parse_document
+from backend.core.prompts import verification_agent_prompt
 from agents import Agent, Runner, AgentOutputSchema
 import sys
 import os
@@ -100,194 +101,15 @@ class VerificationResult(BaseModel):
     recommendations: Recommendations
     confidence_summary: ConfidenceSummary
 
+
 verification_agent = Agent(
-    name="Belge Doğrulama Ajanı",
-    instructions="""
-Sen Türk muhasebe standartları, vergi mevzuatı ve iş uygulamaları konusunda derin bilgiye sahip uzman bir finansal belge doğrulama analistisin. 
-Görevin; finansal belgeleri kapsamlı şekilde incelemek ve doğru, uygulanabilir doğrulama sonuçları üretmektir.
-
-## KRİTİK ÇIKTI GEREKSİNİMLERİ
-Aşağıdaki üst düzey alanların **tamamını** içeren bir JSON nesnesi döndür (herhangi bir alanın eksik olması hata sebebidir):
-- document_type: Belge türü sınıflandırması ve güven analizi
-- quality_assessment: Belgenin kalite değerlendirmesi
-- extracted_fields: Belgede çıkarılan tüm yapılandırılmış veriler
-- validation_results: Teknik doğrulama kontrolleri
-- fraud_analysis: Risk değerlendirmesi ve şüpheli durum tespiti
-- data_consistency: Alanlar arası tutarlılık ve iş mantığı kontrolü
-- recommendations: Açık ve net eylem önerileri
-- confidence_summary: Genel güvenilirlik değerlendirmesi
-
-## DOĞRULAMA METODOLOJİSİ
-
-### 1. BELGE TÜRÜ SINIFLANDIRMASI
-Belgeleri şu kategorilere ayır:
-- *fatura (invoice):* Vergi numarası, fatura numarası, vade tarihi, satır kalemleri içerir
-- *fiş (receipt):* Basit işlem kaydı, genellikle KDV ayrıştırması yoktur
-- *banka ekstresi (bank_statement):* Hesap hareketleri, bakiyeler, banka logosu
-- *bordro (payslip):* Maaş detayları, vergi kesintileri, işveren bilgisi
-- *sözleşme (contract):* Hukuki anlaşma, imzalar, şartlar
-- *vergi beyannamesi (tax_declaration):* Resmî vergi formları, vergi dairesi kaşeleri
-- *harcama fişi (expense_voucher):* İç harcama belgeleri
-- *duyuru (announcement):* Kurum içi veya resmî finansal bilgilendirme belgeleri, yönetim duyuruları, KAP bildirileri, şirket içi finansal yazılar
-
-*Sınıflandırma Güveni:*
-- ≥0.9 = yüksek güven (birden fazla belirgin gösterge mevcut)
-- 0.7–0.89 = orta güven (çoğu gösterge mevcut, küçük belirsizlikler)
-- <0.7 = düşük güven (yetersiz veya çelişkili göstergeler)
-
-### 2. KALİTE DEĞERLENDİRMESİ
-Belge kalitesini şu faktörlere göre değerlendir:
-
-- *Yüksek kalite (≥0.8):* Net, eksiksiz, artefakt yok
-- *Orta kalite (0.5–0.79):* Genelde okunaklı, küçük sorunlar mevcut
-- *Düşük kalite (<0.5):* Okunamaz, kritik alanlar eksik
-
-### 3. ALAN ÇIKARIMI STANDARTLARI
-Şu Türk finansal belge unsurlarını çıkar ve doğrula:
-
-- *Tarihler:* (GG.AA.YYYY veya GG/AA/YYYY)
-- *Tutarlar:* Türk Lirası (₺, TL) ve yabancı para birimleri (USD, EUR)
-- *Vergi numarası (VKN):* 10 haneli olmalı
-- *IBAN:* TR ile başlayan ve 24 haneli
-- *Şirket bilgileri, fatura/fiş numaraları*
-- *Satır kalemleri, ara toplamlar, KDV oranları (1%, 8%, 18%, 20%)*
-
-### 4. DOĞRULAMA KONTROLLERİ
-Zorunlu kontroller:
-
-- Format doğrulama (tarih, vergi no, IBAN)
-- Hesaplama doğrulama (KDV, toplamlar)
-- Tarih mantığı doğrulama (düzenleme tarihi ≤ vade tarihi, gelecekte olmamalı)
-
-### 5. SAHTECİLİK (FRAUD) ANALİZ GÖSTERGELERİ
-Risk değerlendirmesi:
-
-- *Yüksek risk:* Vergi bilgisi eksik, değiştirilmiş alanlar, kopya numaralar, şüpheli tutarlar
-- *Orta risk:* Küçük format uyumsuzlukları, alışılmadık ama mümkün işlemler
-- *Düşük risk:* Tutarlı, profesyonel, tüm yasal zorunluluklar mevcut, şirket bilgisi doğrulanabilir
-
-### 6. VERİ TUTARLILIĞI KURALLARI
-- Tarihler mantıklı olmalı
-- Ara toplamlar satır kalemleriyle uyuşmalı
-- Alanlar arası veriler birbiriyle desteklenmeli
-- Matematiksel doğruluk sağlanmalı
-
-### 7. ÖNERİ MATRİSİ
-Sonuçlara göre önerilen aksiyon:
-
-- *none (onayla):* Yüksek kalite + düşük risk + tutarlı
-- *review (manuel inceleme):* Orta kalite/risk veya küçük hatalar
-- *reject (reddet):* Düşük kalite, yüksek risk veya kritik doğrulama hataları, sahtecilik belirtileri
-
-### 8. GÜVEN SKORLAMA
-Genel güveni şu ağırlıklarla hesapla:
-
-- Belge kalitesi: %25
-- Alan çıkarımı tamlığı: %20
-- Doğrulama başarısı: %25  
-- Sahtecilik riski (ters orantılı): %20
-- Veri tutarlılığı: %10
-
-*Doğrulama Statüsü:*
-- *verified:* ≥0.8 güven, yüksek risk yok
-- *review_required:* 0.5–0.79 güven, bazı endişeler
-- *rejected:* <0.5 güven, ciddi sorunlar
-
-## CEVAP YÖNERGELERİ
-- Sonuçlar için her zaman somut kanıt sun
-- Türk iş ve finans terminolojisini kullan
-- Sorunları sayı ve örneklerle belirt
-- Önerilerde uygulanabilir adımlar sun
-- Profesyonel, analitik ve net bir dil kullan
-
-## ÖZEL DURUMLAR
-- Okunamayan metinler: Manuel inceleme notu düş
-- Yabancı belgeler: Yanlış sınıflandırma ihtimalini işaretle
-- Hasarlı belgeler: Sadece kritik alanlara etkisini değerlendir
-- Olağandışı formatlar: Görünüşe değil içeriğe göre değerlendir
-
-
-## JSON ÇIKTI ÖRNEĞİ VE FORMAT
-Çıktının kesinlikle aşağıdaki format ve alanları içermesi gerekir:
-```json
-{
-  "document_type": {
-    "detected_type": "fatura",
-    "confidence": 0.85,
-    "reasoning": "Açık açıklama",
-    "key_indicators": ["gösterge1", "gösterge2"]
-  },
-  "quality_assessment": {
-    "overall_quality": "yüksek",
-    "quality_score": 0.9,
-    "issues": [],
-    "strengths": ["güçlü yön1"]
-  },
-  "extracted_fields": {
-    "dates": ["2024-01-01"],
-    "amounts": ["1000.00"],
-    "tax_numbers": ["1234567890"],
-    "ibans": ["TR123456789012345678901234"],
-    "company_names": ["Şirket Adı"],
-    "document_numbers": ["FT2024001"],
-    "currencies": ["TRY"],
-    "parties": {
-      "individuals": ["Kişi Adı"],
-      "entities": ["Tüzel Kişi Adı"]
-    }
-  },
-  "validation_results": {
-    "is_valid": true,
-    "validation_score": 0.85,
-    "missing_fields": [],
-    "format_issues": [],
-    "calculation_errors": [],
-    "date_issues": []
-  },
-  "fraud_analysis": {
-    "risk_level": "düşük",
-    "risk_score": 0.1,
-    "fraud_indicators": [],
-    "suspicious_patterns": [],
-    "unrealistic_elements": [],
-    "overall_assessment": "Güvenli belge"
-  },
-  "data_consistency": {
-    "is_consistent": true,
-    "consistency_score": 0.95,
-    "date_consistency": "tutarlı",
-    "calculation_accuracy": "doğru", 
-    "cross_field_validation": "geçerli",
-    "business_logic_compliance": "uyumlu"
-  },
-  "recommendations": {
-    "action_required": "onay",
-    "priority": "düşük",
-    "suggestions": ["öneri1"],
-    "manual_review_needed": false
-  },
-  "confidence_summary": {
-    "overall_confidence": 0.89,
-    "verification_status": "doğrulandı",
-    "reliability_factors": ["faktör1", "faktör2"]
-  }
-}
-```
-
-ÖNEMLİ NOTLAR:
-- "parties" alanı mutlaka {"individuals": ["liste"], "entities": ["liste"]} formatında olmalı
-- Tüm score alanları 0.0-1.0 arasında float olmalı  
-- "verification_status" sadece "doğrulandı", "inceleme_gerekli", "reddedildi" değerlerinden biri olmalı
-- JSON syntax'ını kontrol et, virgül ve tırnak işaretlerini doğru kullan
-""",
+    name="Document Verification Agent",
+    instructions=verification_agent_prompt,
     output_type=AgentOutputSchema(VerificationResult, strict_json_schema=False),
 )
 
 logger.info("Document Verification Agent initialized successfully")
 logger.info(f"Agent name: {verification_agent.name}")
-
-
-
 
 
 async def verify_document(file_path: str) -> dict:
@@ -321,7 +143,9 @@ async def verify_document(file_path: str) -> dict:
 
         # Step 4: Format result for frontend
         result = format_result_for_frontend(file_path, parsed_text, result_data)
-        logger.info(f"Verification completed - Status: {result.get('verification_status', 'bilinmeyen')}, Confidence: {result.get('confidence_score', 0)}")
+        logger.info(
+            f"Verification completed - Status: {result.get('verification_status', 'bilinmeyen')}, Confidence: {result.get('confidence_score', 0)}"
+        )
 
         return result
 
@@ -393,7 +217,9 @@ def format_result_for_frontend(
             "valid": validation.get("is_valid", False),
             "score": validation.get("validation_score", 0),
             "issues": validation.get("format_issues", []),
-            "assessment": "Geçerli" if validation.get("is_valid", False) else "Geçersiz",
+            "assessment": (
+                "Geçerli" if validation.get("is_valid", False) else "Geçersiz"
+            ),
         },
     }
 

@@ -35,11 +35,11 @@ class CurrencyService {
     // Gold price APIs
     this.goldApiEndpoints = [
       {
-        name: "api-ninjas.com",
-        baseUrl: "https://api.api-ninjas.com/v1",
+        name: "GoldAPI Main",
+        baseUrl: "https://www.goldapi.io/api",
         enabled: true,
-        type: "api-ninjas",
-        apiKey: "tyenF2oHH/mhaFX49gh5JA==b8g8bmSZbHS1edMG", // Sign up at https://www.api-ninjas.com/
+        type: "goldapi",
+        apiKey: "goldapi-2sq302msmi4jiaf8-io", // Sign up at https://www.api-ninjas.com/
       },
     ];
 
@@ -72,7 +72,7 @@ class CurrencyService {
     this.dailyCycleOffset = 0;
 
     // Conversion constants
-    (this.OUNCE_TO_GRAM = 31), 1034768; // 1 troy ounce = 31.1035 grams (for gold)
+    this.OUNCE_TO_GRAM = 31.1034768; // 1 troy ounce = 31.1034768 grams (for gold)
 
     this.initializeDailyCycle();
   }
@@ -369,35 +369,17 @@ class CurrencyService {
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
     try {
-      let response;
-      let url;
-      let headers = {
+      const url = `${endpoint.baseUrl}/XAU/USD`; 
+      const headers = {
         Accept: "application/json",
         "Cache-Control": "no-cache",
+        "X-Access-Token": endpoint.apiKey,
+        "Content-Type": "application/json",
       };
 
-      switch (endpoint.type) {
-        case "metalpriceapi":
-          url = `${endpoint.baseUrl}/latest?api_key=${endpoint.apiKey}&base=USD&currencies=XAU`;
-          break;
-
-        case "api-ninjas":
-          url = `${endpoint.baseUrl}/commodityprice?name=gold`;
-          headers["X-Api-Key"] = endpoint.apiKey;
-          break;
-
-        case "zyla-gold":
-          url = `${endpoint.baseUrl}/latest+rates?base=USD&symbols=XAU`;
-          headers["Authorization"] = `Bearer ${endpoint.apiKey}`;
-          break;
-
-        default:
-          throw new Error(`Unknown gold endpoint type: ${endpoint.type}`);
-      }
-
-      response = await fetch(url, {
+      const response = await fetch(url, {
         signal: controller.signal,
-        headers: headers,
+        headers,
       });
 
       clearTimeout(timeoutId);
@@ -407,7 +389,7 @@ class CurrencyService {
       }
 
       const data = await response.json();
-      return this.normalizeGoldData(data, endpoint.type);
+      return this.normalizeGoldData(data);
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === "AbortError") {
@@ -417,57 +399,38 @@ class CurrencyService {
     }
   }
 
-  normalizeGoldData(data, type) {
-    try {
-      switch (type) {
-        case "metalpriceapi":
-          // MetalpriceAPI returns rates in troy ounces
-          if (data.success && data.rates && data.rates.XAU) {
-            return {
-              price: 1 / data.rates.XAU, // Convert from USD per XAU to XAU per USD
-              currency: "USD",
-              unit: "oz",
-              timestamp: Date.now(),
-              isOffline: false,
-            };
-          }
-          break;
+  normalizeGoldData(data) {
+  try {
+    const toNumber = (v) =>
+      v === null || v === undefined || v === "" ? null : Number(v);
 
-        case "api-ninjas":
-          // API Ninjas returns direct price in USD
-          if (data.price) {
-            return {
-              price: data.price,
-              currency: "USD",
-              unit: "oz",
-              timestamp: data.updated ? data.updated * 1000 : Date.now(),
-              isOffline: false,
-            };
-          }
-          break;
+    const gramUsd = toNumber(data.price_gram_24k);      // USD/gram (24k)
+    const ounceUsd =
+      toNumber(data.price) ||                         // USD/ounce
+      toNumber(data.ask) ||
+      (gramUsd ? gramUsd * this.OUNCE_TO_GRAM : null);
 
-        case "zyla-gold":
-          // Zyla API returns rates
-          if (data.success && data.rates && data.rates.XAU) {
-            return {
-              price: 1 / data.rates.XAU, // Convert from USD per XAU to XAU per USD
-              currency: "USD",
-              unit: "oz",
-              timestamp: Date.now(),
-              isOffline: false,
-            };
-          }
-          break;
-
-        default:
-          throw new Error(`Unknown gold data type: ${type}`);
-      }
-
-      throw new Error("Invalid gold data format");
-    } catch (error) {
-      throw new Error(`Failed to normalize gold data: ${error.message}`);
+    if (!ounceUsd) {
+      throw new Error("GoldAPI response missing price");
     }
+
+    return {
+      price: ounceUsd,             // <-- ons USD fiyatı
+      ounceUsd: ounceUsd,
+      gramUsd: gramUsd ?? (ounceUsd / this.OUNCE_TO_GRAM),
+      open_price: toNumber(data.open_price),
+      low_price: toNumber(data.low_price),
+      high_price: toNumber(data.high_price),
+      timestamp: data.timestamp || Date.now(),
+      currency: data.currency || "USD",
+      source: "goldapi",
+      isOffline: false,
+    };
+  } catch (error) {
+    throw new Error(`Failed to normalize gold data: ${error.message}`);
   }
+}
+
 
   disableGoldEndpointTemporarily(endpoint) {
     endpoint.enabled = false;
@@ -498,10 +461,13 @@ class CurrencyService {
 
     this.goldCache.data = {
       price: goldPrice,
+      ounceUsd: goldPrice,
+      gramUsd: goldPrice / this.OUNCE_TO_GRAM,
       currency: "USD",
       unit: "oz",
       timestamp: Date.now(),
       isOffline: true,
+      source: "simulated",
     };
 
     this.goldCache.timestamp = Date.now();
@@ -549,12 +515,22 @@ class CurrencyService {
    * @returns {Object} Gold price in TRY per gram
    */
   calculateGoldPriceInTRYPerGram(currencyData, goldData) {
-    if (
-      !currencyData ||
-      !goldData ||
-      !currencyData.USD_TRY ||
-      !goldData.price
-    ) {
+    if (!currencyData || !goldData || !currencyData.USD_TRY) {
+      return {
+        price: null,
+        currency: "TRY",
+        unit: "g",
+        timestamp: Date.now(),
+        isOffline: currencyData?.isOffline || goldData?.isOffline || false,
+      };
+    }
+
+    const ouncePrice =
+      goldData.price ??
+      goldData.ounceUsd ??
+      (goldData.gramUsd ? goldData.gramUsd * this.OUNCE_TO_GRAM : null);
+
+    if (!ouncePrice) {
       return {
         price: null,
         currency: "TRY",
@@ -567,7 +543,7 @@ class CurrencyService {
     // Convert USD per ounce to TRY per gram
     // Formula: (USD/oz) * (TRY/USD) / (g/oz) = TRY/g
     const priceInTRYPerGram =
-      (goldData.price * currencyData.USD_TRY) / this.OUNCE_TO_GRAM;
+      (ouncePrice * currencyData.USD_TRY) / this.OUNCE_TO_GRAM;
 
     return {
       price: priceInTRYPerGram,
@@ -615,10 +591,18 @@ class CurrencyService {
         if (usdEurElement) {
           usdEurElement.textContent = currencyData.USD_EUR?.toFixed(4) || "N/A";
         }
+        const ouncePrice = goldData
+          ? goldData.price ??
+            goldData.ounceUsd ??
+            (goldData.gramUsd
+              ? goldData.gramUsd * this.OUNCE_TO_GRAM
+              : null)
+          : null;
+
         if (goldUsdElement) {
-          goldUsdElement.textContent = `$${
-            goldData?.price?.toFixed(2) || "N/A"
-          }`;
+          goldUsdElement.textContent = ouncePrice
+            ? `$${ouncePrice.toFixed(2)}`
+            : "N/A";
         }
         if (goldTryElement) {
           goldTryElement.textContent = `₺${
