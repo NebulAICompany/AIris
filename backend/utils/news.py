@@ -13,16 +13,6 @@ import numpy as np
 
 logger = get_logger("NEWS_UTILS")
 
-# Handle pytz import gracefully
-try:
-    import pytz
-
-    PYTZ_AVAILABLE = True
-except ImportError:
-    PYTZ_AVAILABLE = False
-    logger.warning("pytz not available, using basic timezone handling")
-
-
 # Financial news RSS sources configuration
 @dataclass
 class NewsSource:
@@ -54,6 +44,9 @@ FINANCIAL_NEWS_SOURCES = [
     NewsSource("CNBC-e", "https://www.cnbce.com/rss", "tr"),
     NewsSource("Investing.com TR", "https://tr.investing.com/rss/news.rss", "tr"),
     NewsSource("Dünya Gazetesi", "https://www.dunya.com/rss/ekonomi.xml", "tr"),
+    NewsSource("Hürriyet Ekonomi", "https://www.hurriyet.com.tr/rss/ekonomi.xml", "tr"),
+    NewsSource("BloombergHT", "https://www.bloomberght.com/rss", "tr"),
+    NewsSource("Finansın Gündemi", "https://www.finansingundemi.com/rss", "tr"),
 ]
 
 
@@ -249,44 +242,25 @@ def normalize_datetime(date_str: str) -> datetime.datetime:
     This ensures proper time display for Turkish users.
     """
     if not date_str:
-        if PYTZ_AVAILABLE:
-            turkey_tz = pytz.timezone("Europe/Istanbul")
-            return datetime.datetime.min.replace(tzinfo=turkey_tz)
-        else:
-            # GMT+3 offset
-            turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
-            return datetime.datetime.min.replace(tzinfo=turkey_offset)
+        # GMT+3 offset
+        turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
+        return datetime.datetime.min.replace(tzinfo=turkey_offset)
 
     try:
         parsed_date = date_parser.parse(date_str)
 
-        if PYTZ_AVAILABLE:
-            turkey_tz = pytz.timezone("Europe/Istanbul")
-
-            # If the date is offset-naive (no timezone info), assume it's Turkish local time
-            if parsed_date.tzinfo is None:
-                parsed_date = turkey_tz.localize(parsed_date)
-            else:
-                # Convert any timezone to Turkish time
-                parsed_date = parsed_date.astimezone(turkey_tz)
+        # If the date is offset-naive (no timezone info), assume it's Turkish local time
+        if parsed_date.tzinfo is None:
+            parsed_date = parsed_date.replace(tzinfo=turkey_offset)
         else:
-            # Fallback without pytz - use GMT+3
-            turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
-            if parsed_date.tzinfo is None:
-                parsed_date = parsed_date.replace(tzinfo=turkey_offset)
-            else:
-                parsed_date = parsed_date.astimezone(turkey_offset)
+            parsed_date = parsed_date.astimezone(turkey_offset)
 
         return parsed_date
 
     except Exception as e:
         logger.warning(f"Failed to parse date '{date_str}': {e}")
-        if PYTZ_AVAILABLE:
-            turkey_tz = pytz.timezone("Europe/Istanbul")
-            return datetime.datetime.min.replace(tzinfo=turkey_tz)
-        else:
-            turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
-            return datetime.datetime.min.replace(tzinfo=turkey_offset)
+        turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
+        return datetime.datetime.min.replace(tzinfo=turkey_offset)
 
 
 async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str]:

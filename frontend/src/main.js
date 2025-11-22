@@ -125,7 +125,7 @@ class AIrisApp {
     ipcMain.removeAllListeners("upload-file");
     ipcMain.removeAllListeners("check-health");
     ipcMain.removeAllListeners("open-dev-tools");
-    ipcMain.removeAllListeners("open-external-url");
+  ipcMain.removeAllListeners("open-external-url");
 
     // Handle file selection dialog
     ipcMain.handle("select-file", async () => {

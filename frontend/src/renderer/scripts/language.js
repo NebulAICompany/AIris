@@ -30,7 +30,7 @@ class LanguageService {
         uploadFiles: "Upload Files",
         myFiles: "My Files",
         createdDocuments: "Created Documents",
-        interestCalculator: "Interest Calculator",
+        interestCalculator: "Calculations",
         financeNews: "Finance News",
         balance: "Balance",
         currentStatus: "Current Status",
@@ -349,6 +349,68 @@ class LanguageService {
         yearlyInterestCost: "Yearly Cost",
         enterValidValues: "Please enter valid values",
         enterPositiveValues: "Please enter positive values",
+        depositCalculatorTitle: "Deposit Return",
+        depositCalculatorDescription:
+          "Estimate the interest earned on a fixed-term deposit.",
+        depositPrincipal: "Principal Amount",
+        depositDays: "Term (Days)",
+        depositAnnualRate: "Annual Interest Rate (%)",
+        depositResults: "Deposit Results",
+        depositInterest: "Interest Earned",
+        depositFinalAmount: "Final Amount",
+        compoundDepositTitle: "Compound Deposit",
+        compoundDepositDescription:
+          "Calculate compound interest across different compounding frequencies.",
+        compoundDepositPrincipal: "Principal Amount",
+        compoundDepositAnnualRate: "Annual Interest Rate (%)",
+        compoundDepositTerm: "Term (Number of Periods)",
+        compoundDepositFrequency: "Compounding Frequency",
+        compoundDepositFrequencyDaily: "Daily",
+        compoundDepositFrequencyMonthly: "Monthly",
+        compoundDepositFrequencyYearly: "Yearly",
+        compoundDepositResults: "Compound Deposit Results",
+        compoundDepositInterest: "Interest Earned",
+        compoundDepositFinalAmount: "Final Amount",
+        presentValueCalculatorTitle: "Present Value",
+        presentValueCalculatorDescription:
+          "Discount a future amount to today's value.",
+        presentValueFutureAmount: "Future Value",
+        presentValueAnnualRate: "Annual Interest Rate (%)",
+        presentValueYears: "Years",
+        presentValueMonths: "Months",
+        presentValueDays: "Days",
+        presentValueResults: "Present Value Results",
+        presentValueValue: "Present Value",
+        futureValueCalculatorTitle: "Future Value",
+        futureValueCalculatorDescription:
+          "Project a current amount into the future.",
+        futureValuePresentAmount: "Present Value",
+        futureValueAnnualRate: "Annual Interest Rate (%)",
+        futureValueYears: "Years",
+        futureValueMonths: "Months",
+        futureValueDays: "Days",
+        futureValueResults: "Future Value Results",
+        futureValueValue: "Future Value",
+        futureValueAnnuityCalculatorTitle: "Future Value of Annuity",
+        futureValueAnnuityCalculatorDescription:
+          "Project a series of equal payments into the future.",
+        futureValueAnnuityPayment: "Periodic Payment",
+        futureValueAnnuityAnnualRate: "Annual Interest Rate (%)",
+        futureValueAnnuityYears: "Years",
+        futureValueAnnuityMonths: "Months",
+        futureValueAnnuityDays: "Days",
+        futureValueAnnuityResults: "Future Value Results",
+        futureValueAnnuityValue: "Future Value",
+        presentValueAnnuityCalculatorTitle: "Present Value of Annuity",
+        presentValueAnnuityCalculatorDescription:
+          "Discount a series of equal payments to today's value.",
+        presentValueAnnuityPayment: "Periodic Payment",
+        presentValueAnnuityAnnualRate: "Annual Interest Rate (%)",
+        presentValueAnnuityYears: "Years",
+        presentValueAnnuityMonths: "Months",
+        presentValueAnnuityDays: "Days",
+        presentValueAnnuityResults: "Present Value Results",
+        presentValueAnnuityValue: "Present Value",
 
         // File Selection
         selectFiles: "Select Files",
@@ -387,6 +449,66 @@ class LanguageService {
         processing: "Processing...",
         unknown: "Unknown",
         failed: "Failed",
+
+        // Balance Calendar
+        balanceCalendar: {
+          navLabel: "Balance Calendar",
+          title: "Balance of Payments",
+          subtitle:
+            "Track daily cash positions derived from processed Excel workbooks.",
+          timeframeLabel: "Timeframe",
+          timeframes: {
+            last1Month: "Last 1 month",
+            last3Months: "Last 3 months",
+            last6Months: "Last 6 months",
+            last9Months: "Last 9 months",
+            last12Months: "Last 12 months",
+          },
+          refresh: "Refresh",
+          processTitle: "Process Balance Document",
+          processDescription:
+            "Upload a balance of payments document (Excel, PDF, image, etc.). The parser extracts the ledger and the agent will normalize transactions automatically.",
+          uploadButton: "Upload & Process",
+          uploadNote:
+            "Uses parser.py to extract ledger details before running the agent.",
+          runAgent: "Run Agent",
+          loading: undefined,
+          selectDayPrompt: "Select a day to view transaction details.",
+          noDocuments: "No balance documents found",
+          fetchDocumentsError: "Failed to load documents",
+          retry: "Retry",
+          summaryPeriodLabel: "Period",
+          latestActivity: "Latest activity: {date}",
+          noActivity: "No activity recorded yet",
+          totalIncome: "Total Income",
+          totalExpense: "Total Expense",
+          netChange: "Net Change",
+          weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          legendTitle: "Net balance intensity",
+          incomeLabel: "Income",
+          expenseLabel: "Expense",
+          netLabel: "Net",
+          tooltipNoTransactions: "No transactions",
+          dayNoTransactions: "No transactions recorded for this day.",
+          transactionsLoadError: "Unable to load transactions",
+          calendarLoadError: "Unable to load calendar",
+          calendarFetchError: "Unable to fetch calendar data",
+          selectFilePrompt: "Please upload a balance document first.",
+          runningAgent: "Running agent...",
+          agentRunFailed: "Agent run failed",
+          agentRequestFailed: "Failed to run the agent.",
+          agentSuccess: "Agent completed successfully.",
+          unsupportedFileType: "Unsupported file type for balance processing.",
+          uploadingFile: "Uploading {filename}...",
+          uploadSuccess: "Uploaded {filename}. Running agent...",
+          uploadFailed: "Failed to upload balance document.",
+          transactionSingular: "{count} transaction",
+          transactionPlural: "{count} transactions",
+          direction: {
+            income: "Income",
+            expense: "Expense",
+          },
+        },
 
         // Navigation
         goToChat: "Go to Chat",
@@ -433,7 +555,7 @@ class LanguageService {
         uploadFiles: "Dosya Yükle",
         myFiles: "Dosyalarım",
         createdDocuments: "Oluşturulan Belgeler",
-        interestCalculator: "Kredi Hesaplama",
+        interestCalculator: "Hesaplamalar",
         financeNews: "Finans Haberleri",
         balance: "Ödemeler Dengesi",
         currentStatus: "Güncel Durum",
@@ -458,6 +580,68 @@ class LanguageService {
         yearlyInterestCost: "Yıllık Maliyet",
         enterValidValues: "Lütfen geçerli değerler giriniz",
         enterPositiveValues: "Lütfen pozitif değerler giriniz",
+        depositCalculatorTitle: "Mevduat Getirisi",
+        depositCalculatorDescription:
+          "Vadeli mevduatınızın getirisini hesaplayın.",
+        depositPrincipal: "Anapara Tutarı",
+        depositDays: "Vade (Gün)",
+        depositAnnualRate: "Yıllık Faiz Oranı (%)",
+        depositResults: "Mevduat Sonuçları",
+        depositInterest: "Kazanç",
+        depositFinalAmount: "Vade Sonu Tutarı",
+        compoundDepositTitle: "Bileşik Mevduat",
+        compoundDepositDescription:
+          "Farklı bileşik dönemleri için getiriyi hesaplayın.",
+        compoundDepositPrincipal: "Anapara Tutarı",
+        compoundDepositAnnualRate: "Yıllık Faiz Oranı (%)",
+        compoundDepositTerm: "Vade (Dönem Sayısı)",
+        compoundDepositFrequency: "Bileşik Frekansı",
+        compoundDepositFrequencyDaily: "Günlük",
+        compoundDepositFrequencyMonthly: "Aylık",
+        compoundDepositFrequencyYearly: "Yıllık",
+        compoundDepositResults: "Bileşik Mevduat Sonuçları",
+        compoundDepositInterest: "Kazanç",
+        compoundDepositFinalAmount: "Vade Sonu Tutarı",
+        presentValueCalculatorTitle: "Bugünkü Değer",
+        presentValueCalculatorDescription:
+          "Gelecekteki bir tutarı bugünkü değere indirgeyin.",
+        presentValueFutureAmount: "Gelecekteki Tutar",
+        presentValueAnnualRate: "Yıllık Faiz Oranı (%)",
+        presentValueYears: "Yıl",
+        presentValueMonths: "Ay",
+        presentValueDays: "Gün",
+        presentValueResults: "Bugünkü Değer Sonuçları",
+        presentValueValue: "Bugünkü Değer",
+        futureValueCalculatorTitle: "Gelecek Değer",
+        futureValueCalculatorDescription:
+          "Bugünkü bir tutarı geleceğe projeksiyon yapın.",
+        futureValuePresentAmount: "Bugünkü Tutar",
+        futureValueAnnualRate: "Yıllık Faiz Oranı (%)",
+        futureValueYears: "Yıl",
+        futureValueMonths: "Ay",
+        futureValueDays: "Gün",
+        futureValueResults: "Gelecek Değer Sonuçları",
+        futureValueValue: "Gelecek Değer",
+        futureValueAnnuityCalculatorTitle: "Eşit Ödemelerin Gelecek Değeri",
+        futureValueAnnuityCalculatorDescription:
+          "Eşit ödemelerin gelecekteki toplam değerini hesaplayın.",
+        futureValueAnnuityPayment: "Periyodik Ödeme",
+        futureValueAnnuityAnnualRate: "Yıllık Faiz Oranı (%)",
+        futureValueAnnuityYears: "Yıl",
+        futureValueAnnuityMonths: "Ay",
+        futureValueAnnuityDays: "Gün",
+        futureValueAnnuityResults: "Gelecek Değer Sonuçları",
+        futureValueAnnuityValue: "Gelecek Değer",
+        presentValueAnnuityCalculatorTitle: "Eşit Ödemelerin Bugünkü Değeri",
+        presentValueAnnuityCalculatorDescription:
+          "Eşit ödemelerin bugünkü toplam değerini hesaplayın.",
+        presentValueAnnuityPayment: "Periyodik Ödeme",
+        presentValueAnnuityAnnualRate: "Yıllık Faiz Oranı (%)",
+        presentValueAnnuityYears: "Yıl",
+        presentValueAnnuityMonths: "Ay",
+        presentValueAnnuityDays: "Gün",
+        presentValueAnnuityResults: "Bugünkü Değer Sonuçları",
+        presentValueAnnuityValue: "Bugünkü Değer",
 
         // Chat Section
         aiFinancialAssistant: "AIris Finansal Asistan",
@@ -780,6 +964,66 @@ class LanguageService {
         unknown: "Bilinmeyen",
         failed: "Başarısız",
 
+        // Balance Calendar
+        balanceCalendar: {
+          navLabel: "Ödemeler Dengesi",
+          title: "Ödemeler Dengesi",
+          subtitle:
+            "İşlenen Excel çalışma kitaplarından türetilen günlük nakit pozisyonlarını takip edin.",
+          timeframeLabel: "Zaman Aralığı",
+          timeframes: {
+            last1Month: "Son 1 ay",
+            last3Months: "Son 3 ay",
+            last6Months: "Son 6 ay",
+            last9Months: "Son 9 ay",
+            last12Months: "Son 12 ay",
+          },
+          refresh: "Yenile",
+          processTitle: "Ödemeler Dengesi Belgesini İşle",
+          processDescription:
+            "Bir ödemeler dengesi belgesi (Excel, PDF, görsel vb.) yükleyin. Ayrıştırıcı defteri çıkarır ve ajan işlemleri otomatik olarak normalleştirir.",
+          uploadButton: "Yükle ve İşle",
+          uploadNote:
+            "Ajanı çalıştırmadan önce defter detaylarını çıkarmak için parser.py kullanır.",
+          runAgent: "Ajanı Çalıştır",
+          loading: undefined,
+          selectDayPrompt: "İşlem detaylarını görmek için bir gün seçin.",
+          noDocuments: "Ödemeler dengesi belgesi bulunamadı",
+          fetchDocumentsError: "Belgeler yüklenemedi",
+          retry: "Tekrar dene",
+          summaryPeriodLabel: "Dönem",
+          latestActivity: "Son işlem: {date}",
+          noActivity: "Henüz kayıtlı işlem yok",
+          totalIncome: "Toplam Gelir",
+          totalExpense: "Toplam Gider",
+          netChange: "Net Değişim",
+          weekdays: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
+          legendTitle: "Net ödeme yoğunluğu",
+          incomeLabel: "Gelir",
+          expenseLabel: "Gider",
+          netLabel: "Net",
+          tooltipNoTransactions: "İşlem yok",
+          dayNoTransactions: "Bu gün için kayıtlı işlem yok.",
+          transactionsLoadError: "İşlemler yüklenemedi",
+          calendarLoadError: "Takvim yüklenemedi",
+          calendarFetchError: "Takvim verileri alınamadı",
+          selectFilePrompt: "Lütfen önce bir ödemeler dengesi belgesi yükleyin.",
+          runningAgent: "Ajan çalıştırılıyor...",
+          agentRunFailed: "Ajan çalışması başarısız oldu",
+          agentRequestFailed: "Ajan çalıştırılamadı.",
+          agentSuccess: "Ajan başarıyla tamamlandı.",
+          unsupportedFileType: "Ödemeler dengesi işlemesi için desteklenmeyen dosya türü.",
+          uploadingFile: "{filename} yükleniyor...",
+          uploadSuccess: "{filename} yüklendi. Ajan çalıştırılıyor...",
+          uploadFailed: "Ödemeler dengesi belgesi yüklenemedi.",
+          transactionSingular: "{count} işlem",
+          transactionPlural: "{count} işlem",
+          direction: {
+            income: "Gelir",
+            expense: "Gider",
+          },
+        },
+
         // Navigation
         goToChat: "Sohbete Git",
 
@@ -925,6 +1169,18 @@ class LanguageService {
       const key = element.getAttribute("data-i18n-placeholder");
       const text = this.get(key);
       element.placeholder = text;
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-title");
+      element.title = this.get(key);
+    });
+
+    document.querySelectorAll("[data-i18n-tooltip]").forEach((element) => {
+      const key = element.getAttribute("data-i18n-tooltip");
+      const text = this.get(key);
+      element.setAttribute("data-tooltip", text);
+      element.setAttribute("aria-label", text);
     });
 
     // Update title
