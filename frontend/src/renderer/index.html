@@ -32,6 +32,9 @@
       <!-- Header -->
       <header class="header">
         <div class="header-content">
+         <button id="sidebarToggle" class="toggle-btn">
+           <i class="fas fa-bars"></i>
+          </button>
           <div class="header-left">
             <div class="logo">
               <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
@@ -90,7 +93,7 @@
 
       <!-- Main Content -->
       <main class="main-content">
-        <!-- Sidebar -->
+
         <aside class="sidebar">
           <nav class="sidebar-nav">
             <button class="nav-item active" data-tab="chat" data-tooltip="Chat">
@@ -135,6 +138,30 @@
               <i class="fas fa-newspaper"></i>
               <span data-i18n="financeNews">Finance News</span>
             </button>
+
+            <div class="nav-item collapsible">
+              <i class="fas fa-wallet"></i>
+              <span data-i18n="balance">Ödemeler Dengesi</span>
+              <i class="fas fa-chevron-right submenu-icon"></i>
+            </div>
+            <div class="sub-menu">
+              <button class="sub-item" data-page="#currentStatus">
+                <i class="fas fa-chart-line"></i>
+                <span data-i18n="currentStatus">Güncel Durum</span>
+              </button>
+              <button class="sub-item" data-page="#sales">
+                <i class="fas fa-arrow-up"></i>
+                <span data-i18n="sales">Satış</span>
+              </button>
+              <button class="sub-item" data-page="#purchase">
+                <i class="fas fa-arrow-down"></i>
+                <span data-i18n="purchase">Alış</span>
+              </button>
+              <button class="sub-item" data-page="#cash">
+                <i class="fas fa-money-bill-wave"></i>
+                <span data-i18n="cash">Nakit</span>
+              </button>
+            </div>
 
             <button
               class="nav-item"
@@ -247,73 +274,54 @@
                 </div>
               </div>
 
-              <div class="chat-input-container">
-                <div class="chat-input-wrapper">
-                  <!-- Chat file upload area (for showing selected files) -->
-                  <div
-                    class="chat-file-upload-area"
-                    id="chat-file-upload"
-                    style="display: none"
-                  >
-                    <div
-                      class="uploaded-files-preview"
-                      id="chat-uploaded-files"
-                    ></div>
-                  </div>
+             <div class="chat-input-container">
+              <div class="chat-input-wrapper">
 
-                  <div class="chat-input-controls">
-                    <button
-                      id="web-search-toggle"
-                      class="web-search-button"
-                      title=""
-                      data-i18n-title="toggleWebSearch"
-                    >
-                      <i class="fas fa-globe"></i>
-                    </button>
-                    <button
-                      id="file-attachment-btn"
-                      class="file-attachment-button"
-                      title="Attach files"
-                    >
+                <!-- Chat file upload area -->
+                <div class="chat-file-upload-area" id="chat-file-upload" style="display: none">
+                  <div class="uploaded-files-preview" id="chat-uploaded-files"></div>
+                </div>
+
+                <div class="chat-input-controls">
+                  <button id="web-search-toggle" class="web-search-button" title="" data-i18n-title="toggleWebSearch">
+                    <i class="fas fa-globe"></i>
+                  </button>
+
+                  <!-- File attachment dropdown -->
+                  <div class="dropdown-container">
+                    <button id="file-attachment-btn" class="file-attachment-button" title="Attach files">
                       <i class="fas fa-paperclip"></i>
                     </button>
-                    <button
-                      id="file-selection-btn"
-                      class="file-selection-button"
-                      title="Select files to include"
-                    >
-                      <i class="fas fa-file"></i>
-                    </button>
-                    <button
-                        id="photo-less-toggle"
-                        class="file-photoless-button"
-                        title="Photo-less file processing"
-                      >
-                        <i class="fas fa-file-alt"></i>
-                    </button>
 
-                    <textarea
-                      id="chat-input"
-                      class="chat-input"
-                      data-i18n="chatPlaceholder"
-                      placeholder="Drag files here or ask a question about your financial documents..."
-                      rows="1"
-                    ></textarea>
-                    <button id="send-button" class="send-button" disabled>
-                      <i class="fas fa-paper-plane"></i>
-                    </button>
+                    <div id="file-dropdown" class="dropdown-menu">
+                      <button id="normal-file" class="dropdown-item" data-i18n="normalFile">
+                        Normal File Attach
+                      </button>
+                      <button id="photoless-mode" class="dropdown-item" data-i18n="photolessMode">
+                        Photo-less Mode
+                      </button>
+                    </div>
                   </div>
+
+                  <button id="file-selection-btn" class="file-selection-button" title="Select files to include">
+                    <i class="fas fa-file"></i>
+                  </button>
+
+                  <textarea id="chat-input" class="chat-input" data-i18n="chatPlaceholder"
+                    placeholder="Drag files here or ask a question about your financial documents..." rows="1">
+                  </textarea>
+
+                  <button id="send-button" class="send-button" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
                 </div>
 
                 <!-- Hidden file input for chat uploads -->
-                <input
-                  type="file"
-                  id="chat-file-input"
-                  multiple
-                  accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
-                  style="display: none"
-                />
+                <input type="file" id="chat-file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" style="display: none" />
+
               </div>
+            </div>
+
 
               <!-- File Selection Modal -->
               <div id="file-selection-modal" class="file-selection-modal">
@@ -444,6 +452,9 @@
               </div>
             </div>
           </div>
+
+
+          
           <!-- Files Tab -->
           <div id="files-tab" class="tab-content">
             <div class="files-container">
@@ -2010,6 +2021,31 @@
               </section>
             </div>
           </div>
+
+         <!-- Güncel Durum Tab -->
+          <div id="currentStatus-tab" class="tab-content">
+            <h2>Güncel Durum</h2>
+            <p>Güncel ödemeler dengesi bilgileri burada.</p>
+          </div>
+
+          <!-- Satış Tab -->
+          <div id="sales-tab" class="tab-content">
+            <h2>Satış</h2>
+            <p>Satış verileri burada.</p>
+          </div>
+
+          <!-- Alış Tab -->
+          <div id="purchase-tab" class="tab-content">
+            <h2>Alış</h2>
+            <p>Alış verileri burada.</p>
+          </div>
+
+          <!-- Nakit Tab -->
+          <div id="cash-tab" class="tab-content">
+            <h2>Nakit</h2>
+            <p>Nakit akışı burada.</p>
+          </div>
+
 
           <!-- Settings Tab -->
           <div id="settings-tab" class="tab-content">
