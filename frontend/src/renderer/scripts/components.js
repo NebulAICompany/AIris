@@ -1226,6 +1226,112 @@ setupFloatingSubmenu(collapsible, subMenu) {
         });
       }
     });
+
+    // Toggle button handlers for consolidated calculators
+    const depositToggleSimple = document.getElementById("deposit-type-toggle-simple");
+    const depositToggleCompound = document.getElementById("deposit-type-toggle-compound");
+    if (depositToggleSimple && depositToggleCompound) {
+      depositToggleSimple.addEventListener("click", () => {
+        this.switchDepositMode("simple");
+      });
+      depositToggleCompound.addEventListener("click", () => {
+        this.switchDepositMode("compound");
+      });
+    }
+
+    const pvFvTogglePresent = document.getElementById("pv-fv-type-toggle-present");
+    const pvFvToggleFuture = document.getElementById("pv-fv-type-toggle-future");
+    if (pvFvTogglePresent && pvFvToggleFuture) {
+      pvFvTogglePresent.addEventListener("click", () => {
+        this.switchPvFvMode("present");
+      });
+      pvFvToggleFuture.addEventListener("click", () => {
+        this.switchPvFvMode("future");
+      });
+    }
+
+    const annuityTogglePresent = document.getElementById("annuity-type-toggle-present");
+    const annuityToggleFuture = document.getElementById("annuity-type-toggle-future");
+    if (annuityTogglePresent && annuityToggleFuture) {
+      annuityTogglePresent.addEventListener("click", () => {
+        this.switchAnnuityMode("present");
+      });
+      annuityToggleFuture.addEventListener("click", () => {
+        this.switchAnnuityMode("future");
+      });
+    }
+  }
+
+  switchDepositMode(mode) {
+    const simpleForm = document.getElementById("deposit-simple-form");
+    const compoundForm = document.getElementById("deposit-compound-form");
+    const simpleBtn = document.getElementById("deposit-type-toggle-simple");
+    const compoundBtn = document.getElementById("deposit-type-toggle-compound");
+    const resultsContainer = document.getElementById("deposit-results");
+
+    if (mode === "simple") {
+      if (simpleForm) simpleForm.style.display = "block";
+      if (compoundForm) compoundForm.style.display = "none";
+      if (simpleBtn) simpleBtn.classList.add("active");
+      if (compoundBtn) compoundBtn.classList.remove("active");
+    } else {
+      if (simpleForm) simpleForm.style.display = "none";
+      if (compoundForm) compoundForm.style.display = "block";
+      if (simpleBtn) simpleBtn.classList.remove("active");
+      if (compoundBtn) compoundBtn.classList.add("active");
+    }
+    // Hide results when switching modes
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  switchPvFvMode(mode) {
+    const presentForm = document.getElementById("pv-fv-present-form");
+    const futureForm = document.getElementById("pv-fv-future-form");
+    const presentBtn = document.getElementById("pv-fv-type-toggle-present");
+    const futureBtn = document.getElementById("pv-fv-type-toggle-future");
+    const resultsContainer = document.getElementById("pv-fv-results");
+
+    if (mode === "present") {
+      if (presentForm) presentForm.style.display = "block";
+      if (futureForm) futureForm.style.display = "none";
+      if (presentBtn) presentBtn.classList.add("active");
+      if (futureBtn) futureBtn.classList.remove("active");
+    } else {
+      if (presentForm) presentForm.style.display = "none";
+      if (futureForm) futureForm.style.display = "block";
+      if (presentBtn) presentBtn.classList.remove("active");
+      if (futureBtn) futureBtn.classList.add("active");
+    }
+    // Hide results when switching modes
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  switchAnnuityMode(mode) {
+    const presentForm = document.getElementById("annuity-present-form");
+    const futureForm = document.getElementById("annuity-future-form");
+    const presentBtn = document.getElementById("annuity-type-toggle-present");
+    const futureBtn = document.getElementById("annuity-type-toggle-future");
+    const resultsContainer = document.getElementById("annuity-results");
+
+    if (mode === "present") {
+      if (presentForm) presentForm.style.display = "block";
+      if (futureForm) futureForm.style.display = "none";
+      if (presentBtn) presentBtn.classList.add("active");
+      if (futureBtn) futureBtn.classList.remove("active");
+    } else {
+      if (presentForm) presentForm.style.display = "none";
+      if (futureForm) futureForm.style.display = "block";
+      if (presentBtn) presentBtn.classList.remove("active");
+      if (futureBtn) futureBtn.classList.add("active");
+    }
+    // Hide results when switching modes
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
   }
 
   handleNavigation(e) {
@@ -6539,13 +6645,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   displayCompoundDepositResults(results) {
-    const resultsContainer = document.getElementById(
-      "compound-deposit-results"
-    );
-    const interestEl = document.getElementById("compound-deposit-interest");
-    const finalAmountEl = document.getElementById(
-      "compound-deposit-final-amount"
-    );
+    // Use the unified deposit results container
+    const resultsContainer = document.getElementById("deposit-results");
+    const interestEl = document.getElementById("deposit-interest");
+    const finalAmountEl = document.getElementById("deposit-final-amount");
 
     if (resultsContainer) {
       resultsContainer.style.display = "block";
@@ -6593,20 +6696,29 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   displayPresentValueResults(results) {
-    const resultsContainer = document.getElementById(
-      "present-value-results"
-    );
-    const presentValueEl = document.getElementById("present-value-amount");
+    // Use the unified PV/FV results container
+    const resultsContainer = document.getElementById("pv-fv-results");
+    const amountEl = document.getElementById("pv-fv-amount");
+    const titleEl = document.getElementById("pv-fv-results-title");
+    const labelEl = document.getElementById("pv-fv-result-label");
 
     if (resultsContainer) {
       resultsContainer.style.display = "block";
     }
 
-    if (presentValueEl) {
-      presentValueEl.textContent = this.formatCurrency(
+    if (amountEl) {
+      amountEl.textContent = this.formatCurrency(
         results.presentValue,
         2
       );
+    }
+
+    if (titleEl) {
+      titleEl.textContent = "Bugünkü Değer Sonuçları";
+    }
+
+    if (labelEl) {
+      labelEl.textContent = "Bugünkü Değer";
     }
 
     setTimeout(() => {
@@ -6640,18 +6752,29 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   displayFutureValueResults(results) {
-    const resultsContainer = document.getElementById("future-value-results");
-    const futureValueEl = document.getElementById("future-value-amount");
+    // Use the unified PV/FV results container
+    const resultsContainer = document.getElementById("pv-fv-results");
+    const amountEl = document.getElementById("pv-fv-amount");
+    const titleEl = document.getElementById("pv-fv-results-title");
+    const labelEl = document.getElementById("pv-fv-result-label");
 
     if (resultsContainer) {
       resultsContainer.style.display = "block";
     }
 
-    if (futureValueEl) {
-      futureValueEl.textContent = this.formatCurrency(
+    if (amountEl) {
+      amountEl.textContent = this.formatCurrency(
         results.futureValue,
         2
       );
+    }
+
+    if (titleEl) {
+      titleEl.textContent = "Gelecek Değer Sonuçları";
+    }
+
+    if (labelEl) {
+      labelEl.textContent = "Gelecek Değer";
     }
 
     setTimeout(() => {
@@ -6685,22 +6808,29 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   displayFutureValueAnnuityResults(results) {
-    const resultsContainer = document.getElementById(
-      "future-value-annuity-results"
-    );
-    const futureValueEl = document.getElementById(
-      "future-value-annuity-amount"
-    );
+    // Use the unified annuity results container
+    const resultsContainer = document.getElementById("annuity-results");
+    const amountEl = document.getElementById("annuity-amount");
+    const titleEl = document.getElementById("annuity-results-title");
+    const labelEl = document.getElementById("annuity-result-label");
 
     if (resultsContainer) {
       resultsContainer.style.display = "block";
     }
 
-    if (futureValueEl) {
-      futureValueEl.textContent = this.formatCurrency(
+    if (amountEl) {
+      amountEl.textContent = this.formatCurrency(
         results.futureValue,
         2
       );
+    }
+
+    if (titleEl) {
+      titleEl.textContent = "Gelecek Değer Sonuçları";
+    }
+
+    if (labelEl) {
+      labelEl.textContent = "Gelecek Değer";
     }
 
     setTimeout(() => {
@@ -6734,22 +6864,29 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   displayPresentValueAnnuityResults(results) {
-    const resultsContainer = document.getElementById(
-      "present-value-annuity-results"
-    );
-    const presentValueEl = document.getElementById(
-      "present-value-annuity-amount"
-    );
+    // Use the unified annuity results container
+    const resultsContainer = document.getElementById("annuity-results");
+    const amountEl = document.getElementById("annuity-amount");
+    const titleEl = document.getElementById("annuity-results-title");
+    const labelEl = document.getElementById("annuity-result-label");
 
     if (resultsContainer) {
       resultsContainer.style.display = "block";
     }
 
-    if (presentValueEl) {
-      presentValueEl.textContent = this.formatCurrency(
+    if (amountEl) {
+      amountEl.textContent = this.formatCurrency(
         results.presentValue,
         2
       );
+    }
+
+    if (titleEl) {
+      titleEl.textContent = "Bugünkü Değer Sonuçları";
+    }
+
+    if (labelEl) {
+      labelEl.textContent = "Bugünkü Değer";
     }
 
     setTimeout(() => {
@@ -6831,9 +6968,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (termInput) termInput.value = "";
     if (frequencySelect) frequencySelect.value = "daily";
 
-    const resultsContainer = document.getElementById(
-      "compound-deposit-results"
-    );
+    // Use unified deposit results container
+    const resultsContainer = document.getElementById("deposit-results");
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
@@ -6856,9 +6992,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (monthsInput) monthsInput.value = "";
     if (daysInput) daysInput.value = "";
 
-    const resultsContainer = document.getElementById(
-      "present-value-results"
-    );
+    // Use unified PV/FV results container
+    const resultsContainer = document.getElementById("pv-fv-results");
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
@@ -6881,7 +7016,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (monthsInput) monthsInput.value = "";
     if (daysInput) daysInput.value = "";
 
-    const resultsContainer = document.getElementById("future-value-results");
+    // Use unified PV/FV results container
+    const resultsContainer = document.getElementById("pv-fv-results");
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
@@ -6906,9 +7042,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (monthsInput) monthsInput.value = "";
     if (daysInput) daysInput.value = "";
 
-    const resultsContainer = document.getElementById(
-      "future-value-annuity-results"
-    );
+    // Use unified annuity results container
+    const resultsContainer = document.getElementById("annuity-results");
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
@@ -6937,9 +7072,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (monthsInput) monthsInput.value = "";
     if (daysInput) daysInput.value = "";
 
-    const resultsContainer = document.getElementById(
-      "present-value-annuity-results"
-    );
+    // Use unified annuity results container
+    const resultsContainer = document.getElementById("annuity-results");
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
