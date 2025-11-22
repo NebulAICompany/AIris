@@ -14,7 +14,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, tcmb_data_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from backend.shared.constants import OPENAI_MODEL
 
 main_agent_as_tools = [
     finance_agent_tool,
