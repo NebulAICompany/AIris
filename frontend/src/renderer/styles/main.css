@@ -411,32 +411,17 @@ input:checked + .slider:before {
   overflow: hidden;
 }
 
-.sidebar:hover {
-  width: var(--sidebar-width);
-}
-
 .sidebar.expanded {
   width: var(--sidebar-width);
 }
 
-.sidebar.collapsed {
-  width: var(--sidebar-collapsed-width);
-}
-
-.sidebar.collapsed:hover {
-  width: var(--sidebar-width);
-}
-
 .sidebar-nav {
-  padding: 16px 8px;
+  padding: 10px 6px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.sidebar.collapsed .sidebar-nav {
-  padding: 16px 4px;
-}
 
 .nav-item {
   display: flex;
@@ -471,12 +456,11 @@ input:checked + .slider:before {
 
 .sidebar.collapsed .nav-item span {
   opacity: 0;
+  display: none;
 }
 
-.sidebar.collapsed:hover .nav-item span,
-.sidebar:hover .nav-item span,
 .sidebar.expanded .nav-item span {
-  opacity: 1;
+  display: inline;
 }
 
 .nav-item i {
@@ -491,24 +475,9 @@ input:checked + .slider:before {
   margin-right: 0;
 }
 
-.sidebar.collapsed:hover .nav-item i,
-.sidebar:hover .nav-item i,
-.sidebar.expanded .nav-item i {
-  margin-right: 12px;
-}
-
 .nav-item:hover {
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
-  transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-right: -17px;
-  padding-right: 30px;
-}
-
-.sidebar.collapsed .nav-item:hover i {
-  color: var(--accent-primary);
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
 }
 
 /* Tooltip effect for collapsed sidebar */
@@ -536,6 +505,126 @@ input:checked + .slider:before {
   animation: tooltipFadeIn 0.2s ease forwards;
 }
 
+#sidebarToggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  margin-top: 6px;
+  margin-left: -13px;
+  align-self: flex-start; /* solda sabit */
+}
+
+#sidebarToggle:hover {
+  color: var(--accent-primary);
+}
+
+.sidebar.collapsed .nav-item[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  font-size: 12px;
+  z-index: 1000;
+}
+
+/* Collapsible icon for nav-items with submenu */
+.nav-item.collapsible {
+  position: relative;
+}
+
+.nav-item.collapsible .submenu-icon {
+  margin-right: 3px;
+  font-size: 12px;
+  transition: transform 0.3s, opacity 0.3s;
+  opacity: 1; /* sidebar açık/kapalı farkında opacity değiştirilecek */
+  transform: rotate(0deg); /* default sağ */
+}
+
+.sidebar.collapsed .nav-item.collapsible .submenu-icon {
+  display: none;
+}
+
+/* Hoverdayken ikon aşağıya dönsün */
+.nav-item.collapsible:hover .submenu-icon {
+  transform: rotate(90deg); /* sağdan aşağıya döndür */
+}
+
+/* Sub-menu container */
+.sub-menu {
+  display: flex;
+  flex-direction: column;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+  padding-left: 8px;
+  background-color: var(--bg-secondary);
+}
+
+/* Keep submenu visible if hovering over parent or submenu */
+.nav-item.collapsible:hover + .sub-menu,
+.sub-menu:hover {
+  max-height: 500px;
+}
+
+/* Sub-item styling */
+.sub-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+  min-height: 44px;
+  justify-content: flex-start;
+}
+
+.sub-item i {
+  font-size: 16px;
+  width: 16px;
+  flex-shrink: 0;
+  margin-right: 12px;
+  transition: margin-right 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sub-item:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+.sub-menu.open {
+  display: block; /* veya slide efekti istersen transition ile */
+}
+.sidebar.collapsed .sub-menu {
+    top: 37%;
+    max-width: 170px;
+    left: 60px;
+    position: absolute;
+    z-index: 1000;
+    padding-left: 0;
+}
+
+
+
+
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
@@ -547,7 +636,8 @@ input:checked + .slider:before {
   }
 }
 
-.nav-item.active {
+.nav-item.active,
+.sub-item.active {
   background-color: var(--accent-primary);
   color: white;
   box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);
@@ -2075,6 +2165,12 @@ body.nebula-theme .app-container {
 body.nebula-theme .main-content {
   position: relative;
   z-index: 1;
+}
+
+body.nebula-theme .sidebar.collapsed {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--bg-secondary) !important; /* Tema ile uyumlu */
 }
 
 /* Glassy header and sidebar with neon edge */

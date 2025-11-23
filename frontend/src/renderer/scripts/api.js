@@ -299,10 +299,17 @@ class APIService {
   }
 
   // Upload file to backend
-  async uploadFile(file, progressCallback) {
+  async uploadFile(file, options = {}, progressCallback) {
     try {
       const formData = new FormData();
       formData.append("file", file);
+
+      if (options && options.photoLessMode !== undefined) {
+        formData.append(
+          "photoLessMode",
+          options.photoLessMode ? "true" : "false"
+        );
+      }
 
       const config = {
         timeout: 180000, // 3 minutes for file uploads (increased for larger files)
@@ -324,6 +331,50 @@ class APIService {
         success: true,
         data: response.data,
         message: response.data.message || "File uploaded successfully",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async uploadBalanceDocument(file, options = {}, progressCallback) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      if (options && options.photoLessMode !== undefined) {
+        formData.append(
+          "photoLessMode",
+          options.photoLessMode ? "true" : "false"
+        );
+      }
+
+      const config = {
+        timeout: 180000,
+      };
+
+      if (progressCallback) {
+        progressCallback(0);
+      }
+
+      const response = await this.api.post(
+        "/api/balance-of-payments/upload",
+        formData,
+        config
+      );
+
+      if (progressCallback) {
+        progressCallback(100);
+      }
+
+      return {
+        success: true,
+        data: response.data,
+        message:
+          response.data.message || "Balance document uploaded successfully",
       };
     } catch (error) {
       return {
@@ -365,6 +416,75 @@ class APIService {
         success: false,
         error: error.message,
         files: [],
+      };
+    }
+  }
+
+  async getBalanceCalendar(months = 3, endDate = null) {
+    try {
+      const params = { months };
+      if (endDate) {
+        params.endDate = endDate;
+      }
+
+      const response = await this.api.get(
+        "/api/balance-of-payments/calendar",
+        { params }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error fetching balance calendar:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async processBalanceWorkbook(fileName, replaceExisting = true) {
+    try {
+      const response = await this.api.post(
+        "/api/balance-of-payments/process",
+        {
+          fileName,
+          replaceExisting,
+        },
+        {
+          timeout: 300000,
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error processing balance workbook:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async getBalanceTransactions(date) {
+    try {
+      const response = await this.api.get(
+        `/api/balance-of-payments/transactions/${date}`
+      );
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error fetching balance transactions:", error);
+      return {
+        success: false,
+        error: error.message,
       };
     }
   }

@@ -8,63 +8,504 @@ class UIComponents {
     this.currentTab = "chat";
     this.chatHistory = [];
     this.uploadedFiles = [];
-    this.chatUploadedFiles = []; // Add this property for chat uploads
+    this.chatUploadedFiles = [];
     this.isProcessing = false;
     this.isDarkMode = false;
-    // Add webSearchEnabled flag, initialize from storage or default to false
     this.webSearchEnabled = Utils.isWebSearchEnabled();
 
-    // Finance news properties
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
 
-    // Chat session management
     this.currentSessionId = null;
     this.chatSessions = [];
 
-    // File selection management
     this.selectedFiles = [];
     this.allFiles = [];
     this.fileSelectionModal = null;
-    this.hasInitializedFiles = false; // Flag to track if files have been initialized
+    this.hasInitializedFiles = false;
+
+    // Profile modal state
+    this.selectedProfileFiles = []; // Sadece profile modal için
+    this.profileModal = null;
 
     this.init();
-
-    // Subscribe to language changes
     if (window.languageService) {
-      window.languageService.subscribe(() => {
-        this.updateDynamicTexts();
-      });
+      window.languageService.subscribe(() => this.updateDynamicTexts());
     }
   }
 
   init() {
     this.setupEventListeners();
-    // Theme loading moved to AIrisApp class to load before loading screen
-    // this.loadTheme();
     this.initializeComponents();
-
-    // Load files and select all by default
     this.loadAndSelectAllFiles();
+    this.setupFileSearch();
 
-    // Set toggle state on load
+    this.loadProfiles();
+
+    // Profile modal setup
+    this.setupProfileModal();
+    this.setupProfileSelect();
+    this.setupSidebarToggle();
+    this.initSidebar();
+
     const webSearchToggle = document.getElementById("web-search-toggle");
-    if (webSearchToggle) {
-      if (this.webSearchEnabled) {
-        webSearchToggle.classList.add("active");
-      }
-    }
+    if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
 
-    // Set language setting on load
     if (window.languageService) {
       const languageSetting = document.getElementById("language-setting");
-      if (languageSetting) {
-        languageSetting.value = window.languageService.getCurrentLanguage();
-      }
-      // Update texts with current language
+      if (languageSetting) languageSetting.value = window.languageService.getCurrentLanguage();
       window.languageService.updatePageTexts();
     }
   }
+
+initSidebar() {
+  const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
+  const collapsible = document.querySelector('.nav-item.collapsible');
+  const subMenu = document.querySelector('.sub-menu');
+  const subItems = document.querySelectorAll('.sub-item');
+  const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
+
+  // İlk yüklemede tüm aktiflikleri temizle
+  navItems.forEach(item => item.classList.remove('active'));
+  subItems.forEach(item => item.classList.remove('active'));
+  if(collapsible) collapsible.classList.remove('active');
+  balanceSections.forEach(sec => sec.classList.remove('active'));
+
+  // Sayfa açıldığında chat nav varsayılan aktif olsun
+  const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
+  if (chatNav) {
+    chatNav.classList.add('active');
+    const chatTab = document.getElementById('chat-tab');
+    if (chatTab) chatTab.classList.add('active');
+  }
+
+  // Nav item click
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+      if(collapsible) collapsible.classList.remove('active');
+      balanceSections.forEach(sec => sec.classList.remove('active'));
+
+      item.classList.add('active');
+
+      // Sidebar açıkken subMenu kapat
+      if (subMenu && !document.querySelector('.sidebar.collapsed')) {
+        subMenu.classList.remove('open');
+        subMenu.style.maxHeight = null;
+      }
+
+      // Tab göster
+      const tabId = item.dataset.tab + '-tab';
+      const tab = document.getElementById(tabId);
+      if (tab) tab.classList.add('active');
+    });
+  });
+
+  // Collapsible tıklama
+  if (collapsible && subMenu) {
+    collapsible.addEventListener('click', () => {
+      const isCollapsed = document.querySelector('.sidebar.collapsed');
+
+      // Sidebar açık → normal toggle
+      if(!isCollapsed) {
+        subMenu.classList.toggle('open');
+        subMenu.style.maxHeight = subMenu.classList.contains('open')
+          ? subMenu.scrollHeight + 'px'
+          : null;
+      } else {
+        // Sidebar kapalı → floating submenu sadece burada açılır
+        this.setupFloatingSubmenu(collapsible, subMenu);
+      }
+
+      // Collapsible kendisi tıklanabilir: active yap
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+      collapsible.classList.add('active');
+
+      // Tab göster
+      const tabId = collapsible.dataset.page.replace('#','') + '-tab';
+      const tab = document.getElementById(tabId);
+      if(tab) {
+        balanceSections.forEach(sec => sec.classList.remove('active'));
+        tab.classList.add('active');
+      }
+    });
+  }
+
+  // Sub-item tıklama
+  subItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const isCollapsed = document.querySelector('.sidebar.collapsed');
+
+      // Aktiflikleri temizle
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+      if(collapsible) collapsible.classList.remove('active');
+      balanceSections.forEach(sec => sec.classList.remove('active'));
+
+      item.classList.add('active');
+
+      // Tab aç
+      const sectionId = item.dataset.page.replace('#', '') + '-tab';
+      const section = document.getElementById(sectionId);
+      if (section) section.classList.add('active');
+
+      if (!isCollapsed) {
+        // Sidebar açık → subMenu açık kalsın
+        if (subMenu) {
+          subMenu.classList.add('open');
+          subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
+        }
+      } else {
+        // Sidebar kapalı → floating submenu zaten DOM’da yok
+        if (subMenu) {
+          subMenu.classList.remove('open');
+          subMenu.style.maxHeight = null;
+        }
+      }
+
+      location.hash = item.dataset.page;
+    });
+  });
+}
+
+// Floating submenu sidebar kapalıyken açmak için
+setupFloatingSubmenu(collapsible, subMenu) {
+  // Sadece sidebar kapalıysa çalışmalı
+  if (!document.querySelector('.sidebar.collapsed')) return;
+
+  // Önce varsa eski floating submenuyi kaldır
+  const existing = document.querySelector('.floating-sub-menu');
+  if(existing) existing.remove();
+
+  // Yeni floating submenu klonla
+  const clone = subMenu.cloneNode(true);
+  clone.classList.add('floating-sub-menu');
+  clone.style.position = 'absolute';
+  clone.style.zIndex = 4000;
+  clone.style.display = 'flex';
+  clone.style.flexDirection = 'column';
+  clone.style.maxHeight = '500px';
+  clone.style.top = collapsible.offsetTop + 'px';
+  clone.style.left = (collapsible.offsetWidth + 8) + 'px';
+  document.querySelector('.sidebar').appendChild(clone);
+
+  // Hover efektleri için mouseleave
+  clone.addEventListener('mouseleave', () => {
+    clone.remove();
+  });
+
+  // Floating submenu içindeki sub-item click
+  clone.querySelectorAll('.sub-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item, .sub-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      collapsible.classList.add('active');
+
+      // Tab göster
+      const sectionId = item.dataset.page.replace('#','') + '-tab';
+      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
+      const tab = document.getElementById(sectionId);
+      if(tab) tab.classList.add('active');
+
+      clone.remove();
+      location.hash = item.dataset.page;
+    });
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+ setupSidebarToggle() {
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.querySelector('.toggle-btn');
+    // Sub-menu ve collapsible elemanlarını da seçelim
+    const subMenu = document.querySelector('.sub-menu');
+    const collapsible = document.querySelector('.nav-item.collapsible');
+
+    if (!sidebar || !toggleBtn) return;
+
+    // LocalStorage kontrolü (Mevcut kodun)
+    const savedState = localStorage.getItem('sidebarState');
+    if (savedState === 'expanded') {
+        sidebar.classList.add('expanded');
+        sidebar.classList.remove('collapsed');
+    } else {
+        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('expanded');
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        if (isCollapsed) {
+            // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('expanded');
+            localStorage.setItem('sidebarState', 'expanded');
+            
+            // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
+            // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
+            
+        } else {
+            // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
+            sidebar.classList.remove('expanded');
+            sidebar.classList.add('collapsed');
+            localStorage.setItem('sidebarState', 'collapsed');
+
+            // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
+            // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
+            if (subMenu && subMenu.classList.contains('open')) {
+                subMenu.classList.remove('open');
+                subMenu.style.maxHeight = null; // Inline stili temizle
+            }
+
+            // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
+            // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
+            if (collapsible) {
+                collapsible.classList.remove('active');
+            }
+        }
+    });
+}
+
+  // ---------------- Profile Modal ----------------
+  loadProfiles() {
+    const storedProfiles = localStorage.getItem("savedProfiles");
+    this.allProfiles = storedProfiles ? JSON.parse(storedProfiles) : [];
+  }
+
+  setupProfileModal() {
+    this.profileModal = document.getElementById("create-profile-selection");
+    if (!this.allProfiles) this.allProfiles = [];
+    this.setupProfileSelect();
+
+    // Butonlar
+    document.getElementById("open-profile-popup")?.addEventListener("click", () => this.showProfileModal());
+    document.getElementById("close-profile-selection")?.addEventListener("click", () => this.hideProfileModal());
+    document.getElementById("cancel-profile-popup")?.addEventListener("click", () => this.hideProfileModal());
+    document.getElementById("save-profile-popup")?.addEventListener("click", () => this.saveProfiles());
+
+    document.getElementById("select-all-profile-files")?.addEventListener("click", () => this.selectAllProfiles());
+    document.getElementById("deselect-all-profile-files")?.addEventListener("click", () => this.deselectAllProfiles());
+
+    // Arama input
+    const input = document.getElementById("file-profile-selection-search");
+    const clearBtn = document.getElementById("file-profile-selection-search-clear");
+
+    input?.addEventListener("input", (e) => this.renderProfileFiles(e.target.value.trim().toLowerCase()));
+    input?.addEventListener("keypress", (e) => { if (e.key === "Escape") this.clearProfileSearch(); });
+    clearBtn?.addEventListener("click", () => this.clearProfileSearch());
+
+    // Escape tuşu modal kapatma
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.profileModal.classList.contains("show")) this.hideProfileModal();
+    });
+
+    // İlk render
+    this.renderProfileFiles();
+  }
+
+  showProfileModal() {
+    if (!this.profileModal) return;
+    this.profileModal.classList.add("show");
+
+    // Dosyaları modalda göster
+    this.renderProfileFiles();
+  }
+
+  hideProfileModal() {
+    if (!this.profileModal) return;
+    this.profileModal.classList.remove("show");
+  }
+
+  renderProfileFiles(filter = "") {
+    const container = document.getElementById("files-profile-list");
+    if (!container || !this.allFiles) return;
+
+    let visibleFiles = filter
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
+      : this.allFiles;
+
+    // Seçili dosyaları en üste taşı
+    visibleFiles.sort((a, b) => {
+      const aSelected = this.selectedProfileFiles.includes(a.name);
+      const bSelected = this.selectedProfileFiles.includes(b.name);
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+
+    container.innerHTML = visibleFiles.map(file => `
+    <div class="file-selection-item profile-item ${this.selectedProfileFiles.includes(file.name) ? "selected" : ""}" data-name="${file.name}">
+      <div class="file-checkbox ${this.selectedProfileFiles.includes(file.name) ? "checked" : ""}">
+        <i class="fas fa-check"></i>
+      </div>
+      <div class="file-item-icon ${file.name.split(".").pop().toLowerCase()}">
+        <i class="${this.getFileIcon(file.name.split(".").pop())}"></i>
+      </div>
+      <div class="file-item-info">
+        <div class="file-item-name" title="${file.name}">${file.name}</div>
+        <div class="file-item-size">${this.formatFileSize(file.size)}</div>
+      </div>
+    </div>
+  `).join("");
+
+    // Click eventleri
+    container.querySelectorAll(".profile-item").forEach(item => {
+      const name = item.dataset.name;
+      const checkbox = item.querySelector(".file-checkbox");
+
+      item.onclick = () => this.toggleProfileFile(name);
+      checkbox.onclick = (e) => { e.stopPropagation(); this.toggleProfileFile(name); };
+    });
+  }
+
+  toggleProfileFile(name) {
+    const index = this.selectedProfileFiles.indexOf(name);
+    if (index > -1) this.selectedProfileFiles.splice(index, 1);
+    else this.selectedProfileFiles.push(name);
+
+    this.renderProfileFiles(document.getElementById("file-profile-selection-search")?.value?.trim().toLowerCase() || "");
+  }
+
+  selectAllProfiles() {
+    const filter = document.getElementById("file-profile-selection-search")?.value?.trim().toLowerCase() || "";
+    const visibleFiles = filter
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
+      : this.allFiles;
+
+    this.selectedProfileFiles = visibleFiles.map(f => f.name);
+    this.renderProfileFiles(filter);
+  }
+
+  deselectAllProfiles() {
+    const filter = document.getElementById("file-profile-selection-search")?.value?.trim().toLowerCase() || "";
+    const visibleFiles = filter
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
+      : this.allFiles;
+
+    this.selectedProfileFiles = this.selectedProfileFiles.filter(name => !visibleFiles.some(f => f.name === name));
+    this.renderProfileFiles(filter);
+  }
+
+
+  saveProfiles() {
+    const profileNameInput = document.getElementById("profile-name");
+    const fileList = document.getElementById("files-profile-list");
+
+    try {
+      if (!this.selectedProfileFiles || this.selectedProfileFiles.length === 0) {
+        if (fileList) fileList.scrollIntoView({ behavior: "smooth", block: "center" });
+        return Utils.showSnackbar(window.languageService.t("noFilesSelected"), "error");
+      }
+
+      const profileName = profileNameInput.value.trim();
+      if (!profileName) {
+        profileNameInput.focus();
+        return Utils.showSnackbar(window.languageService.t("profileNameRequired"), "warning");
+      }
+
+      const exists = this.allProfiles.some(p => p.name.toLowerCase() === profileName.toLowerCase());
+      if (exists) {
+        profileNameInput.select();
+        profileNameInput.focus();
+        return Utils.showSnackbar(window.languageService.t("profileNameExists"), "error");
+      }
+
+      const newProfile = {
+        name: profileName,
+        files: [...this.selectedProfileFiles],
+      };
+
+      this.allProfiles.push(newProfile);
+      localStorage.setItem("savedProfiles", JSON.stringify(this.allProfiles));
+      this.updateProfileSelectOptions();
+
+      Utils.showSnackbar(window.languageService.t("profileSaved"), "success");
+
+      this.selectedProfileFiles = [];
+      profileNameInput.value = "";
+      this.hideProfileModal();
+    } catch (err) {
+      console.error("SaveProfiles Error:", err);
+      Utils.showSnackbar(window.languageService.t("unknownError"), "error");
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+  setupProfileSelect() {
+    const select = document.getElementById("file-profile-select");
+    if (!select) return;
+
+    // Dropdown seçeneklerini güncelle
+    this.updateProfileSelectOptions();
+
+    // Profil seçildiğinde
+    select.addEventListener("change", () => {
+      const selectedProfileName = select.value;
+      if (!selectedProfileName) {
+        this.selectedFiles = [];
+      } else {
+        const profile = this.allProfiles.find(p => p.name === selectedProfileName);
+        if (profile) {
+          this.selectedFiles = [...profile.files]; // profile’dan gelen dosyalar seçili olacak
+        }
+      }
+
+      // File selection modal'ı güncelle
+      this.renderFileSelectionList();
+      this.updateFileSelectionButton();
+    });
+  }
+
+
+  updateProfileSelectOptions() {
+    const select = document.getElementById("file-profile-select");
+    if (!select) return;
+
+    // Önce tüm seçenekleri temizle
+    select.innerHTML = `<option value="" data-i18n="selectProfile">Select Profile</option>`;
+
+    this.allProfiles.forEach(profile => {
+      const opt = document.createElement("option");
+      opt.value = profile.name;
+      opt.textContent = profile.name;
+      select.appendChild(opt);
+    });
+  }
+
+
+
+  clearProfileSearch() {
+    const input = document.getElementById("file-profile-selection-search");
+    if (input) input.value = "";
+    this.renderProfileFiles();
+    input?.focus();
+  }
+
+  // -------------------------------------------------
+
+
 
   async loadAndSelectAllFiles() {
     try {
@@ -247,12 +688,54 @@ class UIComponents {
     }
 
     // File attachment button (paperclip)
+    // Dropdown açıp kapatma
     const fileAttachmentBtn = document.getElementById("file-attachment-btn");
-    if (fileAttachmentBtn) {
-      fileAttachmentBtn.addEventListener("click", () => {
-        chatFileInput?.click();
-      });
-    }
+    const dropdown = document.getElementById("file-dropdown");
+
+    fileAttachmentBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // dışarı taşmasın
+      dropdown.style.display =
+        dropdown.style.display === "block" ? "none" : "block";
+    });
+
+    // Menü dışına tıklayınca kapansın
+    document.addEventListener("click", () => {
+      dropdown.style.display = "none";
+    });
+
+    // Normal attach seçeneği
+    const normalAttachBtn = document.getElementById("normal-file");
+
+    normalAttachBtn.addEventListener("click", () => {
+      chatFileInput?.click();  // ❗ ESKİ davranış buraya taşındı
+      dropdown.style.display = "none";
+    });
+
+    // Photo-less mode seçeneği
+    const photoLessBtn = document.getElementById("photoless-mode");
+
+    photoLessBtn.addEventListener("click", () => {
+      // Language
+      const lang = window.languageService?.getCurrentLanguage() || "tr";
+
+      // Photoless mod durumunu global bir değişkene kaydedelim
+      window.isPhotoLessMode = true;
+
+      let msg = lang === "en"
+        ? "Files will be processed without photos."
+        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
+
+      Utils.showSnackbar(msg, "info", 4000);
+
+      // Dosya seçimi aç
+      const chatFileInput = document.getElementById("chat-file-input");
+      chatFileInput?.click();
+
+      // Dropdown kapat
+      dropdown.style.display = "none";
+    });
+
+
 
     // File selection modal close
     const closeFileSelection = document.getElementById("close-file-selection");
@@ -447,6 +930,119 @@ class UIComponents {
     const loanAmountInput = document.getElementById("loan-amount");
     const loanTermInput = document.getElementById("loan-term");
     const interestRateInput = document.getElementById("interest-rate");
+    const depositCalculateBtn = document.getElementById(
+      "deposit-calculate-btn"
+    );
+    const depositResetBtn = document.getElementById("deposit-reset-btn");
+    const depositPrincipalInput = document.getElementById(
+      "deposit-principal"
+    );
+    const depositDaysInput = document.getElementById("deposit-days");
+    const depositAnnualRateInput = document.getElementById(
+      "deposit-annual-rate"
+    );
+    const presentValueCalculateBtn = document.getElementById(
+      "present-value-calculate-btn"
+    );
+    const presentValueResetBtn = document.getElementById(
+      "present-value-reset-btn"
+    );
+    const presentValueFutureAmountInput = document.getElementById(
+      "present-value-future-amount"
+    );
+    const presentValueAnnualRateInput = document.getElementById(
+      "present-value-annual-rate"
+    );
+    const presentValueYearsInput = document.getElementById(
+      "present-value-years"
+    );
+    const presentValueMonthsInput = document.getElementById(
+      "present-value-months"
+    );
+    const presentValueDaysInput = document.getElementById(
+      "present-value-days"
+    );
+    const futureValueCalculateBtn = document.getElementById(
+      "future-value-calculate-btn"
+    );
+    const futureValueResetBtn = document.getElementById(
+      "future-value-reset-btn"
+    );
+    const futureValuePresentAmountInput = document.getElementById(
+      "future-value-present-amount"
+    );
+    const futureValueAnnualRateInput = document.getElementById(
+      "future-value-annual-rate"
+    );
+    const futureValueYearsInput = document.getElementById(
+      "future-value-years"
+    );
+    const futureValueMonthsInput = document.getElementById(
+      "future-value-months"
+    );
+    const futureValueDaysInput = document.getElementById(
+      "future-value-days"
+    );
+    const futureValueAnnuityCalculateBtn = document.getElementById(
+      "future-value-annuity-calculate-btn"
+    );
+    const futureValueAnnuityResetBtn = document.getElementById(
+      "future-value-annuity-reset-btn"
+    );
+    const futureValueAnnuityPaymentInput = document.getElementById(
+      "future-value-annuity-payment"
+    );
+    const futureValueAnnuityAnnualRateInput = document.getElementById(
+      "future-value-annuity-annual-rate"
+    );
+    const futureValueAnnuityYearsInput = document.getElementById(
+      "future-value-annuity-years"
+    );
+    const futureValueAnnuityMonthsInput = document.getElementById(
+      "future-value-annuity-months"
+    );
+    const futureValueAnnuityDaysInput = document.getElementById(
+      "future-value-annuity-days"
+    );
+    const compoundDepositCalculateBtn = document.getElementById(
+      "compound-deposit-calculate-btn"
+    );
+    const compoundDepositResetBtn = document.getElementById(
+      "compound-deposit-reset-btn"
+    );
+    const compoundDepositPrincipalInput = document.getElementById(
+      "compound-deposit-principal"
+    );
+    const compoundDepositAnnualRateInput = document.getElementById(
+      "compound-deposit-annual-rate"
+    );
+    const compoundDepositTermInput = document.getElementById(
+      "compound-deposit-term"
+    );
+    const compoundDepositFrequencySelect = document.getElementById(
+      "compound-deposit-frequency"
+    );
+    const presentValueAnnuityCalculateBtn = document.getElementById(
+      "present-value-annuity-calculate-btn"
+    );
+    const presentValueAnnuityResetBtn = document.getElementById(
+      "present-value-annuity-reset-btn"
+    );
+    const presentValueAnnuityPaymentInput = document.getElementById(
+      "present-value-annuity-payment"
+    );
+    const presentValueAnnuityAnnualRateInput = document.getElementById(
+      "present-value-annuity-annual-rate"
+    );
+    const presentValueAnnuityYearsInput = document.getElementById(
+      "present-value-annuity-years"
+    );
+    const presentValueAnnuityMonthsInput = document.getElementById(
+      "present-value-annuity-months"
+    );
+    const presentValueAnnuityDaysInput = document.getElementById(
+      "present-value-annuity-days"
+    );
 
     if (calculateBtn) {
       calculateBtn.addEventListener("click", () => this.calculateLoan());
@@ -456,12 +1052,176 @@ class UIComponents {
       resetCalcBtn.addEventListener("click", () => this.resetCalculator());
     }
 
+    if (depositCalculateBtn) {
+      depositCalculateBtn.addEventListener("click", () =>
+        this.calculateDepositReturn()
+      );
+    }
+
+    if (depositResetBtn) {
+      depositResetBtn.addEventListener("click", () =>
+        this.resetDepositCalculator()
+      );
+    }
+
+    if (compoundDepositCalculateBtn) {
+      compoundDepositCalculateBtn.addEventListener("click", () =>
+        this.calculateCompoundDepositReturn()
+      );
+    }
+
+    if (compoundDepositResetBtn) {
+      compoundDepositResetBtn.addEventListener("click", () =>
+        this.resetCompoundDepositCalculator()
+      );
+    }
+
+    if (presentValueAnnuityCalculateBtn) {
+      presentValueAnnuityCalculateBtn.addEventListener("click", () =>
+        this.calculatePresentValueAnnuity()
+      );
+    }
+
+    if (presentValueAnnuityResetBtn) {
+      presentValueAnnuityResetBtn.addEventListener("click", () =>
+        this.resetPresentValueAnnuityCalculator()
+      );
+    }
+
+    if (presentValueCalculateBtn) {
+      presentValueCalculateBtn.addEventListener("click", () =>
+        this.calculatePresentValue()
+      );
+    }
+
+    if (presentValueResetBtn) {
+      presentValueResetBtn.addEventListener("click", () =>
+        this.resetPresentValueCalculator()
+      );
+    }
+
+    if (futureValueCalculateBtn) {
+      futureValueCalculateBtn.addEventListener("click", () =>
+        this.calculateFutureValue()
+      );
+    }
+
+    if (futureValueResetBtn) {
+      futureValueResetBtn.addEventListener("click", () =>
+        this.resetFutureValueCalculator()
+      );
+    }
+
+    if (futureValueAnnuityCalculateBtn) {
+      futureValueAnnuityCalculateBtn.addEventListener("click", () =>
+        this.calculateFutureValueAnnuity()
+      );
+    }
+
+    if (futureValueAnnuityResetBtn) {
+      futureValueAnnuityResetBtn.addEventListener("click", () =>
+        this.resetFutureValueAnnuityCalculator()
+      );
+    }
+
     // Add Enter key support for calculator inputs
     [loanAmountInput, loanTermInput, interestRateInput].forEach((input) => {
       if (input) {
         input.addEventListener("keypress", (e) => {
           if (e.key === "Enter") {
             this.calculateLoan();
+          }
+        });
+      }
+    });
+
+    [
+      depositPrincipalInput,
+      depositDaysInput,
+      depositAnnualRateInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateDepositReturn();
+          }
+        });
+      }
+    });
+
+    [
+      compoundDepositPrincipalInput,
+      compoundDepositAnnualRateInput,
+      compoundDepositTermInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateCompoundDepositReturn();
+          }
+        });
+      }
+    });
+
+    [
+      presentValueFutureAmountInput,
+      presentValueAnnualRateInput,
+      presentValueYearsInput,
+      presentValueMonthsInput,
+      presentValueDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculatePresentValue();
+          }
+        });
+      }
+    });
+
+    [
+      futureValuePresentAmountInput,
+      futureValueAnnualRateInput,
+      futureValueYearsInput,
+      futureValueMonthsInput,
+      futureValueDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateFutureValue();
+          }
+        });
+      }
+    });
+
+    [
+      futureValueAnnuityPaymentInput,
+      futureValueAnnuityAnnualRateInput,
+      futureValueAnnuityYearsInput,
+      futureValueAnnuityMonthsInput,
+      futureValueAnnuityDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculateFutureValueAnnuity();
+          }
+        });
+      }
+    });
+
+    [
+      presentValueAnnuityPaymentInput,
+      presentValueAnnuityAnnualRateInput,
+      presentValueAnnuityYearsInput,
+      presentValueAnnuityMonthsInput,
+      presentValueAnnuityDaysInput,
+    ].forEach((input) => {
+      if (input) {
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            this.calculatePresentValueAnnuity();
           }
         });
       }
@@ -516,6 +1276,12 @@ class UIComponents {
 
       case "news":
         await this.loadFinanceNews();
+        break;
+
+      case "balance-heatmap":
+        if (window.balanceCalendarApp?.refreshOnActivate) {
+          await window.balanceCalendarApp.refreshOnActivate();
+        }
         break;
       case "verification":
         await this.loadVerificationTab();
@@ -632,7 +1398,9 @@ class UIComponents {
       for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         try {
-          const response = await window.apiService.uploadFile(file);
+          const response = await window.apiService.uploadFile(file, {
+            photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
+          });
           if (response.success) {
             uploadedFiles.push({
               name: file.name,
@@ -676,6 +1444,7 @@ class UIComponents {
           const responseCharts = response.charts || response.data?.charts || [];
           const responseGeneratedFiles =
             response.generatedFiles || response.data?.generatedFiles || [];
+          const responseSources = response.sources || response.data?.sources || [];
 
           if (responseContent) {
             this.addMessageToChat(
@@ -683,7 +1452,8 @@ class UIComponents {
               responseContent,
               responseImages,
               responseCharts,
-              responseGeneratedFiles
+              responseGeneratedFiles,
+              responseSources
             );
           } else {
             console.warn("Empty response received:", response);
@@ -809,7 +1579,8 @@ class UIComponents {
     content,
     images = [],
     charts = [],
-    generatedFiles = []
+    generatedFiles = [],
+    sources = []
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -833,16 +1604,12 @@ class UIComponents {
       // Simple content processing
       let processedContent = content || "No response received";
 
-      // Debug: Log the original content
-      console.log("Original content:", processedContent);
-
-      // Process mathematical expressions first, before markdown parsing
+      // Process mathematical expressions BEFORE markdown parsing
+      // KaTeX generates HTML which marked will preserve
       processedContent = Utils.processMathExpressions(processedContent);
 
-      // Debug: Log content after math processing
-      console.log("After math processing:", processedContent);
-
       // Safely parse markdown content, fallback to escaped HTML if marked fails
+      // marked preserves HTML by default, so KaTeX output will be kept
       let parsedContent;
       try {
         parsedContent =
@@ -854,18 +1621,59 @@ class UIComponents {
         parsedContent = Utils.escapeHtml(processedContent);
       }
 
-      // Debug: Log final parsed content
-      console.log("Final parsed content:", parsedContent);
+      // Build sources display if sources are available
+      let sourcesHTML = "";
+      if (sources && sources.length > 0) {
+        const sourcesList = sources.map(source => 
+          `<div class="source-item">
+            <i class="fas fa-file-pdf"></i>
+            <span>${Utils.escapeHtml(source)}</span>
+          </div>`
+        ).join("");
+        
+        sourcesHTML = `
+          <div class="sources-container">
+            <div class="sources-header">
+              <span class="sources-label">Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}</span>
+              <span class="sources-toggle">></span>
+            </div>
+            <div class="sources-list">
+              <div>${sourcesList}</div>
+            </div>
+          </div>
+        `;
+      }
 
       messageDiv.innerHTML = `
                 <div class="message-avatar">
                     <i class="fas fa-robot"></i>
                 </div>
                 <div class="message-content">
+                    ${sourcesHTML}
                     <div class="message-text">${parsedContent}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
+      
+      // Add click event listener for sources toggle if sources exist
+      if (sources && sources.length > 0) {
+        const sourcesHeader = messageDiv.querySelector('.sources-header');
+        if (sourcesHeader) {
+          sourcesHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
+        
+        // Make source items look clickable but prevent any action
+        const sourceItems = messageDiv.querySelectorAll('.source-item');
+        sourceItems.forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Visual feedback only - no actual action
+          });
+        });
+      }
     } else if (type === "error") {
       messageDiv.innerHTML = `
                 <div class="message-avatar">
@@ -873,8 +1681,8 @@ class UIComponents {
                 </div>
                 <div class="message-content">
                     <div class="message-text error">${Utils.escapeHtml(
-                      content
-                    )}</div>
+        content
+      )}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
@@ -947,16 +1755,14 @@ class UIComponents {
         }
         if (chart.chart_type) {
           chartInfo.push(
-            `Type: ${
-              chart.chart_type.charAt(0).toUpperCase() +
-              chart.chart_type.slice(1)
+            `Type: ${chart.chart_type.charAt(0).toUpperCase() +
+            chart.chart_type.slice(1)
             }`
           );
         }
         if (chart.period) {
           chartInfo.push(
-            `Period: ${
-              chart.period.charAt(0).toUpperCase() + chart.period.slice(1)
+            `Period: ${chart.period.charAt(0).toUpperCase() + chart.period.slice(1)
             }`
           );
         }
@@ -990,8 +1796,7 @@ class UIComponents {
       (generatedFiles && generatedFiles.length > 0)
     ) {
       console.log(
-        `Adding ${(images || []).length} images and ${
-          (generatedFiles || []).length
+        `Adding ${(images || []).length} images and ${(generatedFiles || []).length
         } generated files to message`
       );
 
@@ -1004,8 +1809,7 @@ class UIComponents {
       attachmentsHeader.className = "images-header";
       attachmentsHeader.innerHTML = `
         <i class="fas fa-paperclip" style="font-size: 0.9em; opacity: 0.7;"></i>
-        <span style="font-size: 1em; opacity: 0.9;">${
-          (images || []).length + (generatedFiles || []).length
+        <span style="font-size: 1em; opacity: 0.9;">${(images || []).length + (generatedFiles || []).length
         } attachment</span>
         <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
       `;
@@ -1551,24 +2355,27 @@ class UIComponents {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images, charts, and generated files properly - they should be fresh for each message
+          // Extract images, charts, generated files, and sources properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
           const generatedFiles = msg.metadata?.generatedFiles || [];
+          const sources = msg.metadata?.sources || [];
 
-          // Ensure images, charts, and generated files are not accumulated from previous sessions
+          // Ensure images, charts, generated files, and sources are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
           const cleanGeneratedFiles = Array.isArray(generatedFiles)
             ? generatedFiles.slice()
             : [];
+          const cleanSources = Array.isArray(sources) ? sources.slice() : [];
 
           this.addMessageToChat(
             msg.role,
             msg.content,
             cleanImages,
             cleanCharts,
-            cleanGeneratedFiles
+            cleanGeneratedFiles,
+            cleanSources
           );
 
           // Update local chat history
@@ -1774,15 +2581,14 @@ class UIComponents {
 
     sessionItem.innerHTML = `
       <div class="chat-session-title">${Utils.escapeHtml(
-        session.title || "Untitled Chat"
-      )}</div>
+      session.title || "Untitled Chat"
+    )}</div>
       <div class="chat-session-meta">
         <span class="chat-session-date">${formattedDate}</span>
         <span class="chat-session-count">${session.message_count}</span>
         <div class="chat-session-actions">
-          <button class="chat-session-delete" data-session-id="${
-            session.session_id
-          }" title="Delete session">
+          <button class="chat-session-delete" data-session-id="${session.session_id
+      }" title="Delete session">
             <i class="fas fa-trash"></i>
           </button>
         </div>
@@ -2093,12 +2899,10 @@ class UIComponents {
         statusClass = "uploading";
         break;
       case "success":
-        statusIcon = "✅";
         statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
-        statusIcon = "❌";
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -2107,11 +2911,10 @@ class UIComponents {
     const messageElement = document.createElement("div");
     messageElement.className = `file-status-message ${statusClass}`;
     messageElement.innerHTML = `
-      <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
-          fileName
-        )}</span>: ${statusText}
+      fileName
+    )}</span>: ${statusText}
       </div>
     `;
 
@@ -2132,12 +2935,10 @@ class UIComponents {
 
     switch (status) {
       case "success":
-        statusIcon = "✅";
         statusText = `Uploaded`;
         statusClass = "success";
         break;
       case "error":
-        statusIcon = "❌";
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -2146,11 +2947,10 @@ class UIComponents {
     // Update the message
     statusMessage.className = `file-status-message ${statusClass}`;
     statusMessage.innerHTML = `
-      <div class="status-icon">${statusIcon}</div>
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
-          fileName
-        )}</span>: ${statusText}
+      fileName
+    )}</span>: ${statusText}
       </div>
     `;
   }
@@ -2242,85 +3042,30 @@ class UIComponents {
 
   async loadFileLibrary() {
     try {
-      // Fetch the file list from the backend
       const response = await fetch("http://localhost:8001/api/files");
       if (!response.ok) throw new Error("Failed to fetch file list");
       const data = await response.json();
-      const files = data.files || [];
+      this.allFiles = data.files || [];
 
-      // Get the file library container
-      const fileLibrary = document.getElementById("files-grid");
-      if (!fileLibrary) return;
-      fileLibrary.innerHTML = "";
+      // İlk listeleme
+      this.displayFilteredFiles();
 
-      if (files.length === 0) {
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        fileLibrary.innerHTML = `<div class="empty-state">
-          <i class="fas fa-folder-open"></i>
-          <h3>${t("noDocuments")}</h3>
-          <p>${t("uploadToGetStarted")}</p>
-          <button class="cta-button" data-tab="chat">${t(
-            "uploadFilesBtn"
-          )}</button>
-        </div>`;
-        return;
+      // 🔍 Arama olayları
+      const searchInput = document.getElementById("file-tab-search");
+      const clearBtn = document.getElementById("file-tab-search-clear");
+
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          this.displayFilteredFiles(searchInput.value.trim().toLowerCase());
+        });
       }
 
-      // Render each file
-      files.forEach((file) => {
-        const fileItem = document.createElement("div");
-        fileItem.className = "file-card";
-        fileItem.style.cursor = "pointer";
-        fileItem.dataset.fileName = file.name;
-        fileItem.innerHTML = `
-          <div class="file-card-header">
-            <div class="file-card-main">
-              <div class="file-card-icon">
-                <i class="${Utils.getFileIcon(file.name)}"></i>
-              </div>
-              <div class="file-card-info">
-                <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
-                <div class="file-card-details">${Utils.formatFileSize(
-                  file.size
-                )} • ${Utils.formatDate(file.created_at)}</div>
-              </div>
-            </div>
-            <div class="file-card-actions">
-              <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
-                file.name
-              )}" title="Delete file">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="file-card-preview" id="preview-${Utils.escapeHtml(
-            file.name
-          ).replace(/[^a-zA-Z0-9]/g, "_")}">
-            <div class="preview-loading">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span data-i18n="previewLoading">Loading preview...</span>
-            </div>
-          </div>
-        `;
-
-        // Add click handler to open file (but not on action buttons)
-        fileItem.addEventListener("click", (e) => {
-          // Don't open file if clicking on action buttons or preview area
-          if (
-            !e.target.closest(".file-card-actions") &&
-            !e.target.closest(".file-card-preview")
-          ) {
-            this.openFile(file.name);
-          }
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          this.displayFilteredFiles();
         });
-
-        fileLibrary.appendChild(fileItem);
-
-        // Load preview for this file
-        this.loadFilePreview(file.name);
-      });
+      }
     } catch (error) {
       const fileLibrary = document.getElementById("files-grid");
       if (fileLibrary) {
@@ -2328,14 +3073,91 @@ class UIComponents {
           ? window.languageService.t.bind(window.languageService)
           : (key) => key;
         fileLibrary.innerHTML = `<div class="empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <h3>${t("error")}</h3>
-          <p>${t("networkError")}</p>
-        </div>`;
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>${t("error")}</h3>
+        <p>${t("networkError")}</p>
+      </div>`;
       }
       console.error("Error loading file library:", error);
     }
   }
+
+  displayFilteredFiles(searchTerm = "") {
+    const fileLibrary = document.getElementById("files-grid");
+    if (!fileLibrary) return;
+    fileLibrary.innerHTML = "";
+
+    const t = window.languageService
+      ? window.languageService.t.bind(window.languageService)
+      : (key) => key;
+
+    const filteredFiles = this.allFiles.filter((f) =>
+      f.name.toLowerCase().includes(searchTerm)
+    );
+
+    if (filteredFiles.length === 0) {
+      fileLibrary.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h3>${t("noDocuments")}</h3>
+        <p>${t("uploadToGetStarted")}</p>
+      </div>`;
+      return;
+    }
+
+    filteredFiles.forEach((file) => {
+      const safeName = Utils.escapeHtml(file.name);
+      const previewId = `preview-${safeName.replace(/[^a-zA-Z0-9]/g, "_")}`;
+
+      const fileItem = document.createElement("div");
+      fileItem.className = "file-card";
+      fileItem.style.cursor = "pointer";
+      fileItem.dataset.fileName = file.name;
+
+      fileItem.innerHTML = `
+      <div class="file-card-header">
+        <div class="file-card-main">
+          <div class="file-card-icon">
+            <i class="${Utils.getFileIcon(file.name)}"></i>
+          </div>
+          <div class="file-card-info">
+            <div class="file-card-name">${safeName}</div>
+            <div class="file-card-details">${Utils.formatFileSize(
+        file.size
+      )} • ${Utils.formatDate(file.created_at)}</div>
+          </div>
+        </div>
+        <div class="file-card-actions">
+          <button class="file-action-btn delete-btn" data-filename="${safeName}" title="Delete file">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+      <div class="file-card-preview" id="${previewId}">
+        <div class="preview-loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span data-i18n="previewLoading">Loading preview...</span>
+        </div>
+      </div>
+    `;
+
+      // 📂 Dosyaya tıklayınca aç
+      fileItem.addEventListener("click", (e) => {
+        if (
+          !e.target.closest(".file-card-actions") &&
+          !e.target.closest(".file-card-preview")
+        ) {
+          this.openFile(file.name);
+        }
+      });
+
+      fileLibrary.appendChild(fileItem);
+
+      // ✅ Önizlemeyi yükle
+      this.loadFilePreview(file.name);
+    });
+  }
+
 
   async loadCreatedDocumentsLibrary() {
     try {
@@ -2364,8 +3186,8 @@ class UIComponents {
           <h3>${t("noCreatedDocuments")}</h3>
           <p>${t("askAiToCreateDocuments")}</p>
           <button class="cta-button" data-tab="chat">${t(
-            "startChatBtn"
-          )}</button>
+          "startChatBtn"
+        )}</button>
         </div>`;
         return;
       }
@@ -2385,21 +3207,21 @@ class UIComponents {
               <div class="file-card-info">
                 <div class="file-card-name">${Utils.escapeHtml(file.name)}</div>
                 <div class="file-card-details">${Utils.formatFileSize(
-                  file.size
-                )} • ${Utils.formatDate(file.created_at)}</div>
+          file.size
+        )} • ${Utils.formatDate(file.created_at)}</div>
               </div>
             </div>
             <div class="file-card-actions">
               <button class="file-action-btn delete-btn" data-filename="${Utils.escapeHtml(
-                file.name
-              )}" title="Delete file">
+          file.name
+        )}" title="Delete file">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
           </div>
           <div class="file-card-preview" id="created-preview-${Utils.escapeHtml(
-            file.name
-          ).replace(/[^a-zA-Z0-9]/g, "_")}">
+          file.name
+        ).replace(/[^a-zA-Z0-9]/g, "_")}">
             <div class="preview-loading">
               <i class="fas fa-spinner fa-spin"></i>
               <span data-i18n="previewLoading">Loading preview...</span>
@@ -2468,8 +3290,8 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Connection error"
-          )}</span>
+        error.message || "Connection error"
+      )}</span>
         </div>
       `;
     }
@@ -2481,8 +3303,8 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview error: ${Utils.escapeHtml(
-            previewData.error || "Error occurred"
-          )}</span>
+        previewData.error || "Error occurred"
+      )}</span>
         </div>
       `;
       return;
@@ -2611,8 +3433,8 @@ class UIComponents {
         <div class="preview-error">
           <i class="fas fa-exclamation-triangle"></i>
           <span>Preview unavailable: ${Utils.escapeHtml(
-            error.message || "Connection error"
-          )}</span>
+        error.message || "Connection error"
+      )}</span>
         </div>
       `;
     }
@@ -2809,19 +3631,17 @@ class UIComponents {
                 <div class="file-meta">
                     <span class="file-size">${fileSize}</span>
                     <span class="file-date">${t(
-                      "uploadedOn"
-                    )} ${uploadDate}</span>
+      "uploadedOn"
+    )} ${uploadDate}</span>
                 </div>
             </div>
             <div class="file-actions">
-                <button class="action-btn" onclick="window.uiComponents.downloadFile('${
-                  file.id
-                }')" title="${t("downloadFile")}">
+                <button class="action-btn" onclick="window.uiComponents.downloadFile('${file.id
+      }')" title="${t("downloadFile")}">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${
-                  file.id
-                }')" title="${t("deleteFile")}">
+                <button class="action-btn delete" onclick="window.uiComponents.deleteFile('${file.id
+      }')" title="${t("deleteFile")}">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -2934,13 +3754,12 @@ class UIComponents {
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
     notification.innerHTML = `
-            <i class="fas fa-${
-              type === "success"
-                ? "check"
-                : type === "error"
-                ? "exclamation-triangle"
-                : "info"
-            }"></i>
+            <i class="fas fa-${type === "success"
+        ? "check"
+        : type === "error"
+          ? "exclamation-triangle"
+          : "info"
+      }"></i>
             <span>${Utils.escapeHtml(message)}</span>
         `;
 
@@ -3189,8 +4008,8 @@ class UIComponents {
         <div class="news-hero-content">
           <h2 class="news-hero-title">${Utils.escapeHtml(article.title)}</h2>
           <p class="news-hero-description">${this.cleanDescriptionForCard(
-            article.summary || ""
-          )}</p>
+      article.summary || ""
+    )}</p>
           <div class="news-hero-meta">
             <span class="news-hero-sources">
               <i class="fas fa-building"></i>
@@ -3270,8 +4089,8 @@ class UIComponents {
         <div class="news-content">
           <h3 class="news-title">${Utils.escapeHtml(article.title)}</h3>
           <p class="news-description">${this.cleanDescriptionForCard(
-            article.summary || ""
-          )}</p>
+      article.summary || ""
+    )}</p>
           <div class="news-meta">
             <span class="news-sources">
               <i class="fas fa-building"></i>
@@ -3703,8 +4522,8 @@ class UIComponents {
                loading="lazy"
                onerror="this.style.display='none'" />
           <div class="image-caption">Image from ${Utils.escapeHtml(
-            img.source
-          )}</div>
+        img.source
+      )}</div>
         </div>
       `;
       content = content.replace("{{IMAGE_LEAD}}", imageHtml);
@@ -3724,8 +4543,8 @@ class UIComponents {
                  loading="lazy"
                  onerror="this.style.display='none'" />
             <div class="image-caption">Image from ${Utils.escapeHtml(
-              img.source
-            )}</div>
+          img.source
+        )}</div>
           </div>
         `;
         content = content.replace(marker, imageHtml);
@@ -3836,8 +4655,8 @@ class UIComponents {
           source.url
         )}" target="_blank" rel="noopener noreferrer" class="news-source-link" 
            data-source-name="${Utils.escapeHtml(
-             source.name
-           )}" data-source-url="${Utils.escapeHtml(source.url)}">
+          source.name
+        )}" data-source-url="${Utils.escapeHtml(source.url)}">
           <div class="source-icon">${icon}</div>
           <div class="source-info">
             <div class="source-name">${Utils.escapeHtml(source.name)}</div>
@@ -4536,10 +5355,10 @@ class UIComponents {
     const details = Array.isArray(issues)
       ? issues.join(", ")
       : stageData.assessment ||
-        stageData.reasoning ||
-        (window.languageService
-          ? window.languageService.t("noDetailsAvailable")
-          : "No details available");
+      stageData.reasoning ||
+      (window.languageService
+        ? window.languageService.t("noDetailsAvailable")
+        : "No details available");
 
     const t = window.languageService
       ? window.languageService.t.bind(window.languageService)
@@ -4688,29 +5507,52 @@ class UIComponents {
     }
   }
 
+  setupFileSearch() {
+    const input = document.getElementById("file-selection-search");
+    const clearBtn = document.getElementById("file-selection-search-clear");
+
+    if (!input) return;
+
+    input.addEventListener("input", (e) => {
+      this.fileSelectionFilter = e.target.value.trim().toLowerCase();
+      this.renderFileSelectionList();
+    });
+
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Escape") this.clearFileSearch();
+    });
+
+    clearBtn?.addEventListener("click", () => this.clearFileSearch());
+  }
+
+  clearFileSearch() {
+    const input = document.getElementById("file-selection-search");
+    if (input) input.value = "";
+    this.fileSelectionFilter = "";
+    this.renderFileSelectionList();
+    input?.focus();
+  }
+
   // File Selection Modal Methods
   async showFileSelectionModal() {
     const modal = document.getElementById("file-selection-modal");
     if (!modal) return;
 
-    // Store reference to modal
     this.fileSelectionModal = modal;
 
     // Load files if not already loaded
     await this.loadFilesForSelection();
 
-    // Show modal with animation
+    // Show modal
     modal.classList.add("show");
 
-    // Update file selection display
+    // Update display
     this.updateFileSelectionDisplay();
   }
 
   hideFileSelectionModal() {
     const modal = document.getElementById("file-selection-modal");
-    if (modal) {
-      modal.classList.remove("show");
-    }
+    if (modal) modal.classList.remove("show");
     this.fileSelectionModal = null;
   }
 
@@ -4718,21 +5560,17 @@ class UIComponents {
     const filesList = document.getElementById("files-selection-list");
     if (!filesList) return;
 
-    // Show loading state
     filesList.innerHTML = `
-      <div class="loading-files">
-        <i class="fas fa-spinner fa-spin"></i>
-        <span>Loading files...</span>
-      </div>
-    `;
+        <div class="loading-files">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading files...</span>
+        </div>`;
 
     try {
-      // Fetch files from API
       const result = await window.apiService.getFiles();
 
       if (result.success && result.files) {
         this.allFiles = result.files;
-
         this.renderFileSelectionList();
         this.updateFileSelectionButton();
       } else {
@@ -4741,11 +5579,10 @@ class UIComponents {
     } catch (error) {
       console.error("Error loading files for selection:", error);
       filesList.innerHTML = `
-        <div class="loading-files">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span>Error loading files: ${error.message}</span>
-        </div>
-      `;
+            <div class="loading-files">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Error loading files: ${error.message}</span>
+            </div>`;
     }
   }
 
@@ -4753,41 +5590,63 @@ class UIComponents {
     const filesList = document.getElementById("files-selection-list");
     if (!filesList || !this.allFiles) return;
 
-    if (this.allFiles.length === 0) {
-      filesList.innerHTML = `
-        <div class="loading-files">
-          <i class="fas fa-folder-open"></i>
-          <span>No files available. Upload some files first.</span>
-        </div>
-      `;
-      return;
-    }
+    const q = this.fileSelectionFilter;
 
-    filesList.innerHTML = this.allFiles
-      .map((file) => {
-        const isSelected = this.selectedFiles.includes(file.name);
-        const fileExtension = file.name.split(".").pop().toLowerCase();
-        const fileIcon = this.getFileIcon(fileExtension);
-        const fileSize = this.formatFileSize(file.size);
+    let visibleFiles = q
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
+      : this.allFiles;
 
-        return `
-        <div class="file-selection-item ${
-          isSelected ? "selected" : ""
-        }" data-filename="${file.name}">
-          <div class="file-checkbox ${isSelected ? "checked" : ""}">
-            <i class="fas fa-check"></i>
-          </div>
-          <div class="file-item-icon ${fileExtension}">
-            <i class="${fileIcon}"></i>
-          </div>
-          <div class="file-item-info">
-            <div class="file-item-name" title="${file.name}">${file.name}</div>
-            <div class="file-item-size">${fileSize}</div>
-          </div>
-        </div>
-      `;
-      })
-      .join("");
+    // Seçili dosyaları en üste taşı
+    visibleFiles.sort((a, b) => {
+      const aSelected = this.selectedFiles.includes(a.name);
+      const bSelected = this.selectedFiles.includes(b.name);
+
+      if (aSelected && !bSelected) return -1; // a seçiliyse b'nin üstüne al
+      if (!aSelected && bSelected) return 1;  // b seçiliyse a'nın üstüne al
+      return 0; // ikisi de aynı seçili durumdaysa sıralamayı bozma
+    });
+
+
+
+    filesList.innerHTML = visibleFiles.map(file => {
+      const isSelected = this.selectedFiles.includes(file.name);
+      const fileExtension = file.name.split(".").pop().toLowerCase();
+      const fileIcon = this.getFileIcon(fileExtension);
+      const fileSize = this.formatFileSize(file.size);
+
+      return `
+        <div class="file-selection-item ${isSelected ? "selected" : ""}" data-filename="${file.name}">
+            <div class="file-checkbox ${isSelected ? "checked" : ""}">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="file-item-icon ${fileExtension}">
+                <i class="${fileIcon}"></i>
+            </div>
+            <div class="file-item-info">
+                <div class="file-item-name" title="${file.name}">${file.name}</div>
+                <div class="file-item-size">${fileSize}</div>
+            </div>
+        </div>`;
+    }).join("");
+
+    // Click eventlerini bağla (item veya checkbox farketmez)
+    const items = filesList.querySelectorAll(".file-selection-item");
+    items.forEach(item => {
+      const fileName = item.dataset.filename;
+      const checkbox = item.querySelector(".file-checkbox");
+
+      // Container click
+      item.onclick = (e) => {
+        e.stopPropagation(); // çakışmaları önle
+        this.toggleFileSelection(fileName);
+      };
+
+      // Checkbox click
+      checkbox.onclick = (e) => {
+        e.stopPropagation(); // parent click ile çakışmayı önle
+        this.toggleFileSelection(fileName);
+      };
+    });
   }
 
   getFileIcon(extension) {
@@ -4816,39 +5675,52 @@ class UIComponents {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
+
   toggleFileSelection(fileName) {
     const index = this.selectedFiles.indexOf(fileName);
 
-    if (index > -1) {
-      // File is selected, remove it
-      this.selectedFiles.splice(index, 1);
-    } else {
-      // File is not selected, add it
-      this.selectedFiles.push(fileName);
-    }
+    if (index > -1) this.selectedFiles.splice(index, 1);
+    else this.selectedFiles.push(fileName);
 
-    // Update display
-    this.updateFileSelectionDisplay();
+    // Listeyi yeniden render et ve seçili dosyaları en üste taşı
+    this.renderFileSelectionList();
     this.updateFileSelectionButton();
   }
 
   selectAllFiles() {
-    this.selectedFiles = [...this.allFiles.map((file) => file.name)];
+    const q = this.fileSelectionFilter;
+    const visibleFiles = q
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
+      : this.allFiles;
+
+    const visibleNames = visibleFiles.map(f => f.name);
+
+    const set = new Set(this.selectedFiles);
+    visibleNames.forEach(n => set.add(n));
+    this.selectedFiles = Array.from(set);
+
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
   }
 
   deselectAllFiles() {
-    this.selectedFiles = [];
+    const q = this.fileSelectionFilter;
+    const visibleFiles = q
+      ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
+      : this.allFiles;
+
+    const visibleNames = visibleFiles.map(f => f.name);
+
+    this.selectedFiles = this.selectedFiles.filter(n => !visibleNames.includes(n));
+
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
   }
 
   updateFileSelectionDisplay() {
-    // Update checkboxes and selection state
     const fileItems = document.querySelectorAll(".file-selection-item");
 
-    fileItems.forEach((item) => {
+    fileItems.forEach(item => {
       const fileName = item.dataset.filename;
       const isSelected = this.selectedFiles.includes(fileName);
       const checkbox = item.querySelector(".file-checkbox");
@@ -5002,9 +5874,8 @@ class UIComponents {
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--accent-success, #10b981)";
       } else {
-        uploadStatus.textContent = `❌ ${
-          errorMessage || window.languageService?.get("failed") || "Failed"
-        }`;
+        uploadStatus.textContent = `❌ ${errorMessage || window.languageService?.get("failed") || "Failed"
+          }`;
         uploadStatus.className = "upload-status";
         uploadStatus.style.color = "var(--error-color, #ef4444)";
       }
@@ -5027,6 +5898,37 @@ class UIComponents {
   }
 
   // Credit Calculator Methods
+  computeLoanPayments(principal, termMonths, monthlyRatePercent) {
+    if (termMonths <= 0) {
+      throw new Error("Kredi vadesi 0'dan büyük olmalıdır");
+    }
+
+    const monthlyRate = monthlyRatePercent / 100;
+
+    if (monthlyRate === 0) {
+      const monthlyPayment = principal / termMonths;
+      return {
+        monthlyPayment,
+        totalPayment: monthlyPayment * termMonths,
+      };
+    }
+
+    const onePlusRate = 1 + monthlyRate;
+    const powerTerm = Math.pow(onePlusRate, termMonths);
+    const denominator = powerTerm - 1;
+
+    if (Math.abs(denominator) < 1e-9) {
+      throw new Error("Faiz oranı hesaplanamadı, lütfen girdileri kontrol edin");
+    }
+
+    const monthlyPayment = principal * ((monthlyRate * powerTerm) / denominator);
+
+    return {
+      monthlyPayment,
+      totalPayment: monthlyPayment * termMonths,
+    };
+  }
+
   calculateLoan() {
     try {
       // Get input values
@@ -5071,28 +5973,12 @@ class UIComponents {
         throw new Error("Faiz oranı %100'den küçük olmalıdır");
       }
 
-      // Convert annual interest rate to monthly rate
-      // r = Annual Rate / 12 / 100 (as shown in the formula image)
-      const r = interestRate / 100;
-
-      // Calculate monthly payment using the exact annuity formula from the image
-      // A = P × [r(1+r)^n] / [(1+r)^n - 1]
-      let monthlyPayment;
-      if (r === 0) {
-        // If no interest, simple division
-        monthlyPayment = loanAmount / loanTerm;
-      } else {
-        // Apply the exact annuity formula
-        const onePlusR = 1 + r; // (1+r)
-        const powerTerm = Math.pow(onePlusR, loanTerm); // (1+r)^n
-        const numerator = r * powerTerm; // r(1+r)^n
-        const denominator = powerTerm - 1; // (1+r)^n - 1
-
-        monthlyPayment = loanAmount * (numerator / denominator);
-      }
-
-      // Calculate total payment
-      const totalPayment = monthlyPayment * loanTerm;
+      // Calculate payments using monthly rate percentage provided by the user
+      const { monthlyPayment, totalPayment } = this.computeLoanPayments(
+        loanAmount,
+        loanTerm,
+        interestRate
+      );
 
       // Calculate total interest
       const totalInterest = totalPayment - loanAmount;
@@ -5108,6 +5994,450 @@ class UIComponents {
       });
 
       // Calculation completed successfully - no notification needed
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateDepositReturn() {
+    try {
+      const principalInput = document.getElementById("deposit-principal");
+      const daysInput = document.getElementById("deposit-days");
+      const annualRateInput = document.getElementById("deposit-annual-rate");
+
+      if (!principalInput || !daysInput || !annualRateInput) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const principal = this.parseNumber(principalInput.value);
+      const days = parseInt(daysInput.value, 10);
+      const annualRate = this.parseNumber(annualRateInput.value);
+
+      if (isNaN(principal) || principal <= 0) {
+        principalInput.focus();
+        throw new Error(
+          "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(days) || days <= 0) {
+        daysInput.focus();
+        throw new Error("Vade gün sayısı 0'dan büyük olmalıdır");
+      }
+
+      if (days > 3650) {
+        daysInput.focus();
+        throw new Error("Vade 3650 günden (10 yıl) uzun olamaz");
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      if (annualRate > 100) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+      }
+
+      const interest = principal * annualRate * (days / 36500);
+      const finalAmount = principal + interest;
+
+      const roundedInterest = Math.round(interest * 1000) / 1000;
+      const roundedFinalAmount = Math.round(finalAmount * 1000) / 1000;
+
+      this.displayDepositResults({
+        interest: roundedInterest,
+        finalAmount: roundedFinalAmount,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateCompoundDepositReturn() {
+    try {
+      const principalInput = document.getElementById(
+        "compound-deposit-principal"
+      );
+      const annualRateInput = document.getElementById(
+        "compound-deposit-annual-rate"
+      );
+      const termInput = document.getElementById("compound-deposit-term");
+      const frequencySelect = document.getElementById(
+        "compound-deposit-frequency"
+      );
+
+      if (!principalInput || !annualRateInput || !termInput || !frequencySelect) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const principal = this.parseNumber(principalInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const term = parseInt(termInput.value, 10);
+      const frequency = frequencySelect.value;
+
+      if (isNaN(principal) || principal <= 0) {
+        principalInput.focus();
+        throw new Error(
+          "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      if (annualRate > 100) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+      }
+
+      if (isNaN(term) || term <= 0) {
+        termInput.focus();
+        throw new Error("Vade dönem sayısı 0'dan büyük olmalıdır");
+      }
+
+      let periodsPerYear;
+      switch (frequency) {
+        case "daily":
+          periodsPerYear = 365;
+          break;
+        case "monthly":
+          periodsPerYear = 12;
+          break;
+        case "yearly":
+          periodsPerYear = 1;
+          break;
+        default:
+          throw new Error(
+            "Frekans 'daily', 'monthly' veya 'yearly' olmalıdır"
+          );
+      }
+
+      const rateDecimal = annualRate / 100;
+      const periodicRate = rateDecimal / periodsPerYear;
+      const finalAmount = principal * Math.pow(1 + periodicRate, term);
+      const interest = finalAmount - principal;
+
+      const roundedInterest = Math.round(interest * 1000) / 1000;
+      const roundedFinalAmount = Math.round(finalAmount * 1000) / 1000;
+
+      this.displayCompoundDepositResults({
+        interest: roundedInterest,
+        finalAmount: roundedFinalAmount,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculatePresentValue() {
+    try {
+      const futureAmountInput = document.getElementById(
+        "present-value-future-amount"
+      );
+      const annualRateInput = document.getElementById(
+        "present-value-annual-rate"
+      );
+      const yearsInput = document.getElementById("present-value-years");
+      const monthsInput = document.getElementById("present-value-months");
+      const daysInput = document.getElementById("present-value-days");
+
+      if (
+        !futureAmountInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const futureAmount = this.parseNumber(futureAmountInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(futureAmount) || futureAmount <= 0) {
+        futureAmountInput.focus();
+        throw new Error(
+          "Gelecekteki tutar 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const totalYears =
+        (Number.isNaN(years) ? 0 : Math.max(years, 0)) +
+        (Number.isNaN(months) ? 0 : Math.max(months, 0) / 12) +
+        (Number.isNaN(days) ? 0 : Math.max(days, 0) / 365);
+
+      if (totalYears <= 0) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      const presentValue =
+        futureAmount / Math.pow(1 + rateDecimal, totalYears);
+      const roundedPresentValue = Math.round(presentValue * 100) / 100;
+
+      this.displayPresentValueResults({
+        presentValue: roundedPresentValue,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateFutureValue() {
+    try {
+      const presentAmountInput = document.getElementById(
+        "future-value-present-amount"
+      );
+      const annualRateInput = document.getElementById(
+        "future-value-annual-rate"
+      );
+      const yearsInput = document.getElementById("future-value-years");
+      const monthsInput = document.getElementById("future-value-months");
+      const daysInput = document.getElementById("future-value-days");
+
+      if (
+        !presentAmountInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const presentAmount = this.parseNumber(presentAmountInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(presentAmount) || presentAmount <= 0) {
+        presentAmountInput.focus();
+        throw new Error(
+          "Bugünkü tutar 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const totalYears =
+        (Number.isNaN(years) ? 0 : Math.max(years, 0)) +
+        (Number.isNaN(months) ? 0 : Math.max(months, 0) / 12) +
+        (Number.isNaN(days) ? 0 : Math.max(days, 0) / 365);
+
+      if (totalYears <= 0) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      const futureValue =
+        presentAmount * Math.pow(1 + rateDecimal, totalYears);
+      const roundedFutureValue = Math.round(futureValue * 100) / 100;
+
+      this.displayFutureValueResults({
+        futureValue: roundedFutureValue,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculateFutureValueAnnuity() {
+    try {
+      const paymentInput = document.getElementById(
+        "future-value-annuity-payment"
+      );
+      const annualRateInput = document.getElementById(
+        "future-value-annuity-annual-rate"
+      );
+      const yearsInput = document.getElementById(
+        "future-value-annuity-years"
+      );
+      const monthsInput = document.getElementById(
+        "future-value-annuity-months"
+      );
+      const daysInput = document.getElementById(
+        "future-value-annuity-days"
+      );
+
+      if (
+        !paymentInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const payment = this.parseNumber(paymentInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(payment) || payment <= 0) {
+        paymentInput.focus();
+        throw new Error(
+          "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const hasYears = !Number.isNaN(years) && years > 0;
+      const hasMonths = !Number.isNaN(months) && months > 0;
+      const hasDays = !Number.isNaN(days) && days > 0;
+
+      if (!hasYears && !hasMonths && !hasDays) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      let periods;
+      let periodRate;
+
+      if (hasYears) {
+        periods = Math.max(years, 0);
+        periodRate = rateDecimal;
+      } else if (hasMonths) {
+        periods = Math.max(months, 0);
+        periodRate = rateDecimal / 12;
+      } else {
+        periods = Math.max(days, 0);
+        periodRate = rateDecimal / 365;
+      }
+
+      let futureValue;
+      if (periodRate === 0) {
+        futureValue = payment * periods;
+      } else {
+        const growthFactor = Math.pow(1 + periodRate, periods);
+        futureValue = payment * ((growthFactor - 1) / periodRate);
+      }
+
+      const roundedFutureValue = Math.round(futureValue * 100) / 100;
+
+      this.displayFutureValueAnnuityResults({
+        futureValue: roundedFutureValue,
+      });
+    } catch (error) {
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  calculatePresentValueAnnuity() {
+    try {
+      const paymentInput = document.getElementById(
+        "present-value-annuity-payment"
+      );
+      const annualRateInput = document.getElementById(
+        "present-value-annuity-annual-rate"
+      );
+      const yearsInput = document.getElementById(
+        "present-value-annuity-years"
+      );
+      const monthsInput = document.getElementById(
+        "present-value-annuity-months"
+      );
+      const daysInput = document.getElementById(
+        "present-value-annuity-days"
+      );
+
+      if (
+        !paymentInput ||
+        !annualRateInput ||
+        !yearsInput ||
+        !monthsInput ||
+        !daysInput
+      ) {
+        throw new Error("Gerekli form elemanları bulunamadı");
+      }
+
+      const payment = this.parseNumber(paymentInput.value);
+      const annualRate = this.parseNumber(annualRateInput.value);
+      const years = parseInt(yearsInput.value, 10);
+      const months = parseInt(monthsInput.value, 10);
+      const days = parseInt(daysInput.value, 10);
+
+      if (isNaN(payment) || payment <= 0) {
+        paymentInput.focus();
+        throw new Error(
+          "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+        );
+      }
+
+      if (isNaN(annualRate) || annualRate < 0) {
+        annualRateInput.focus();
+        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+      }
+
+      const hasYears = !Number.isNaN(years) && years > 0;
+      const hasMonths = !Number.isNaN(months) && months > 0;
+      const hasDays = !Number.isNaN(days) && days > 0;
+
+      if (!hasYears && !hasMonths && !hasDays) {
+        yearsInput.focus();
+        throw new Error(
+          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+        );
+      }
+
+      const rateDecimal = annualRate / 100;
+      let periods;
+      let periodRate;
+
+      if (hasYears) {
+        periods = Math.max(years, 0);
+        periodRate = rateDecimal;
+      } else if (hasMonths) {
+        periods = Math.max(months, 0);
+        periodRate = rateDecimal / 12;
+      } else {
+        periods = Math.max(days, 0);
+        periodRate = rateDecimal / 365;
+      }
+
+      let presentValue;
+      if (periodRate === 0) {
+        presentValue = payment * periods;
+      } else {
+        const discountFactor = Math.pow(1 + periodRate, -periods);
+        presentValue = payment * ((1 - discountFactor) / periodRate);
+      }
+
+      const roundedPresentValue = Math.round(presentValue * 100) / 100;
+
+      this.displayPresentValueAnnuityResults({
+        presentValue: roundedPresentValue,
+      });
     } catch (error) {
       this.showNotification(error.message, "error");
     }
@@ -5158,6 +6488,300 @@ class UIComponents {
     }, 100);
   }
 
+  displayDepositResults(results) {
+    const resultsContainer = document.getElementById("deposit-results");
+    const interestEl = document.getElementById("deposit-interest");
+    const finalAmountEl = document.getElementById("deposit-final-amount");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (interestEl) {
+      interestEl.textContent = this.formatCurrency(results.interest, 3);
+    }
+
+    if (finalAmountEl) {
+      finalAmountEl.textContent = this.formatCurrency(
+        results.finalAmount,
+        3
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayCompoundDepositResults(results) {
+    const resultsContainer = document.getElementById(
+      "compound-deposit-results"
+    );
+    const interestEl = document.getElementById("compound-deposit-interest");
+    const finalAmountEl = document.getElementById(
+      "compound-deposit-final-amount"
+    );
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (interestEl) {
+      interestEl.textContent = this.formatCurrency(results.interest, 3);
+    }
+
+    if (finalAmountEl) {
+      finalAmountEl.textContent = this.formatCurrency(
+        results.finalAmount,
+        3
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayPresentValueResults(results) {
+    const resultsContainer = document.getElementById(
+      "present-value-results"
+    );
+    const presentValueEl = document.getElementById("present-value-amount");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (presentValueEl) {
+      presentValueEl.textContent = this.formatCurrency(
+        results.presentValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayFutureValueResults(results) {
+    const resultsContainer = document.getElementById("future-value-results");
+    const futureValueEl = document.getElementById("future-value-amount");
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (futureValueEl) {
+      futureValueEl.textContent = this.formatCurrency(
+        results.futureValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayFutureValueAnnuityResults(results) {
+    const resultsContainer = document.getElementById(
+      "future-value-annuity-results"
+    );
+    const futureValueEl = document.getElementById(
+      "future-value-annuity-amount"
+    );
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (futureValueEl) {
+      futureValueEl.textContent = this.formatCurrency(
+        results.futureValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
+  displayPresentValueAnnuityResults(results) {
+    const resultsContainer = document.getElementById(
+      "present-value-annuity-results"
+    );
+    const presentValueEl = document.getElementById(
+      "present-value-annuity-amount"
+    );
+
+    if (resultsContainer) {
+      resultsContainer.style.display = "block";
+    }
+
+    if (presentValueEl) {
+      presentValueEl.textContent = this.formatCurrency(
+        results.presentValue,
+        2
+      );
+    }
+
+    setTimeout(() => {
+      if (!resultsContainer) {
+        return;
+      }
+
+      const calculatorContainer = document.querySelector(
+        ".calculator-container"
+      );
+
+      if (calculatorContainer) {
+        const containerRect = calculatorContainer.getBoundingClientRect();
+        const resultsRect = resultsContainer.getBoundingClientRect();
+        const scrollTop =
+          calculatorContainer.scrollTop +
+          (resultsRect.top - containerRect.top) -
+          20;
+
+        calculatorContainer.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        resultsContainer.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 100);
+  }
+
   resetCalculator() {
     // Clear input fields
     const loanAmountInput = document.getElementById("loan-amount");
@@ -5170,6 +6794,152 @@ class UIComponents {
 
     // Hide results
     const resultsContainer = document.getElementById("calculator-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetDepositCalculator() {
+    const principalInput = document.getElementById("deposit-principal");
+    const daysInput = document.getElementById("deposit-days");
+    const annualRateInput = document.getElementById("deposit-annual-rate");
+
+    if (principalInput) principalInput.value = "";
+    if (daysInput) daysInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+
+    const resultsContainer = document.getElementById("deposit-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetCompoundDepositCalculator() {
+    const principalInput = document.getElementById(
+      "compound-deposit-principal"
+    );
+    const annualRateInput = document.getElementById(
+      "compound-deposit-annual-rate"
+    );
+    const termInput = document.getElementById("compound-deposit-term");
+    const frequencySelect = document.getElementById(
+      "compound-deposit-frequency"
+    );
+
+    if (principalInput) principalInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (termInput) termInput.value = "";
+    if (frequencySelect) frequencySelect.value = "daily";
+
+    const resultsContainer = document.getElementById(
+      "compound-deposit-results"
+    );
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetPresentValueCalculator() {
+    const futureAmountInput = document.getElementById(
+      "present-value-future-amount"
+    );
+    const annualRateInput = document.getElementById(
+      "present-value-annual-rate"
+    );
+    const yearsInput = document.getElementById("present-value-years");
+    const monthsInput = document.getElementById("present-value-months");
+    const daysInput = document.getElementById("present-value-days");
+
+    if (futureAmountInput) futureAmountInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById(
+      "present-value-results"
+    );
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetFutureValueCalculator() {
+    const presentAmountInput = document.getElementById(
+      "future-value-present-amount"
+    );
+    const annualRateInput = document.getElementById(
+      "future-value-annual-rate"
+    );
+    const yearsInput = document.getElementById("future-value-years");
+    const monthsInput = document.getElementById("future-value-months");
+    const daysInput = document.getElementById("future-value-days");
+
+    if (presentAmountInput) presentAmountInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById("future-value-results");
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetFutureValueAnnuityCalculator() {
+    const paymentInput = document.getElementById(
+      "future-value-annuity-payment"
+    );
+    const annualRateInput = document.getElementById(
+      "future-value-annuity-annual-rate"
+    );
+    const yearsInput = document.getElementById("future-value-annuity-years");
+    const monthsInput = document.getElementById(
+      "future-value-annuity-months"
+    );
+    const daysInput = document.getElementById("future-value-annuity-days");
+
+    if (paymentInput) paymentInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById(
+      "future-value-annuity-results"
+    );
+    if (resultsContainer) {
+      resultsContainer.style.display = "none";
+    }
+  }
+
+  resetPresentValueAnnuityCalculator() {
+    const paymentInput = document.getElementById(
+      "present-value-annuity-payment"
+    );
+    const annualRateInput = document.getElementById(
+      "present-value-annuity-annual-rate"
+    );
+    const yearsInput = document.getElementById(
+      "present-value-annuity-years"
+    );
+    const monthsInput = document.getElementById(
+      "present-value-annuity-months"
+    );
+    const daysInput = document.getElementById(
+      "present-value-annuity-days"
+    );
+
+    if (paymentInput) paymentInput.value = "";
+    if (annualRateInput) annualRateInput.value = "";
+    if (yearsInput) yearsInput.value = "";
+    if (monthsInput) monthsInput.value = "";
+    if (daysInput) daysInput.value = "";
+
+    const resultsContainer = document.getElementById(
+      "present-value-annuity-results"
+    );
     if (resultsContainer) {
       resultsContainer.style.display = "none";
     }
@@ -5201,12 +6971,12 @@ class UIComponents {
   }
 
   // Helper method to format currency
-  formatCurrency(amount) {
+  formatCurrency(amount, fractionDigits = 2) {
     return new Intl.NumberFormat("tr-TR", {
       style: "currency",
       currency: "TRY",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
   }
 
@@ -5414,9 +7184,9 @@ class UIComponents {
           <div class="message-content">
             <div class="message-text">${Utils.escapeHtml(message)}</div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</div>
+        hour: "2-digit",
+        minute: "2-digit",
+      })}</div>
           </div>
         </div>
         <div class="message assistant-message">
@@ -5435,9 +7205,9 @@ class UIComponents {
               </div>
             </div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</div>
+        hour: "2-digit",
+        minute: "2-digit",
+      })}</div>
           </div>
         </div>
       `;
@@ -5886,9 +7656,8 @@ class UIComponents {
       priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(
         2
       )} (${isPositive ? "+" : ""}${changePercent.toFixed(2)}%)`;
-      priceChange.className = `stock-price-change ${
-        isPositive ? "positive" : "negative"
-      }`;
+      priceChange.className = `stock-price-change ${isPositive ? "positive" : "negative"
+        }`;
     }
     if (priceTime) {
       const date = new Date(latest.date);
@@ -5973,32 +7742,32 @@ class UIComponents {
     const volume = latest.volume
       ? latest.volume.toLocaleString("tr-TR")
       : previous
-      ? previous.volume.toLocaleString("tr-TR")
-      : "--";
+        ? previous.volume.toLocaleString("tr-TR")
+        : "--";
 
     metricsContainer.innerHTML = `
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "prevClose"
-        )}</span>
+      "prevClose"
+    )}</span>
         <span class="financial-metric-value">₺${previousClose}</span>
       </div>
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "open"
-        )}</span>
+      "open"
+    )}</span>
         <span class="financial-metric-value">₺${open}</span>
       </div>
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "dayRange"
-        )}</span>
+      "dayRange"
+    )}</span>
         <span class="financial-metric-value">₺${dayRange}</span>
       </div>
       <div class="financial-metric">
         <span class="financial-metric-label">${languageService.get(
-          "volume"
-        )}</span>
+      "volume"
+    )}</span>
         <span class="financial-metric-value">${volume}</span>
       </div>
     `;
@@ -6022,26 +7791,26 @@ class UIComponents {
     // Show loading placeholder immediately
     detailsContainer.innerHTML = `
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "fulltimeEmployees"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "fulltimeEmployees"
+    )}</span><span class="company-detail-value">${languageService.get(
       "loading"
     )}</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "sector"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "sector"
+    )}</span><span class="company-detail-value">${languageService.get(
       "loading"
     )}</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "industry"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "industry"
+    )}</span><span class="company-detail-value">${languageService.get(
       "loading"
     )}</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "country"
-      )}</span><span class="company-detail-value">TR</span></div>
+      "country"
+    )}</span><span class="company-detail-value">TR</span></div>
       <div class="company-detail"><span class="company-detail-label">${languageService.get(
-        "exchange"
-      )}</span><span class="company-detail-value">${languageService.get(
+      "exchange"
+    )}</span><span class="company-detail-value">${languageService.get(
       "istanbulStockExchange"
     )}</span></div>
       <div class="company-description"><p class="description-text">Fetching description…</p></div>
@@ -6081,14 +7850,12 @@ class UIComponents {
         const isLong = description.length > 240;
         descriptionHtml = `
           <div class="company-description">
-            <p class="description-text ${
-              isLong ? "" : "expanded"
-            }">${description}</p>
-            ${
-              isLong
-                ? '<button class="read-more-btn" id="company-read-more">Read More</button>'
-                : ""
-            }
+            <p class="description-text ${isLong ? "" : "expanded"
+          }">${description}</p>
+            ${isLong
+            ? '<button class="read-more-btn" id="company-read-more">Read More</button>'
+            : ""
+          }
           </div>
         `;
       } else {
@@ -6104,35 +7871,35 @@ class UIComponents {
       detailsContainer.innerHTML = `
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "fulltimeEmployees"
-          )}</span>
+        "fulltimeEmployees"
+      )}</span>
           <span class="company-detail-value">${fulltimeEmployees}</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "sector"
-          )}</span>
+        "sector"
+      )}</span>
           <span class="company-detail-value">${sector}</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "industry"
-          )}</span>
+        "industry"
+      )}</span>
           <span class="company-detail-value">${industry}</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "country"
-          )}</span>
+        "country"
+      )}</span>
           <span class="company-detail-value">TR</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "exchange"
-          )}</span>
+        "exchange"
+      )}</span>
           <span class="company-detail-value">${languageService.get(
-            "istanbulStockExchange"
-          )}</span>
+        "istanbulStockExchange"
+      )}</span>
         </div>
         ${descriptionHtml}
       `;
@@ -6155,32 +7922,32 @@ class UIComponents {
       detailsContainer.innerHTML = `
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "fulltimeEmployees"
-          )}</span>
+        "fulltimeEmployees"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "sector"
-          )}</span>
+        "sector"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "industry"
-          )}</span>
+        "industry"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "country"
-          )}</span>
+        "country"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-detail">
           <span class="company-detail-label">${languageService.get(
-            "exchange"
-          )}</span>
+        "exchange"
+      )}</span>
           <span class="company-detail-value">--</span>
         </div>
         <div class="company-description">
@@ -6270,64 +8037,58 @@ class UIComponents {
         <!-- Grid lines and axes -->
         <g class="chart-grid" stroke="#e5e7eb" stroke-width="0.5" opacity="0.6">
           ${yAxisLabels
-            .map(
-              (label) => `
-            <line x1="${padding}" y1="${label.y}" x2="${
-                padding + chartWidth
-              }" y2="${label.y}" />
+        .map(
+          (label) => `
+            <line x1="${padding}" y1="${label.y}" x2="${padding + chartWidth
+            }" y2="${label.y}" />
           `
-            )
-            .join("")}
+        )
+        .join("")}
           ${xAxisLabels
-            .map(
-              (label) => `
-            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${
-                padding + chartHeight
-              }" />
+        .map(
+          (label) => `
+            <line x1="${label.x}" y1="${padding}" x2="${label.x}" y2="${padding + chartHeight
+            }" />
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </g>
         
         <!-- Y-axis labels (prices) -->
         <g class="y-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
           ${yAxisLabels
-            .map(
-              (label) => `
-            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${
-                label.text
-              }</text>
+        .map(
+          (label) => `
+            <text x="${padding - 8}" y="${label.y + 3}" text-anchor="end">${label.text
+            }</text>
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </g>
         
         <!-- X-axis labels (dates) -->
         <g class="x-axis-labels" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#6b7280">
           ${xAxisLabels
-            .map(
-              (label) => `
-            <text x="${label.x}" y="${
-                padding + chartHeight + 20
-              }" text-anchor="middle">${label.text}</text>
+        .map(
+          (label) => `
+            <text x="${label.x}" y="${padding + chartHeight + 20
+            }" text-anchor="middle">${label.text}</text>
           `
-            )
-            .join("")}
+        )
+        .join("")}
         </g>
         
         <!-- Main chart area -->
         <g class="chart-area">
           <path d="${pathData}" stroke="${color}" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="${pathData} L ${points[points.length - 1].x},${
-      padding + chartHeight
-    } L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
+          <path d="${pathData} L ${points[points.length - 1].x},${padding + chartHeight
+      } L ${points[0].x},${padding + chartHeight} Z" fill="url(#chartGradient)"/>
         </g>
         
         <!-- Interactive elements -->
         <g id="hover-group">
-          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${
-      padding + chartHeight
-    }" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
+          <line id="hover-line" x1="0" y1="${padding}" x2="0" y2="${padding + chartHeight
+      }" stroke="#6b7280" stroke-opacity="0.9" stroke-width="1.5" stroke-dasharray="4,3" style="display:none" />
           <circle id="hover-dot" r="3" fill="${color}" stroke="#fff" stroke-width="1.5" style="display:none" />
         </g>
         <rect id="selection-rect" x="0" y="${padding}" width="0" height="${chartHeight}" fill="#3b82f6" opacity="0.15" style="display:none" />
@@ -6411,9 +8172,8 @@ class UIComponents {
       const d2 = sortedData[b];
       const change = d2.close - d1.close;
       const pct = d1.close ? (change / d1.close) * 100 : 0;
-      const priceStr = `₺${change.toFixed(2)} (${
-        pct >= 0 ? "+" : ""
-      }${pct.toFixed(2)}%)`;
+      const priceStr = `₺${change.toFixed(2)} (${pct >= 0 ? "+" : ""
+        }${pct.toFixed(2)}%)`;
       rangeTooltip.querySelector("#range-price").textContent = priceStr;
       rangeTooltip.querySelector("#range-dates").textContent = `${formatDate(
         d1
@@ -6551,10 +8311,10 @@ class UIComponents {
     try {
       const date = new Date(
         dataPoint.date ||
-          dataPoint.time ||
-          dataPoint.datetime ||
-          dataPoint.Date ||
-          dataPoint.DATE
+        dataPoint.time ||
+        dataPoint.datetime ||
+        dataPoint.Date ||
+        dataPoint.DATE
       );
 
       // Format based on current language
@@ -6636,8 +8396,7 @@ class UIComponents {
         return `
         <div class="mover-item" data-symbol="${item.symbol}">
           <span class="mover-symbol">${item.symbol}</span>
-          <span class="mover-change ${
-            positive ? "positive" : "negative"
+          <span class="mover-change ${positive ? "positive" : "negative"
           }">${formatted}</span>
         </div>
       `;
@@ -6773,8 +8532,8 @@ class UIComponents {
       searchDropdown.innerHTML = `
         <div class="stock-search-no-results">
           <i class="fas fa-spinner fa-spin"></i> ${languageService.get(
-            "loading"
-          )}
+        "loading"
+      )}
         </div>
       `;
       searchDropdown.classList.add("show");
@@ -6853,8 +8612,8 @@ class UIComponents {
     searchDropdown.innerHTML = `
       <div class="stock-search-no-results">
         <i class="fas fa-exclamation-triangle"></i> ${languageService.get(
-          "error"
-        )}
+      "error"
+    )}
       </div>
     `;
     searchDropdown.classList.add("show");
