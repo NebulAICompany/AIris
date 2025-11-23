@@ -1551,8 +1551,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
           const responseGeneratedFiles =
             response.generatedFiles || response.data?.generatedFiles || [];
           const responseSources = response.sources || response.data?.sources || [];
-          const responseTools = response.usedTools || response.data?.usedTools || [];
-
           if (responseContent) {
             this.addMessageToChat(
               "assistant",
@@ -1560,8 +1558,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
               responseImages,
               responseCharts,
               responseGeneratedFiles,
-              responseSources,
-              responseTools
+              responseSources
             );
           } else {
             console.warn("Empty response received:", response);
@@ -1688,8 +1685,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
     images = [],
     charts = [],
     generatedFiles = [],
-    sources = [],
-    tools = []
+    sources = []
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -1730,47 +1726,65 @@ setupFloatingSubmenu(collapsible, subMenu) {
         parsedContent = Utils.escapeHtml(processedContent);
       }
 
-      // Build sources and tools display
+      // Build sources display
       let sourcesHTML = "";
       const hasSources = sources && sources.length > 0;
-      const hasTools = tools && tools.length > 0;
       
-      if (hasSources || hasTools) {
+      if (hasSources) {
         const itemsList = [];
         
-        // Add sources with file icon or web link icon
+        // Add sources with file icon, web link icon, or API icon
         if (hasSources) {
           sources.forEach(source => {
-            // Check if source is a web link (format: "Name|URL")
-            const webLinkMatch = source.match(/^(.+)\|(.+)$/);
-            if (webLinkMatch) {
-              const [, name, url] = webLinkMatch;
-              // Extract domain from URL
-              let domain = "";
-              try {
-                const urlObj = new URL(url);
-                domain = urlObj.hostname.replace(/^www\./, "");
-              } catch (e) {
-                domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-              }
+            // Check if source is a web link or API source (format: "Name|URL" or "Name|api://name")
+            const linkMatch = source.match(/^(.+)\|(.+)$/);
+            if (linkMatch) {
+              const [, name, url] = linkMatch;
               
-              // Shorten title (max 60 chars)
-              const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
-              
-              itemsList.push(`
-                <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
-                  <div class="source-icon">
-                    <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="source-favicon-fallback" style="display: none;">
-                      <i class="fas fa-globe"></i>
+              // Check if it's an API source
+              if (url.startsWith("api://")) {
+                // API source - show with database/API icon
+                const apiName = url.replace("api://", "");
+                itemsList.push(`
+                  <div class="source-item source-item-api" title="${Utils.escapeHtml(name)}">
+                    <div class="source-icon">
+                      <i class="fas fa-database"></i>
+                    </div>
+                    <div class="source-content">
+                      <div class="source-title">${Utils.escapeHtml(name)}</div>
+                      <div class="source-domain">API Data Source</div>
                     </div>
                   </div>
-                  <div class="source-content">
-                    <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
-                    <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+                `);
+              } else {
+                // Web link - show with favicon
+                // Extract domain from URL
+                let domain = "";
+                try {
+                  const urlObj = new URL(url);
+                  domain = urlObj.hostname.replace(/^www\./, "");
+                } catch (e) {
+                  domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+                }
+                
+                // Shorten title (max 60 chars)
+                const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
+                
+                itemsList.push(`
+                  <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
+                    <div class="source-icon">
+                      <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="source-favicon-fallback" style="display: none;">
+                        <i class="fas fa-globe"></i>
+                      </div>
+                    </div>
+                    <div class="source-content">
+                      <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
+                      <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+                    </div>
                   </div>
-                </div>
-              `);
+                `);
+              }
             } else {
               // Regular file source (clickable to open document)
               itemsList.push(`
@@ -1787,24 +1801,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
           });
         }
         
-        // Add tools with wrench icon
-        if (hasTools) {
-          tools.forEach(tool => {
-            itemsList.push(`
-              <div class="source-item">
-                <i class="fas fa-wrench"></i>
-                <span>${Utils.escapeHtml(tool)}</span>
-              </div>
-            `);
-          });
-        }
-        
-        const totalCount = (hasSources ? sources.length : 0) + (hasTools ? tools.length : 0);
-        const labelText = hasSources && hasTools 
-          ? `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}, used ${tools.length} tool${tools.length > 1 ? 's' : ''}`
-          : hasSources 
-            ? `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}`
-            : `Used ${tools.length} tool${tools.length > 1 ? 's' : ''}`;
+        const totalCount = sources.length;
+        const labelText = `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}`;
         
         sourcesHTML = `
           <div class="sources-container">
@@ -1830,8 +1828,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 </div>
             `;
       
-      // Add click event listener for sources toggle if sources or tools exist
-      if ((sources && sources.length > 0) || (tools && tools.length > 0)) {
+      // Add click event listener for sources toggle if sources exist
+      if (sources && sources.length > 0) {
         const sourcesHeader = messageDiv.querySelector('.sources-header');
         if (sourcesHeader) {
           sourcesHeader.addEventListener('click', function() {
@@ -2572,21 +2570,19 @@ setupFloatingSubmenu(collapsible, subMenu) {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images, charts, generated files, sources, and tools properly - they should be fresh for each message
+          // Extract images, charts, generated files, and sources properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
           const generatedFiles = msg.metadata?.generatedFiles || [];
           const sources = msg.metadata?.sources || [];
-          const tools = msg.metadata?.usedTools || [];
 
-          // Ensure images, charts, generated files, sources, and tools are not accumulated from previous sessions
+          // Ensure images, charts, generated files, and sources are not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
           const cleanGeneratedFiles = Array.isArray(generatedFiles)
             ? generatedFiles.slice()
             : [];
           const cleanSources = Array.isArray(sources) ? sources.slice() : [];
-          const cleanTools = Array.isArray(tools) ? tools.slice() : [];
 
           this.addMessageToChat(
             msg.role,
@@ -2594,8 +2590,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
             cleanImages,
             cleanCharts,
             cleanGeneratedFiles,
-            cleanSources,
-            cleanTools
+            cleanSources
           );
 
           // Update local chat history
