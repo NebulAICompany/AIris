@@ -1845,7 +1845,6 @@ body.dark-theme .image-caption {
   text-align: left;
 }
 
-<<<<<<< HEAD
 
 :root {
   --bg-primary: #f0f4f9; /* Gemini benzeri açık gri */
@@ -1858,7 +1857,6 @@ body.dark-theme .image-caption {
 
 
 /* ANA KAPLAYICI (KUTU GÖRÜNÜMÜ) */
-=======
 /* Sources display styles */
 .sources-container {
   margin-top: 0;
@@ -1957,7 +1955,6 @@ body.dark-theme .image-caption {
   font-weight: 400;
 }
 
->>>>>>> a29ee76c9a3a0034607437e994d80c64d92385d1
 .chat-input-container {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
