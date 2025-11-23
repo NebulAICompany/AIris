@@ -1,10 +1,11 @@
-from agents import Agent
+from agents import Agent, AgentOutputSchema
 from .prompts import (
     wolfram_instructions,
     main_agent_instructions,
     news_chat_agent_instructions,
 )
 from typing import List
+from pydantic import BaseModel, Field
 from .tools.api import (
     web_search_tool,
     wolfram_alpha_query,
@@ -12,9 +13,25 @@ from .tools.api import (
     get_uploaded_files_count,
     list_uploaded_files,
 )
-from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, plotting_agent_tool, tcmb_data_agent_tool
+from .tools.agent_as_tools import (
+    finance_agent_tool,
+    office_agent_tool,
+    plotting_agent_tool,
+    tcmb_data_agent_tool,
+)
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL
+
+
+class MainAgentResponse(BaseModel):
+    """Structured output for main agent response"""
+
+    answer: str = Field(..., description="The agent's answer to the user's query")
+    used_tools: List[str] = Field(
+        default_factory=list,
+        description="List of tool names that were used during the response generation",
+    )
+
 
 main_agent_as_tools = [
     finance_agent_tool,
@@ -77,6 +94,7 @@ def create_main_agent(
         instructions=agent_instructions,
         model=OPENAI_MODEL,
         tools=tools,
+        output_type=AgentOutputSchema(MainAgentResponse, strict_json_schema=False),
     )
 
     return agent

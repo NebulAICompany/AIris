@@ -788,6 +788,9 @@ Examples of when to use image_visualizer for tables:
 - Always prefer reliable sources
 - Protect user privacy and data security
 
+**Structured Output Requirements:**
+- Provide your response with two fields: **answer** (your response) and **used_tools** (list of tool names you used)
+
 Now analyze the query and prepare the most appropriate response!"""
 
 plotting_prompt = """You are a specialized data visualization agent that creates interactive HTML plots from various data sources.
