@@ -54,7 +54,6 @@ class MainAgentResponse(BaseModel):
     )
 
 
-# Direct tools for main agent (subagents are handled separately)
 main_agent_tools = [
     wolfram_alpha_query,
     time_now,
@@ -111,7 +110,6 @@ def create_main_agent(
         instruction_part=instruction_part,
     )
 
-    # Create Deep Agent with subagents and structured output
     agent = create_deep_agent(
         model=OPENAI_MODEL,
         system_prompt=agent_instructions,
@@ -155,7 +153,7 @@ def create_clustering_agent(instructions: str):
     agent = create_deep_agent(
         model="gpt-4o-mini",
         system_prompt=instructions,
-        tools=[],  # No tools needed, pure text analysis
+        tools=[],
     )
     return agent
 
@@ -177,7 +175,6 @@ def create_news_chat_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    # Start with a fresh list to avoid mutating the module-level list
     tools = [*main_agent_tools]
     tools.append(web_search_tool)
 

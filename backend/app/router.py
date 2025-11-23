@@ -194,8 +194,8 @@ async def search_symbols(query: str = ""):
 @router.post("/query")
 async def handle_query(request: QueryRequest):
     """
-    Kullanıcının gönderdiği sorguyu alır,
-    pipeline üzerinden işler ve LLM yanıtını döner.
+    Receives the user's query,
+    processes it through the pipeline, and returns the LLM response.
     """
     try:
 
