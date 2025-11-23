@@ -90,13 +90,14 @@ class VectorStorePipeline:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
-    async def run(self, text_content: str, document_name: str):
+    async def run(self, text_content: str, document_name: str, file_extension: str = None):
         """
         Process text content directly without reading from files
 
         Args:
             text_content: The extracted text content from parser
             document_name: Name of the document (for metadata)
+            file_extension: Extension of the document
         """
         try:
             if not text_content or not text_content.strip():
@@ -104,9 +105,12 @@ class VectorStorePipeline:
                 return
 
             chunk_idx = 0
-
-            # Split the text into semantic chunks
-            docs = self.text_splitter.create_documents([text_content])
+            
+            if file_extension == ".xlsx" or file_extension == ".xls":
+                text_content_list = text_content.split("====SHEET SEPARATOR====")
+                docs = self.text_splitter.create_documents(text_content_list)
+            else:
+                docs = self.text_splitter.create_documents([text_content])
             if not docs:
                 logger.warning(f"⚠️ Warning: No chunks were created for {document_name}.")
                 return
