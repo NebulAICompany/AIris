@@ -270,6 +270,7 @@
       `;
 
       this.attachDayHandlers();
+      this.attachMonthHandlers();
     }
 
     renderMonthBlock(monthInfo, dayMap, maxAbs) {
@@ -309,7 +310,7 @@
         <div class="balance-month" data-month="${year}-${String(month + 1).padStart(
         2,
         "0"
-      )}">
+      )}" style="cursor: pointer;" title="Click to expand">
           <div class="balance-month-header">${label}</div>
           <div class="balance-month-weekdays">${weekdayLabels}</div>
           <div class="balance-month-grid">
@@ -360,12 +361,82 @@
       this.heatmapContainer
         .querySelectorAll(".balance-day[data-date]")
         .forEach((button) => {
-          button.addEventListener("click", () => {
+          button.addEventListener("click", (e) => {
+            e.stopPropagation();
             const date = button.getAttribute("data-date");
             const hasEntry = button.getAttribute("data-has-entry") === "true";
             this.selectDay(date, hasEntry);
           });
         });
+    }
+
+    attachMonthHandlers() {
+      this.heatmapContainer
+        .querySelectorAll(".balance-month")
+        .forEach((monthBlock) => {
+          monthBlock.addEventListener("click", (e) => {
+            // Don't open modal if clicking on a day cell
+            if (e.target.closest(".balance-day")) {
+              return;
+            }
+            const monthKey = monthBlock.getAttribute("data-month");
+            this.openMonthModal(monthKey);
+          });
+        });
+    }
+
+    openMonthModal(monthKey) {
+      const [year, month] = monthKey.split("-").map(Number);
+      const dayMap = new Map();
+      this.latestData.days.forEach((day) => dayMap.set(day.date, day));
+      const maxAbs = this.latestData.maxAbsoluteNet || 0;
+
+      const monthInfo = { year, month: month - 1 };
+      const monthContent = this.renderMonthBlock(monthInfo, dayMap, maxAbs);
+
+      const modal = document.createElement("div");
+      modal.className = "balance-month-modal";
+      modal.innerHTML = `
+        <div class="balance-month-modal-overlay"></div>
+        <div class="balance-month-modal-content">
+          <button class="balance-month-modal-close" aria-label="Close">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="balance-month-modal-body">
+            ${monthContent}
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // Close handlers
+      const closeBtn = modal.querySelector(".balance-month-modal-close");
+      const overlay = modal.querySelector(".balance-month-modal-overlay");
+
+      const closeModal = () => {
+        modal.classList.add("closing");
+        setTimeout(() => modal.remove(), 300);
+      };
+
+      closeBtn.addEventListener("click", closeModal);
+      overlay.addEventListener("click", closeModal);
+
+      // Attach day handlers in modal
+      modal.querySelectorAll(".balance-day[data-date]").forEach((button) => {
+        button.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const date = button.getAttribute("data-date");
+          const hasEntry = button.getAttribute("data-has-entry") === "true";
+          this.selectDay(date, hasEntry);
+          closeModal();
+        });
+      });
+
+      // Animate in
+      requestAnimationFrame(() => {
+        modal.classList.add("active");
+      });
     }
 
     async selectDay(date, hasEntry) {
@@ -378,6 +449,11 @@
             btn.getAttribute("data-date") === date
           );
         });
+
+      // Skip detail panel rendering if it doesn't exist
+      if (!this.detailPanel) {
+        return;
+      }
 
       if (!hasEntry) {
         this.renderDetailEmpty(date);
@@ -400,6 +476,7 @@
     }
 
     renderDetailEmpty(date) {
+      if (!this.detailPanel) return;
       this.detailPanel.innerHTML = `
         <div class="detail-empty">
           <i class="fas fa-info-circle"></i>
@@ -410,6 +487,7 @@
     }
 
     renderDetailError(message) {
+      if (!this.detailPanel) return;
       this.detailPanel.innerHTML = `
         <div class="detail-empty error">
           <i class="fas fa-exclamation-triangle"></i>
@@ -419,6 +497,8 @@
     }
 
     renderDetail(data) {
+      if (!this.detailPanel) return;
+      
       const { date, transactions } = data;
       if (!transactions?.length) {
         this.renderDetailEmpty(date);
