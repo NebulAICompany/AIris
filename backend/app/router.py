@@ -278,7 +278,7 @@ async def handle_upload(
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
 
-        pre_embedding_process = "none"
+        pre_embedding_process = "cch"
 
         result = await process_file(
             str(file_path),
