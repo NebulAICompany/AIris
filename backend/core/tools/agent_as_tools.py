@@ -106,6 +106,7 @@ plotting_agent = Agent(
         get_suitable_plot_types,
         create_html_plot
     ],
+)
 
 tcmb_data_agent = Agent(
     name="TCMB Data Agent",
