@@ -23,13 +23,24 @@ from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL
 
 
+class WebSource(BaseModel):
+    """Web source information"""
+
+    name: str = Field(..., description="Website or page name/title")
+    url: str = Field(..., description="Full URL of the website")
+
+
 class MainAgentResponse(BaseModel):
     """Structured output for main agent response"""
 
     answer: str = Field(..., description="The agent's answer to the user's query")
     used_tools: List[str] = Field(
         default_factory=list,
-        description="List of tool names that were used during the response generation",
+        description="List of tool names that were used during the response generation (exclude web_search_tool)",
+    )
+    web_sources: List[WebSource] = Field(
+        default_factory=list,
+        description="List of websites used from web search (name and URL pairs). Only include when web_search_tool was used.",
     )
 
 
