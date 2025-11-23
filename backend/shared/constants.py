@@ -79,6 +79,9 @@ MARKET_DATA_DB_PATH = DATABASE_DIR / "market_data.db"
 # Uploads tracking database path
 UPLOADS_DB_PATH = DATABASE_DIR / "uploads_tracking.db"
 
+# Balance of payments database path
+BALANCE_PAYMENTS_DB_PATH = DATABASE_DIR / "balance_payments.db"
+
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 VERIFICATION_UPLOADS_PATH = DATABASE_DIR / "verification_uploads"
@@ -133,6 +136,7 @@ MASKED_MAP_JSON_PATH_STR = str(MASKED_MAP_JSON_PATH)
 LOGS_DIR_STR = str(LOGS_DIR)
 BACKEND_LOG_PATH_STR = str(BACKEND_LOG_PATH)
 BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
+BALANCE_PAYMENTS_DB_PATH_STR = str(BALANCE_PAYMENTS_DB_PATH)
 
 
 ### Model Names ###

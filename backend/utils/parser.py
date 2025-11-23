@@ -108,7 +108,7 @@ async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
     return descriptions
 
 
-async def AzureParser(file_path: str):
+async def AzureParser(file_path: str, photo_less_mode: bool = False):
     with open(file_path, "rb") as f:
         poller = document_intelligence_client.begin_analyze_document(
             "prebuilt-layout",
@@ -131,7 +131,7 @@ async def AzureParser(file_path: str):
 
     logger.info(f"Processing document: {document_name}")
 
-    if result.figures:
+    if not photo_less_mode and result.figures:
         for figure in result.figures:
             caption = figure.caption.content if figure.caption else ""
             if not figure.id:
@@ -177,7 +177,7 @@ async def AzureParser(file_path: str):
             for fid, desc in zip(figure_order, descriptions):
                 figure_images[fid]["description"] = desc
     else:
-        logger.info("No figures found.")
+        logger.info("No figures found or photo_less mode is active.")
 
     # Extract table images if tables are found
     table_images = {}
@@ -217,15 +217,27 @@ async def AzureParser(file_path: str):
 
     content = result.content
 
-    # Process figures
-    for figure_id, data in figure_images.items():
-        start = content.find("<figure>")
-        if start != -1:
-            end = content.find("</figure>", start) + 9
-            caption = data["caption"] if data["caption"] else "no caption figure"
-            desc = data.get("description", "No description")
-            figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
-            content = content[:start] + figure_md + content[end:]
+    if not photo_less_mode:
+        # Process figures
+        for figure_id, data in figure_images.items():
+            start = content.find("<figure>")
+            if start != -1:
+                end = content.find("</figure>", start) + 9
+                caption = data["caption"] if data["caption"] else "no caption figure"
+                desc = data.get("description", "No description")
+                figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
+                content = content[:start] + figure_md + content[end:]
+    else:
+        # Remove entire figure blocks in photo-less mode
+        while True:
+            start = content.find("<figure>")
+            if start == -1:
+                break
+            end = content.find("</figure>", start)
+            if end == -1:
+                content = content[:start]
+                break
+            content = content[:start] + content[end + len("</figure>") :]
 
     # Add table references to content (without removing table content)
     for table_unique_id, data in table_images.items():
@@ -241,32 +253,35 @@ async def AzureParser(file_path: str):
     return content
 
 
-async def ImageParser(file_path: str):
-    image_path = Path(file_path)
-    if not image_path.exists():
-        logger.warning(f"Görsel dosyası bulunamadı: {file_path}")
-        return None
+async def ImageParser(file_path: str, photo_less_mode: bool = False):
+    if not photo_less_mode:
+        image_path = Path(file_path)
+        if not image_path.exists():
+            logger.warning(f"Görsel dosyası bulunamadı: {file_path}")
+            return None
 
-    with open(file_path, "rb") as f:
-        image_bytes = f.read()
+        with open(file_path, "rb") as f:
+            image_bytes = f.read()
 
-    image = Image.open(io.BytesIO(image_bytes))
-    os.makedirs(IMAGES_PATH_STR, exist_ok=True)
-    image_id = f"img_{uuid.uuid4().hex[:8]}"
+        image = Image.open(io.BytesIO(image_bytes))
+        os.makedirs(IMAGES_PATH_STR, exist_ok=True)
+        image_id = f"img_{uuid.uuid4().hex[:8]}"
 
-    image_filename = f"{image_id}.png"
-    saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
-    image.save(saved_image_path, format="PNG")
+        image_filename = f"{image_id}.png"
+        saved_image_path = os.path.join(IMAGES_PATH_STR, image_filename)
+        image.save(saved_image_path, format="PNG")
 
-    # Add to mapping
-    document_name = os.path.splitext(os.path.basename(file_path))[0]
-    add_image_to_mapping(image_filename, document_name, "image")
+        # Add to mapping
+        document_name = os.path.splitext(os.path.basename(file_path))[0]
+        add_image_to_mapping(image_filename, document_name, "image")
 
-    descriptions = await describe_images([image_bytes])
-    description = descriptions[0] if descriptions else "Açıklama alınamadı."
+        descriptions = await describe_images([image_bytes])
+        description = descriptions[0] if descriptions else "Açıklama alınamadı."
 
-    content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
-    return content
+        content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
+        return content
+    else: 
+        return "Photo-less mode enabled, image content omitted.\n"
 
 
 async def TxtParser(file_path: str):

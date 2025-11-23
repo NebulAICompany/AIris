@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent, create_news_chat_agent
+from backend.core.agents import create_main_agent, create_news_chat_agent
 from backend.retrieval.retriever import (
     load_vectorstore,
     retrieve_with_keyword_helping,
@@ -9,23 +9,17 @@ from backend.retrieval.retriever import (
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import (
-    detect_language,
     refine_query,
 )
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
-from backend.server.finance_mcp import get_chart_datas, clear_chart_datas
+from backend.core.tools.finance import get_chart_datas, clear_chart_datas
 from backend.core.tools.office import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
 
 logger = get_logger("QUERY_PIPELINE")
-
-
-def preprocess_query(query: str):
-    lang = detect_language(query)
-    return query, lang
 
 
 async def run_orchestration(
@@ -59,9 +53,7 @@ async def run_orchestration(
     skip_retrieval = not selected_files or len(selected_files) == 0
 
     # 1. Preprocessing and analysis
-    preprocessed_query, lang = preprocess_query(query)
-
-    refined_result = refine_query(preprocessed_query, lang)
+    refined_result = refine_query(query)
     preprocessed_query = refined_result.refined_query
     query_keywords = refined_result.keywords
 
@@ -88,9 +80,13 @@ async def run_orchestration(
 
     # 4. Enhanced Retrieval using vector + keyword helping
     reranked_docs = None
+    unique_file_names = []
 
     if skip_retrieval:
         reranked_docs = []
+        logger.info(
+            f"📄 No documents used in retrieval for query '{query}' (no files selected)"
+        )
     else:
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
@@ -110,6 +106,14 @@ async def run_orchestration(
                 preprocessed_query, doc_contents, with_score=False, top_n=5
             )
 
+            if reranked_docs:
+                unique_file_names_set = set()
+                for doc in reranked_docs:
+                    file_name = doc.get("metadata", {}).get("file_name")
+                    if file_name:
+                        unique_file_names_set.add(file_name)
+
+                unique_file_names = sorted(list(unique_file_names_set))
     context_entries = []
 
     if reranked_docs:
@@ -130,7 +134,7 @@ async def run_orchestration(
         else:
             local_context = "Local Content Status: No relevant content could be found for your query in the selected files."
 
-    agent = create_rag_agent(
+    agent = create_main_agent(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
@@ -153,6 +157,8 @@ async def run_orchestration(
         metadata["charts"] = charts
     if generated_files:
         metadata["generatedFiles"] = generated_files
+    if unique_file_names:
+        metadata["sources"] = unique_file_names
 
     metadata = metadata if metadata else None
     chat_history_manager.add_message(
@@ -164,6 +170,7 @@ async def run_orchestration(
         "images": images,
         "charts": charts,
         "generatedFiles": generated_files,
+        "sources": unique_file_names,
     }
 
 
@@ -193,21 +200,18 @@ async def run_news_chat_orchestration(
     else:
         conversation_context = []
 
-    # Preprocess query
-    preprocessed_query, lang = preprocess_query(query)
-
     # Create news context string
     news_context_str = format_news_context(news_context)
 
     # Create specialized news agent
     agent = create_news_chat_agent(
         news_context=news_context_str,
-        query=preprocessed_query,
+        query=query,
         conversation_history=conversation_context,
     )
 
     # Generate answer
-    answer = await generate_answer(prompt=preprocessed_query, agent=agent)
+    answer = await generate_answer(prompt=query, agent=agent)
 
     # Get images
     images = get_image_datas()

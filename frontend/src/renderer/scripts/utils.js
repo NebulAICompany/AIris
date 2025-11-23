@@ -177,111 +177,53 @@ class Utils {
     }
 
     try {
-      console.log('Processing math expressions in:', content);
-
-      // First, protect existing HTML and markdown from being processed
+      // Protect code blocks and inline code from math processing
       const protectedContent = [];
-      let contentWithPlaceholders = content;
-      
-      // Protect code blocks
-      contentWithPlaceholders = contentWithPlaceholders.replace(/```[\s\S]*?```/g, (match) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+      let processedContent = content;
+
+      // Protect code blocks (markdown and HTML)
+      processedContent = processedContent.replace(/```[\s\S]*?```/g, (match) => {
+        const placeholder = `__PROTECTED_CODE_${protectedContent.length}__`;
         protectedContent.push(match);
         return placeholder;
       });
 
       // Protect inline code
-      contentWithPlaceholders = contentWithPlaceholders.replace(/`[^`]+`/g, (match) => {
-        const placeholder = `__PROTECTED_${protectedContent.length}__`;
+      processedContent = processedContent.replace(/`[^`]+`/g, (match) => {
+        const placeholder = `__PROTECTED_INLINE_${protectedContent.length}__`;
         protectedContent.push(match);
         return placeholder;
       });
 
-      // Handle display math blocks first (between $$ ... $$)
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+      // Process display math blocks ($$ ... $$) - must come before inline math
+      processedContent = processedContent.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
         try {
-          console.log('Processing display math:', math);
-          return katex.renderToString(math.trim(), {displayMode: true});
+          return katex.renderToString(math.trim(), { displayMode: true });
         } catch (e) {
-          console.warn('KaTeX rendering failed for display math:', match);
+          console.warn('KaTeX rendering failed for display math:', e);
           return match;
         }
       });
 
-      // Handle inline math blocks (between $ ... $)
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\$([^$\n]+)\$/g, (match, math) => {
+      // Process inline math ($ ... $) - avoid matching $$ by checking for single $
+      // Match $...$ but not $$...$$ by ensuring the $ is not preceded or followed by another $
+      processedContent = processedContent.replace(/([^$]|^)\$([^$\n]+?)\$([^$]|$)/g, (match, before, math, after) => {
         try {
-          console.log('Processing inline math:', math);
-          return katex.renderToString(math.trim(), {displayMode: false});
+          const rendered = katex.renderToString(math.trim(), { displayMode: false });
+          return (before || '') + rendered + (after || '');
         } catch (e) {
-          console.warn('KaTeX rendering failed for inline math:', match);
+          console.warn('KaTeX rendering failed for inline math:', e);
           return match;
         }
-      });
-
-      // Handle fractions like \frac{numerator}{denominator} - with more robust regex
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\\frac\s*\{\s*([^{}]+(?:\{[^{}]*\}[^{}]*)*)\s*\}\s*\{\s*([^{}]+(?:\{[^{}]*\}[^{}]*)*)\s*\}/g, (match, num, den) => {
-        try {
-          console.log('Processing fraction:', match, 'num:', num, 'den:', den);
-          return katex.renderToString(`\\frac{${num.trim()}}{${den.trim()}}`, {displayMode: false});
-        } catch (e) {
-          console.warn('KaTeX rendering failed for fraction:', match, e);
-          return `${num.trim()}/${den.trim()}`; // Fallback to simple fraction
-        }
-      });
-
-      // Handle text expressions like \text{...}
-      contentWithPlaceholders = contentWithPlaceholders.replace(/\\text\s*\{\s*([^{}]+(?:\{[^{}]*\}[^{}]*)*)\s*\}/g, (match, text) => {
-        try {
-          console.log('Processing text:', match);
-          return katex.renderToString(`\\text{${text.trim()}}`, {displayMode: false});
-        } catch (e) {
-          console.warn('KaTeX rendering failed for text:', match);
-          return text.trim(); // Fallback to plain text
-        }
-      });
-
-      // Handle simple fractions like 180/12 = with equals sign
-      contentWithPlaceholders = contentWithPlaceholders.replace(/(\d+)\/(\d+)\s*=\s*(\d+(?:\.\d+)?)/g, (match, num, den, result) => {
-        try {
-          console.log('Processing simple fraction with result:', match);
-          return `${katex.renderToString(`\\frac{${num}}{${den}}`, {displayMode: false})} = ${result}`;
-        } catch (e) {
-          return match;
-        }
-      });
-
-      // Handle simple fractions like 180/12
-      contentWithPlaceholders = contentWithPlaceholders.replace(/(\d+)\/(\d+)/g, (match, num, den) => {
-        try {
-          console.log('Processing simple fraction:', match);
-          return katex.renderToString(`\\frac{${num}}{${den}}`, {displayMode: false});
-        } catch (e) {
-          return match;
-        }
-      });
-
-      // Handle other specific LaTeX commands
-      const latexCommands = ['sqrt', 'sum', 'int', 'lim', 'log', 'ln', 'sin', 'cos', 'tan'];
-      latexCommands.forEach(cmd => {
-        const regex = new RegExp(`\\\\${cmd}\\s*(?:\\{([^}]*)\\})?`, 'g');
-        contentWithPlaceholders = contentWithPlaceholders.replace(regex, (match, arg) => {
-          try {
-            return katex.renderToString(match, {displayMode: false});
-          } catch (e) {
-            console.warn(`KaTeX rendering failed for ${cmd}:`, match);
-            return match;
-          }
-        });
       });
 
       // Restore protected content
       protectedContent.forEach((content, index) => {
-        contentWithPlaceholders = contentWithPlaceholders.replace(`__PROTECTED_${index}__`, content);
+        processedContent = processedContent.replace(`__PROTECTED_CODE_${index}__`, content);
+        processedContent = processedContent.replace(`__PROTECTED_INLINE_${index}__`, content);
       });
 
-      console.log('Final processed content:', contentWithPlaceholders);
-      return contentWithPlaceholders;
+      return processedContent;
     } catch (error) {
       console.error('Error processing math expressions:', error);
       return content;
@@ -306,7 +248,7 @@ class Utils {
       rect.top >= 0 &&
       rect.left >= 0 &&
       rect.bottom <=
-        (window.innerHeight || document.documentElement.clientHeight) &&
+      (window.innerHeight || document.documentElement.clientHeight) &&
       rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     );
   }
@@ -428,6 +370,44 @@ class Utils {
 
   static isWebSearchEnabled() {
     return this.storage.get("webSearchEnabled", false);
+  }
+
+  // Show snackbar notification
+  static showSnackbar(message, type = "info", duration = 4000) {
+    const icons = {
+      success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+      error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      warning: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a1.64 1.64 0 001.42 2.5h16.52a1.64 1.64 0 001.42-2.5L13.71 3.86a1.64 1.64 0 00-2.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></svg>',
+      info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/></svg>'
+    };
+
+    let container = document.getElementById("snackbar-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "snackbar-container";
+      document.body.appendChild(container);
+    }
+
+    const snackbar = document.createElement("div");
+    snackbar.className = `snackbar ${type}`;
+
+    const icon = document.createElement("span");
+    icon.className = "snackbar-icon";
+    icon.innerHTML = icons[type] || icons.info; // <-- Burada innerHTML kullanıyoruz
+
+    const text = document.createElement("span");
+    text.className = "snackbar-text";
+    text.textContent = message;
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "snackbar-close";
+    closeBtn.textContent = "×";
+    closeBtn.onclick = () => snackbar.remove();
+
+    snackbar.append(icon, text, closeBtn);
+    container.appendChild(snackbar);
+
+    setTimeout(() => snackbar.remove(), duration);
   }
 
 }

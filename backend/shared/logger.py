@@ -1,4 +1,5 @@
 import sys
+import logging
 from loguru import logger
 from backend.shared.constants import LOGS_DIR, BACKEND_LOG_PATH_STR, BACKEND_ERROR_LOG_PATH_STR
 
@@ -41,3 +42,8 @@ def get_logger(context_tag=None):
     if context_tag:
         return logger.bind(name=context_tag)
     return logger
+
+
+# Quiet Azure SDK HTTP logging noise
+logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
