@@ -1738,15 +1738,52 @@ setupFloatingSubmenu(collapsible, subMenu) {
       if (hasSources || hasTools) {
         const itemsList = [];
         
-        // Add sources with file icon
+        // Add sources with file icon or web link icon
         if (hasSources) {
           sources.forEach(source => {
-            itemsList.push(`
-              <div class="source-item">
-                <i class="fas fa-file-pdf"></i>
-                <span>${Utils.escapeHtml(source)}</span>
-              </div>
-            `);
+            // Check if source is a web link (format: "Name|URL")
+            const webLinkMatch = source.match(/^(.+)\|(.+)$/);
+            if (webLinkMatch) {
+              const [, name, url] = webLinkMatch;
+              // Extract domain from URL
+              let domain = "";
+              try {
+                const urlObj = new URL(url);
+                domain = urlObj.hostname.replace(/^www\./, "");
+              } catch (e) {
+                domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+              }
+              
+              // Shorten title (max 60 chars)
+              const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
+              
+              itemsList.push(`
+                <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
+                  <div class="source-icon">
+                    <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="source-favicon-fallback" style="display: none;">
+                      <i class="fas fa-globe"></i>
+                    </div>
+                  </div>
+                  <div class="source-content">
+                    <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
+                    <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+                  </div>
+                </div>
+              `);
+            } else {
+              // Regular file source (clickable to open document)
+              itemsList.push(`
+                <div class="source-item source-item-file" data-filename="${Utils.escapeHtml(source)}" title="Click to open ${Utils.escapeHtml(source)}">
+                  <div class="source-icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </div>
+                  <div class="source-content">
+                    <div class="source-title">${Utils.escapeHtml(source)}</div>
+                  </div>
+                </div>
+              `);
+            }
           });
         }
         
@@ -1802,13 +1839,55 @@ setupFloatingSubmenu(collapsible, subMenu) {
           });
         }
         
-        // Make source items look clickable but prevent any action
-        const sourceItems = messageDiv.querySelectorAll('.source-item');
-        sourceItems.forEach(item => {
+        // Handle source item clicks
+        const sourceWebItems = messageDiv.querySelectorAll('.source-item-web');
+        sourceWebItems.forEach(item => {
           item.addEventListener('click', function(e) {
-            e.preventDefault();
             e.stopPropagation();
-            // Visual feedback only - no actual action
+            const url = this.dataset.url;
+            if (url) {
+              // Use Electron API to open in external browser
+              if (window.airisAPI && window.airisAPI.openExternalUrl) {
+                window.airisAPI
+                  .openExternalUrl(url)
+                  .then((result) => {
+                    if (!result.success) {
+                      console.warn("Failed to open link via Electron API:", result.error);
+                      // Fallback to window.open
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error using Electron API:", error);
+                    // Fallback to window.open
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  });
+              } else {
+                // Fallback for non-Electron environments
+                window.open(url, "_blank", "noopener,noreferrer");
+              }
+            }
+          });
+        });
+        
+        // Handle file source items (clickable to open files)
+        const sourceFileItems = messageDiv.querySelectorAll('.source-item-file');
+        sourceFileItems.forEach(item => {
+          item.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            const fileName = this.dataset.filename;
+            if (fileName) {
+              try {
+                // Use Electron API to open the file
+                if (window.airisAPI && window.airisAPI.openFile) {
+                  await window.airisAPI.openFile(fileName);
+                } else {
+                  console.warn("Electron API not available for opening files");
+                }
+              } catch (error) {
+                console.error("Error opening file:", error);
+              }
+            }
           });
         });
       }

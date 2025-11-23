@@ -789,7 +789,14 @@ Examples of when to use image_visualizer for tables:
 - Protect user privacy and data security
 
 **Structured Output Requirements:**
-- Provide your response with two fields: **answer** (your response) and **used_tools** (list of tool names you used)
+- Provide your response with three fields:
+  1. **answer**: Your complete response to the user's query
+  2. **used_tools**: List of tool names you used (exclude web_search_tool from this list)
+  3. **web_sources**: When you use web_search_tool, provide a list of websites with name and URL pairs. Each entry should have:
+     - **name**: The website/page title or name
+     - **url**: The full URL of the website
+     - Only include websites that were actually used in your response
+     - If you didn't use web_search_tool, provide an empty list
 
 Now analyze the query and prepare the most appropriate response!"""
 
