@@ -183,7 +183,6 @@ news_summarization_subagent = SubAgent(
     model="gpt-4o-mini",
 )
 
-# List of all subagents for use in main agent
 main_agent_subagents = [
     finance_subagent,
     office_subagent,
