@@ -141,7 +141,7 @@
 
             <div class="nav-item collapsible" data-page="#balance">
               <i class="fas fa-wallet"></i>
-              <span data-i18n="balance">Ödemeler Dengesi</span>
+              <span data-i18n="financialAnalysis">Finansal Analiz</span>
               <i class="fas fa-chevron-right submenu-icon"></i>
             </div>
             <div class="sub-menu">
@@ -162,17 +162,6 @@
                 <span data-i18n="cash">Nakit</span>
               </button>
             </div>
-
-            <button
-              class="nav-item"
-              data-tab="balance-heatmap"
-              data-tooltip="Balance Calendar"
-              data-i18n-tooltip="balanceCalendar.navLabel"
-            >
-              <i class="fas fa-calendar-day"></i>
-              <span data-i18n="balanceCalendar.navLabel">Balance Calendar</span>
-            </button>
-
             <button
               class="nav-item"
               data-tab="settings"
@@ -1892,15 +1881,10 @@
 
 
           <div id="balance-tab" class="tab-content">
-            <h2>Bilanço</h2>
-            <p>Şirket bilanço verileri burada.</p>
-          </div>
-          <!-- Balance Calendar Tab -->
-          <div id="balance-heatmap-tab" class="tab-content">
             <div class="balance-app">
               <header class="balance-header">
                 <div class="header-text">
-                  <h1 data-i18n="balanceCalendar.title">Balance of Payments</h1>
+                  <h1 data-i18n="balanceCalendar.title">Financial Analysis</h1>
                   <p
                     class="subtitle"
                     data-i18n="balanceCalendar.subtitle"
@@ -1957,11 +1941,11 @@
                   <h2>
                     <i class="fas fa-file-excel"></i>
                     <span data-i18n="balanceCalendar.processTitle">
-                      Process Balance Document
+                      Process Financial Analysis Document
                     </span>
                   </h2>
                   <p data-i18n="balanceCalendar.processDescription">
-                    Upload or select a balance of payments document (Excel, PDF, image, etc.).
+                    Upload or select a financial analysis document (balance of payments, Excel, PDF, image, etc.).
                     The parser extracts the ledger and the agent will normalize transactions automatically.
                   </p>
                 </div>
@@ -1997,19 +1981,7 @@
                   <div id="balance-summary" class="balance-summary"></div>
                   <div class="calendar-legend" id="balance-legend"></div>
                 </div>
-                <div id="balance-loading" class="balance-loading" hidden>
-                  <i class="fas fa-spinner fa-spin"></i>
-                </div>
                 <div id="balance-heatmap" class="balance-heatmap"></div>
-              </section>
-
-              <section id="balance-detail" class="balance-detail-panel">
-                <div class="detail-empty">
-                  <i class="fas fa-hand-pointer"></i>
-                  <p data-i18n="balanceCalendar.selectDayPrompt">
-                    Select a day to view transaction details.
-                  </p>
-                </div>
               </section>
             </div>
           </div>

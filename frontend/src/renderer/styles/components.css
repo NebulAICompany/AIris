@@ -623,103 +623,253 @@ body.dark-theme .chart-caption {
 .balance-month-layout {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
   width: 100%;
+}
+
+.balance-month-layout[data-scale="normal"] {
+  gap: 24px;
+}
+
+.balance-month-layout[data-scale="medium"] {
+  gap: 20px;
+}
+
+.balance-month-layout[data-scale="small"] {
+  gap: 16px;
+}
+
+.balance-month-layout[data-scale="tiny"] {
+  gap: 12px;
 }
 
 .balance-month-row {
   display: grid;
-  gap: 32px;
+  gap: 24px;
   width: 100%;
 }
 
-.balance-month-row.full {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.balance-month-layout[data-scale="normal"] .balance-month-row {
+  gap: 24px;
 }
 
-.balance-month-row.partial {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  justify-content: center;
-  justify-items: center;
+.balance-month-layout[data-scale="medium"] .balance-month-row {
+  gap: 20px;
 }
 
-.balance-month-row.single {
-  grid-template-columns: minmax(320px, 520px);
-  justify-content: center;
-  justify-items: center;
+.balance-month-layout[data-scale="small"] .balance-month-row {
+  gap: 16px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-row {
+  gap: 12px;
 }
 
 .balance-month {
   background: var(--bg-secondary, rgba(248, 250, 252, 0.4));
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 24px;
-  padding: 28px 32px;
-  min-height: 420px;
+  border-radius: 20px;
+  padding: 20px 24px;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   box-shadow: var(--shadow-sm, 0 10px 28px rgba(15, 23, 42, 0.08));
   width: 100%;
 }
 
+.balance-month-layout[data-scale="normal"] .balance-month {
+  padding: 22px 26px;
+  min-height: 360px;
+  gap: 16px;
+  border-radius: 20px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month {
+  padding: 18px 22px;
+  min-height: 300px;
+  gap: 12px;
+  border-radius: 18px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month {
+  padding: 14px 18px;
+  min-height: 240px;
+  gap: 10px;
+  border-radius: 16px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month {
+  padding: 12px 14px;
+  min-height: 200px;
+  gap: 8px;
+  border-radius: 14px;
+}
+
 .balance-month-header {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, #0f172a);
 }
 
+.balance-month-layout[data-scale="normal"] .balance-month-header {
+  font-size: 1rem;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month-header {
+  font-size: 0.95rem;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month-header {
+  font-size: 0.85rem;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-header {
+  font-size: 0.8rem;
+}
+
 .balance-month-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 48px);
-  gap: 10px;
+  grid-template-columns: repeat(7, 40px);
+  gap: 7px;
   text-align: center;
 }
 
+.balance-month-layout[data-scale="normal"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 42px);
+  gap: 8px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 36px);
+  gap: 6px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 30px);
+  gap: 5px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 26px);
+  gap: 4px;
+}
+
 .balance-weekday {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--text-secondary, #94a3b8);
-  line-height: 48px;
+  line-height: 40px;
+}
+
+.balance-month-layout[data-scale="normal"] .balance-weekday {
+  font-size: 0.75rem;
+  line-height: 42px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-weekday {
+  font-size: 0.68rem;
+  line-height: 36px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-weekday {
+  font-size: 0.62rem;
+  line-height: 30px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-weekday {
+  font-size: 0.58rem;
+  line-height: 26px;
 }
 
 .balance-month-grid {
   display: grid;
-  grid-template-columns: repeat(7, 48px);
-  gap: 10px;
+  grid-template-columns: repeat(7, 40px);
+  gap: 7px;
+}
+
+.balance-month-layout[data-scale="normal"] .balance-month-grid {
+  grid-template-columns: repeat(7, 42px);
+  gap: 8px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month-grid {
+  grid-template-columns: repeat(7, 36px);
+  gap: 6px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month-grid {
+  grid-template-columns: repeat(7, 30px);
+  gap: 5px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-grid {
+  grid-template-columns: repeat(7, 26px);
+  gap: 4px;
 }
 
 .balance-day {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 7px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border 0.15s ease;
   backdrop-filter: blur(6px);
 }
 
+.balance-month-layout[data-scale="normal"] .balance-day {
+  width: 42px;
+  height: 42px;
+  border-radius: 7px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-day {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-day {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-day {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+}
+
 .balance-day.placeholder {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: transparent !important;
   pointer-events: none;
-  cursor: default;
 }
 
-.balance-day:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
-  border-color: rgba(15, 23, 42, 0.16);
+.balance-month-layout[data-scale="normal"] .balance-day.placeholder {
+  width: 42px;
+  height: 42px;
 }
 
-.balance-day.selected {
-  border: 2px solid rgba(59, 130, 246, 0.9);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+.balance-month-layout[data-scale="medium"] .balance-day.placeholder {
+  width: 36px;
+  height: 36px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-day.placeholder {
+  width: 30px;
+  height: 30px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-day.placeholder {
+  width: 26px;
+  height: 26px;
 }
 
 .balance-day.empty {
@@ -732,6 +882,140 @@ body.dark-theme .chart-caption {
   height: 12px;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.7);
+}
+
+/* Month Modal */
+.balance-month-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.balance-month-modal.active {
+  opacity: 1;
+}
+
+.balance-month-modal.closing {
+  opacity: 0;
+}
+
+.balance-month-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.balance-month-modal-content {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 24px;
+  padding: 40px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.balance-month-modal.active .balance-month-modal-content {
+  transform: scale(1);
+}
+
+.balance-month-modal.closing .balance-month-modal-content {
+  transform: scale(0.9);
+}
+
+.balance-month-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.1);
+  color: var(--text-primary, #0f172a);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.balance-month-modal-close:hover {
+  background: rgba(15, 23, 42, 0.2);
+  transform: rotate(90deg);
+}
+
+.balance-month-modal-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.balance-month-modal .balance-month {
+  min-width: 600px;
+  min-height: 600px;
+  padding: 40px;
+  gap: 24px;
+  cursor: default;
+}
+
+.balance-month-modal .balance-month-header {
+  font-size: 1.5rem;
+}
+
+.balance-month-modal .balance-month-weekdays {
+  grid-template-columns: repeat(7, 64px);
+  gap: 12px;
+}
+
+.balance-month-modal .balance-weekday {
+  font-size: 0.9rem;
+  line-height: 64px;
+}
+
+.balance-month-modal .balance-month-grid {
+  grid-template-columns: repeat(7, 64px);
+  gap: 12px;
+}
+
+.balance-month-modal .balance-day {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+}
+
+.balance-month-modal .balance-day.placeholder {
+  width: 64px;
+  height: 64px;
+}
+
+.balance-month-modal .day-dot {
+  width: 16px;
+  height: 16px;
+}
+
+.balance-month:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+  transition: all 0.2s ease;
 }
 
 .balance-detail-panel {

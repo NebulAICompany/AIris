@@ -1384,7 +1384,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
         await this.loadFinanceNews();
         break;
 
-      case "balance-heatmap":
+      case "balance":
         if (window.balanceCalendarApp?.refreshOnActivate) {
           await window.balanceCalendarApp.refreshOnActivate();
         }
