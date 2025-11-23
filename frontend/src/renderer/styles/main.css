@@ -621,9 +621,6 @@ input:checked + .slider:before {
     padding-left: 0;
 }
 
-
-
-
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
