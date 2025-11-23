@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 import backend.pipeline.vector as vectorpipe
 from backend.shared.logger import get_logger
-from backend.utils.parser import AzureParser, TxtParser, ImageParser
+from backend.utils.parser import AzureParser, TxtParser, ImageParser, ExcelParser
 from backend.pipeline.vector import PreEmbeddingProcess
 import pandas as pd
 from backend.shared.constants import UPLOADS_PATH
@@ -19,12 +19,14 @@ async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
     """
     try:
         file_extension = Path(file_path).suffix.lower()
-        if file_extension in (".pdf", ".docx", ".xlsx"):
+        if file_extension in (".pdf", ".docx"):
             extracted_text = await AzureParser(file_path, photo_less_mode=photo_less_mode)
         elif file_extension == ".txt":
             extracted_text = await TxtParser(file_path)
         elif file_extension in (".jpg", ".jpeg", ".gif", ".bmp", ".png"):
             extracted_text = await ImageParser(file_path, photo_less_mode=photo_less_mode)
+        elif file_extension == ".xlsx":
+            extracted_text = await ExcelParser(file_path)
         elif file_extension == ".xls":
             # Read the old .xls and create a new file in .xlsx format
             df = pd.read_excel(file_path)
@@ -32,7 +34,7 @@ async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
             df.to_excel(str(new_file_path), index=False)
             logger.info(f"Converted {file_path} to {new_file_path}")
             # Parse the new xlsx file
-            extracted_text = await AzureParser(str(new_file_path), photo_less_mode=photo_less_mode)
+            extracted_text = await ExcelParser(str(new_file_path))
             # Delete the temporary xlsx file after processing
             if os.path.exists(new_file_path):
                 os.remove(new_file_path)
@@ -100,10 +102,12 @@ async def process_file(
             process_enum = PreEmbeddingProcess.NONE
         logger.info(f"Pre-embedding process: {process_enum}")
         original_stem = Path(file_path).stem
+        file_extension = Path(file_path).suffix.lower()
 
         await vectorpipe.VectorStorePipeline(pre_embedding_process=process_enum).run(
             text_content=extracted_text,
             document_name=original_stem,
+            file_extension=file_extension,
         )
 
         # Record the upload in the database
