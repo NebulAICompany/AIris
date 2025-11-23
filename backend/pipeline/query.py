@@ -144,11 +144,13 @@ async def run_orchestration(
         conversation_history=conversation_context,
     )
     # Generate initial answer with structured output
-    answer, web_sources = await generate_answer(prompt=masked_query, agent=agent)
+    answer, web_sources, api_sources = await generate_answer(
+        prompt=masked_query, agent=agent
+    )
     # 6. Unmask
     final_answer = unmask_text(answer)
 
-    # 7. Combine document sources with web sources
+    # 7. Combine document sources with web sources and API sources
     all_sources = list(unique_file_names) if unique_file_names else []
     for web_source in web_sources:
         # Format as "Name|URL" for frontend to parse and display as clickable link
@@ -156,6 +158,14 @@ async def run_orchestration(
         url = web_source.get("url", "")
         if name and url:
             all_sources.append(f"{name}|{url}")
+    for api_source in api_sources:
+        # Format API sources as "API Name|description" (no URL, but frontend can handle it)
+        name = api_source.get("name", "")
+        description = api_source.get("description", "")
+        if name:
+            # Use description as a pseudo-URL for consistency, or just name
+            display_text = f"{name}" + (f" - {description}" if description else "")
+            all_sources.append(f"{display_text}|api://{name}")
 
     # 9. Get images, charts, and generated files and add assistant response to chat history
     images = get_image_datas()
@@ -223,7 +233,21 @@ async def run_news_chat_orchestration(
     )
 
     # Generate answer
-    answer, web_sources = await generate_answer(prompt=query, agent=agent)
+    answer, web_sources, api_sources = await generate_answer(prompt=query, agent=agent)
+
+    # Combine web sources and API sources
+    all_sources = []
+    for web_source in web_sources:
+        name = web_source.get("name", "")
+        url = web_source.get("url", "")
+        if name and url:
+            all_sources.append(f"{name}|{url}")
+    for api_source in api_sources:
+        name = api_source.get("name", "")
+        description = api_source.get("description", "")
+        if name:
+            display_text = f"{name}" + (f" - {description}" if description else "")
+            all_sources.append(f"{display_text}|api://{name}")
 
     # Get images
     images = get_image_datas()

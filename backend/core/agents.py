@@ -28,6 +28,18 @@ class WebSource(BaseModel):
     url: str = Field(..., description="Full URL of the website")
 
 
+class ApiSource(BaseModel):
+    """API data source information"""
+
+    name: str = Field(
+        ...,
+        description="API or data source name (e.g., 'TCMB EVDS', 'Marketstack', 'Wolfram Alpha')",
+    )
+    description: str = Field(
+        ..., description="Brief description of what data was retrieved from this API"
+    )
+
+
 class MainAgentResponse(BaseModel):
     """Structured output for main agent response"""
 
@@ -35,6 +47,10 @@ class MainAgentResponse(BaseModel):
     web_sources: List[WebSource] = Field(
         default_factory=list,
         description="List of websites used from web search (name and URL pairs). Only include when web_search_tool was used.",
+    )
+    api_sources: List[ApiSource] = Field(
+        default_factory=list,
+        description="List of APIs or data sources used (e.g., TCMB EVDS, Marketstack, Wolfram Alpha). Include when you used tools like get_tcmb_data, get_eod_data, wolfram_alpha_query, etc.",
     )
 
 

@@ -1733,39 +1733,58 @@ setupFloatingSubmenu(collapsible, subMenu) {
       if (hasSources) {
         const itemsList = [];
         
-        // Add sources with file icon or web link icon
+        // Add sources with file icon, web link icon, or API icon
         if (hasSources) {
           sources.forEach(source => {
-            // Check if source is a web link (format: "Name|URL")
-            const webLinkMatch = source.match(/^(.+)\|(.+)$/);
-            if (webLinkMatch) {
-              const [, name, url] = webLinkMatch;
-              // Extract domain from URL
-              let domain = "";
-              try {
-                const urlObj = new URL(url);
-                domain = urlObj.hostname.replace(/^www\./, "");
-              } catch (e) {
-                domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-              }
+            // Check if source is a web link or API source (format: "Name|URL" or "Name|api://name")
+            const linkMatch = source.match(/^(.+)\|(.+)$/);
+            if (linkMatch) {
+              const [, name, url] = linkMatch;
               
-              // Shorten title (max 60 chars)
-              const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
-              
-              itemsList.push(`
-                <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
-                  <div class="source-icon">
-                    <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="source-favicon-fallback" style="display: none;">
-                      <i class="fas fa-globe"></i>
+              // Check if it's an API source
+              if (url.startsWith("api://")) {
+                // API source - show with database/API icon
+                const apiName = url.replace("api://", "");
+                itemsList.push(`
+                  <div class="source-item source-item-api" title="${Utils.escapeHtml(name)}">
+                    <div class="source-icon">
+                      <i class="fas fa-database"></i>
+                    </div>
+                    <div class="source-content">
+                      <div class="source-title">${Utils.escapeHtml(name)}</div>
+                      <div class="source-domain">API Data Source</div>
                     </div>
                   </div>
-                  <div class="source-content">
-                    <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
-                    <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+                `);
+              } else {
+                // Web link - show with favicon
+                // Extract domain from URL
+                let domain = "";
+                try {
+                  const urlObj = new URL(url);
+                  domain = urlObj.hostname.replace(/^www\./, "");
+                } catch (e) {
+                  domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+                }
+                
+                // Shorten title (max 60 chars)
+                const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
+                
+                itemsList.push(`
+                  <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
+                    <div class="source-icon">
+                      <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                      <div class="source-favicon-fallback" style="display: none;">
+                        <i class="fas fa-globe"></i>
+                      </div>
+                    </div>
+                    <div class="source-content">
+                      <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
+                      <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+                    </div>
                   </div>
-                </div>
-              `);
+                `);
+              }
             } else {
               // Regular file source (clickable to open document)
               itemsList.push(`
