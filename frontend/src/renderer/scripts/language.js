@@ -336,6 +336,8 @@ class LanguageService {
         expense_voucher: "Expense Voucher",
 
         // Calculator Section
+        loanCalculatorTitle: "Loan Calculator",
+        loanCalculatorDescription: "Calculate your loan payments and total costs",
         calculateLoanPayments: "Calculate your loan payments and total costs",
         loanAmount: "Loan Amount",
         loanTerm: "Loan Term (Months)",
@@ -411,6 +413,12 @@ class LanguageService {
         presentValueAnnuityDays: "Days",
         presentValueAnnuityResults: "Present Value Results",
         presentValueAnnuityValue: "Present Value",
+        simpleDeposit: "Simple Interest",
+        compoundDeposit: "Compound Interest",
+        presentValue: "Present Value",
+        futureValue: "Future Value",
+        presentValueAnnuity: "Present Value",
+        futureValueAnnuity: "Future Value",
 
         // File Selection
         selectFiles: "Select Files",
@@ -566,6 +574,9 @@ class LanguageService {
         settings: "Ayarlar",
 
         // Calculator Section
+        loanCalculatorTitle: "Kredi Hesaplayıcı",
+        loanCalculatorDescription:
+          "Kredi ödemelerinizi ve toplam maliyetinizi hesaplayın",
         calculateLoanPayments:
           "Kredi ödemelerinizi ve toplam maliyetleri hesaplayın",
         loanAmount: "Kredi Tutarı",
@@ -642,6 +653,12 @@ class LanguageService {
         presentValueAnnuityDays: "Gün",
         presentValueAnnuityResults: "Bugünkü Değer Sonuçları",
         presentValueAnnuityValue: "Bugünkü Değer",
+        simpleDeposit: "Basit Faiz",
+        compoundDeposit: "Bileşik Faiz",
+        presentValue: "Bugünkü Değer",
+        futureValue: "Gelecek Değer",
+        presentValueAnnuity: "Bugünkü Değer",
+        futureValueAnnuity: "Gelecek Değer",
 
         // Chat Section
         aiFinancialAssistant: "AIris Finansal Asistan",
