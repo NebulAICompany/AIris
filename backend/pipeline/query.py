@@ -1,71 +1,38 @@
 from typing import List, Optional, Dict, Any
 from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent, create_news_chat_agent
+from backend.core.agents import create_main_agent, create_news_chat_agent
 from backend.retrieval.retriever import (
-    retrieve_top_k,
-    retrieve_with_keyword_search,
-    retrieve_hybrid,
     load_vectorstore,
     retrieve_with_keyword_helping,
 )
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.utils.query import (
-    detect_language,
-    filter_docs_by_selected_files,
     refine_query,
 )
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
-from backend.server.finance_mcp import get_chart_datas, clear_chart_datas
+from backend.core.tools.finance import get_chart_datas, clear_chart_datas
 from backend.core.tools.office import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
 
 logger = get_logger("QUERY_PIPELINE")
 
 
-def preprocess_query(query: str):
-    lang = detect_language(query)
-    logger.debug(f"Detected Language: {lang}")
-    return query, lang
-
-
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
-    pre_embedding_process: str = "none",
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
-    search_method: str = "vector",  # "vector", "keyword", or "hybrid"
 ) -> Dict[str, Any]:
 
-    logger.info(f"🔍 Query Orchestrator started:")
-    logger.info(f"   - Query: {query}")
-    logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-    logger.info(f"   - Pre-embedding Process: {pre_embedding_process}")
-    logger.info(f"   - Search Method: {search_method}")
-    logger.info(f"   - Session ID: {session_id}")
-    logger.info(f"   - Selected Files: {selected_files}")
-
     # Clear previous attachments at the start of each new query
-    logger.info("🧹 Clearing previous attachments...")
     clear_image_datas()
     clear_chart_datas()
     clear_generated_files()
-    logger.info("✅ Previous attachments cleared")
-
-    # Handle chat history and session management
-    if not session_id:
-        logger.debug(f"   - No session ID provided, processing as standalone query")
-        return {
-            "response": "Session ID gerekli. Lütfen geçerli bir session ile tekrar deneyin.",
-            "images": [],
-            "charts": [],
-            "generatedFiles": [],
-        }
 
     # Add user message to chat history
     chat_history_manager.add_message(session_id, MessageRole.USER, query)
@@ -74,36 +41,26 @@ async def run_orchestration(
     conversation_context = chat_history_manager.get_conversation_context(
         session_id, max_messages=10
     )
-    logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
 
     # Reduce history if too long
     session = chat_history_manager.get_session(session_id)
     if session and len(session.messages) > 30:
-        logger.info(f"   - Reducing chat history from {len(session.messages)} messages")
         chat_history_manager.reduce_history(session, target_messages=20)
 
     client = load_vectorstore(VECTORSTORE_PATH_STR)
 
-    # 0. Selected files control - skip retrieval if no files selected
+    # 0. Selected files check - skip retrieval if no files selected
     skip_retrieval = not selected_files or len(selected_files) == 0
 
-    # 1. Temizlik + analiz
-    preprocessed_query, lang = preprocess_query(query)
-    logger.info(f"   - Preprocessed Query before refinement: {preprocessed_query}")
-
-    refined_result = refine_query(preprocessed_query, lang)
+    # 1. Preprocessing and analysis
+    refined_result = refine_query(query)
     preprocessed_query = refined_result.refined_query
     query_keywords = refined_result.keywords
-    logger.info(f"   - Query after refinement: {preprocessed_query}")
-    logger.info(f"   - Extracted keywords: {query_keywords}")
 
-    # 2. Girdi kontrolü (OpenAI moderation)
+    # 2. Input moderation (OpenAI moderation)
     input_moderation = check_openai_moderation(preprocessed_query)
     if input_moderation["flagged"]:
-        logger.warning("moderation error")
-        response_message = (
-            f"Sorgunuz uygunsuz içerikler içeriyor: {input_moderation['violations']}"
-        )
+        response_message = f"Your query contains inappropriate content: {input_moderation['violations']}"
 
         # Add assistant response to chat history
         chat_history_manager.add_message(
@@ -117,85 +74,27 @@ async def run_orchestration(
             "generatedFiles": [],
         }
 
-    # 3. Hassas bilgileri maskele
+    # 3. Mask sensitive information
     masked_query_list = await mask_text([preprocessed_query], "query")
     masked_query = masked_query_list[0]
-    logger.debug(f"Masked Query: {masked_query}")
 
-    ENABLED_RAG_TECHNIQUES = []
-
-    # 4. Enhanced Retrieval with different techniques
+    # 4. Enhanced Retrieval using vector + keyword helping
     reranked_docs = None
+    unique_file_names = []
 
     if skip_retrieval:
-        logger.info("   - Skipping retrieval due to no selected files")
         reranked_docs = []
-    elif "rag_fusion" in ENABLED_RAG_TECHNIQUES:
-        # RAG Fusion (Multiple Query Generation + RRF)
-        from backend.retrieval.rag_fusion import retrieve_with_fusion
-
-        fusion_docs, fusion_metadata = await retrieve_with_fusion(
+        logger.info(
+            f"📄 No documents used in retrieval for query '{query}' (no files selected)"
+        )
+    else:
+        retrieved_docs = retrieve_with_keyword_helping(
             client=client,
             query=preprocessed_query,
+            query_terms=query_keywords,
             k=15,
-            num_queries=4,
-            top_n=5,
-            final_rerank=True,
-            excessive_k=60,
+            selected_files=selected_files,
         )
-
-        if fusion_docs:
-            logger.debug(f"🔀 RAG Fusion Results: {fusion_metadata}")
-            # Filter fusion docs by selected files
-            reranked_docs = filter_docs_by_selected_files(fusion_docs, selected_files)
-
-    elif "rse" in ENABLED_RAG_TECHNIQUES:
-        # RSE (Relevant Segment Extraction)
-        from backend.retrieval.rse import retrieve_with_rse
-
-        rse_chunks, rse_scores = retrieve_with_rse(
-            client=client, query=preprocessed_query, k=15
-        )
-
-        if rse_chunks:
-            # Filter RSE chunks by selected files
-            reranked_docs = filter_docs_by_selected_files(rse_chunks, selected_files)
-            if reranked_docs:
-                reranked_docs = reranked_docs[:5]  # Take top 5 RSE segments
-    else:
-        # Standard retrieval methods using extracted keywords
-        if search_method == "keyword":
-            logger.info("🔍 Using keyword search (BM25)")
-
-            retrieved_docs = retrieve_with_keyword_search(
-                query_terms=query_keywords, k=15, selected_files=selected_files
-            )
-        elif search_method == "hybrid":
-            logger.info("🔍 Using hybrid search (vector + keyword)")
-            retrieved_docs = retrieve_hybrid(
-                client=client,
-                query=preprocessed_query,
-                query_terms=query_keywords,
-                k=15,
-                selected_files=selected_files,
-            )
-        elif search_method == "vector_keyword_helping":
-            logger.info("🔍 Using vector + keyword search helping")
-            retrieved_docs = retrieve_with_keyword_helping(
-                client=client,
-                query=preprocessed_query,
-                query_terms=query_keywords,
-                k=15,
-                selected_files=selected_files,
-            )
-        else:  # Default to vector search
-            logger.info("🔍 Using vector search")
-            retrieved_docs = retrieve_top_k(
-                client=client,
-                query=preprocessed_query,
-                k=15,
-                selected_files=selected_files,
-            )
 
         if retrieved_docs:
             # Extract only the content from the retrieved docs before reranking
@@ -207,39 +106,35 @@ async def run_orchestration(
                 preprocessed_query, doc_contents, with_score=False, top_n=5
             )
 
+            if reranked_docs:
+                unique_file_names_set = set()
+                for doc in reranked_docs:
+                    file_name = doc.get("metadata", {}).get("file_name")
+                    if file_name:
+                        unique_file_names_set.add(file_name)
+
+                unique_file_names = sorted(list(unique_file_names_set))
     context_entries = []
 
     if reranked_docs:
-        included_parent_chunk_ids = []
         for doc in reranked_docs:
-            included_parent_chunk_ids.append(doc["metadata"].get("chunk_id"))
             content = doc["content"]
             metadata = doc["metadata"]
             metadata_str = ""
             metadata_str += f"Source: {metadata.get('file_name')}\n"
             context_entries.append(
-                f"Lokal İçerik: {content}\n\n Lokal Metadata:\n{metadata_str}"
+                f"Local Content: {content}\n\n Local Metadata:\n{metadata_str}"
             )
 
         local_context = "\n\n---\n\n".join(context_entries)
-        logger.info(f"   - Local context created with {len(context_entries)} documents")
     else:
         # Determine the reason for empty context and provide appropriate message
         if skip_retrieval:
-            local_context = "Lokal İçerik Durumu: Hiçbir dosya seçilmediği için lokal belgelerden içerik alınamadı."
-            logger.info(
-                "   - No files selected, using informational message for empty context"
-            )
+            local_context = "Local Content Status: No content could be retrieved from local documents because no files were selected."
         else:
-            local_context = "Lokal İçerik Durumu: Seçilen dosyalarda sorgunuzla ilgili uygun içerik bulunamadı."
-            logger.info(
-                "   - No relevant documents found, using informational message for empty context"
-            )
-    logger.info(f"In Query, Pre-embedding process: {pre_embedding_process}")
-    logger.debug(f"   - Local Context: {local_context}")
-    logger.info(f"using web search ?= {web_search_enabled}")
+            local_context = "Local Content Status: No relevant content could be found for your query in the selected files."
 
-    agent = create_rag_agent(
+    agent = create_main_agent(
         local_context=local_context,
         web_search_enabled=web_search_enabled,
         query=masked_query,
@@ -247,8 +142,7 @@ async def run_orchestration(
     )
     # Generate initial answer
     answer = await generate_answer(prompt=masked_query, agent=agent)
-    logger.debug(f"🧠 Answer: {answer}")
-    # 6. Maske çöz
+    # 6. Unmask
     final_answer = unmask_text(answer)
 
     # 7. Get images, charts, and generated files and add assistant response to chat history
@@ -263,6 +157,8 @@ async def run_orchestration(
         metadata["charts"] = charts
     if generated_files:
         metadata["generatedFiles"] = generated_files
+    if unique_file_names:
+        metadata["sources"] = unique_file_names
 
     metadata = metadata if metadata else None
     chat_history_manager.add_message(
@@ -274,23 +170,18 @@ async def run_orchestration(
         "images": images,
         "charts": charts,
         "generatedFiles": generated_files,
+        "sources": unique_file_names,
     }
 
 
 async def run_news_chat_orchestration(
     query: str,
     news_context: dict,
-    web_search_enabled: bool,
     session_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Specialized orchestration for news chat queries with news context and web search.
     """
-    logger.info(f"📰 News Chat Orchestrator started:")
-    logger.info(f"   - Query: {query}")
-    logger.info(f"   - News Title: {news_context.get('title', 'Unknown')}")
-    logger.info(f"   - Web Search Enabled: {web_search_enabled}")
-    logger.info(f"   - Session ID: {session_id}")
 
     # Handle chat history and session management
     if session_id:
@@ -301,38 +192,26 @@ async def run_news_chat_orchestration(
         conversation_context = chat_history_manager.get_conversation_context(
             session_id, max_messages=10
         )
-        logger.debug(f"   - Conversation context: {len(conversation_context)} messages")
 
         # Reduce history if too long
         session = chat_history_manager.get_session(session_id)
         if session and len(session.messages) > 30:
-            logger.info(
-                f"   - Reducing chat history from {len(session.messages)} messages"
-            )
             chat_history_manager.reduce_history(session, target_messages=20)
     else:
         conversation_context = []
-        logger.debug(f"   - No session ID provided, processing as standalone query")
-
-    # Preprocess query
-    preprocessed_query, lang = preprocess_query(query)
-    logger.info(f"   - Preprocessed Query: {preprocessed_query}")
 
     # Create news context string
     news_context_str = format_news_context(news_context)
-    logger.debug(f"   - News Context: {news_context_str}")
 
     # Create specialized news agent
     agent = create_news_chat_agent(
         news_context=news_context_str,
-        web_search_enabled=web_search_enabled,
-        query=preprocessed_query,
+        query=query,
         conversation_history=conversation_context,
     )
 
     # Generate answer
-    answer = await generate_answer(prompt=preprocessed_query, agent=agent)
-    logger.debug(f"🧠 News Chat Answer: {answer}")
+    answer = await generate_answer(prompt=query, agent=agent)
 
     # Get images
     images = get_image_datas()

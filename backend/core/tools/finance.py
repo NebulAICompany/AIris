@@ -1,10 +1,10 @@
-import asyncio
 import httpx
 import sys
 import json
+import time
 from pathlib import Path
 from typing import Dict, Any
-from mcp.server.fastmcp import FastMCP
+from agents import function_tool
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
@@ -22,30 +22,27 @@ from backend.shared.constants import (
 )
 
 
-mcp = FastMCP("finance")
-
-
-async def make_request(
+def make_request(
     endpoint: str, params: Dict[str, Any], retries: int = 3, timeout: float = 10.0
 ) -> Dict[str, Any]:
-    """Sends an asynchronous request to the Marketstack API."""
+    """Sends a synchronous request to the Marketstack API."""
     params["access_key"] = MARKETSTACK_API_KEY
     url = f"{MARKETSTACK_BASE_URL}/{endpoint}"
 
     attempt = 0
     while attempt < retries:
         try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                response = await client.get(url, params=params)
+            with httpx.Client(timeout=timeout) as client:
+                response = client.get(url, params=params)
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPStatusError as e:
             return {"error": f"HTTP hata: {e.response.status_code} - {e.response.text}"}
-        except (httpx.RequestError, asyncio.TimeoutError) as e:
+        except httpx.RequestError as e:
             attempt += 1
             if attempt < retries:
                 wait_time = 2 ** (attempt - 1)
-                await asyncio.sleep(wait_time)
+                time.sleep(wait_time)
             else:
                 return {"error": f"İstek hatası: {str(e)}"}
         except Exception as e:
@@ -57,8 +54,8 @@ async def make_request(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_eod_data(
+@function_tool()
+def get_eod_data(
     symbols: str,
     date_from: str = None,
     date_to: str = None,
@@ -93,11 +90,11 @@ async def get_eod_data(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("eod", params)
+    return make_request("eod", params)
 
 
-@mcp.tool()
-async def get_eod_latest(
+@function_tool()
+def get_eod_latest(
     symbols: str,
     exchange: str = None,
     sort: str = "DESC",
@@ -126,11 +123,11 @@ async def get_eod_latest(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("eod/latest", params)
+    return make_request("eod/latest", params)
 
 
-@mcp.tool()
-async def get_eod_date(
+@function_tool()
+def get_eod_date(
     symbols: str,
     date: str,
     exchange: str = None,
@@ -161,7 +158,7 @@ async def get_eod_date(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request(f"eod/{date}", params)
+    return make_request(f"eod/{date}", params)
 
 
 # ============================================================================
@@ -169,8 +166,8 @@ async def get_eod_date(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_intraday_data(
+@function_tool()
+def get_intraday_data(
     symbols: str,
     interval: str = "1min",
     date_from: str = None,
@@ -208,11 +205,11 @@ async def get_intraday_data(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("intraday", params)
+    return make_request("intraday", params)
 
 
-@mcp.tool()
-async def get_intraday_latest(
+@function_tool()
+def get_intraday_latest(
     symbols: str,
     interval: str = "1min",
     exchange: str = None,
@@ -244,11 +241,11 @@ async def get_intraday_latest(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("intraday/latest", params)
+    return make_request("intraday/latest", params)
 
 
-@mcp.tool()
-async def get_exchanges(
+@function_tool()
+def get_exchanges(
     search: str = None,
     country: str = None,
     limit: int = 100,
@@ -272,11 +269,11 @@ async def get_exchanges(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("exchanges", params)
+    return make_request("exchanges", params)
 
 
-@mcp.tool()
-async def get_exchange_info(
+@function_tool()
+def get_exchange_info(
     exchange: str,
 ):
     """
@@ -288,7 +285,7 @@ async def get_exchange_info(
     Returns:
         dict: Detailed information about the specified exchange
     """
-    return await make_request(f"exchanges/{exchange}", {})
+    return make_request(f"exchanges/{exchange}", {})
 
 
 # ============================================================================
@@ -296,8 +293,8 @@ async def get_exchange_info(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_currencies(
+@function_tool()
+def get_currencies(
     search: str = None,
     limit: int = 100,
     offset: int = 0,
@@ -318,11 +315,11 @@ async def get_currencies(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("currencies", params)
+    return make_request("currencies", params)
 
 
-@mcp.tool()
-async def get_timezones(
+@function_tool()
+def get_timezones(
     search: str = None,
     limit: int = 100,
     offset: int = 0,
@@ -343,7 +340,7 @@ async def get_timezones(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("timezones", params)
+    return make_request("timezones", params)
 
 
 # ============================================================================
@@ -351,8 +348,8 @@ async def get_timezones(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_bond_list(
+@function_tool()
+def get_bond_list(
     limit: int = 100,
     offset: int = 0,
 ):
@@ -371,11 +368,11 @@ async def get_bond_list(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("bondlist", params)
+    return make_request("bondlist", params)
 
 
-@mcp.tool()
-async def get_bond_info(
+@function_tool()
+def get_bond_info(
     country: str,
 ):
     """
@@ -391,7 +388,7 @@ async def get_bond_info(
     params = {
         "country": country,
     }
-    return await make_request("bond", params)
+    return make_request("bond", params)
 
 
 # ============================================================================
@@ -399,8 +396,8 @@ async def get_bond_info(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_etf_list(
+@function_tool()
+def get_etf_list(
     list_type: str = "ticker",
     limit: int = 100,
     offset: int = 0,
@@ -424,11 +421,11 @@ async def get_etf_list(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("etflist", params)
+    return make_request("etflist", params)
 
 
-@mcp.tool()
-async def get_etf_holdings(
+@function_tool()
+def get_etf_holdings(
     ticker: str,
     date_from: str = None,
     date_to: str = None,
@@ -452,7 +449,7 @@ async def get_etf_holdings(
         **({"date_from": date_from} if date_from else {}),
         **({"date_to": date_to} if date_to else {}),
     }
-    return await make_request("etfholdings", params)
+    return make_request("etfholdings", params)
 
 
 # ============================================================================
@@ -460,8 +457,8 @@ async def get_etf_holdings(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_splits_data(
+@function_tool()
+def get_splits_data(
     symbols: str,
     date_from: str = None,
     date_to: str = None,
@@ -493,11 +490,11 @@ async def get_splits_data(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("splits", params)
+    return make_request("splits", params)
 
 
-@mcp.tool()
-async def get_dividends_data(
+@function_tool()
+def get_dividends_data(
     symbols: str,
     date_from: str = None,
     date_to: str = None,
@@ -529,7 +526,7 @@ async def get_dividends_data(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("dividends", params)
+    return make_request("dividends", params)
 
 
 # ============================================================================
@@ -537,8 +534,8 @@ async def get_dividends_data(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_index_list(
+@function_tool()
+def get_index_list(
     limit: int = 100,
     offset: int = 0,
 ):
@@ -557,11 +554,11 @@ async def get_index_list(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("indexlist", params)
+    return make_request("indexlist", params)
 
 
-@mcp.tool()
-async def get_index_info(
+@function_tool()
+def get_index_info(
     index: str,
 ):
     """
@@ -577,7 +574,7 @@ async def get_index_info(
     params = {
         "index": index,
     }
-    return await make_request("indexinfo", params)
+    return make_request("indexinfo", params)
 
 
 # ============================================================================
@@ -585,8 +582,8 @@ async def get_index_info(
 # ============================================================================
 
 
-@mcp.tool()
-async def get_tickers_list(
+@function_tool()
+def get_tickers_list(
     search: str = None,
     exchange: str = None,
     limit: int = 100,
@@ -610,11 +607,11 @@ async def get_tickers_list(
         "limit": limit,
         "offset": offset,
     }
-    return await make_request("tickerslist", params)
+    return make_request("tickerslist", params)
 
 
-@mcp.tool()
-async def get_ticker_info_detailed(
+@function_tool()
+def get_ticker_info_detailed(
     ticker: str,
 ):
     """
@@ -629,7 +626,7 @@ async def get_ticker_info_detailed(
     params = {
         "ticker": ticker,
     }
-    return await make_request("tickerinfo", params)
+    return make_request("tickerinfo", params)
 
 
 # ============================================================================
@@ -640,8 +637,8 @@ async def get_ticker_info_detailed(
 # PROFESSIONAL PLAN METHODS (403 Forbidden for Free/Basic Plans)
 # ============================================================================
 
-# @mcp.tool()
-# async def get_realtime_stock_price(
+# @function_tool()
+# def get_realtime_stock_price(
 #     ticker: str,
 #     exchange: str = None,
 # ):
@@ -663,11 +660,11 @@ async def get_ticker_info_detailed(
 #         "ticker": ticker,
 #         **({"exchange": exchange} if exchange else {}),
 #     }
-#     return await make_request("stockprice", params)
+#     return make_request("stockprice", params)
 
 
-# @mcp.tool()
-# async def get_commodity_prices(
+# @function_tool()
+# def get_commodity_prices(
 #     commodity_name: str,
 # ):
 #     """
@@ -684,11 +681,11 @@ async def get_ticker_info_detailed(
 #     params = {
 #         "commodity_name": commodity_name,
 #     }
-#     return await make_request("commodities", params)
+#     return make_request("commodities", params)
 
 
-# @mcp.tool()
-# async def get_commodities_history(
+# @function_tool()
+# def get_commodities_history(
 #     commodity_name: str,
 #     date_from: str = None,
 #     date_to: str = None,
@@ -716,15 +713,15 @@ async def get_ticker_info_detailed(
 #         **({"date_to": date_to} if date_to else {}),
 #         "frequency": frequency,
 #     }
-#     return await make_request("commoditieshistory", params)
+#     return make_request("commoditieshistory", params)
 
 
 # ============================================================================
 # BUSINESS PLAN METHODS (403 Forbidden for Free/Basic/Professional Plans)
 # ============================================================================
 
-# @mcp.tool()
-# async def get_company_ratings(
+# @function_tool()
+# def get_company_ratings(
 #     ticker: str,
 #     date_from: str = None,
 #     date_to: str = None,
@@ -752,11 +749,11 @@ async def get_ticker_info_detailed(
 #         **({"date_to": date_to} if date_to else {}),
 #         **({"rated": rated} if rated else {}),
 #     }
-#     return await make_request("companyratings", params)
+#     return make_request("companyratings", params)
 
 
-# @mcp.tool()
-# async def find_cik_by_company_name_edgar(
+# @function_tool()
+# def find_cik_by_company_name_edgar(
 #     company_name: str,
 #     limit: int = 100,
 #     offset: int = 0,
@@ -780,11 +777,11 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request("cik_code", params)
+#     return make_request("cik_code", params)
 
 
-# @mcp.tool()
-# async def find_company_name_by_cik_edgar(
+# @function_tool()
+# def find_company_name_by_cik_edgar(
 #     cik_code: str,
 # ):
 #     """
@@ -800,11 +797,11 @@ async def get_ticker_info_detailed(
 #     params = {
 #         "cik_code": cik_code,
 #     }
-#     return await make_request("company_name", params)
+#     return make_request("company_name", params)
 
 
-# @mcp.tool()
-# async def get_company_submissions_edgar(
+# @function_tool()
+# def get_company_submissions_edgar(
 #     cik_code: str,
 # ):
 #     """
@@ -820,11 +817,11 @@ async def get_ticker_info_detailed(
 #     params = {
 #         "cik_code": cik_code,
 #     }
-#     return await make_request("submissions", params)
+#     return make_request("submissions", params)
 
 
-# @mcp.tool()
-# async def get_company_facts_edgar(
+# @function_tool()
+# def get_company_facts_edgar(
 #     cik_code: str,
 # ):
 #     """
@@ -840,11 +837,11 @@ async def get_ticker_info_detailed(
 #     params = {
 #         "cik_code": cik_code,
 #     }
-#     return await make_request("company_facts", params)
+#     return make_request("company_facts", params)
 
 
-# @mcp.tool()
-# async def get_company_concepts_accounts_payable(
+# @function_tool()
+# def get_company_concepts_accounts_payable(
 #     cik_code: str,
 # ):
 #     """
@@ -860,11 +857,11 @@ async def get_ticker_info_detailed(
 #     params = {
 #         "cik_code": cik_code,
 #     }
-#     return await make_request("concept/accounts_payable", params)
+#     return make_request("concept/accounts_payable", params)
 
 
-# @mcp.tool()
-# async def get_frames_accounts_payable(
+# @function_tool()
+# def get_frames_accounts_payable(
 #     frame: str,
 #     units: str = "USD",
 #     limit: int = 100,
@@ -891,15 +888,15 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request(f"frames/accounts_payable/{units}", params)
+#     return make_request(f"frames/accounts_payable/{units}", params)
 
 
 # ============================================================================
 # COMPANY DATA METHODS (Legacy - Business Plan Required)
 # ============================================================================
 
-# @mcp.tool()
-# async def find_cik_by_company_name(
+# @function_tool()
+# def find_cik_by_company_name(
 #     company_name: str,
 #     limit: int = 100,
 #     offset: int = 0,
@@ -923,11 +920,11 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request("cik_code", params)
+#     return make_request("cik_code", params)
 
 
-# @mcp.tool()
-# async def find_company_name_by_cik(
+# @function_tool()
+# def find_company_name_by_cik(
 #     cik: str,
 # ):
 #     """
@@ -943,11 +940,11 @@ async def get_ticker_info_detailed(
 #     params = {
 #         "cik_code": cik,
 #     }
-#     return await make_request("company_name", params)
+#     return make_request("company_name", params)
 
 
-# @mcp.tool()
-# async def get_company_submissions(
+# @function_tool()
+# def get_company_submissions(
 #     cik: str,
 #     form_type: str = None,
 #     date_from: str = None,
@@ -978,11 +975,11 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request(f"company_submissions/{cik}/submissions", params)
+#     return make_request(f"company_submissions/{cik}/submissions", params)
 
 
-# @mcp.tool()
-# async def get_company_facts(
+# @function_tool()
+# def get_company_facts(
 #     cik: str,
 #     taxonomy: str = "us-gaap",
 #     tag: str = None,
@@ -1016,11 +1013,11 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request(f"company_facts/{cik}", params)
+#     return make_request(f"company_facts/{cik}", params)
 
 
-# @mcp.tool()
-# async def get_company_concepts(
+# @function_tool()
+# def get_company_concepts(
 #     cik: str,
 #     taxonomy: str = "us-gaap",
 #     tag: str = None,
@@ -1054,11 +1051,11 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request(f"company_concepts/{cik}", params)
+#     return make_request(f"company_concepts/{cik}", params)
 
 
-# @mcp.tool()
-# async def get_frames(
+# @function_tool()
+# def get_frames(
 #     taxonomy: str = "us-gaap",
 #     tag: str = None,
 #     ccp: str = None,
@@ -1094,7 +1091,7 @@ async def get_ticker_info_detailed(
 #         "limit": limit,
 #         "offset": offset,
 #     }
-#     return await make_request("frames", params)
+#     return make_request("frames", params)
 
 
 # ============================================================================
@@ -1193,8 +1190,8 @@ def calculate_macd(data: pd.Series, fast: int = 12, slow: int = 26, signal: int 
 # ============================================================================
 
 
-@mcp.tool()
-async def create_stock_chart(
+@function_tool()
+def create_stock_chart(
     symbols: list,
     period: str = "daily",
     chart_type: str = "candlestick",
@@ -1279,13 +1276,13 @@ async def create_stock_chart(
             try:
                 # Fetch market data with increased limits
                 if period.lower() == "intraday":
-                    response = await get_intraday_data(
+                    response = get_intraday_data(
                         symbols=symbol,
                         interval="1hour",
                         limit=min(time_range_days * 12, 1000),
                     )
                 else:
-                    response = await get_eod_data(
+                    response = get_eod_data(
                         symbols=symbol, limit=min(max(time_range_days, 250), 1000)
                     )
 
@@ -1884,7 +1881,3 @@ async def create_stock_chart(
 
     except Exception as e:
         return {"error": f"Chart creation failed: {str(e)}"}
-
-
-if __name__ == "__main__":
-    mcp.run(transport="stdio")

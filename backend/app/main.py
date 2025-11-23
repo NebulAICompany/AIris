@@ -2,17 +2,12 @@ import sys
 import asyncio
 import os
 from datetime import datetime
-
-if sys.platform == "win32":
-    # Use ProactorEventLoop for Windows subprocess support
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
-from fastapi import FastAPI, Response
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.router import router as query_router
 from backend.utils.market_data import init_market_data
 from backend.shared.logger import get_logger
-
 from fastapi.staticfiles import StaticFiles
 from backend.retrieval.retriever import load_vectorstore
 from backend.shared.constants import (
@@ -20,25 +15,17 @@ from backend.shared.constants import (
     FRONTEND_RENDERER_DIR,
     FRONTEND_ASSETS_DIR,
 )
-
-
+if sys.platform == "win32":
+    # Use ProactorEventLoop for Windows subprocess support
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 logger = get_logger("MAIN")
 
-# Fast API app start
-app = FastAPI(
-    title="AIris Yerel RAG API",
-    version="0.1.0",
-    description="Generative AI for Local Data",
-)
-
-logger.info("Starting AIris Backend API...")
-
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    Uygulama başlangıcında vektör deposunu yükle ve MCP sunucularına bağlan.
+    Lifespan event handler for startup and shutdown.
     """
+    # Startup
     try:
         if not os.path.exists(VECTORSTORE_PATH_STR):
             os.makedirs(VECTORSTORE_PATH_STR)
@@ -56,13 +43,6 @@ async def startup_event():
         # Initialize company info once (skips if already present)
         await init_market_data()
 
-        # Connect MCP servers using best practices
-        logger.info("Connecting MCP servers...")
-        from backend.core.tools.mcp import connect_mcp_servers
-
-        await connect_mcp_servers()
-        logger.info("MCP servers connected successfully.")
-
     except Exception as e:
         import traceback
 
@@ -72,23 +52,27 @@ async def startup_event():
         # to prevent the app from starting with a misconfigured state.
         # raise e
 
+    yield
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Uygulama kapanırken MCP sunucularından bağlantıyı kes.
-    """
+    # Shutdown
     try:
-        logger.info("Disconnecting MCP servers...")
-        from backend.core.tools.mcp import disconnect_mcp_servers
-
-        await disconnect_mcp_servers()
-        logger.info("MCP servers disconnected successfully.")
+        logger.info("Shutting down AIris Backend API...")
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
 
 
-# UI statik dosyalarını sun
+logger.info("Starting AIris Backend API...")
+
+# Fast API app start
+app = FastAPI(
+    title="AIris Yerel RAG API",
+    version="0.1.0",
+    description="Generative AI for Local Data",
+    lifespan=lifespan,
+)
+
+
+# Serve UI static files
 app.mount(
     "/static",
     StaticFiles(directory=str(FRONTEND_RENDERER_DIR)),
@@ -98,7 +82,7 @@ app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="asse
 
 # expose_metrics()
 
-# Geliştirme sırasında frontend bu api rahat erişmesi için
+# Allow frontend to easily access this API during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins for development
@@ -126,5 +110,5 @@ async def health_check():
     }
 
 
-# API rotalarını bağla
+# Connect API routes
 app.include_router(query_router, prefix="/api")
