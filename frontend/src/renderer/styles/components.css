@@ -1122,7 +1122,8 @@ body.dark-theme .image-caption {
   background-color: transparent;
   margin: 0;
   width: 100%;
-  max-width: 100%;
+  max-width: 60%;
+  align-self: center;
   box-sizing: border-box;
 }
 
@@ -1247,7 +1248,7 @@ body.dark-theme .image-caption {
 }
 
 .message.assistant-message .message-text {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-secondary);
   border-radius: 16px 16px 16px 4px;
 }
 
@@ -1267,11 +1268,53 @@ body.dark-theme .image-caption {
   text-align: left;
 }
 
+
+:root {
+  --bg-primary: #f0f4f9; /* Gemini benzeri açık gri */
+  --bg-secondary: #e9eef6; /* Hover durumları için */
+  --text-primary: #1f1f1f;
+  --text-secondary: #444746;
+  --border-radius-lg: 28px; /* Daha yuvarlak köşeler */
+  --accent-color: #0b57d0; /* Gönder butonu rengi */
+}
+
+
+/* ANA KAPLAYICI (KUTU GÖRÜNÜMÜ) */
 .chat-input-container {
   background-color: var(--bg-primary);
-  border-top: 1px solid var(--border-color);
+  border: 1px solid var(--border-color);
   padding: 16px;
   border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 60%;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  position: relative;
+  margin-bottom: 7px;
+}
+
+.chat-input {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  outline: none;
+  width: 100%;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  
+  resize: none;  
+  overflow-y: hidden;     
+  box-sizing: border-box; 
+  
+  line-height: 24px;      /* 1 satır = 24px */
+  padding: 0 4px; 
+  
+  min-height: 24px;      /* Minimum 1 satır */
+  max-height: 96px;      /* Maksimum 4 satır (4 * 24px) */
+  transition: background-color 0.2s; 
 }
 
 .chat-input-wrapper {
@@ -1314,6 +1357,68 @@ body.dark-theme .image-caption {
   align-items: flex-end;
   gap: 8px;
 }
+.chat-input::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-input::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+
+/* ALT SATIR (BUTONLAR) */
+.chat-controls-row {
+  display: flex;
+  justify-content: space-between; /* Sol ve Sağ grupları ayırır */
+  align-items: center;
+  margin-top: 4px;
+}
+
+.left-controls, .right-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.send-button {
+  all: unset;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.send-button:hover:not([disabled]) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Disabled görünümü */
+.send-button[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* İkon dönüşümler */
+.send-icon {
+  width: 27px;
+  height: 27px;
+  transition: transform 0.2s ease;
+}
+
+/* Disabled → yukarı */
+.send-button[disabled] .send-icon {
+  transform: rotate(-90deg);
+}
+
+/* Enabled → sağa */
+.send-button:not([disabled]) .send-icon {
+  transform: rotate(0deg);
+}
 
 .dropdown-container {
   position: relative;
@@ -1332,7 +1437,7 @@ body.dark-theme .image-caption {
   min-width: 170px;       /* Chat-bar yapısına daha uygun */
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  border-radius: 10px;
   box-shadow: var(--shadow-lg);
 
   overflow: hidden;
@@ -1355,13 +1460,28 @@ body.dark-theme .image-caption {
   border: none;
   font-size: 14px;
   cursor: pointer;
-  color: var(--text-primary); /* Tema ile uyumlu */
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Yazı solda, ikon sağda */
+  gap: 10px;
   transition: background 0.15s ease;
+}
+
+.dropdown-item i {
+  color: var(--text-secondary); /* İkon temaya göre renklensin */
+  font-size: 14px;
+  transition: color 0.15s ease;
 }
 
 .dropdown-item:hover {
   background: var(--bg-secondary);
 }
+
+.dropdown-item:hover i {
+  color: var(--text-primary); /* Hover olduğunda ikon daha belirgin */
+}
+
 
 /* Animasyon */
 @keyframes dropdownFadeUp {
@@ -1378,8 +1498,7 @@ body.dark-theme .image-caption {
 .file-attachment-button,
 .file-selection-button,
 .web-search-button {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
+  background: transparent;
   border-radius: 50%;
   width: 44px;
   height: 44px;
@@ -1396,8 +1515,8 @@ body.dark-theme .image-caption {
 .file-attachment-button:hover,
 .file-selection-button:hover,
 .web-search-button:hover {
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
+  background: var(--accent-primary) !important;
+  transform: translateY(-2px);
   color: white;
 }
 
@@ -1438,7 +1557,6 @@ body.dark-theme .image-caption {
 }
 
 .web-search-button.active i {
-  animation: webSearchPulse 1.5s ease-in-out infinite;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
   font-size: 1.1em;
   position: relative;
@@ -1452,7 +1570,6 @@ body.dark-theme .image-caption {
 
 .web-search-button:not(.active):hover {
   background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-  border-color: #d1d5db;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -1485,10 +1602,10 @@ body.dark-theme .image-caption {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px 0;
 }
 
 .chat-file-item {
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1558,28 +1675,6 @@ body.dark-theme .image-caption {
   background: var(--accent-danger, #ef4444);
   color: white;
   transform: scale(1.1);
-}
-
-.chat-input {
-  flex: 1;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 12px 16px;
-  font-family: var(--font-primary);
-  font-size: 14px;
-  line-height: 1.4;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  resize: none;
-  min-height: 44px;
-  max-height: 120px;
-  transition: all 0.3s ease;
-}
-
-.chat-input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .chat-input.drag-over {
@@ -1831,33 +1926,7 @@ body.dark-theme .upload-animation .dots span {
 
 .chat-input:focus {
   outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
-
-.send-button {
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: var(--border-radius);
-  background-color: var(--accent-primary);
-  color: white;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.send-button:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.send-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* Upload Components */
 .upload-container {
   height: 100%;
@@ -5748,7 +5817,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   width: 44px;
   height: 44px;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  border-radius: 50%;
   background-color: var(--bg-primary);
   color: var(--text-secondary);
   cursor: pointer;
@@ -6817,8 +6886,6 @@ body.nebula-theme .chat-file-upload-zone.drag-over {
 /* Nebula theme for chat input drag over */
 body.nebula-theme .chat-input.drag-over {
   background: rgba(139, 92, 246, 0.1) !important;
-  border-color: rgba(139, 92, 246, 0.6) !important;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4) !important;
 }
 
 /* Nebula theme for file status messages */
