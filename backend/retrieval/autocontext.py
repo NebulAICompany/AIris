@@ -1,12 +1,11 @@
-from typing import List, Dict, Any, Optional
+from typing import List
 from backend.core.runner import generate_answer
-from backend.core.agents import create_rag_agent
+from backend.core.agents import create_main_agent
 from backend.shared.logger import get_logger
 from langchain_core.documents import Document
 import re
 
 logger = get_logger("AUTOCONTEXT")
-
 
 class AutoContextProcessor:
     """
@@ -20,17 +19,14 @@ class AutoContextProcessor:
     def __init__(
         self,
         use_document_summary: bool = True,
-        use_section_summaries: bool = True,
     ):
         """
         Initialize the AutoContext processor.
 
         Args:
             use_document_summary: Whether to generate document-level summaries
-            use_section_summaries: Whether to generate section-level summaries
         """
         self.use_document_summary = use_document_summary
-        self.use_section_summaries = use_section_summaries
 
     async def generate_document_title(
         self, document_text: str, existing_title: str = None
@@ -50,7 +46,7 @@ class AutoContextProcessor:
 
         try:
             # Create a simple agent for title generation
-            agent = create_rag_agent(
+            agent = create_main_agent(
                 local_context="",
                 web_search_enabled=False,
                 query="Generate document title",
@@ -73,7 +69,6 @@ Requirements:
 Generated title:"""
 
             response = await generate_answer(title_prompt, agent)
-
             # Clean up the response
             title = response.strip()
             # Remove quotes if present
@@ -82,7 +77,6 @@ Generated title:"""
             if len(title) > 100:
                 title = title[:97] + "..."
 
-            logger.info(f"Generated document title: {title}")
             return title
 
         except Exception as e:
@@ -94,7 +88,6 @@ Generated title:"""
     ) -> str:
         """
         Generate a summary of the entire document.
-
         Args:
             document_text: Full text of the document
             document_title: Title of the document
@@ -107,13 +100,12 @@ Generated title:"""
 
         try:
             # Create a simple agent for summary generation
-            agent = create_rag_agent(
+            agent = create_main_agent(
                 local_context="",
                 web_search_enabled=False,
                 query="Generate document summary",
                 instruction="Generate a comprehensive summary of the document. Write the summary in the language of the document.",
             )
-
             summary_prompt = f"""You are a document analyst. Generate a comprehensive summary of the document below.
 
 Document Title: {document_title}
@@ -132,13 +124,10 @@ Requirements:
 Document summary:"""
 
             response = await generate_answer(summary_prompt, agent)
-
             # Clean up the response
             summary = response.strip()
             # Remove any quotes
             summary = re.sub(r'^["\']|["\']$', "", summary)
-
-            logger.info(f"Generated document summary: {summary[:100]}...")
             return summary
 
         except Exception as e:
@@ -192,31 +181,23 @@ Document summary:"""
         Returns:
             List of chunks with contextual headers
         """
-        if not chunks:
+        if not chunks: 
             return chunks
-
-        logger.info(f"Processing {len(chunks)} chunks with AutoContext")
 
         # Reconstruct document text from chunks
         document_text = "\n\n".join([chunk.page_content for chunk in chunks])
-        document_lines = document_text.split("\n")
 
         # Generate document title if not provided
         if not document_title:
-            document_title = await self.generate_document_title(
-                document_text, file_name
-            )
+            document_title = await self.generate_document_title(document_text, file_name)
 
         # Generate document summary
-        document_summary = await self.generate_document_summary(
-            document_text, document_title
-        )
+        document_summary = await self.generate_document_summary(document_text, document_title)
 
         # Process each chunk
         processed_chunks = []
         for i, chunk in enumerate(chunks):
             try:
-                
                 # Create contextual header
                 contextual_chunk_text = self.create_contextual_header(
                     chunk.page_content,
@@ -240,20 +221,13 @@ Document summary:"""
                     }
                 )
 
-                processed_chunk = Document(
-                    page_content=contextual_chunk_text, metadata=new_metadata
-                )
-
+                processed_chunk = Document(page_content=contextual_chunk_text, metadata=new_metadata)
                 processed_chunks.append(processed_chunk)
 
             except Exception as e:
                 logger.error(f"Error processing chunk {i}: {e}")
                 # Fall back to original chunk
                 processed_chunks.append(chunk)
-
-        logger.info(
-            f"Successfully processed {len(processed_chunks)} chunks with AutoContext"
-        )
         return processed_chunks
 
 
@@ -281,11 +255,8 @@ async def apply_autocontext(
     """
     if not enabled or not chunks:
         return chunks
-
     try:
-        return await autocontext_processor.process_document_chunks(
-            chunks, document_title, file_name
-        )
+        return await autocontext_processor.process_document_chunks(chunks, document_title, file_name)
     except Exception as e:
         logger.error(f"AutoContext processing failed: {e}")
         return chunks  # Return original chunks if processing fails

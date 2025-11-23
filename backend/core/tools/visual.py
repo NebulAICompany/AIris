@@ -1,9 +1,8 @@
-from typing import List, Dict
+from typing import List
 from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, IMAGES_PATH_STR
 import base64
 import os
-import openai
 from agents import function_tool
 from backend.core.prompts import redescribe_image_prompt
 
@@ -33,11 +32,11 @@ def image_visualizer(image_ids: List[str]) -> str:
 
     This function should be called when the agent determines that displaying actual images
     would enhance user understanding, based on image descriptions and references found in
-    the local context (patterns like "ID:img_12345678" or "ID:fig_87654321").
+    the local context (patterns like "ID:img_12345678", "ID:fig_87654321", or "ID:table_12345678").
 
     Args:
         image_ids: List of complete image identifiers including prefixes
-                  Examples: ["img_12345678", "fig_87654321"] for corresponding image files
+                  Examples: ["img_12345678", "fig_87654321", "table_12345678"] for corresponding image files
 
     Returns:
         str: Success message indicating how many images were loaded successfully
