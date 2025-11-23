@@ -4,7 +4,7 @@ import json
 import time
 from pathlib import Path
 from typing import Dict, Any
-from agents import function_tool
+from langchain_core.tools import tool
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
@@ -54,7 +54,7 @@ def make_request(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_eod_data(
     symbols: str,
     date_from: str = None,
@@ -93,7 +93,7 @@ def get_eod_data(
     return make_request("eod", params)
 
 
-@function_tool()
+@tool
 def get_eod_latest(
     symbols: str,
     exchange: str = None,
@@ -126,7 +126,7 @@ def get_eod_latest(
     return make_request("eod/latest", params)
 
 
-@function_tool()
+@tool
 def get_eod_date(
     symbols: str,
     date: str,
@@ -166,7 +166,7 @@ def get_eod_date(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_intraday_data(
     symbols: str,
     interval: str = "1min",
@@ -208,7 +208,7 @@ def get_intraday_data(
     return make_request("intraday", params)
 
 
-@function_tool()
+@tool
 def get_intraday_latest(
     symbols: str,
     interval: str = "1min",
@@ -244,7 +244,7 @@ def get_intraday_latest(
     return make_request("intraday/latest", params)
 
 
-@function_tool()
+@tool
 def get_exchanges(
     search: str = None,
     country: str = None,
@@ -272,7 +272,7 @@ def get_exchanges(
     return make_request("exchanges", params)
 
 
-@function_tool()
+@tool
 def get_exchange_info(
     exchange: str,
 ):
@@ -293,7 +293,7 @@ def get_exchange_info(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_currencies(
     search: str = None,
     limit: int = 100,
@@ -318,7 +318,7 @@ def get_currencies(
     return make_request("currencies", params)
 
 
-@function_tool()
+@tool
 def get_timezones(
     search: str = None,
     limit: int = 100,
@@ -348,7 +348,7 @@ def get_timezones(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_bond_list(
     limit: int = 100,
     offset: int = 0,
@@ -371,7 +371,7 @@ def get_bond_list(
     return make_request("bondlist", params)
 
 
-@function_tool()
+@tool
 def get_bond_info(
     country: str,
 ):
@@ -396,7 +396,7 @@ def get_bond_info(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_etf_list(
     list_type: str = "ticker",
     limit: int = 100,
@@ -424,7 +424,7 @@ def get_etf_list(
     return make_request("etflist", params)
 
 
-@function_tool()
+@tool
 def get_etf_holdings(
     ticker: str,
     date_from: str = None,
@@ -457,7 +457,7 @@ def get_etf_holdings(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_splits_data(
     symbols: str,
     date_from: str = None,
@@ -493,7 +493,7 @@ def get_splits_data(
     return make_request("splits", params)
 
 
-@function_tool()
+@tool
 def get_dividends_data(
     symbols: str,
     date_from: str = None,
@@ -534,7 +534,7 @@ def get_dividends_data(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_index_list(
     limit: int = 100,
     offset: int = 0,
@@ -557,7 +557,7 @@ def get_index_list(
     return make_request("indexlist", params)
 
 
-@function_tool()
+@tool
 def get_index_info(
     index: str,
 ):
@@ -582,7 +582,7 @@ def get_index_info(
 # ============================================================================
 
 
-@function_tool()
+@tool
 def get_tickers_list(
     search: str = None,
     exchange: str = None,
@@ -610,7 +610,7 @@ def get_tickers_list(
     return make_request("tickerslist", params)
 
 
-@function_tool()
+@tool
 def get_ticker_info_detailed(
     ticker: str,
 ):
@@ -637,7 +637,7 @@ def get_ticker_info_detailed(
 # PROFESSIONAL PLAN METHODS (403 Forbidden for Free/Basic Plans)
 # ============================================================================
 
-# @function_tool()
+# @tool
 # def get_realtime_stock_price(
 #     ticker: str,
 #     exchange: str = None,
@@ -663,7 +663,7 @@ def get_ticker_info_detailed(
 #     return make_request("stockprice", params)
 
 
-# @function_tool()
+# @tool
 # def get_commodity_prices(
 #     commodity_name: str,
 # ):
@@ -684,7 +684,7 @@ def get_ticker_info_detailed(
 #     return make_request("commodities", params)
 
 
-# @function_tool()
+# @tool
 # def get_commodities_history(
 #     commodity_name: str,
 #     date_from: str = None,
@@ -720,7 +720,7 @@ def get_ticker_info_detailed(
 # BUSINESS PLAN METHODS (403 Forbidden for Free/Basic/Professional Plans)
 # ============================================================================
 
-# @function_tool()
+# @tool
 # def get_company_ratings(
 #     ticker: str,
 #     date_from: str = None,
@@ -752,7 +752,7 @@ def get_ticker_info_detailed(
 #     return make_request("companyratings", params)
 
 
-# @function_tool()
+# @tool
 # def find_cik_by_company_name_edgar(
 #     company_name: str,
 #     limit: int = 100,
@@ -780,7 +780,7 @@ def get_ticker_info_detailed(
 #     return make_request("cik_code", params)
 
 
-# @function_tool()
+# @tool
 # def find_company_name_by_cik_edgar(
 #     cik_code: str,
 # ):
@@ -800,7 +800,7 @@ def get_ticker_info_detailed(
 #     return make_request("company_name", params)
 
 
-# @function_tool()
+# @tool
 # def get_company_submissions_edgar(
 #     cik_code: str,
 # ):
@@ -820,7 +820,7 @@ def get_ticker_info_detailed(
 #     return make_request("submissions", params)
 
 
-# @function_tool()
+# @tool
 # def get_company_facts_edgar(
 #     cik_code: str,
 # ):
@@ -840,7 +840,7 @@ def get_ticker_info_detailed(
 #     return make_request("company_facts", params)
 
 
-# @function_tool()
+# @tool
 # def get_company_concepts_accounts_payable(
 #     cik_code: str,
 # ):
@@ -860,7 +860,7 @@ def get_ticker_info_detailed(
 #     return make_request("concept/accounts_payable", params)
 
 
-# @function_tool()
+# @tool
 # def get_frames_accounts_payable(
 #     frame: str,
 #     units: str = "USD",
@@ -895,7 +895,7 @@ def get_ticker_info_detailed(
 # COMPANY DATA METHODS (Legacy - Business Plan Required)
 # ============================================================================
 
-# @function_tool()
+# @tool
 # def find_cik_by_company_name(
 #     company_name: str,
 #     limit: int = 100,
@@ -923,7 +923,7 @@ def get_ticker_info_detailed(
 #     return make_request("cik_code", params)
 
 
-# @function_tool()
+# @tool
 # def find_company_name_by_cik(
 #     cik: str,
 # ):
@@ -943,7 +943,7 @@ def get_ticker_info_detailed(
 #     return make_request("company_name", params)
 
 
-# @function_tool()
+# @tool
 # def get_company_submissions(
 #     cik: str,
 #     form_type: str = None,
@@ -978,7 +978,7 @@ def get_ticker_info_detailed(
 #     return make_request(f"company_submissions/{cik}/submissions", params)
 
 
-# @function_tool()
+# @tool
 # def get_company_facts(
 #     cik: str,
 #     taxonomy: str = "us-gaap",
@@ -1016,7 +1016,7 @@ def get_ticker_info_detailed(
 #     return make_request(f"company_facts/{cik}", params)
 
 
-# @function_tool()
+# @tool
 # def get_company_concepts(
 #     cik: str,
 #     taxonomy: str = "us-gaap",
@@ -1054,7 +1054,7 @@ def get_ticker_info_detailed(
 #     return make_request(f"company_concepts/{cik}", params)
 
 
-# @function_tool()
+# @tool
 # def get_frames(
 #     taxonomy: str = "us-gaap",
 #     tag: str = None,
@@ -1190,7 +1190,7 @@ def calculate_macd(data: pd.Series, fast: int = 12, slow: int = 26, signal: int 
 # ============================================================================
 
 
-@function_tool()
+@tool
 def create_stock_chart(
     symbols: list,
     period: str = "daily",

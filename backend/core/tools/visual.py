@@ -3,7 +3,7 @@ from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, IMAGES_PATH_STR
 import base64
 import os
-from agents import function_tool
+from langchain_core.tools import tool
 from backend.core.prompts import redescribe_image_prompt
 
 logger = get_logger("VISUAL")
@@ -25,7 +25,7 @@ def clear_image_datas():
     IMAGE_DATA.clear()
 
 
-@function_tool
+@tool
 def image_visualizer(image_ids: List[str]) -> str:
     """
     Load and display images to the frontend based on image IDs found in RAG context.
@@ -82,7 +82,7 @@ def image_visualizer(image_ids: List[str]) -> str:
     return "images loaded successfully into attachments. Do not add into answer, it is already in attachments."
 
 
-@function_tool
+@tool
 def redescribe_image_content(image_name: str, user_query: str) -> str:
     """
     Analyze an image based on a user query using OpenAI's vision capabilities.

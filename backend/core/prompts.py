@@ -793,12 +793,17 @@ Examples of when to use image_visualizer for tables:
 **Structured Output Requirements:**
 - Provide your response with three fields:
   1. **answer**: Your complete response to the user's query
-  2. **used_tools**: List of tool names you used (exclude web_search_tool from this list)
-  3. **web_sources**: When you use web_search_tool, provide a list of websites with name and URL pairs. Each entry should have:
+  2. **web_sources**: When you use web_search_tool, provide a list of websites with name and URL pairs. Each entry should have:
      - **name**: The website/page title or name
      - **url**: The full URL of the website
      - Only include websites that were actually used in your response
      - If you didn't use web_search_tool, provide an empty list
+  3. **api_sources**: When you use API tools (TCMB EVDS, Marketstack, Wolfram Alpha, etc.), provide a list of APIs used. Each entry should have:
+     - **name**: The API or data source name (e.g., "TCMB EVDS", "Marketstack", "Wolfram Alpha")
+     - **description**: Brief description of what data was retrieved (e.g., "Exchange rates and interest rates", "Stock price data for AAPL", "Mathematical computation")
+     - **Only include the actual API/data source name and what data was retrieved. Do not include anything else.
+     - Include when you used tools like: get_tcmb_data, get_eod_data, wolfram_alpha_query, etc.
+     - If you didn't use any API tools, provide an empty list
 
 Now analyze the query and prepare the most appropriate response!"""
 

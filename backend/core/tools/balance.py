@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from pathlib import Path
 from typing import List, Optional
-from agents import function_tool
+from langchain_core.tools import tool
 from backend.core.runner import generate_answer
 from backend.pipeline.upload import parse_document
 from backend.shared.constants import (
@@ -15,7 +15,8 @@ from backend.utils.balance_payments_database import (
 )
 from backend.core.prompts import balance_of_payments_agent_prompt
 from backend.shared.constants import OPENAI_MODEL
-from agents import Agent
+from deepagents import create_deep_agent
+
 logger = get_logger("BALANCE_TOOLS")
 
 
@@ -126,15 +127,11 @@ def _store_transactions(transactions: List[BalanceTransaction]) -> str:
             return "No transactions stored."
 
         if len(transactions) == 1 and categories:
-            return (
-                f"Stored {stored} transaction categorized as {categories[0]}."
-            )
+            return f"Stored {stored} transaction categorized as {categories[0]}."
 
         if categories:
             category_summary = ", ".join(categories)
-            return (
-                f"Stored {stored} transaction(s) spanning categories: {category_summary}."
-            )
+            return f"Stored {stored} transaction(s) spanning categories: {category_summary}."
 
         return f"Stored {stored} transaction(s)."
     except Exception as exc:
@@ -142,7 +139,7 @@ def _store_transactions(transactions: List[BalanceTransaction]) -> str:
         return f"Error while storing transaction: {exc}"
 
 
-@function_tool
+@tool
 def add_income_transaction(
     amount: float,
     category: str,
@@ -185,7 +182,7 @@ def add_income_transaction(
     return _store_transactions([transaction])
 
 
-@function_tool
+@tool
 def add_expense_transaction(
     amount: float,
     category: str,
@@ -227,17 +224,18 @@ def add_expense_transaction(
     )
     return _store_transactions([transaction])
 
-def create_balance_payments_agent() -> Agent:
-    """Create agent that ingests balance of payments Excel files."""
-    instructions = (f"{balance_of_payments_agent_prompt}\n\n")
 
-    agent = Agent(
-        name="Balance_of_Payments_Agent",
-        instructions=instructions,
+def create_balance_payments_agent():
+    """Create Deep Agent that ingests balance of payments Excel files."""
+    instructions = f"{balance_of_payments_agent_prompt}\n\n"
+
+    agent = create_deep_agent(
         model=OPENAI_MODEL,
+        system_prompt=instructions,
         tools=[add_expense_transaction, add_income_transaction],
     )
     return agent
+
 
 async def process_balance_of_payments(file_path: str) -> dict:
     """Run the balance-of-payments ingestion agent for the given uploaded file."""
@@ -262,8 +260,7 @@ async def process_balance_of_payments(file_path: str) -> dict:
 
     if parsed_content:
         initial_prompt += (
-            "\n\n---\nParsed document content:\n\n"
-            f"{parsed_content}\n\n---\n"
+            "\n\n---\nParsed document content:\n\n" f"{parsed_content}\n\n---\n"
         )
 
     logger.info("Launching balance of payments agent for {}", file_name)
@@ -276,4 +273,3 @@ async def process_balance_of_payments(file_path: str) -> dict:
         "message": summary,
         "file": file_name,
     }
-
