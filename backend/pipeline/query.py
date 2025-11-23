@@ -88,6 +88,7 @@ async def run_orchestration(
             f"📄 No documents used in retrieval for query '{query}' (no files selected)"
         )
     else:
+        preprocessed_query = preprocessed_query + " Selected Files: " + ", ".join(selected_files)
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
             query=preprocessed_query,
