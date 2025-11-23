@@ -834,7 +834,7 @@ def get_balance_of_payments_calendar(
         else:
             end_date = datetime.today().date()
 
-    start_date = end_date - relativedelta(months=months - 1)
+    start_date = end_date - relativedelta(months=months - 2)
     start_date = start_date - timedelta(days=start_date.weekday())
 
     end_weekday = end_date.weekday()
