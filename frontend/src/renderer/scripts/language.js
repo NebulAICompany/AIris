@@ -615,7 +615,7 @@ class LanguageService {
         compoundDepositResults: "Bileşik Mevduat Sonuçları",
         compoundDepositInterest: "Kazanç",
         compoundDepositFinalAmount: "Vade Sonu Tutarı",
-        presentValueCalculatorTitle: "Bugünkü Değer",
+        presentValueCalculatorTitle: "Bugünkü/Gelecek Değer",
         presentValueCalculatorDescription:
           "Gelecekteki bir tutarı bugünkü değere indirgeyin.",
         presentValueFutureAmount: "Gelecekteki Tutar",
@@ -635,7 +635,7 @@ class LanguageService {
         futureValueDays: "Gün",
         futureValueResults: "Gelecek Değer Sonuçları",
         futureValueValue: "Gelecek Değer",
-        futureValueAnnuityCalculatorTitle: "Eşit Ödemelerin Gelecek Değeri",
+        futureValueAnnuityCalculatorTitle: "Eşit Ödemelerin Bugünkü/Gelecek Değeri",
         futureValueAnnuityCalculatorDescription:
           "Eşit ödemelerin gelecekteki toplam değerini hesaplayın.",
         futureValueAnnuityPayment: "Periyodik Ödeme",
