@@ -12,13 +12,14 @@ from .tools.api import (
     get_uploaded_files_count,
     list_uploaded_files,
 )
-from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, tcmb_data_agent_tool
+from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, plotting_agent_tool, tcmb_data_agent_tool
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL
 
 main_agent_as_tools = [
     finance_agent_tool,
     office_agent_tool,
+    plotting_agent_tool,
     wolfram_alpha_query,
     time_now,
     image_visualizer,

@@ -1,5 +1,5 @@
 from agents import Agent
-from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news_summarization_prompt, tcmb_data_agent_prompt
+from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news_summarization_prompt, plotting_prompt, tcmb_data_agent_prompt
 from .office import *
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
 from .api import time_now
@@ -26,6 +26,12 @@ from .finance import (
     create_stock_chart,
 )
 from backend.shared.constants import OPENAI_MODEL
+from backend.core.tools.plotting import (
+    get_suitable_plot_types, 
+    create_html_plot,
+    extract_data_from_text,
+    convert_to_plottable_format
+)
 
 office_tools = [
     create_excel_file,
@@ -89,11 +95,24 @@ news_summarization_agent = Agent(
     tools=[],  # This agent uses only LLM capabilities, no external tools
 )
 
+
+plotting_agent = Agent(
+    name="Plotting Agent",
+    instructions=plotting_prompt,
+    model=OPENAI_MODEL,
+    tools=[
+        extract_data_from_text,
+        convert_to_plottable_format,
+        get_suitable_plot_types,
+        create_html_plot
+    ],
+
 tcmb_data_agent = Agent(
     name="TCMB Data Agent",
     instructions=tcmb_data_agent_prompt,
     model=OPENAI_MODEL,
     tools=tcmb_tools,
+
 )
 
 office_agent_tool = office_agent.as_tool(
@@ -129,6 +148,35 @@ news_summarization_tool = news_summarization_agent.as_tool(
     - Best used when you have 2+ articles about the same financial event/story""",
 )
 
+plotting_agent_tool = plotting_agent.as_tool(
+    tool_name="plotting_agent",
+    tool_description="""Use this tool for creating interactive HTML plots from various data sources:
+    
+    **Capabilities:**
+    - Extract structured data from text, tables, JSON, CSV-like formats, markdown tables
+    - Convert data into plottable formats (lists, numpy arrays, pandas DataFrames)
+    - Determine the most suitable plot types for given data
+    - Create professional interactive HTML plots with Plotly
+    - Save charts to disk for display
+    
+    **Supported Plot Types:**
+    line, bar, scatter, pie, histogram, box, heatmap, area, violin, bubble, 
+    waterfall, radar, funnel, candlestick, treemap, scatter_3d
+    
+    **Input Data Formats:**
+    - Markdown tables (| Col1 | Col2 | ...)
+    - CSV/TSV text (comma or tab separated)
+    - JSON objects or arrays
+    - Python lists, dictionaries
+    - Key-value pairs (Key: Value format)
+    - Natural language descriptions with numbers
+    
+    **Important:**
+    - Charts are automatically displayed above the response after creation
+    - Do NOT add chart HTML or chart content to the answer
+    - Focus on explaining the visualization and insights
+    - This tool handles the complete workflow: data extraction → formatting → plot creation → saving""",
+)
 tcmb_data_agent_tool = tcmb_data_agent.as_tool(
     tool_name="tcmb_economic_data",
     tool_description=f"""Use this tool for comprehensive Turkish Central Bank (TCMB) economic data retrieval and analysis:
