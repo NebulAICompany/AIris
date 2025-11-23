@@ -344,30 +344,20 @@
         : `${this.formatDateLabel(date)}\nNo transactions`;
 
       return `
-        <button
+        <div
           class="${classNames.join(" ")}"
           data-date="${date}"
           data-has-entry="${entry ? "true" : "false"}"
           style="background:${color};"
           title="${Utils.escapeHtml(tooltip)}"
-          aria-pressed="${isSelected}"
         >
           <span class="day-dot" style="opacity:${intensity}"></span>
-        </button>
+        </div>
       `;
     }
 
     attachDayHandlers() {
-      this.heatmapContainer
-        .querySelectorAll(".balance-day[data-date]")
-        .forEach((button) => {
-          button.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const date = button.getAttribute("data-date");
-            const hasEntry = button.getAttribute("data-has-entry") === "true";
-            this.selectDay(date, hasEntry);
-          });
-        });
+      // Day cells are now non-interactive, only showing visual data
     }
 
     attachMonthHandlers() {
@@ -421,17 +411,6 @@
 
       closeBtn.addEventListener("click", closeModal);
       overlay.addEventListener("click", closeModal);
-
-      // Attach day handlers in modal
-      modal.querySelectorAll(".balance-day[data-date]").forEach((button) => {
-        button.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const date = button.getAttribute("data-date");
-          const hasEntry = button.getAttribute("data-has-entry") === "true";
-          this.selectDay(date, hasEntry);
-          closeModal();
-        });
-      });
 
       // Animate in
       requestAnimationFrame(() => {
