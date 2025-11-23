@@ -907,7 +907,6 @@ body.dark-theme .chart-caption {
     height: 26px;
   }
 }
-
 /* Chart Header and Controls */
 .chart-header {
   display: flex;
@@ -1764,7 +1763,7 @@ body.dark-theme .image-caption {
 .message.user-message {
   flex-direction: row-reverse;
   justify-content: flex-start;
-  margin-left: 0;
+  margin-left: auto;
   margin-right: 0;
 }
 
@@ -1792,13 +1791,13 @@ body.dark-theme .image-caption {
 }
 
 .message-content {
-  flex: 0 1 auto;
+  flex: 1;
   max-width: 70%;
   min-width: 0;
 }
 
 .message.user-message .message-content {
-  text-align: left;
+  text-align: right;
 }
 
 .message.assistant-message .message-content {
@@ -1813,8 +1812,6 @@ body.dark-theme .image-caption {
   word-wrap: break-word;
   display: inline-block;
   max-width: 100%;
-  width: fit-content;
-  min-width: 120px;
 }
 
 .message.user-message .message-text {
@@ -1855,8 +1852,6 @@ body.dark-theme .image-caption {
   --accent-color: #0b57d0; /* Gönder butonu rengi */
 }
 
-
-/* ANA KAPLAYICI (KUTU GÖRÜNÜMÜ) */
 /* Sources display styles */
 .sources-container {
   margin-top: 0;
@@ -1955,6 +1950,8 @@ body.dark-theme .image-caption {
   font-weight: 400;
 }
 
+
+/* ANA KAPLAYICI (KUTU GÖRÜNÜMÜ) */
 .chat-input-container {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -2052,47 +2049,6 @@ body.dark-theme .image-caption {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.send-button {
-  all: unset;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.send-button:hover:not([disabled]) {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-/* Disabled görünümü */
-.send-button[disabled] {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* İkon dönüşümler */
-.send-icon {
-  width: 27px;
-  height: 27px;
-  transition: transform 0.2s ease;
-}
-
-/* Disabled → yukarı */
-.send-button[disabled] .send-icon {
-  transform: rotate(-90deg);
-}
-
-/* Enabled → sağa */
-.send-button:not([disabled]) .send-icon {
-  transform: rotate(0deg);
 }
 
 .dropdown-container {
@@ -2271,6 +2227,47 @@ body.dark-theme .image-caption {
     transform: scale(1.15);
     opacity: 0.9;
   }
+}
+
+.send-button {
+  all: unset;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.send-button:hover:not([disabled]) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Disabled görünümü */
+.send-button[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* İkon dönüşümler */
+.send-icon {
+  width: 27px;
+  height: 27px;
+  transition: transform 0.2s ease;
+}
+
+/* Disabled → yukarı */
+.send-button[disabled] .send-icon {
+  transform: rotate(-90deg);
+}
+
+/* Enabled → sağa */
+.send-button:not([disabled]) .send-icon {
+  transform: rotate(0deg);
 }
 
 .uploaded-files-preview {
@@ -4075,6 +4072,7 @@ code {
 .katex-display .katex {
   vertical-align: 0 !important;
 }
+
 
 /* Dark theme with higher specificity */
 [data-theme="dark"] .message-text pre,
