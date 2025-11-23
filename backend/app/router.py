@@ -218,6 +218,7 @@ async def handle_query(request: QueryRequest):
             "charts": answer.get("charts", []),
             "generatedFiles": answer.get("generatedFiles", []),
             "sources": answer.get("sources", []),
+            "usedTools": answer.get("usedTools", []),
             "sessionId": answer.get("session_id", session_id),
         }
 
@@ -256,7 +257,9 @@ async def handle_news_chat(request: NewsChatRequest):
     except Exception as e:
         logger.error(f"Error processing news chat query: {str(e)}")
         api_requests_total.labels(status="error").inc()
-        raise HTTPException( status_code=500, detail=f"Error processing news chat query: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error processing news chat query: {str(e)}"
+        )
 
 
 @router.post("/upload")
@@ -389,7 +392,9 @@ def get_chat_session(session_id: str):
         raise
     except Exception as e:
         logger.error(f"Error getting chat session {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error getting chat session: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting chat session: {str(e)}"
+        )
 
 
 @router.post("/chat/sessions")
@@ -790,9 +795,8 @@ async def trigger_balance_of_payments_process(request: BalanceProcessRequest):
         )
 
     try:
-        result = await process_balance_of_payments(
-            file_path=str(file_path))
-        
+        result = await process_balance_of_payments(file_path=str(file_path))
+
         return result
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))

@@ -140,8 +140,8 @@ async def run_orchestration(
         query=masked_query,
         conversation_history=conversation_context,
     )
-    # Generate initial answer
-    answer = await generate_answer(prompt=masked_query, agent=agent)
+    # Generate initial answer with structured output
+    answer, used_tools = await generate_answer(prompt=masked_query, agent=agent)
     # 6. Unmask
     final_answer = unmask_text(answer)
 
@@ -159,6 +159,8 @@ async def run_orchestration(
         metadata["generatedFiles"] = generated_files
     if unique_file_names:
         metadata["sources"] = unique_file_names
+    if used_tools:
+        metadata["usedTools"] = used_tools
 
     metadata = metadata if metadata else None
     chat_history_manager.add_message(
@@ -171,6 +173,7 @@ async def run_orchestration(
         "charts": charts,
         "generatedFiles": generated_files,
         "sources": unique_file_names,
+        "usedTools": used_tools,
     }
 
 
