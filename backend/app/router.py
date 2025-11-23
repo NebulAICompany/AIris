@@ -218,7 +218,6 @@ async def handle_query(request: QueryRequest):
             "charts": answer.get("charts", []),
             "generatedFiles": answer.get("generatedFiles", []),
             "sources": answer.get("sources", []),
-            "usedTools": answer.get("usedTools", []),
             "sessionId": answer.get("session_id", session_id),
         }
 

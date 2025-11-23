@@ -88,7 +88,9 @@ async def run_orchestration(
             f"📄 No documents used in retrieval for query '{query}' (no files selected)"
         )
     else:
-        preprocessed_query = preprocessed_query + " Selected Files: " + ", ".join(selected_files)
+        preprocessed_query = (
+            preprocessed_query + " Selected Files: " + ", ".join(selected_files)
+        )
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
             query=preprocessed_query,
@@ -142,16 +144,11 @@ async def run_orchestration(
         conversation_history=conversation_context,
     )
     # Generate initial answer with structured output
-    answer, used_tools, web_sources = await generate_answer(
-        prompt=masked_query, agent=agent
-    )
+    answer, web_sources = await generate_answer(prompt=masked_query, agent=agent)
     # 6. Unmask
     final_answer = unmask_text(answer)
 
-    # 7. Filter out web_search_tool from used_tools (web sources are shown separately)
-    filtered_tools = [tool for tool in used_tools if tool != "web_search_tool"]
-
-    # 8. Combine document sources with web sources
+    # 7. Combine document sources with web sources
     all_sources = list(unique_file_names) if unique_file_names else []
     for web_source in web_sources:
         # Format as "Name|URL" for frontend to parse and display as clickable link
@@ -174,8 +171,6 @@ async def run_orchestration(
         metadata["generatedFiles"] = generated_files
     if all_sources:
         metadata["sources"] = all_sources
-    if filtered_tools:
-        metadata["usedTools"] = filtered_tools
 
     metadata = metadata if metadata else None
     chat_history_manager.add_message(
@@ -188,7 +183,6 @@ async def run_orchestration(
         "charts": charts,
         "generatedFiles": generated_files,
         "sources": all_sources,
-        "usedTools": filtered_tools,
     }
 
 
@@ -228,8 +222,8 @@ async def run_news_chat_orchestration(
         conversation_history=conversation_context,
     )
 
-    # Generate answer (news chat agent doesn't use structured output)
-    answer, _ = await generate_answer(prompt=query, agent=agent)
+    # Generate answer
+    answer, web_sources = await generate_answer(prompt=query, agent=agent)
 
     # Get images
     images = get_image_datas()
