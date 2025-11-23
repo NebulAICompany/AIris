@@ -623,75 +623,195 @@ body.dark-theme .chart-caption {
 .balance-month-layout {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
   width: 100%;
+}
+
+.balance-month-layout[data-scale="normal"] {
+  gap: 24px;
+}
+
+.balance-month-layout[data-scale="medium"] {
+  gap: 20px;
+}
+
+.balance-month-layout[data-scale="small"] {
+  gap: 16px;
+}
+
+.balance-month-layout[data-scale="tiny"] {
+  gap: 12px;
 }
 
 .balance-month-row {
   display: grid;
-  gap: 32px;
+  gap: 24px;
   width: 100%;
 }
 
-.balance-month-row.full {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.balance-month-layout[data-scale="normal"] .balance-month-row {
+  gap: 24px;
 }
 
-.balance-month-row.partial {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  justify-content: center;
-  justify-items: center;
+.balance-month-layout[data-scale="medium"] .balance-month-row {
+  gap: 20px;
 }
 
-.balance-month-row.single {
-  grid-template-columns: minmax(320px, 520px);
-  justify-content: center;
-  justify-items: center;
+.balance-month-layout[data-scale="small"] .balance-month-row {
+  gap: 16px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-row {
+  gap: 12px;
 }
 
 .balance-month {
   background: var(--bg-secondary, rgba(248, 250, 252, 0.4));
   border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 24px;
-  padding: 28px 32px;
-  min-height: 420px;
+  border-radius: 20px;
+  padding: 20px 24px;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   box-shadow: var(--shadow-sm, 0 10px 28px rgba(15, 23, 42, 0.08));
   width: 100%;
 }
 
+.balance-month-layout[data-scale="normal"] .balance-month {
+  padding: 22px 26px;
+  min-height: 360px;
+  gap: 16px;
+  border-radius: 20px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month {
+  padding: 18px 22px;
+  min-height: 300px;
+  gap: 12px;
+  border-radius: 18px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month {
+  padding: 14px 18px;
+  min-height: 240px;
+  gap: 10px;
+  border-radius: 16px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month {
+  padding: 12px 14px;
+  min-height: 200px;
+  gap: 8px;
+  border-radius: 14px;
+}
+
 .balance-month-header {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary, #0f172a);
 }
 
+.balance-month-layout[data-scale="normal"] .balance-month-header {
+  font-size: 1rem;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month-header {
+  font-size: 0.95rem;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month-header {
+  font-size: 0.85rem;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-header {
+  font-size: 0.8rem;
+}
+
 .balance-month-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 48px);
-  gap: 10px;
+  grid-template-columns: repeat(7, 40px);
+  gap: 7px;
   text-align: center;
 }
 
+.balance-month-layout[data-scale="normal"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 42px);
+  gap: 8px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 36px);
+  gap: 6px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 30px);
+  gap: 5px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-weekdays {
+  grid-template-columns: repeat(7, 26px);
+  gap: 4px;
+}
+
 .balance-weekday {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: var(--text-secondary, #94a3b8);
-  line-height: 48px;
+  line-height: 40px;
+}
+
+.balance-month-layout[data-scale="normal"] .balance-weekday {
+  font-size: 0.75rem;
+  line-height: 42px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-weekday {
+  font-size: 0.68rem;
+  line-height: 36px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-weekday {
+  font-size: 0.62rem;
+  line-height: 30px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-weekday {
+  font-size: 0.58rem;
+  line-height: 26px;
 }
 
 .balance-month-grid {
   display: grid;
-  grid-template-columns: repeat(7, 48px);
-  gap: 10px;
+  grid-template-columns: repeat(7, 40px);
+  gap: 7px;
+}
+
+.balance-month-layout[data-scale="normal"] .balance-month-grid {
+  grid-template-columns: repeat(7, 42px);
+  gap: 8px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-month-grid {
+  grid-template-columns: repeat(7, 36px);
+  gap: 6px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-month-grid {
+  grid-template-columns: repeat(7, 30px);
+  gap: 5px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-month-grid {
+  grid-template-columns: repeat(7, 26px);
+  gap: 4px;
 }
 
 .balance-day {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 7px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
@@ -702,13 +822,57 @@ body.dark-theme .chart-caption {
   backdrop-filter: blur(6px);
 }
 
+.balance-month-layout[data-scale="normal"] .balance-day {
+  width: 42px;
+  height: 42px;
+  border-radius: 7px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-day {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-day {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-day {
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+}
+
 .balance-day.placeholder {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: transparent !important;
   pointer-events: none;
   cursor: default;
+}
+
+.balance-month-layout[data-scale="normal"] .balance-day.placeholder {
+  width: 42px;
+  height: 42px;
+}
+
+.balance-month-layout[data-scale="medium"] .balance-day.placeholder {
+  width: 36px;
+  height: 36px;
+}
+
+.balance-month-layout[data-scale="small"] .balance-day.placeholder {
+  width: 30px;
+  height: 30px;
+}
+
+.balance-month-layout[data-scale="tiny"] .balance-day.placeholder {
+  width: 26px;
+  height: 26px;
 }
 
 .balance-day:hover {
