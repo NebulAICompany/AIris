@@ -10,7 +10,7 @@ from pptx import Presentation
 from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH
 from backend.security.pii import unmask_text
-from agents import function_tool
+from langchain_core.tools import tool
 
 # Global variable to track generated files
 GENERATED_FILES = []
@@ -22,7 +22,7 @@ FILES_PATH.mkdir(parents=True, exist_ok=True)
 logger = get_logger("OFFICE_TOOLS")
 
 
-@function_tool()
+@tool
 def create_excel_file(
     data: List[List[str]], file_name: str, sheet_name: str = "Sheet1"
 ) -> Dict[str, Any]:
@@ -104,7 +104,7 @@ def create_excel_file(
         return {"success": False, "error": f"Failed to create Excel file: {str(e)}"}
 
 
-@function_tool()
+@tool
 def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
     """
     Create a Word document with the specified content.
@@ -178,7 +178,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
         return {"success": False, "error": f"Failed to create Word document: {str(e)}"}
 
 
-@function_tool()
+@tool
 def create_powerpoint_presentation(
     title: str, slides_content: str, file_name: str
 ) -> Dict[str, Any]:
@@ -273,7 +273,7 @@ def create_powerpoint_presentation(
         }
 
 
-@function_tool()
+@tool
 def add_powerpoint_slide(
     file_path: str, slide_title: str, slide_content: str, slide_position: int = -1
 ) -> Dict[str, Any]:
@@ -331,7 +331,7 @@ def add_powerpoint_slide(
         return {"success": False, "error": f"Failed to add slide: {str(e)}"}
 
 
-@function_tool()
+@tool
 def modify_word_content(
     file_path: str, search_text: str, replace_text: str
 ) -> Dict[str, Any]:
@@ -394,7 +394,7 @@ def modify_word_content(
         return {"success": False, "error": f"Failed to modify Word document: {str(e)}"}
 
 
-@function_tool()
+@tool
 def modify_excel_cells(
     file_path: str, updates: str, sheet_name: str = None
 ) -> Dict[str, Any]:
@@ -430,7 +430,7 @@ def modify_excel_cells(
             else:
                 return {
                     "success": False,
-                    "error": f"Worksheet '{sheet_name}' does not exist in the workbook. Available sheets: {', '.join(wb.sheetnames)}"
+                    "error": f"Worksheet '{sheet_name}' does not exist in the workbook. Available sheets: {', '.join(wb.sheetnames)}",
                 }
         else:
             ws = wb.active
@@ -469,7 +469,7 @@ def modify_excel_cells(
         return {"success": False, "error": f"Failed to modify Excel cells: {str(e)}"}
 
 
-@function_tool()
+@tool
 def create_excel_charts(
     file_path: str, chart_data: str, sheet_name: str = None
 ) -> Dict[str, Any]:
