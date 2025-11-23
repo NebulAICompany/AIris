@@ -3,15 +3,23 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence
-from backend.shared.constants import BALANCE_PAYMENTS_DB_PATH
+from collections import Counter
+from backend.shared.constants import (
+    BALANCE_PAYMENTS_DB_PATH,
+    BALANCE_TRANSACTION_CATEGORIES,
+)
 from backend.shared.logger import get_logger
 logger = get_logger("BALANCE_DB")
+
+CATEGORY_SQL_VALUES = "', '".join(BALANCE_TRANSACTION_CATEGORIES)
+CATEGORY_CHECK_CLAUSE = f"('{CATEGORY_SQL_VALUES}')"
 
 @dataclass
 class BalanceTransaction:
     transaction_date: str
     amount: float
     direction: str
+    category: Optional[str] = None
 
 
 class BalancePaymentsDatabase:
@@ -31,16 +39,18 @@ class BalancePaymentsDatabase:
         try:
             with self._connect() as conn:
                 conn.execute(
-                    """
+                    f"""
                     CREATE TABLE IF NOT EXISTS bop_transactions (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         transaction_date TEXT NOT NULL,
                         amount REAL NOT NULL,
                         direction TEXT NOT NULL CHECK(direction IN ('income', 'expense')),
+                        category TEXT CHECK(category IN {CATEGORY_CHECK_CLAUSE} OR category IS NULL),
                         created_at TEXT DEFAULT CURRENT_TIMESTAMP
                     )
                     """
                 )
+                self._ensure_category_column(conn)
                 conn.execute(
                     """
                     CREATE INDEX IF NOT EXISTS idx_bop_transactions_date
@@ -59,10 +69,28 @@ class BalancePaymentsDatabase:
                     """
                 )
                 conn.commit()
-                logger.info("✅ Balance of payments database initialized at %s", self.db_path)
+                logger.info(
+                    "Balance of payments database initialized at {}",
+                    self.db_path,
+                )
         except Exception as exc:
-            logger.error("❌ Failed to initialize balance of payments database: %s", exc)
+            logger.error(
+                "Failed to initialize balance of payments database: {}",
+                exc,
+            )
             raise
+
+    def _ensure_category_column(self, conn: sqlite3.Connection) -> None:
+        columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(bop_transactions)")
+        }
+        if "category" not in columns:
+            conn.execute(
+                f"""
+                ALTER TABLE bop_transactions
+                ADD COLUMN category TEXT CHECK(category IN {CATEGORY_CHECK_CLAUSE} OR category IS NULL)
+                """
+            )
 
     def store_transactions(
         self,
@@ -76,7 +104,9 @@ class BalancePaymentsDatabase:
             with self._connect() as conn:
                 dates_to_update: List[str] = []
 
-                insert_rows: List[tuple[str, float, str]] = []
+                insert_rows: List[tuple[str, float, str, Optional[str]]] = []
+                direction_counts: Counter[str] = Counter()
+                category_counts: Counter[str] = Counter()
                 for tx in transactions:
                     try:
                         normalized_date = datetime.fromisoformat(
@@ -87,32 +117,47 @@ class BalancePaymentsDatabase:
                             f"Transaction date must be ISO formatted YYYY-MM-DD, got '{tx.transaction_date}'."
                         ) from exc
 
+                    category: Optional[str] = None
+                    if tx.category is not None:
+                        category = tx.category.strip()
+                        if not category:
+                            category = None
+                    if category is not None and category not in BALANCE_TRANSACTION_CATEGORIES:
+                        raise ValueError(
+                            "Invalid category. Expected one of: "
+                            + ", ".join(BALANCE_TRANSACTION_CATEGORIES)
+                        )
+
                     insert_rows.append(
                         (
                             normalized_date,
                             float(tx.amount),
                             tx.direction,
+                            category,
                         )
                     )
+                    direction_counts[tx.direction] += 1
+                    category_key = category or "(none)"
+                    category_counts[category_key] += 1
 
                 conn.executemany(
                     """
                     INSERT INTO bop_transactions (
                         transaction_date,
                         amount,
-                        direction
-                    ) VALUES (?, ?, ?)
+                        direction,
+                        category
+                    ) VALUES (?, ?, ?, ?)
                     """,
                     insert_rows,
                 )
 
                 dates_to_update.extend(tx.transaction_date for tx in transactions)
                 self._recalculate_daily_balances(conn, set(dates_to_update))
-
                 conn.commit()
-                return len(insert_rows)
+                return True
         except Exception as exc:
-            logger.error("❌ Failed to store balance transactions: %s", exc)
+            logger.error("Failed to store balance transactions: {}", exc)
             raise
 
     def _recalculate_daily_balances(
@@ -195,7 +240,7 @@ class BalancePaymentsDatabase:
         with self._connect() as conn:
             rows = conn.execute(
                 """
-                SELECT transaction_date, amount, direction
+                SELECT transaction_date, amount, direction, category
                 FROM bop_transactions
                 WHERE transaction_date = ?
                 ORDER BY created_at ASC
@@ -210,6 +255,7 @@ class BalancePaymentsDatabase:
                     "date": row["transaction_date"],
                     "amount": float(row["amount"]),
                     "direction": row["direction"],
+                    "category": row["category"],
                 }
             )
         return results

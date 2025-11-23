@@ -82,6 +82,25 @@ UPLOADS_DB_PATH = DATABASE_DIR / "uploads_tracking.db"
 # Balance of payments database path
 BALANCE_PAYMENTS_DB_PATH = DATABASE_DIR / "balance_payments.db"
 
+# Balance of payments transaction categories
+BALANCE_TRANSACTION_CATEGORIES = (
+    "İşletme Faaliyetleri",
+    "Yatırım Faaliyetleri",
+    "Finansman Faaliyetleri",
+)
+
+BALANCE_TRANSACTION_CATEGORY_ALIASES = {
+    "operating activities": "İşletme Faaliyetleri",
+    "operating activity": "İşletme Faaliyetleri",
+    "işletme faaliyetleri": "İşletme Faaliyetleri",
+    "investment activities": "Yatırım Faaliyetleri",
+    "investment activity": "Yatırım Faaliyetleri",
+    "yatırım faaliyetleri": "Yatırım Faaliyetleri",
+    "financing activities": "Finansman Faaliyetleri",
+    "financing activity": "Finansman Faaliyetleri",
+    "finansman faaliyetleri": "Finansman Faaliyetleri",
+}
+
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 VERIFICATION_UPLOADS_PATH = DATABASE_DIR / "verification_uploads"
