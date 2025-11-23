@@ -1,5 +1,11 @@
 from agents import Agent
-from backend.core.prompts import finance_agent_prompt, office_agent_prompt, news_summarization_prompt, plotting_prompt, tcmb_data_agent_prompt
+from backend.core.prompts import (
+    finance_agent_prompt,
+    office_agent_prompt,
+    news_summarization_prompt,
+    plotting_prompt,
+    tcmb_data_agent_prompt,
+)
 from .office import *
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
 from .api import time_now
@@ -27,10 +33,10 @@ from .finance import (
 )
 from backend.shared.constants import OPENAI_MODEL
 from backend.core.tools.plotting import (
-    get_suitable_plot_types, 
+    get_suitable_plot_types,
     create_html_plot,
     extract_data_from_text,
-    convert_to_plottable_format
+    convert_to_plottable_format,
 )
 
 office_tools = [
@@ -104,7 +110,7 @@ plotting_agent = Agent(
         extract_data_from_text,
         convert_to_plottable_format,
         get_suitable_plot_types,
-        create_html_plot
+        create_html_plot,
     ],
 )
 
@@ -113,7 +119,6 @@ tcmb_data_agent = Agent(
     instructions=tcmb_data_agent_prompt,
     model=OPENAI_MODEL,
     tools=tcmb_tools,
-
 )
 
 office_agent_tool = office_agent.as_tool(

@@ -141,12 +141,26 @@ async def run_orchestration(
         query=masked_query,
         conversation_history=conversation_context,
     )
-    # Generate initial answer
-    answer = await generate_answer(prompt=masked_query, agent=agent)
+    # Generate initial answer with structured output
+    answer, used_tools, web_sources = await generate_answer(
+        prompt=masked_query, agent=agent
+    )
     # 6. Unmask
     final_answer = unmask_text(answer)
 
-    # 7. Get images, charts, and generated files and add assistant response to chat history
+    # 7. Filter out web_search_tool from used_tools (web sources are shown separately)
+    filtered_tools = [tool for tool in used_tools if tool != "web_search_tool"]
+
+    # 8. Combine document sources with web sources
+    all_sources = list(unique_file_names) if unique_file_names else []
+    for web_source in web_sources:
+        # Format as "Name|URL" for frontend to parse and display as clickable link
+        name = web_source.get("name", "")
+        url = web_source.get("url", "")
+        if name and url:
+            all_sources.append(f"{name}|{url}")
+
+    # 9. Get images, charts, and generated files and add assistant response to chat history
     images = get_image_datas()
     charts = get_chart_datas()
     generated_files = get_generated_files()
@@ -158,8 +172,10 @@ async def run_orchestration(
         metadata["charts"] = charts
     if generated_files:
         metadata["generatedFiles"] = generated_files
-    if unique_file_names:
-        metadata["sources"] = unique_file_names
+    if all_sources:
+        metadata["sources"] = all_sources
+    if filtered_tools:
+        metadata["usedTools"] = filtered_tools
 
     metadata = metadata if metadata else None
     chat_history_manager.add_message(
@@ -171,7 +187,8 @@ async def run_orchestration(
         "images": images,
         "charts": charts,
         "generatedFiles": generated_files,
-        "sources": unique_file_names,
+        "sources": all_sources,
+        "usedTools": filtered_tools,
     }
 
 
@@ -211,8 +228,8 @@ async def run_news_chat_orchestration(
         conversation_history=conversation_context,
     )
 
-    # Generate answer
-    answer = await generate_answer(prompt=query, agent=agent)
+    # Generate answer (news chat agent doesn't use structured output)
+    answer, _ = await generate_answer(prompt=query, agent=agent)
 
     # Get images
     images = get_image_datas()
