@@ -113,6 +113,11 @@
         this.renderSummary(result.data);
         this.renderLegend(result.data.maxAbsoluteNet || 0);
         this.renderHeatmap(result.data);
+
+        // Also refresh the category pie chart
+        if (window.categoryPieChart) {
+          await window.categoryPieChart.refresh();
+        }
       } catch (error) {
         logger.error(`Failed to load calendar: ${error}`, "BALANCE");
         this.heatmapContainer.innerHTML = this.renderErrorState(
@@ -851,16 +856,12 @@
     // Initialize category pie chart
     if (document.getElementById("category-pie-chart")) {
       window.categoryPieChart = new CategoryPieChart();
-      // Refresh when navigating to the currentStatus tab
-      document.querySelectorAll('[data-page="#currentStatus"]').forEach(btn => {
-        btn.addEventListener("click", () => {
-          setTimeout(() => {
-            if (window.categoryPieChart) {
-              window.categoryPieChart.refresh();
-            }
-          }, 100);
-        });
-      });
+      // Initial load when balance tab is visible
+      setTimeout(() => {
+        if (window.categoryPieChart && document.getElementById("category-pie-chart")) {
+          window.categoryPieChart.refresh();
+        }
+      }, 500);
     }
   });
 })();
