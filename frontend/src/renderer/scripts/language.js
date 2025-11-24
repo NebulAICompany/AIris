@@ -34,10 +34,9 @@ class LanguageService {
         financeNews: "Finance News",
         financialAnalysis: "Financial Analysis",
         balance: "Balance",
-        currentStatus: "Current Status",
-        sales: "Sales",
-        purchase: "Purchase",
-        cash: "Cash",
+        currentStatus: "Balance Sheet",
+        purchase: "Income Statement",
+        cash: "Cash Flow",
         settings: "Settings",
 
         // Chat Section
@@ -568,10 +567,9 @@ class LanguageService {
         financeNews: "Finans Haberleri",
         financialAnalysis: "Finansal Analiz",
         balance: "Ödemeler Dengesi",
-        currentStatus: "Güncel Durum",
-        sales: "Satış",
-        purchase: "Alış",
-        cash: "Nakit",
+        currentStatus: "Bilanço",
+        purchase: "Gelir Tablosu",
+        cash: "Nakit Akışı",
 
         settings: "Ayarlar",
 

@@ -876,6 +876,44 @@ def get_balance_transactions_for_day(date_str: str):
     }
 
 
+@router.get("/balance-of-payments/category-totals")
+def get_balance_category_totals():
+    """
+    Get transaction totals grouped by category.
+    All amounts are treated as positive (absolute values).
+    """
+    try:
+        category_totals = balance_payments_db.get_category_totals()
+        return {
+            "categories": category_totals,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching category totals: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch category totals",
+        )
+
+
+@router.get("/balance-of-payments/category-net-values")
+def get_balance_category_net_values():
+    """
+    Get net values (income - expense) for each category.
+    Returns income, expense, and net amounts for each category.
+    """
+    try:
+        category_net_values = balance_payments_db.get_category_net_values()
+        return {
+            "categories": category_net_values,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching category net values: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch category net values",
+        )
+
+
 @router.get("/finance-news")
 async def get_finance_news(force_refresh: bool = False):
     """
