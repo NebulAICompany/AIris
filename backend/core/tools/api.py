@@ -1,12 +1,12 @@
 import requests
 import xml.etree.ElementTree as ET
-from agents import function_tool
+from langchain_core.tools import tool
 from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 
-@function_tool
+@tool
 async def time_now(tz: str = "Europe/Istanbul") -> str:
     """
     Get the current date and time in ISO 8601 format for a specified timezone.
@@ -26,7 +26,7 @@ async def time_now(tz: str = "Europe/Istanbul") -> str:
     return datetime.now(ZoneInfo(tz)).isoformat()
 
 
-@function_tool
+@tool
 def wolfram_alpha_query(query: str) -> str:
     """
     Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
@@ -79,7 +79,7 @@ def wolfram_alpha_query(query: str) -> str:
         return f"Error: {str(e)}"
 
 
-@function_tool
+@tool
 def web_search_tool(query: str, max_results: int = 5) -> list:
     """
     Perform a web search using Tavily and return the results.
@@ -98,7 +98,7 @@ def web_search_tool(query: str, max_results: int = 5) -> list:
         return [{"error": str(e)}]
 
 
-@function_tool
+@tool
 def get_uploaded_files_count() -> str:
     """
     Get the total count of files uploaded to the system.
@@ -124,7 +124,7 @@ def get_uploaded_files_count() -> str:
         return f"Error retrieving upload count: {str(e)}"
 
 
-@function_tool
+@tool
 def list_uploaded_files(limit: int = 10) -> str:
     """
     List recently uploaded files with their details.

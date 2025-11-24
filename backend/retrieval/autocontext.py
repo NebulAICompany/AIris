@@ -137,14 +137,16 @@ Document summary:"""
     def create_contextual_header(
         self,
         chunk_text: str,
-        document_title: str,
-        document_summary: str,
+        file_name: str = None,
+        document_title: str = None,
+        document_summary: str = None,
     ) -> str:
         """
         Create a contextual header for a chunk.
 
         Args:
             chunk_text: Original chunk text
+            file_name: File name
             document_title: Document title
             document_summary: Document summary
 
@@ -154,6 +156,9 @@ Document summary:"""
         header_parts = []
 
         # Document context
+        if file_name:
+            header_parts.append(f"File: {file_name}")
+
         if document_title:
             header_parts.append(f"Document: {document_title}")
 
@@ -201,6 +206,7 @@ Document summary:"""
                 # Create contextual header
                 contextual_chunk_text = self.create_contextual_header(
                     chunk.page_content,
+                    file_name,
                     document_title,
                     document_summary
                 )
@@ -210,10 +216,11 @@ Document summary:"""
                 new_metadata.update(
                     {
                         "autocontext_enabled": True,
+                        "file_name": file_name,
                         "document_title": document_title,
                         "document_summary": (
-                            document_summary[:200] + "..."
-                            if len(document_summary) > 200
+                            document_summary[:400] + "..."
+                            if len(document_summary) > 400
                             else document_summary
                         ),
                         "original_chunk_size": len(chunk.page_content),
@@ -228,6 +235,8 @@ Document summary:"""
                 logger.error(f"Error processing chunk {i}: {e}")
                 # Fall back to original chunk
                 processed_chunks.append(chunk)
+        logger.info(f"Processed {len(processed_chunks)} chunks")
+        logger.info(f"Processed chunks: {processed_chunks}")
         return processed_chunks
 
 
@@ -256,7 +265,7 @@ async def apply_autocontext(
     if not enabled or not chunks:
         return chunks
     try:
-        return await autocontext_processor.process_document_chunks(chunks, document_title, file_name)
+        return await autocontext_processor.process_document_chunks(chunks, document_title=document_title, file_name=file_name)
     except Exception as e:
         logger.error(f"AutoContext processing failed: {e}")
         return chunks  # Return original chunks if processing fails

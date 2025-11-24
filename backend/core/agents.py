@@ -1,10 +1,12 @@
-from agents import Agent
+from deepagents import create_deep_agent
 from .prompts import (
     wolfram_instructions,
     main_agent_instructions,
     news_chat_agent_instructions,
 )
 from typing import List
+from pydantic import BaseModel, Field
+from langchain.agents.structured_output import ToolStrategy
 from .tools.api import (
     web_search_tool,
     wolfram_alpha_query,
@@ -12,20 +14,53 @@ from .tools.api import (
     get_uploaded_files_count,
     list_uploaded_files,
 )
-from .tools.agent_as_tools import finance_agent_tool, office_agent_tool, tcmb_data_agent_tool
+from .tools.agent_as_tools import (
+    main_agent_subagents,
+)
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL
 
-main_agent_as_tools = [
-    finance_agent_tool,
-    office_agent_tool,
+
+class WebSource(BaseModel):
+    """Web source information"""
+
+    name: str = Field(..., description="Website or page name/title")
+    url: str = Field(..., description="Full URL of the website")
+
+
+class ApiSource(BaseModel):
+    """API data source information"""
+
+    name: str = Field(
+        ...,
+        description="API or data source name (e.g., 'TCMB EVDS', 'Marketstack', 'Wolfram Alpha')",
+    )
+    description: str = Field(
+        ..., description="Brief description of what data was retrieved from this API"
+    )
+
+
+class MainAgentResponse(BaseModel):
+    """Structured output for main agent response"""
+
+    answer: str = Field(..., description="The agent's answer to the user's query")
+    web_sources: List[WebSource] = Field(
+        default_factory=list,
+        description="List of websites used from web search (name and URL pairs). Only include when web_search_tool was used.",
+    )
+    api_sources: List[ApiSource] = Field(
+        default_factory=list,
+        description="List of APIs or data sources used (e.g., TCMB EVDS, Marketstack, Wolfram Alpha). Include when you used tools like get_tcmb_data, get_eod_data, wolfram_alpha_query, etc.",
+    )
+
+
+main_agent_tools = [
     wolfram_alpha_query,
     time_now,
     image_visualizer,
     redescribe_image_content,
     get_uploaded_files_count,
     list_uploaded_files,
-    tcmb_data_agent_tool,
 ]
 
 
@@ -35,8 +70,12 @@ def create_main_agent(
     query: str,
     instruction: str = None,
     conversation_history: List = None,
-) -> Agent:
+):
+    """
+    Create a Deep Agent for main assistant functionality.
 
+    Returns a Deep Agent configured with tools, subagents, and custom instructions.
+    """
     instruction_part = (
         f"**Special Instructions:**\n{instruction}\n" if instruction else ""
     )
@@ -58,7 +97,7 @@ def create_main_agent(
         conversation_context_part += "\n"
 
     # Start with a fresh list to avoid mutating the module-level list
-    tools = [*main_agent_as_tools]
+    tools = [*main_agent_tools]
     if web_search_enabled:
         tools.append(web_search_tool)
 
@@ -71,11 +110,12 @@ def create_main_agent(
         instruction_part=instruction_part,
     )
 
-    agent = Agent(
-        name="Main_Assistant",
-        instructions=agent_instructions,
+    agent = create_deep_agent(
         model=OPENAI_MODEL,
+        system_prompt=agent_instructions,
         tools=tools,
+        subagents=main_agent_subagents,
+        response_format=ToolStrategy(MainAgentResponse),
     )
 
     return agent
@@ -84,9 +124,9 @@ def create_main_agent(
 def create_news_summarization_agent(
     instructions: str,
     web_search_enabled: bool,
-) -> Agent:
+):
     """
-    Create a specialized agent for news summarization with news context and web search capabilities.
+    Create a specialized Deep Agent for news summarization with news context and web search capabilities.
     """
     # Include web context
     web_context_part = (
@@ -100,22 +140,20 @@ def create_news_summarization_agent(
     **Web Search Status:** {web_context_part}
     """
 
-    agent = Agent(
-        name="News_Summarization_Assistant",
-        instructions=agent_instructions,
+    agent = create_deep_agent(
         model="gpt-4o-mini",
-        tools=[web_search_tool],
+        system_prompt=agent_instructions,
+        tools=[web_search_tool] if web_search_enabled else [],
     )
     return agent
 
 
-def create_clustering_agent(instructions: str) -> Agent:
-    """Create specialized clustering agent"""
-    agent = Agent(
-        name="Turkish_Financial_News_Clusterer",
-        instructions=instructions,
+def create_clustering_agent(instructions: str):
+    """Create specialized clustering Deep Agent"""
+    agent = create_deep_agent(
         model="gpt-4o-mini",
-        tools=[],  # No tools needed, pure text analysis
+        system_prompt=instructions,
+        tools=[],
     )
     return agent
 
@@ -124,9 +162,9 @@ def create_news_chat_agent(
     news_context: str,
     query: str,
     conversation_history: List = None,
-) -> Agent:
+):
     """
-    Create a specialized agent for news chat queries with news context and web search capabilities.
+    Create a specialized Deep Agent for news chat queries with news context and web search capabilities.
     """
     # Format conversation history
     conversation_context_part = ""
@@ -137,8 +175,7 @@ def create_news_chat_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    # Start with a fresh list to avoid mutating the module-level list
-    tools = [*main_agent_as_tools]
+    tools = [*main_agent_tools]
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
@@ -148,22 +185,21 @@ def create_news_chat_agent(
         query=query,
     )
 
-    agent = Agent(
-        name="News_Chat_Assistant",
-        instructions=agent_instructions,
+    agent = create_deep_agent(
         model="gpt-4o-mini",
+        system_prompt=agent_instructions,
         tools=tools,
+        subagents=main_agent_subagents,
     )
 
     return agent
 
 
-def create_translation_agent(instructions: str) -> Agent:
-    """Create a specialized translation agent"""
-    agent = Agent(
-        name="Translation_Assistant",
-        instructions=instructions,
+def create_translation_agent(instructions: str):
+    """Create a specialized translation Deep Agent"""
+    agent = create_deep_agent(
         model="gpt-4o-mini",
+        system_prompt=instructions,
         tools=[],
     )
     return agent
