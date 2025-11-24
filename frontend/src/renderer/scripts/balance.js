@@ -113,6 +113,14 @@
         this.renderSummary(result.data);
         this.renderLegend(result.data.maxAbsoluteNet || 0);
         this.renderHeatmap(result.data);
+
+        // Also refresh the category charts
+        if (window.categoryPieChart) {
+          await window.categoryPieChart.refresh();
+        }
+        if (window.categoryColumnChart) {
+          await window.categoryColumnChart.refresh();
+        }
       } catch (error) {
         logger.error(`Failed to load calendar: ${error}`, "BALANCE");
         this.heatmapContainer.innerHTML = this.renderErrorState(
@@ -229,38 +237,48 @@
         monthCursor.setMonth(monthCursor.getMonth() + 1);
       }
 
-      const monthsPerRow = 3;
+      // Calculate optimal grid layout based on number of months
+      const totalMonths = months.length;
+      let columnsPerRow;
+      let scale;
+      
+      if (totalMonths <= 3) {
+        columnsPerRow = totalMonths;
+        scale = 'normal';
+      } else if (totalMonths <= 6) {
+        columnsPerRow = 3;
+        scale = 'medium';
+      } else if (totalMonths <= 9) {
+        columnsPerRow = 3;
+        scale = 'small';
+      } else {
+        columnsPerRow = 4;
+        scale = 'tiny';
+      }
+
       const rows = [];
-      for (let i = 0; i < months.length; i += monthsPerRow) {
-        rows.push(months.slice(i, i + monthsPerRow));
+      for (let i = 0; i < months.length; i += columnsPerRow) {
+        rows.push(months.slice(i, i + columnsPerRow));
       }
 
       const layoutHtml = rows
         .map((row) => {
-          const rowClass = ["balance-month-row"];
-          if (row.length === monthsPerRow) {
-            rowClass.push("full");
-          } else if (row.length === 1) {
-            rowClass.push("single");
-          } else {
-            rowClass.push("partial");
-          }
-
           const monthHtml = row
             .map((info) => this.renderMonthBlock(info, dayMap, maxAbs))
             .join("");
 
-          return `<div class="${rowClass.join(" ")}">${monthHtml}</div>`;
+          return `<div class="balance-month-row" style="grid-template-columns: repeat(${row.length}, 1fr);">${monthHtml}</div>`;
         })
         .join("");
 
       this.heatmapContainer.innerHTML = `
-        <div class="balance-month-layout">
+        <div class="balance-month-layout" data-scale="${scale}" data-columns="${columnsPerRow}">
           ${layoutHtml}
         </div>
       `;
 
       this.attachDayHandlers();
+      this.attachMonthHandlers();
     }
 
     renderMonthBlock(monthInfo, dayMap, maxAbs) {
@@ -300,7 +318,7 @@
         <div class="balance-month" data-month="${year}-${String(month + 1).padStart(
         2,
         "0"
-      )}">
+      )}" style="cursor: pointer;" title="Click to expand">
           <div class="balance-month-header">${label}</div>
           <div class="balance-month-weekdays">${weekdayLabels}</div>
           <div class="balance-month-grid">
@@ -334,29 +352,78 @@
         : `${this.formatDateLabel(date)}\nNo transactions`;
 
       return `
-        <button
+        <div
           class="${classNames.join(" ")}"
           data-date="${date}"
           data-has-entry="${entry ? "true" : "false"}"
           style="background:${color};"
           title="${Utils.escapeHtml(tooltip)}"
-          aria-pressed="${isSelected}"
         >
           <span class="day-dot" style="opacity:${intensity}"></span>
-        </button>
+        </div>
       `;
     }
 
     attachDayHandlers() {
+      // Day cells are now non-interactive, only showing visual data
+    }
+
+    attachMonthHandlers() {
       this.heatmapContainer
-        .querySelectorAll(".balance-day[data-date]")
-        .forEach((button) => {
-          button.addEventListener("click", () => {
-            const date = button.getAttribute("data-date");
-            const hasEntry = button.getAttribute("data-has-entry") === "true";
-            this.selectDay(date, hasEntry);
+        .querySelectorAll(".balance-month")
+        .forEach((monthBlock) => {
+          monthBlock.addEventListener("click", (e) => {
+            // Don't open modal if clicking on a day cell
+            if (e.target.closest(".balance-day")) {
+              return;
+            }
+            const monthKey = monthBlock.getAttribute("data-month");
+            this.openMonthModal(monthKey);
           });
         });
+    }
+
+    openMonthModal(monthKey) {
+      const [year, month] = monthKey.split("-").map(Number);
+      const dayMap = new Map();
+      this.latestData.days.forEach((day) => dayMap.set(day.date, day));
+      const maxAbs = this.latestData.maxAbsoluteNet || 0;
+
+      const monthInfo = { year, month: month - 1 };
+      const monthContent = this.renderMonthBlock(monthInfo, dayMap, maxAbs);
+
+      const modal = document.createElement("div");
+      modal.className = "balance-month-modal";
+      modal.innerHTML = `
+        <div class="balance-month-modal-overlay"></div>
+        <div class="balance-month-modal-content">
+          <button class="balance-month-modal-close" aria-label="Close">
+            <i class="fas fa-times"></i>
+          </button>
+          <div class="balance-month-modal-body">
+            ${monthContent}
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      // Close handlers
+      const closeBtn = modal.querySelector(".balance-month-modal-close");
+      const overlay = modal.querySelector(".balance-month-modal-overlay");
+
+      const closeModal = () => {
+        modal.classList.add("closing");
+        setTimeout(() => modal.remove(), 300);
+      };
+
+      closeBtn.addEventListener("click", closeModal);
+      overlay.addEventListener("click", closeModal);
+
+      // Animate in
+      requestAnimationFrame(() => {
+        modal.classList.add("active");
+      });
     }
 
     async selectDay(date, hasEntry) {
@@ -369,6 +436,11 @@
             btn.getAttribute("data-date") === date
           );
         });
+
+      // Skip detail panel rendering if it doesn't exist
+      if (!this.detailPanel) {
+        return;
+      }
 
       if (!hasEntry) {
         this.renderDetailEmpty(date);
@@ -391,6 +463,7 @@
     }
 
     renderDetailEmpty(date) {
+      if (!this.detailPanel) return;
       this.detailPanel.innerHTML = `
         <div class="detail-empty">
           <i class="fas fa-info-circle"></i>
@@ -401,6 +474,7 @@
     }
 
     renderDetailError(message) {
+      if (!this.detailPanel) return;
       this.detailPanel.innerHTML = `
         <div class="detail-empty error">
           <i class="fas fa-exclamation-triangle"></i>
@@ -410,6 +484,8 @@
     }
 
     renderDetail(data) {
+      if (!this.detailPanel) return;
+      
       const { date, transactions } = data;
       if (!transactions?.length) {
         this.renderDetailEmpty(date);
@@ -597,9 +673,449 @@
     }
   }
 
+  // Category Pie Chart Class
+  class CategoryPieChart {
+    constructor() {
+      this.api = window.apiService || new APIService();
+      this.canvas = document.getElementById("category-pie-chart");
+      this.legendContainer = document.getElementById("category-chart-legend");
+      this.loadingIndicator = document.getElementById("category-chart-loading");
+      this.emptyMessage = document.getElementById("category-chart-empty");
+      this.ctx = this.canvas?.getContext("2d");
+      this.chartData = null;
+      
+      // Color palette for categories
+      this.colors = [
+        { bg: "rgba(59, 130, 246, 0.8)", border: "rgba(59, 130, 246, 1)" },   // Blue
+        { bg: "rgba(16, 185, 129, 0.8)", border: "rgba(16, 185, 129, 1)" },   // Green
+        { bg: "rgba(245, 158, 11, 0.8)", border: "rgba(245, 158, 11, 1)" },   // Amber
+      ];
+    }
+
+    async refresh() {
+      if (!this.canvas || !this.ctx) {
+        console.warn("Category pie chart canvas not found");
+        return;
+      }
+
+      this.showLoading(true);
+      this.hideEmpty();
+
+      try {
+        const result = await this.api.getBalanceCategoryTotals();
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to fetch category data");
+        }
+
+        const categories = result.data?.categories || [];
+        
+        if (categories.length === 0) {
+          this.showEmpty(true);
+          this.clear();
+          return;
+        }
+
+        this.chartData = categories;
+        this.render();
+        this.renderLegend();
+      } catch (error) {
+        console.error("Error loading category chart:", error);
+        this.showEmpty(true);
+        this.clear();
+      } finally {
+        this.showLoading(false);
+      }
+    }
+
+    render() {
+      if (!this.chartData || this.chartData.length === 0) {
+        return;
+      }
+
+      const total = this.chartData.reduce((sum, item) => sum + item.total, 0);
+      
+      if (total === 0) {
+        this.showEmpty(true);
+        return;
+      }
+
+      // Clear canvas
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // Calculate center and radius
+      const centerX = this.canvas.width / 2;
+      const centerY = this.canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 20;
+
+      let currentAngle = -Math.PI / 2; // Start from top
+
+      this.chartData.forEach((item, index) => {
+        const percentage = item.total / total;
+        const sliceAngle = percentage * 2 * Math.PI;
+        const color = this.colors[index % this.colors.length];
+
+        // Draw slice
+        this.ctx.beginPath();
+        this.ctx.moveTo(centerX, centerY);
+        this.ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+        this.ctx.closePath();
+        this.ctx.fillStyle = color.bg;
+        this.ctx.fill();
+        this.ctx.strokeStyle = color.border;
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+
+        // Draw percentage label
+        const labelAngle = currentAngle + sliceAngle / 2;
+        const labelRadius = radius * 0.65;
+        const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+        const labelY = centerY + Math.sin(labelAngle) * labelRadius;
+
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.font = "bold 16px Inter, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillText(`${(percentage * 100).toFixed(1)}%`, labelX, labelY);
+        this.ctx.shadowBlur = 0;
+
+        currentAngle += sliceAngle;
+      });
+    }
+
+    renderLegend() {
+      if (!this.legendContainer || !this.chartData) {
+        return;
+      }
+
+      this.legendContainer.innerHTML = "";
+      const total = this.chartData.reduce((sum, item) => sum + item.total, 0);
+
+      this.chartData.forEach((item, index) => {
+        const color = this.colors[index % this.colors.length];
+        const percentage = ((item.total / total) * 100).toFixed(1);
+        
+        const legendItem = document.createElement("div");
+        legendItem.className = "legend-item";
+        legendItem.innerHTML = `
+          <div class="legend-color" style="background-color: ${color.bg}; border-color: ${color.border};"></div>
+          <div class="legend-content">
+            <div class="legend-label">${item.category}</div>
+            <div class="legend-value">${this.formatCurrency(item.total)} (${percentage}%)</div>
+          </div>
+        `;
+        
+        this.legendContainer.appendChild(legendItem);
+      });
+    }
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat("tr-TR", {
+        style: "currency",
+        currency: "TRY",
+        maximumFractionDigits: 2,
+      }).format(value || 0);
+    }
+
+    showLoading(show) {
+      if (this.loadingIndicator) {
+        this.loadingIndicator.style.display = show ? "flex" : "none";
+      }
+    }
+
+    showEmpty(show) {
+      if (this.emptyMessage) {
+        this.emptyMessage.style.display = show ? "flex" : "none";
+      }
+      if (this.canvas) {
+        this.canvas.style.display = show ? "none" : "block";
+      }
+      if (this.legendContainer) {
+        this.legendContainer.style.display = show ? "none" : "block";
+      }
+    }
+
+    hideEmpty() {
+      this.showEmpty(false);
+    }
+
+    clear() {
+      if (this.ctx && this.canvas) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+      if (this.legendContainer) {
+        this.legendContainer.innerHTML = "";
+      }
+    }
+  }
+
+  // Category Column Chart Class
+  class CategoryColumnChart {
+    constructor() {
+      this.api = window.apiService || new APIService();
+      this.canvas = document.getElementById("category-column-chart");
+      this.ctx = this.canvas?.getContext("2d");
+      this.chartData = null;
+      
+      // Color palette matching pie chart
+      this.colors = [
+        { bg: "rgba(59, 130, 246, 0.8)", border: "rgba(59, 130, 246, 1)" },   // Blue
+        { bg: "rgba(16, 185, 129, 0.8)", border: "rgba(16, 185, 129, 1)" },   // Green
+        { bg: "rgba(245, 158, 11, 0.8)", border: "rgba(245, 158, 11, 1)" },   // Amber
+      ];
+      
+      // Negative color (for negative net values)
+      this.negativeColor = { bg: "rgba(239, 68, 68, 0.8)", border: "rgba(239, 68, 68, 1)" }; // Red
+    }
+
+    async refresh() {
+      if (!this.canvas || !this.ctx) {
+        console.warn("Category column chart canvas not found");
+        return;
+      }
+
+      try {
+        const result = await this.api.getBalanceCategoryNetValues();
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to fetch category net data");
+        }
+
+        const categories = result.data?.categories || [];
+        
+        if (categories.length === 0) {
+          this.clear();
+          return;
+        }
+
+        this.chartData = categories;
+        this.render();
+      } catch (error) {
+        console.error("Error loading category column chart:", error);
+        this.clear();
+      }
+    }
+
+    render() {
+      if (!this.chartData || this.chartData.length === 0) {
+        return;
+      }
+
+      const padding = { top: 40, right: 20, bottom: 80, left: 80 };
+      const chartWidth = this.canvas.width - padding.left - padding.right;
+      const chartHeight = this.canvas.height - padding.top - padding.bottom;
+
+      // Clear canvas
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // Find max and min values for scaling
+      const netValues = this.chartData.map(item => item.net);
+      const maxValue = Math.max(...netValues, 0);
+      const minValue = Math.min(...netValues, 0);
+      const absMax = Math.max(Math.abs(maxValue), Math.abs(minValue));
+
+      // Draw title
+      this.ctx.fillStyle = "#0f172a";
+      this.ctx.font = "600 16px Inter, sans-serif";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("Net Değer (TRY)", this.canvas.width / 2, 22);
+
+      // Calculate bar width and spacing
+      const barCount = this.chartData.length;
+      const barSpacing = chartWidth / (barCount * 2);
+      const barWidth = (chartWidth - barSpacing * (barCount + 1)) / barCount;
+
+      // Draw axes
+      this.drawAxes(padding, chartWidth, chartHeight, absMax);
+
+      // Draw bars
+      this.chartData.forEach((item, index) => {
+        const color = this.colors[index % this.colors.length];
+        const x = padding.left + barSpacing + index * (barWidth + barSpacing);
+        const netValue = item.net;
+        
+        // Determine bar color (positive or negative)
+        const barColor = netValue >= 0 ? color : this.negativeColor;
+        
+        // Calculate bar height and position
+        const zeroY = padding.top + chartHeight / 2;
+        let barHeight = 0;
+        let barY = zeroY;
+        
+        if (absMax > 0) {
+          barHeight = Math.abs(netValue) * (chartHeight / 2) / absMax;
+          if (netValue >= 0) {
+            barY = zeroY - barHeight;
+          } else {
+            barY = zeroY;
+          }
+        }
+
+        // Draw bar
+        this.ctx.fillStyle = barColor.bg;
+        this.ctx.fillRect(x, barY, barWidth, Math.abs(barHeight));
+        
+        // Draw bar border
+        this.ctx.strokeStyle = barColor.border;
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(x, barY, barWidth, Math.abs(barHeight));
+
+        // Draw value label on top of bar
+        const labelY = netValue >= 0 ? barY - 10 : barY + barHeight + 20;
+        const labelText = this.formatCompactCurrency(netValue);
+        
+        // Draw text directly without background
+        this.ctx.font = "600 16px Inter, sans-serif";
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.textAlign = "center";
+        this.ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillText(labelText, x + barWidth / 2, labelY);
+        this.ctx.shadowBlur = 0;
+
+        // Draw category label below x-axis (horizontal, not rotated)
+        this.ctx.font = "600 14px Inter, sans-serif";
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "top";
+        
+        // Shorten category names
+        let categoryLabel = item.category;
+        categoryLabel = categoryLabel.replace(" Faaliyetleri", "");
+        if (categoryLabel.length > 20) {
+          categoryLabel = categoryLabel.substring(0, 18) + "...";
+        }
+        
+        // Add shadow for better readability
+        this.ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillText(categoryLabel, x + barWidth / 2, padding.top + chartHeight + 12);
+        this.ctx.shadowBlur = 0;
+      });
+    }
+
+    drawAxes(padding, chartWidth, chartHeight, absMax) {
+      const zeroY = padding.top + chartHeight / 2;
+
+      // Draw y-axis
+      this.ctx.strokeStyle = "#64748b";
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(padding.left, padding.top);
+      this.ctx.lineTo(padding.left, padding.top + chartHeight);
+      this.ctx.stroke();
+
+      // Draw x-axis (zero line)
+      this.ctx.strokeStyle = "#94a3b8";
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.moveTo(padding.left, zeroY);
+      this.ctx.lineTo(padding.left + chartWidth, zeroY);
+      this.ctx.stroke();
+
+      // Draw y-axis labels
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.font = "600 14px Inter, sans-serif";
+      this.ctx.textAlign = "right";
+      this.ctx.textBaseline = "middle";
+      this.ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      this.ctx.shadowBlur = 3;
+
+      // Positive side
+      const steps = 3;
+      for (let i = 0; i <= steps; i++) {
+        const value = (absMax / steps) * i;
+        const y = zeroY - (chartHeight / 2) * (i / steps);
+        this.ctx.fillText(this.formatCompactCurrency(value), padding.left - 10, y);
+        
+        // Draw grid line
+        this.ctx.shadowBlur = 0;
+        this.ctx.strokeStyle = "#cbd5e1";
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(padding.left, y);
+        this.ctx.lineTo(padding.left + chartWidth, y);
+        this.ctx.stroke();
+        this.ctx.shadowBlur = 3;
+      }
+
+      // Negative side
+      for (let i = 1; i <= steps; i++) {
+        const value = -(absMax / steps) * i;
+        const y = zeroY + (chartHeight / 2) * (i / steps);
+        this.ctx.fillText(this.formatCompactCurrency(value), padding.left - 10, y);
+        
+        // Draw grid line
+        this.ctx.shadowBlur = 0;
+        this.ctx.strokeStyle = "#cbd5e1";
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(padding.left, y);
+        this.ctx.lineTo(padding.left + chartWidth, y);
+        this.ctx.stroke();
+        this.ctx.shadowBlur = 3;
+      }
+      
+      this.ctx.shadowBlur = 0;
+    }
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat("tr-TR", {
+        style: "currency",
+        currency: "TRY",
+        maximumFractionDigits: 0,
+      }).format(value || 0);
+    }
+
+    formatCompactCurrency(value) {
+      const absValue = Math.abs(value);
+      let formatted = "";
+      
+      if (absValue >= 1000000) {
+        formatted = (value / 1000000).toFixed(1) + "M";
+      } else if (absValue >= 1000) {
+        formatted = (value / 1000).toFixed(1) + "K";
+      } else {
+        formatted = value.toFixed(0);
+      }
+      
+      return formatted + " ₺";
+    }
+
+    clear() {
+      if (this.ctx && this.canvas) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     if (document.querySelector(".balance-app")) {
       window.balanceCalendarApp = new BalanceCalendarApp();
     }
+    
+    // Initialize category charts
+    if (document.getElementById("category-pie-chart")) {
+      window.categoryPieChart = new CategoryPieChart();
+      // Initial load when balance tab is visible
+      setTimeout(() => {
+        if (window.categoryPieChart && document.getElementById("category-pie-chart")) {
+          window.categoryPieChart.refresh();
+        }
+      }, 500);
+    }
+    
+    if (document.getElementById("category-column-chart")) {
+      window.categoryColumnChart = new CategoryColumnChart();
+      // Initial load when balance tab is visible
+      setTimeout(() => {
+        if (window.categoryColumnChart && document.getElementById("category-column-chart")) {
+          window.categoryColumnChart.refresh();
+        }
+      }, 500);
+    }
   });
 })();
+

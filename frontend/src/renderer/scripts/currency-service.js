@@ -52,7 +52,7 @@ class CurrencyService {
     this.goldCache = {
       data: null,
       timestamp: null,
-      cacheValidMs: 300000, // 5 minutes cache for gold
+      cacheValidMs: 21600000, // 6 hours cache for gold
     };
 
     this.isRunning = false;

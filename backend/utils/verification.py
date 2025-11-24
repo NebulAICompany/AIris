@@ -4,13 +4,10 @@ from typing import Dict, Any, List, Literal
 from backend.shared.logger import get_logger
 from backend.pipeline.upload import parse_document
 from backend.core.prompts import verification_agent_prompt
-from agents import Agent, Runner, AgentOutputSchema
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from backend.shared.logger import get_logger
-from backend.pipeline.upload import parse_document
-from agents import Agent, Runner, AgentOutputSchema
+from deepagents import create_deep_agent
+from langchain_core.messages import HumanMessage
+from langchain.agents.structured_output import ToolStrategy
+from backend.shared.constants import OPENAI_MODEL
 from pydantic import BaseModel, Field
 
 logger = get_logger("DOCUMENT_VERIFICATION")
@@ -102,28 +99,28 @@ class VerificationResult(BaseModel):
     confidence_summary: ConfidenceSummary
 
 
-verification_agent = Agent(
-    name="Document Verification Agent",
-    instructions=verification_agent_prompt,
-    output_type=AgentOutputSchema(VerificationResult, strict_json_schema=False),
+# Create Deep Agent for document verification with structured output
+verification_agent = create_deep_agent(
+    model=OPENAI_MODEL,
+    system_prompt=verification_agent_prompt,
+    tools=[],
+    response_format=ToolStrategy(VerificationResult),
 )
 
 logger.info("Document Verification Agent initialized successfully")
-logger.info(f"Agent name: {verification_agent.name}")
 
 
 async def verify_document(file_path: str) -> dict:
     """
-    Main verification function that uses OpenAI Agents SDK
+    Main verification function that uses Deep Agents with structured output
     """
-    logger.info(f"Starting document verification: {file_path}")
+    logger.info(f"Starting document verification: {Path(file_path).name}")
 
     try:
-        # Step 1: Parse document
         parsed_text = await parse_document(file_path)
 
         if not parsed_text or len(parsed_text.strip()) < 10:
-            logger.warning(f"Document parsing failed - insufficient text extracted")
+            logger.warning("Document parsing failed - insufficient text extracted")
             return {
                 "error": "Yetersiz metin çıkarıldı",
                 "status": "başarısız",
@@ -132,25 +129,28 @@ async def verify_document(file_path: str) -> dict:
 
         logger.info(f"Document parsed successfully - Text length: {len(parsed_text)}")
 
-        # Step 2: Run verification agent
-        logger.info("Running verification agent...")
-        verification_result = await Runner.run(verification_agent, parsed_text)
-        logger.info("Verification agent completed successfully")
+        logger.info("Running verification Deep Agent...")
+        verification_result = await verification_agent.ainvoke(
+            {"messages": [HumanMessage(content=parsed_text)]}
+        )
+        logger.info("Verification Deep Agent completed successfully")
 
-        # Step 3: Process results
         result_data = extract_result_data(verification_result)
         logger.info(f"Result data extracted - Keys: {list(result_data.keys())}")
 
-        # Step 4: Format result for frontend
+        if not result_data:
+            logger.error("Result data is empty! This will cause all scores to be 0%")
+
         result = format_result_for_frontend(file_path, parsed_text, result_data)
         logger.info(
-            f"Verification completed - Status: {result.get('verification_status', 'bilinmeyen')}, Confidence: {result.get('confidence_score', 0)}"
+            f"Verification completed - Status: {result.get('verification_status', 'bilinmeyen')}, "
+            f"Confidence: {result.get('confidence_score', 0)}"
         )
 
         return result
 
     except Exception as e:
-        logger.error(f"Verification failed: {str(e)}")
+        logger.error(f"Verification failed: {str(e)}", exc_info=True)
         return {
             "error": str(e),
             "status": "başarısız",
@@ -159,34 +159,43 @@ async def verify_document(file_path: str) -> dict:
 
 
 def extract_result_data(verification_result: Any) -> Dict[str, Any]:
-    """Extract result data using the most appropriate method"""
+    """Extract result data from Deep Agent structured output"""
+    if not isinstance(verification_result, dict):
+        logger.warning(
+            f"Verification result is not a dict: {type(verification_result).__name__}"
+        )
+        return {}
 
-    # Get the actual result from RunResult if needed
-    actual_result = getattr(verification_result, "final_output", verification_result)
+    if "structured_response" in verification_result:
+        structured_data = verification_result["structured_response"]
 
-    # Convert to dict using the most appropriate method
-    if hasattr(actual_result, "model_dump"):
-        return actual_result.model_dump()
-    elif hasattr(actual_result, "dict"):
-        return actual_result.dict()
-    elif hasattr(actual_result, "__dict__"):
-        return actual_result.__dict__
-    else:
-        return {"raw_result": str(actual_result)}
+        if hasattr(structured_data, "model_dump"):
+            return structured_data.model_dump()
+        elif hasattr(structured_data, "dict"):
+            return structured_data.dict()
+        elif isinstance(structured_data, dict):
+            return structured_data
+        else:
+            logger.warning(
+                f"Cannot convert structured_response to dict: {type(structured_data).__name__}"
+            )
+            return {}
+
+    logger.error("No structured_response found in verification result")
+    return {}
 
 
 def format_result_for_frontend(
     file_path: str, parsed_text: str, result_data: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Format verification result for frontend compatibility"""
-
     # Extract data with safe defaults
-    doc_type = result_data.get("document_type", {"not detected"})
-    quality = result_data.get("quality_assessment", {"not detected"})
-    validation = result_data.get("validation_results", {"not detected"})
-    fraud = result_data.get("fraud_analysis", {"not detected"})
-    consistency = result_data.get("data_consistency", {"not detected"})
-    confidence = result_data.get("confidence_summary", {"not detected"})
+    doc_type = result_data.get("document_type", {})
+    quality = result_data.get("quality_assessment", {})
+    validation = result_data.get("validation_results", {})
+    fraud = result_data.get("fraud_analysis", {})
+    consistency = result_data.get("data_consistency", {})
+    confidence = result_data.get("confidence_summary", {})
 
     # Build stages with direct Turkish values
     stages = {

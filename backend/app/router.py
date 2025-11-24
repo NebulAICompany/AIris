@@ -194,8 +194,8 @@ async def search_symbols(query: str = ""):
 @router.post("/query")
 async def handle_query(request: QueryRequest):
     """
-    Kullanıcının gönderdiği sorguyu alır,
-    pipeline üzerinden işler ve LLM yanıtını döner.
+    Receives the user's query,
+    processes it through the pipeline, and returns the LLM response.
     """
     try:
 
@@ -256,7 +256,9 @@ async def handle_news_chat(request: NewsChatRequest):
     except Exception as e:
         logger.error(f"Error processing news chat query: {str(e)}")
         api_requests_total.labels(status="error").inc()
-        raise HTTPException( status_code=500, detail=f"Error processing news chat query: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error processing news chat query: {str(e)}"
+        )
 
 
 @router.post("/upload")
@@ -278,7 +280,7 @@ async def handle_upload(
         # Process the uploaded file with pre-embedding process parameter
         from backend.pipeline.upload import process_file
 
-        pre_embedding_process = "none"
+        pre_embedding_process = "cch"
 
         result = await process_file(
             str(file_path),
@@ -389,7 +391,9 @@ def get_chat_session(session_id: str):
         raise
     except Exception as e:
         logger.error(f"Error getting chat session {session_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error getting chat session: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting chat session: {str(e)}"
+        )
 
 
 @router.post("/chat/sessions")
@@ -790,9 +794,8 @@ async def trigger_balance_of_payments_process(request: BalanceProcessRequest):
         )
 
     try:
-        result = await process_balance_of_payments(
-            file_path=str(file_path))
-        
+        result = await process_balance_of_payments(file_path=str(file_path))
+
         return result
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
@@ -834,7 +837,7 @@ def get_balance_of_payments_calendar(
         else:
             end_date = datetime.today().date()
 
-    start_date = end_date - relativedelta(months=months - 1)
+    start_date = end_date - relativedelta(months=months - 2)
     start_date = start_date - timedelta(days=start_date.weekday())
 
     end_weekday = end_date.weekday()
@@ -871,6 +874,44 @@ def get_balance_transactions_for_day(date_str: str):
         "date": target_date.isoformat(),
         "transactions": transactions,
     }
+
+
+@router.get("/balance-of-payments/category-totals")
+def get_balance_category_totals():
+    """
+    Get transaction totals grouped by category.
+    All amounts are treated as positive (absolute values).
+    """
+    try:
+        category_totals = balance_payments_db.get_category_totals()
+        return {
+            "categories": category_totals,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching category totals: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch category totals",
+        )
+
+
+@router.get("/balance-of-payments/category-net-values")
+def get_balance_category_net_values():
+    """
+    Get net values (income - expense) for each category.
+    Returns income, expense, and net amounts for each category.
+    """
+    try:
+        category_net_values = balance_payments_db.get_category_net_values()
+        return {
+            "categories": category_net_values,
+        }
+    except Exception as e:
+        logger.error(f"Error fetching category net values: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch category net values",
+        )
 
 
 @router.get("/finance-news")
