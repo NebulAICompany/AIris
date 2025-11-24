@@ -1988,12 +1988,26 @@
                     İşlem Kategorileri Dağılımı
                   </h3>
                   <p>
-                    İşlemlerinizin kategorilere göre toplam tutarlarının dağılımını gösterir.
+                    İşlemlerinizin kategorilere göre toplam tutarlarının ve net değerlerinin dağılımını gösterir.
                   </p>
                 </div>
-                <div class="category-chart-container">
-                  <canvas id="category-pie-chart" width="400" height="400"></canvas>
-                  <div id="category-chart-legend" class="category-chart-legend"></div>
+                <div class="category-charts-wrapper">
+                  <!-- Pie Chart -->
+                  <div class="chart-box">
+                    <h4 class="chart-title">Toplam İşlem Hacmi</h4>
+                    <div class="pie-chart-container">
+                      <canvas id="category-pie-chart" width="350" height="350"></canvas>
+                    </div>
+                    <div id="category-chart-legend" class="category-chart-legend"></div>
+                  </div>
+                  
+                  <!-- Column Chart -->
+                  <div class="chart-box">
+                    <h4 class="chart-title">Net Değerler (Gelir - Gider)</h4>
+                    <div class="column-chart-container">
+                      <canvas id="category-column-chart" width="450" height="400"></canvas>
+                    </div>
+                  </div>
                 </div>
                 <div id="category-chart-loading" class="chart-loading-indicator" style="display: none;">
                   <i class="fas fa-spinner fa-spin"></i>

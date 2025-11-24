@@ -1218,34 +1218,70 @@ body.dark-theme .chart-caption {
   margin-bottom: 20px;
 }
 
-.category-chart-container {
+.category-charts-wrapper {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
+  gap: 30px;
   margin-top: 20px;
 }
 
+.chart-box {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chart-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.pie-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 #category-pie-chart {
-  max-width: 400px;
-  max-height: 400px;
-  margin: 0 auto;
+  max-width: 350px;
+  max-height: 350px;
+  display: block;
+}
+
+.column-chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+#category-column-chart {
+  max-width: 450px;
   display: block;
 }
 
 .category-chart-legend {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  width: 100%;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background: var(--bg-secondary);
-  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border-radius: 6px;
   transition: var(--transition);
 }
 
@@ -1255,9 +1291,9 @@ body.dark-theme .chart-caption {
 }
 
 .legend-color {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
   border: 2px solid;
   flex-shrink: 0;
 }
@@ -1266,18 +1302,18 @@ body.dark-theme .chart-caption {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .legend-label {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .legend-value {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .chart-loading-indicator,
@@ -1306,15 +1342,19 @@ body.dark-theme .chart-caption {
   font-size: 1rem;
 }
 
-@media (max-width: 960px) {
-  .category-chart-container {
+@media (max-width: 1200px) {
+  .category-charts-wrapper {
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 20px;
   }
   
   #category-pie-chart {
     max-width: 300px;
     max-height: 300px;
+  }
+  
+  #category-column-chart {
+    max-width: 100%;
   }
 }
 

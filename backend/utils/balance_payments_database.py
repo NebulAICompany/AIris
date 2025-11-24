@@ -301,5 +301,40 @@ class BalancePaymentsDatabase:
             )
         return results
 
+    def get_category_net_values(self) -> List[Dict[str, any]]:
+        """
+        Get the net values (income - expense) for each category.
+        Positive values indicate more income than expense, negative values indicate more expense than income.
+        
+        Returns:
+            List of dicts with 'category', 'income', 'expense', and 'net' keys
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT 
+                    category,
+                    COALESCE(SUM(CASE WHEN direction = 'income' THEN amount ELSE 0 END), 0) as income,
+                    COALESCE(SUM(CASE WHEN direction = 'expense' THEN amount ELSE 0 END), 0) as expense,
+                    COALESCE(SUM(CASE WHEN direction = 'income' THEN amount ELSE -amount END), 0) as net
+                FROM bop_transactions
+                WHERE category IS NOT NULL
+                GROUP BY category
+                ORDER BY category
+                """
+            ).fetchall()
+
+        results: List[Dict[str, any]] = []
+        for row in rows:
+            results.append(
+                {
+                    "category": row["category"],
+                    "income": float(row["income"]),
+                    "expense": float(row["expense"]),
+                    "net": float(row["net"]),
+                }
+            )
+        return results
+
 
 balance_payments_db = BalancePaymentsDatabase()
