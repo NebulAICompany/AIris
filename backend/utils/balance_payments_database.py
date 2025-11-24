@@ -270,5 +270,71 @@ class BalancePaymentsDatabase:
             ).fetchone()
         return row["latest_date"] if row and row["latest_date"] else None
 
+    def get_category_totals(self) -> List[Dict[str, any]]:
+        """
+        Get the absolute sum of transaction amounts grouped by category.
+        All amounts are treated as positive regardless of direction (income/expense).
+        
+        Returns:
+            List of dicts with 'category' and 'total' keys
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT 
+                    category,
+                    SUM(ABS(amount)) as total
+                FROM bop_transactions
+                WHERE category IS NOT NULL
+                GROUP BY category
+                ORDER BY total DESC
+                """
+            ).fetchall()
+
+        results: List[Dict[str, any]] = []
+        for row in rows:
+            results.append(
+                {
+                    "category": row["category"],
+                    "total": float(row["total"]),
+                }
+            )
+        return results
+
+    def get_category_net_values(self) -> List[Dict[str, any]]:
+        """
+        Get the net values (income - expense) for each category.
+        Positive values indicate more income than expense, negative values indicate more expense than income.
+        
+        Returns:
+            List of dicts with 'category', 'income', 'expense', and 'net' keys
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT 
+                    category,
+                    COALESCE(SUM(CASE WHEN direction = 'income' THEN amount ELSE 0 END), 0) as income,
+                    COALESCE(SUM(CASE WHEN direction = 'expense' THEN amount ELSE 0 END), 0) as expense,
+                    COALESCE(SUM(CASE WHEN direction = 'income' THEN amount ELSE -amount END), 0) as net
+                FROM bop_transactions
+                WHERE category IS NOT NULL
+                GROUP BY category
+                ORDER BY category
+                """
+            ).fetchall()
+
+        results: List[Dict[str, any]] = []
+        for row in rows:
+            results.append(
+                {
+                    "category": row["category"],
+                    "income": float(row["income"]),
+                    "expense": float(row["expense"]),
+                    "net": float(row["net"]),
+                }
+            )
+        return results
+
 
 balance_payments_db = BalancePaymentsDatabase()
