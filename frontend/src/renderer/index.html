@@ -259,51 +259,48 @@
                 </div>
               </div>
 
-             <div class="chat-input-container">
-              <div class="chat-input-wrapper">
-
-                <!-- Chat file upload area -->
-                <div class="chat-file-upload-area" id="chat-file-upload" style="display: none">
-                  <div class="uploaded-files-preview" id="chat-uploaded-files"></div>
-                </div>
-
-                <div class="chat-input-controls">
-                  <button id="web-search-toggle" class="web-search-button" title="" data-i18n-title="toggleWebSearch">
+           <div class="chat-input-container">
+            <div class="chat-file-upload-area" id="chat-file-upload" style="display: none"> 
+              <div class="uploaded-files-preview" id="chat-uploaded-files"></div> 
+            </div>
+              <textarea id="chat-input" class="chat-input" 
+                        placeholder="Bir şeyler sorun veya dosya yükleyin..." ></textarea>
+              <div class="chat-controls-row">
+                <div class="left-controls">
+                  <button id="web-search-toggle" class="web-search-button" title="Web'de Ara">
                     <i class="fas fa-globe"></i>
                   </button>
 
-                  <!-- File attachment dropdown -->
                   <div class="dropdown-container">
-                    <button id="file-attachment-btn" class="file-attachment-button" title="Attach files">
-                      <i class="fas fa-paperclip"></i>
+                    <button id="file-attachment-btn" class="file-attachment-button" title="Dosya Ekle">
+                      <i class="fas fa-plus-circle"></i>
                     </button>
-
                     <div id="file-dropdown" class="dropdown-menu">
-                      <button id="normal-file" class="dropdown-item" data-i18n="normalFile">
-                        Normal File Attach
+                     <button id="normal-file" class="dropdown-item">
+                        Normal Dosya <i class="fas fa-file" style="margin-right: 4px;"></i> 
                       </button>
-                      <button id="photoless-mode" class="dropdown-item" data-i18n="photolessMode">
-                        Photo-less Mode
+
+                      <button id="photoless-mode" class="dropdown-item">
+                        Fotoğrafsız Mod  <i class="fas fa-eye-slash"></i>
                       </button>
                     </div>
                   </div>
-
-                  <button id="file-selection-btn" class="file-selection-button" title="Select files to include">
-                    <i class="fas fa-file"></i>
+                  <button id="file-selection-btn" class="file-selection-button" title="Dosya Seç">
+                    <i class="fas fa-folder-open"></i>
                   </button>
-
-                  <textarea id="chat-input" class="chat-input" data-i18n="chatPlaceholder"
-                    placeholder="Drag files here or ask a question about your financial documents..." rows="1">
-                  </textarea>
-
-                  <button id="send-button" class="send-button" disabled>
-                    <i class="fas fa-paper-plane"></i>
-                  </button>
+                  
+                  <input type="file" id="chat-file-input" multiple style="display: none" />
                 </div>
 
-                <!-- Hidden file input for chat uploads -->
-                <input type="file" id="chat-file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" style="display: none" />
+                <div class="right-controls">
+                  <button id="send-button" class="send-button" disabled>
+                    <svg viewBox="0 0 24 24" class="send-icon">
+                      <path d="M7.2 20.4L21 12 7.2 3.6 7.2 10.2 17.4 12 7.2 13.8z" fill="currentColor"/>
+                    </svg>
+                  </button>
 
+                </div>
+                <input type="file" id="chat-file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" style="display: none" />
               </div>
             </div>
 

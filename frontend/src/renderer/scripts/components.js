@@ -47,6 +47,7 @@ class UIComponents {
     this.setupProfileSelect();
     this.setupSidebarToggle();
     this.initSidebar();
+    this.setupInputResize();
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
@@ -57,6 +58,43 @@ class UIComponents {
       window.languageService.updatePageTexts();
     }
   }
+setupInputResize() {
+    const textarea = document.getElementById('chat-input');
+    if (!textarea) return;
+
+    const adjustHeight = () => {
+        // 1. Önce yüksekliği "tek satır" boyutuna (24px) sabitle.
+        // 'auto' kullanmak bazen titremeye veya yanlış hesaplamaya (48px'e atlamaya) neden olur.
+        textarea.style.height = '24px';
+
+        // 2. Şimdi içeriğin gerçekte ne kadar yer kapladığını ölç
+        let newHeight = textarea.scrollHeight;
+
+        // 3. Eğer scrollHeight 24px'ten büyükse (yani yazı 2. satıra taştıysa) büyüt
+        // (Kırılganlık payı için > 24 yerine > 25 diyebiliriz ama > 24 genelde yeterlidir)
+        if (newHeight > 24) {
+            
+            if (newHeight > 96) {
+                textarea.style.height = '96px';
+                textarea.style.overflowY = 'auto';
+            } else {
+                textarea.style.height = newHeight + 'px';
+                textarea.style.overflowY = 'hidden';
+            }
+            
+        } else {
+            // Eğer yazı tek satıra sığıyorsa, 24px olarak kalsın
+            // (Yukarıda zaten 24px'e eşitlemiştik, burada overflow'u gizlemek yeterli)
+            textarea.style.overflowY = 'hidden';
+        }
+    };
+
+    textarea.addEventListener('input', adjustHeight);
+
+    // Başlangıçta bir kez çalıştır
+    adjustHeight();
+}
+
 
 initSidebar() {
   const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');

@@ -568,7 +568,6 @@ input:checked + .slider:before {
   overflow: hidden;
   transition: max-height 0.4s ease;
   padding-left: 8px;
-  background-color: var(--bg-secondary);
 }
 
 /* Keep submenu visible if hovering over parent or submenu */
@@ -621,9 +620,6 @@ input:checked + .slider:before {
     z-index: 1000;
     padding-left: 0;
 }
-
-
-
 
 @keyframes tooltipFadeIn {
   from {
@@ -2292,9 +2288,6 @@ body.nebula-theme textarea:focus-visible,
 body.nebula-theme select:focus-visible,
 body.nebula-theme .toggle-switch:focus-within {
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.45),
-    0 0 24px rgba(236, 72, 153, 0.45) !important;
-  border-color: rgba(139, 92, 246, 0.5) !important;
 }
 
 /* Holographic primary button */
