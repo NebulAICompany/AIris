@@ -270,5 +270,36 @@ class BalancePaymentsDatabase:
             ).fetchone()
         return row["latest_date"] if row and row["latest_date"] else None
 
+    def get_category_totals(self) -> List[Dict[str, any]]:
+        """
+        Get the absolute sum of transaction amounts grouped by category.
+        All amounts are treated as positive regardless of direction (income/expense).
+        
+        Returns:
+            List of dicts with 'category' and 'total' keys
+        """
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT 
+                    category,
+                    SUM(ABS(amount)) as total
+                FROM bop_transactions
+                WHERE category IS NOT NULL
+                GROUP BY category
+                ORDER BY total DESC
+                """
+            ).fetchall()
+
+        results: List[Dict[str, any]] = []
+        for row in rows:
+            results.append(
+                {
+                    "category": row["category"],
+                    "total": float(row["total"]),
+                }
+            )
+        return results
+
 
 balance_payments_db = BalancePaymentsDatabase()

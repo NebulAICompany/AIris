@@ -665,9 +665,203 @@
     }
   }
 
+  // Category Pie Chart Class
+  class CategoryPieChart {
+    constructor() {
+      this.api = window.apiService || new APIService();
+      this.canvas = document.getElementById("category-pie-chart");
+      this.legendContainer = document.getElementById("category-chart-legend");
+      this.loadingIndicator = document.getElementById("category-chart-loading");
+      this.emptyMessage = document.getElementById("category-chart-empty");
+      this.ctx = this.canvas?.getContext("2d");
+      this.chartData = null;
+      
+      // Color palette for categories
+      this.colors = [
+        { bg: "rgba(59, 130, 246, 0.8)", border: "rgba(59, 130, 246, 1)" },   // Blue
+        { bg: "rgba(16, 185, 129, 0.8)", border: "rgba(16, 185, 129, 1)" },   // Green
+        { bg: "rgba(245, 158, 11, 0.8)", border: "rgba(245, 158, 11, 1)" },   // Amber
+      ];
+    }
+
+    async refresh() {
+      if (!this.canvas || !this.ctx) {
+        console.warn("Category pie chart canvas not found");
+        return;
+      }
+
+      this.showLoading(true);
+      this.hideEmpty();
+
+      try {
+        const result = await this.api.getBalanceCategoryTotals();
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to fetch category data");
+        }
+
+        const categories = result.data?.categories || [];
+        
+        if (categories.length === 0) {
+          this.showEmpty(true);
+          this.clear();
+          return;
+        }
+
+        this.chartData = categories;
+        this.render();
+        this.renderLegend();
+      } catch (error) {
+        console.error("Error loading category chart:", error);
+        this.showEmpty(true);
+        this.clear();
+      } finally {
+        this.showLoading(false);
+      }
+    }
+
+    render() {
+      if (!this.chartData || this.chartData.length === 0) {
+        return;
+      }
+
+      const total = this.chartData.reduce((sum, item) => sum + item.total, 0);
+      
+      if (total === 0) {
+        this.showEmpty(true);
+        return;
+      }
+
+      // Clear canvas
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // Calculate center and radius
+      const centerX = this.canvas.width / 2;
+      const centerY = this.canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 20;
+
+      let currentAngle = -Math.PI / 2; // Start from top
+
+      this.chartData.forEach((item, index) => {
+        const percentage = item.total / total;
+        const sliceAngle = percentage * 2 * Math.PI;
+        const color = this.colors[index % this.colors.length];
+
+        // Draw slice
+        this.ctx.beginPath();
+        this.ctx.moveTo(centerX, centerY);
+        this.ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+        this.ctx.closePath();
+        this.ctx.fillStyle = color.bg;
+        this.ctx.fill();
+        this.ctx.strokeStyle = color.border;
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+
+        // Draw percentage label
+        const labelAngle = currentAngle + sliceAngle / 2;
+        const labelRadius = radius * 0.65;
+        const labelX = centerX + Math.cos(labelAngle) * labelRadius;
+        const labelY = centerY + Math.sin(labelAngle) * labelRadius;
+
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.font = "bold 16px Inter, sans-serif";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        this.ctx.shadowBlur = 4;
+        this.ctx.fillText(`${(percentage * 100).toFixed(1)}%`, labelX, labelY);
+        this.ctx.shadowBlur = 0;
+
+        currentAngle += sliceAngle;
+      });
+    }
+
+    renderLegend() {
+      if (!this.legendContainer || !this.chartData) {
+        return;
+      }
+
+      this.legendContainer.innerHTML = "";
+      const total = this.chartData.reduce((sum, item) => sum + item.total, 0);
+
+      this.chartData.forEach((item, index) => {
+        const color = this.colors[index % this.colors.length];
+        const percentage = ((item.total / total) * 100).toFixed(1);
+        
+        const legendItem = document.createElement("div");
+        legendItem.className = "legend-item";
+        legendItem.innerHTML = `
+          <div class="legend-color" style="background-color: ${color.bg}; border-color: ${color.border};"></div>
+          <div class="legend-content">
+            <div class="legend-label">${item.category}</div>
+            <div class="legend-value">${this.formatCurrency(item.total)} (${percentage}%)</div>
+          </div>
+        `;
+        
+        this.legendContainer.appendChild(legendItem);
+      });
+    }
+
+    formatCurrency(value) {
+      return new Intl.NumberFormat("tr-TR", {
+        style: "currency",
+        currency: "TRY",
+        maximumFractionDigits: 2,
+      }).format(value || 0);
+    }
+
+    showLoading(show) {
+      if (this.loadingIndicator) {
+        this.loadingIndicator.style.display = show ? "flex" : "none";
+      }
+    }
+
+    showEmpty(show) {
+      if (this.emptyMessage) {
+        this.emptyMessage.style.display = show ? "flex" : "none";
+      }
+      if (this.canvas) {
+        this.canvas.style.display = show ? "none" : "block";
+      }
+      if (this.legendContainer) {
+        this.legendContainer.style.display = show ? "none" : "block";
+      }
+    }
+
+    hideEmpty() {
+      this.showEmpty(false);
+    }
+
+    clear() {
+      if (this.ctx && this.canvas) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+      if (this.legendContainer) {
+        this.legendContainer.innerHTML = "";
+      }
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     if (document.querySelector(".balance-app")) {
       window.balanceCalendarApp = new BalanceCalendarApp();
     }
+    
+    // Initialize category pie chart
+    if (document.getElementById("category-pie-chart")) {
+      window.categoryPieChart = new CategoryPieChart();
+      // Refresh when navigating to the currentStatus tab
+      document.querySelectorAll('[data-page="#currentStatus"]').forEach(btn => {
+        btn.addEventListener("click", () => {
+          setTimeout(() => {
+            if (window.categoryPieChart) {
+              window.categoryPieChart.refresh();
+            }
+          }, 100);
+        });
+      });
+    }
   });
 })();
+

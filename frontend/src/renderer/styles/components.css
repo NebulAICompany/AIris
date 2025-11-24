@@ -1192,6 +1192,148 @@ body.dark-theme .chart-caption {
   }
 }
 
+/* Category Pie Chart Styles */
+.current-status-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.current-status-container h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+}
+
+.category-chart-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 24px;
+  box-shadow: var(--shadow);
+}
+
+.category-chart-section .panel-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.category-chart-section .panel-header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}
+
+.category-chart-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+#category-pie-chart {
+  max-width: 400px;
+  max-height: 400px;
+  margin: 0 auto;
+  display: block;
+}
+
+.category-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.legend-item:hover {
+  background: var(--bg-hover);
+  transform: translateX(4px);
+}
+
+.legend-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid;
+  flex-shrink: 0;
+}
+
+.legend-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.legend-value {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.chart-loading-indicator,
+.chart-empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.chart-loading-indicator i {
+  font-size: 2rem;
+  color: var(--accent-primary);
+}
+
+.chart-empty-message i {
+  font-size: 2.5rem;
+  color: var(--text-tertiary);
+}
+
+.chart-empty-message span {
+  font-size: 1rem;
+}
+
+@media (max-width: 960px) {
+  .category-chart-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  #category-pie-chart {
+    max-width: 300px;
+    max-height: 300px;
+  }
+}
+
 /* Chart Header and Controls */
 .chart-header {
   display: flex;
