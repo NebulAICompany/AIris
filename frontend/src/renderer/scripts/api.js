@@ -489,6 +489,24 @@ class APIService {
     }
   }
 
+  async getBalanceCategoryTotals() {
+    try {
+      const response = await this.api.get(
+        "/api/balance-of-payments/category-totals"
+      );
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error("Error fetching balance category totals:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   // Get system metrics (Prometheus endpoint)
   async getMetrics() {
     try {
