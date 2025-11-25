@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Literal
 from backend.shared.logger import get_logger
 from backend.pipeline.upload import parse_document
 from backend.core.prompts import verification_agent_prompt
-from deepagents import create_deep_agent
+from langchain.agents import create_agent
 from langchain_core.messages import HumanMessage
 from langchain.agents.structured_output import ToolStrategy
 from backend.shared.constants import OPENAI_MODEL
@@ -100,10 +100,10 @@ class VerificationResult(BaseModel):
 
 
 # Create Deep Agent for document verification with structured output
-verification_agent = create_deep_agent(
+verification_agent = create_agent(
     model=OPENAI_MODEL,
-    system_prompt=verification_agent_prompt,
     tools=[],
+    system_prompt=verification_agent_prompt,
     response_format=ToolStrategy(VerificationResult),
 )
 
