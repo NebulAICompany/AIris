@@ -1,4 +1,4 @@
-from deepagents import create_deep_agent
+from langchain.agents import create_agent
 from .prompts import (
     wolfram_instructions,
     main_agent_instructions,
@@ -14,9 +14,7 @@ from .tools.api import (
     get_uploaded_files_count,
     list_uploaded_files,
 )
-from .tools.agent_as_tools import (
-    main_agent_subagents,
-)
+from .tools.agent_as_tools import main_agent_subagents
 from .tools.visual import image_visualizer, redescribe_image_content
 from backend.shared.constants import OPENAI_MODEL
 
@@ -97,7 +95,7 @@ def create_main_agent(
         conversation_context_part += "\n"
 
     # Start with a fresh list to avoid mutating the module-level list
-    tools = [*main_agent_tools]
+    tools = [*main_agent_tools, *main_agent_subagents]
     if web_search_enabled:
         tools.append(web_search_tool)
 
@@ -110,11 +108,10 @@ def create_main_agent(
         instruction_part=instruction_part,
     )
 
-    agent = create_deep_agent(
+    agent = create_agent(
         model=OPENAI_MODEL,
-        system_prompt=agent_instructions,
         tools=tools,
-        subagents=main_agent_subagents,
+        system_prompt=agent_instructions,
         response_format=ToolStrategy(MainAgentResponse),
     )
 
@@ -140,20 +137,20 @@ def create_news_summarization_agent(
     **Web Search Status:** {web_context_part}
     """
 
-    agent = create_deep_agent(
+    agent = create_agent(
         model="gpt-4o-mini",
-        system_prompt=agent_instructions,
         tools=[web_search_tool] if web_search_enabled else [],
+        system_prompt=agent_instructions,
     )
     return agent
 
 
 def create_clustering_agent(instructions: str):
     """Create specialized clustering Deep Agent"""
-    agent = create_deep_agent(
+    agent = create_agent(
         model="gpt-4o-mini",
-        system_prompt=instructions,
         tools=[],
+        system_prompt=instructions,
     )
     return agent
 
@@ -175,7 +172,7 @@ def create_news_chat_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = [*main_agent_tools]
+    tools = [*main_agent_tools, *main_agent_subagents]
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
@@ -185,11 +182,10 @@ def create_news_chat_agent(
         query=query,
     )
 
-    agent = create_deep_agent(
+    agent = create_agent(
         model="gpt-4o-mini",
-        system_prompt=agent_instructions,
         tools=tools,
-        subagents=main_agent_subagents,
+        system_prompt=agent_instructions,
     )
 
     return agent
@@ -197,9 +193,9 @@ def create_news_chat_agent(
 
 def create_translation_agent(instructions: str):
     """Create a specialized translation Deep Agent"""
-    agent = create_deep_agent(
+    agent = create_agent(
         model="gpt-4o-mini",
-        system_prompt=instructions,
         tools=[],
+        system_prompt=instructions,
     )
     return agent

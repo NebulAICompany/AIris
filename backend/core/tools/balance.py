@@ -15,7 +15,7 @@ from backend.utils.balance_payments_database import (
 )
 from backend.core.prompts import balance_of_payments_agent_prompt
 from backend.shared.constants import OPENAI_MODEL
-from deepagents import create_deep_agent
+from langchain.agents import create_agent
 
 logger = get_logger("BALANCE_TOOLS")
 
@@ -229,10 +229,10 @@ def create_balance_payments_agent():
     """Create Deep Agent that ingests balance of payments Excel files."""
     instructions = f"{balance_of_payments_agent_prompt}\n\n"
 
-    agent = create_deep_agent(
+    agent = create_agent(
         model=OPENAI_MODEL,
-        system_prompt=instructions,
         tools=[add_expense_transaction, add_income_transaction],
+        system_prompt=instructions,
     )
     return agent
 
