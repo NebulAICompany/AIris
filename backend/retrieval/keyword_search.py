@@ -6,6 +6,7 @@ Integrates with existing vector search pipeline for hybrid retrieval
 import json
 import math
 import pickle
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 from collections import defaultdict, Counter
@@ -26,6 +27,34 @@ class SearchResult:
     score: float
     metadata: Dict[str, Any]
     matched_terms: List[str]
+
+
+def tokenize_text(text: str) -> List[str]:
+    """
+    Simple tokenizer to convert text into searchable terms
+    
+    Args:
+        text: Input text to tokenize
+        
+    Returns:
+        List of lowercase tokens (words)
+    """
+    if not text:
+        return []
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Replace punctuation with spaces, keep alphanumeric and basic punctuation
+    text = re.sub(r'[^\w\s]', ' ', text)
+    
+    # Split into tokens
+    tokens = text.split()
+    
+    # Filter out very short tokens (1 char) and very long tokens (>50 chars, likely noise)
+    tokens = [t for t in tokens if 2 <= len(t) <= 50]
+    
+    return tokens
 
 
 class BM25KeywordSearch:
@@ -62,10 +91,13 @@ class BM25KeywordSearch:
             logger.warning(f"⚠️ Skipping document {doc_id}: empty content")
             return
 
-        # Use provided terms or empty list
+        # Use provided terms or tokenize the content automatically
         if terms is None:
-            terms = []
-            logger.warning(f"⚠️ No terms provided for document {doc_id}")
+            terms = tokenize_text(content)
+            if not terms:
+                logger.warning(f"⚠️ No terms extracted from document {doc_id}")
+                return
+            logger.debug(f"🔤 Tokenized {len(terms)} terms from document {doc_id}")
 
         # Store document
         self.documents[doc_id] = {
