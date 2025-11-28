@@ -6,6 +6,7 @@ Integrates with existing vector search pipeline for hybrid retrieval
 import json
 import math
 import pickle
+import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 from collections import defaultdict, Counter
@@ -26,6 +27,34 @@ class SearchResult:
     score: float
     metadata: Dict[str, Any]
     matched_terms: List[str]
+
+
+def tokenize_text(text: str) -> List[str]:
+    """
+    Simple tokenizer to convert text into searchable terms
+    
+    Args:
+        text: Input text to tokenize
+        
+    Returns:
+        List of lowercase tokens (words)
+    """
+    if not text:
+        return []
+    
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Replace punctuation with spaces, keep alphanumeric and basic punctuation
+    text = re.sub(r'[^\w\s]', ' ', text)
+    
+    # Split into tokens
+    tokens = text.split()
+    
+    # Filter out very short tokens (1 char) and very long tokens (>50 chars, likely noise)
+    tokens = [t for t in tokens if 2 <= len(t) <= 50]
+    
+    return tokens
 
 
 class BM25KeywordSearch:
@@ -62,10 +91,13 @@ class BM25KeywordSearch:
             logger.warning(f"⚠️ Skipping document {doc_id}: empty content")
             return
 
-        # Use provided terms or empty list
+        # Use provided terms or tokenize the content automatically
         if terms is None:
-            terms = []
-            logger.warning(f"⚠️ No terms provided for document {doc_id}")
+            terms = tokenize_text(content)
+            if not terms:
+                logger.warning(f"⚠️ No terms extracted from document {doc_id}")
+                return
+            logger.debug(f"🔤 Tokenized {len(terms)} terms from document {doc_id}")
 
         # Store document
         self.documents[doc_id] = {
@@ -102,29 +134,34 @@ class BM25KeywordSearch:
     ) -> Tuple[float, List[str]]:
         """Calculate BM25 score for a document given query terms"""
         if doc_id not in self.term_frequencies:
+            logger.debug(f"Document {doc_id} not found in term frequencies")
+            logger.debug(f"Term frequencies: {self.term_frequencies}")
             return 0.0, []
-
+        logger.debug(f"Calculating BM25 score for document {doc_id}")
         doc_tf = self.term_frequencies[doc_id]
         doc_length = self.document_lengths[doc_id]
+        logger.debug(f"Document ID: {doc_id}")
+        logger.debug(f"Document TFs: {self.term_frequencies}")
+        logger.debug(f"Document lengths: {self.document_lengths}")
         matched_terms = []
         score = 0.0
-
+        logger.debug(f"Query terms: {query_terms}")
         for term in query_terms:
             if term in doc_tf:
                 matched_terms.append(term)
-
+                logger.debug(f"Matched term: {term}")
                 # Term frequency in document
                 tf = doc_tf[term]
-
+                logger.debug(f"Term frequency: {tf}")
                 # Document frequency (how many docs contain this term)
                 df = self.document_frequencies.get(term, 0)
-
+                logger.debug(f"Document frequency: {df}")
                 if df == 0:
                     continue
 
                 # IDF calculation
                 idf = math.log((self.total_documents - df + 0.5) / (df + 0.5))
-
+                logger.debug(f"IDF: {idf}")
                 # BM25 formula
                 numerator = tf * (self.k1 + 1)
                 denominator = tf + self.k1 * (
@@ -163,11 +200,7 @@ class BM25KeywordSearch:
             if selected_files:
                 doc_metadata = self.documents[doc_id]["metadata"]
                 file_name = doc_metadata.get("file_name", "")
-                # Remove extension for comparison
-                file_name_base = (
-                    file_name.split(".")[0] if "." in file_name else file_name
-                )
-                if file_name_base not in selected_files:
+                if file_name not in [selected_file.split(".")[0] if "." in selected_file else selected_file for selected_file in selected_files]:
                     continue
 
             score, matched_terms = self.calculate_bm25_score(query_terms, doc_id)
