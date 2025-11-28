@@ -134,29 +134,34 @@ class BM25KeywordSearch:
     ) -> Tuple[float, List[str]]:
         """Calculate BM25 score for a document given query terms"""
         if doc_id not in self.term_frequencies:
+            logger.debug(f"Document {doc_id} not found in term frequencies")
+            logger.debug(f"Term frequencies: {self.term_frequencies}")
             return 0.0, []
-
+        logger.debug(f"Calculating BM25 score for document {doc_id}")
         doc_tf = self.term_frequencies[doc_id]
         doc_length = self.document_lengths[doc_id]
+        logger.debug(f"Document ID: {doc_id}")
+        logger.debug(f"Document TFs: {self.term_frequencies}")
+        logger.debug(f"Document lengths: {self.document_lengths}")
         matched_terms = []
         score = 0.0
-
+        logger.debug(f"Query terms: {query_terms}")
         for term in query_terms:
             if term in doc_tf:
                 matched_terms.append(term)
-
+                logger.debug(f"Matched term: {term}")
                 # Term frequency in document
                 tf = doc_tf[term]
-
+                logger.debug(f"Term frequency: {tf}")
                 # Document frequency (how many docs contain this term)
                 df = self.document_frequencies.get(term, 0)
-
+                logger.debug(f"Document frequency: {df}")
                 if df == 0:
                     continue
 
                 # IDF calculation
                 idf = math.log((self.total_documents - df + 0.5) / (df + 0.5))
-
+                logger.debug(f"IDF: {idf}")
                 # BM25 formula
                 numerator = tf * (self.k1 + 1)
                 denominator = tf + self.k1 * (
@@ -195,11 +200,7 @@ class BM25KeywordSearch:
             if selected_files:
                 doc_metadata = self.documents[doc_id]["metadata"]
                 file_name = doc_metadata.get("file_name", "")
-                # Remove extension for comparison
-                file_name_base = (
-                    file_name.split(".")[0] if "." in file_name else file_name
-                )
-                if file_name_base not in selected_files:
+                if file_name not in [selected_file.split(".")[0] if "." in selected_file else selected_file for selected_file in selected_files]:
                     continue
 
             score, matched_terms = self.calculate_bm25_score(query_terms, doc_id)
