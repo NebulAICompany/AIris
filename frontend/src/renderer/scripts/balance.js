@@ -18,6 +18,7 @@
       this.latestData = null;
       this.selectedDate = null;
       this.currentFileName = null;
+      this.isDataLoaded = false;
       this.init();
     }
 
@@ -66,7 +67,7 @@
 
     init() {
       this.bindEvents();
-      this.refreshCalendar();
+      this.renderEmptyState();
     }
 
     bindEvents() {
@@ -113,6 +114,7 @@
         this.renderSummary(result.data);
         this.renderLegend(result.data.maxAbsoluteNet || 0);
         this.renderHeatmap(result.data);
+        this.isDataLoaded = true;
 
         // Also refresh the category charts
         if (window.categoryPieChart) {
@@ -146,6 +148,20 @@
       }
       if (this.processButton) {
         this.processButton.disabled = isLoading;
+      }
+    }
+
+    renderEmptyState() {
+      if (!this.heatmapContainer) return;
+      this.heatmapContainer.innerHTML = `
+        <div class="balance-empty">
+          <i class="fas fa-calendar-alt" style="font-size: 3rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+          <h3 style="color: #64748b; margin-bottom: 0.5rem;">${this.t("balanceCalendar.noDataLoaded") || "No Data Loaded"}</h3>
+          <p style="color: #94a3b8; margin-bottom: 1.5rem;">${this.t("balanceCalendar.clickRefreshToLoad") || "Click the refresh button to load balance data"}</p>
+        </div>
+      `;
+      if (this.summaryContainer) {
+        this.summaryContainer.innerHTML = "";
       }
     }
 
@@ -587,8 +603,11 @@
       this.feedbackBox.classList.toggle("visible", Boolean(message));
     }
 
-    async refreshOnActivate() {
-      await this.refreshCalendar();
+    async loadInitialDataIfNeeded() {
+      // Only load data once, on first activation or manual refresh
+      if (!this.isDataLoaded) {
+        await this.refreshCalendar();
+      }
     }
 
     async handleUploadSelection(event) {

@@ -141,6 +141,7 @@ def create_news_summarization_agent(
         model="gpt-4o-mini",
         tools=[web_search_tool] if web_search_enabled else [],
         system_prompt=agent_instructions,
+        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent
 
@@ -151,6 +152,7 @@ def create_clustering_agent(instructions: str):
         model="gpt-4o-mini",
         tools=[],
         system_prompt=instructions,
+        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent
 
@@ -186,6 +188,7 @@ def create_news_chat_agent(
         model="gpt-4o-mini",
         tools=tools,
         system_prompt=agent_instructions,
+        response_format=ToolStrategy(MainAgentResponse),
     )
 
     return agent
@@ -197,5 +200,6 @@ def create_translation_agent(instructions: str):
         model="gpt-4o-mini",
         tools=[],
         system_prompt=instructions,
+        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent

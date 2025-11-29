@@ -450,8 +450,10 @@ Process the provided balance content, classify every transaction as either an in
 
 Both tools expect:
 - `amount`: Positive numeric magnitude extracted from the ledger (never include currency symbols).
-- `transaction_date`: Ledger date in ISO format `YYYY-MM-DD`. If a date is missing, omit the argument to default to today, but this should be avoided.
-- `category`: Choose **exactly one** of `Operating Activities (İşletme Faaliyetleri)`, `Investing Activities (Yatırım Faaliyetleri)`, or `Financing Activities (Finansman Faaliyetleri)`. When calling the tools, submit the Turkish label inside the parentheses so downstream systems remain consistent.
+- `transaction_date`: Ledger date in ISO format `YYYY-MM-DD`. 
+If a date is missing, omit the argument to default to today, but this should be avoided.
+- `category`: Choose **exactly one** of `Operating Activities (İşletme Faaliyetleri)`, `Investing Activities (Yatırım Faaliyetleri)`, or `Financing Activities (Finansman Faaliyetleri)`. 
+When calling the tools, submit the Turkish label inside the parentheses so downstream systems remain consistent.
 
 ## Workflow
 1. Review the parsed ledger content included in your instructions. Rely on this extracted text to understand the transactions.
