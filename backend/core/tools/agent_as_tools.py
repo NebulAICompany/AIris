@@ -1,4 +1,5 @@
-from deepagents import SubAgent
+from langchain_core.tools import tool
+from langchain.agents import create_agent
 from backend.core.prompts import (
     finance_agent_prompt,
     office_agent_prompt,
@@ -79,10 +80,47 @@ finance_tools = [
     create_stock_chart,
 ]
 
-# Define subagents for Deep Agents
-finance_subagent = SubAgent(
-    name="finance_agent",
-    description="""Use this subagent for comprehensive financial data analysis including:
+# Create subagents using create_agent
+finance_agent = create_agent(
+    model=OPENAI_MODEL,
+    tools=finance_tools,
+    system_prompt=finance_agent_prompt,
+)
+
+office_agent = create_agent(
+    model=OPENAI_MODEL,
+    tools=office_tools,
+    system_prompt=office_agent_prompt,
+)
+
+plotting_agent = create_agent(
+    model=OPENAI_MODEL,
+    tools=[
+        extract_data_from_text,
+        convert_to_plottable_format,
+        get_suitable_plot_types,
+        create_html_plot,
+    ],
+    system_prompt=plotting_prompt,
+)
+
+tcmb_data_agent = create_agent(
+    model=OPENAI_MODEL,
+    tools=tcmb_tools,
+    system_prompt=tcmb_data_agent_prompt,
+)
+
+news_summarization_agent = create_agent(
+    model="gpt-4o-mini",
+    tools=[],
+    system_prompt=news_summarization_prompt,
+)
+
+
+# Wrap subagents as tools for the main agent
+@tool(
+    "finance_agent",
+    description="""Use this tool for comprehensive financial data analysis including:
     - Real-time stock quotes and company information
     - Historical price data (intraday, daily, weekly, monthly)
     - Technical analysis with moving averages and volume indicators
@@ -90,27 +128,40 @@ finance_subagent = SubAgent(
     - Multi-stock comparison charts with multiple layouts
     - Market trend analysis and volatility assessment
     - Marketstack API integration for market data
-    - Any financial data query requiring data retrieval or visualization""",
-    system_prompt=finance_agent_prompt,
-    tools=finance_tools,
-    model=OPENAI_MODEL,
+    - Any financial data query requiring data retrieval or visualization
+    
+    Input: Natural language query about financial data or analysis.""",
 )
+async def call_finance_agent(query: str) -> str:
+    """Call the finance specialist agent."""
+    result = await finance_agent.ainvoke(
+        {"messages": [{"role": "user", "content": query}]}
+    )
+    return result["messages"][-1].content
 
-office_subagent = SubAgent(
-    name="office_operations",
-    description="""Use this subagent for Microsoft Office operations including:
-        - Creating Excel workbooks from structured data
-        - Generating Word documents with custom content
-        - Document processing and format conversion
-        - Any task requiring Word or Excel functionality""",
-    system_prompt=office_agent_prompt,
-    tools=office_tools,
-    model=OPENAI_MODEL,
+
+@tool(
+    "office_operations",
+    description="""Use this tool for Microsoft Office operations including:
+    - Creating Excel workbooks from structured data
+    - Generating Word documents with custom content
+    - Creating PowerPoint presentations
+    - Document processing and format conversion
+    - Any task requiring Word, Excel, or PowerPoint functionality
+    
+    Input: Natural language request for Office document operations.""",
 )
+async def call_office_agent(query: str) -> str:
+    """Call the office operations specialist agent."""
+    result = await office_agent.ainvoke(
+        {"messages": [{"role": "user", "content": query}]}
+    )
+    return result["messages"][-1].content
 
-plotting_subagent = SubAgent(
-    name="plotting_agent",
-    description="""Use this subagent for creating interactive HTML plots from various data sources:
+
+@tool(
+    "plotting_agent",
+    description="""Use this tool for creating interactive HTML plots from various data sources:
     
     **Capabilities:**
     - Extract structured data from text, tables, JSON, CSV-like formats, markdown tables
@@ -135,20 +186,21 @@ plotting_subagent = SubAgent(
     - Charts are automatically displayed above the response after creation
     - Do NOT add chart HTML or chart content to the answer
     - Focus on explaining the visualization and insights
-    - This tool handles the complete workflow: data extraction → formatting → plot creation → saving""",
-    system_prompt=plotting_prompt,
-    tools=[
-        extract_data_from_text,
-        convert_to_plottable_format,
-        get_suitable_plot_types,
-        create_html_plot,
-    ],
-    model=OPENAI_MODEL,
+    - This tool handles the complete workflow: data extraction → formatting → plot creation → saving
+    
+    Input: Natural language request with data to visualize.""",
 )
+async def call_plotting_agent(query: str) -> str:
+    """Call the plotting specialist agent."""
+    result = await plotting_agent.ainvoke(
+        {"messages": [{"role": "user", "content": query}]}
+    )
+    return result["messages"][-1].content
 
-tcmb_data_subagent = SubAgent(
-    name="tcmb_economic_data",
-    description="""Use this subagent for comprehensive Turkish Central Bank (TCMB) economic data retrieval and analysis:
+
+@tool(
+    "tcmb_economic_data",
+    description="""Use this tool for comprehensive Turkish Central Bank (TCMB) economic data retrieval and analysis:
     - Access TCMB's EVDS (Electronic Data Delivery System) database
     - Retrieve economic indicators, exchange rates, interest rates, inflation data
     - Access balance of payments, reserves, money supply statistics
@@ -163,30 +215,43 @@ tcmb_data_subagent = SubAgent(
     4. Retrieve time series data for specified date ranges
     5. Provide analysis and interpretation of the economic data
     
-    Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends.""",
-    system_prompt=tcmb_data_agent_prompt,
-    tools=tcmb_tools,
-    model=OPENAI_MODEL,
+    Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends.
+    
+    Input: Natural language query about Turkish economic data.""",
 )
+async def call_tcmb_agent(query: str) -> str:
+    """Call the TCMB economic data specialist agent."""
+    result = await tcmb_data_agent.ainvoke(
+        {"messages": [{"role": "user", "content": query}]}
+    )
+    return result["messages"][-1].content
 
-news_summarization_subagent = SubAgent(
-    name="financial_news_summarization",
-    description="""Use this subagent for creating unified summaries from multiple financial news articles covering the same story:
+
+@tool(
+    "financial_news_summarization",
+    description="""Use this tool for creating unified summaries from multiple financial news articles covering the same story:
     - Combine titles and descriptions from multiple news sources
     - Create concise, unified titles for clustered news stories
     - Generate comprehensive summaries that synthesize information from all sources
     - Maintain objectivity and financial accuracy
     - Format output as JSON with unified_title and unified_description fields
-    - Best used when you have 2+ articles about the same financial event/story""",
-    system_prompt=news_summarization_prompt,
-    tools=[],  # This agent uses only LLM capabilities, no external tools
-    model="gpt-4o-mini",
+    - Best used when you have 2+ articles about the same financial event/story
+    
+    Input: Multiple news article titles and descriptions about the same story.""",
 )
+async def call_news_summarization_agent(query: str) -> str:
+    """Call the financial news summarization specialist agent."""
+    result = await news_summarization_agent.ainvoke(
+        {"messages": [{"role": "user", "content": query}]}
+    )
+    return result["messages"][-1].content
 
+
+# List of subagent tools for the main agent
 main_agent_subagents = [
-    finance_subagent,
-    office_subagent,
-    plotting_subagent,
-    tcmb_data_subagent,
-    news_summarization_subagent,
+    call_finance_agent,
+    call_office_agent,
+    call_plotting_agent,
+    call_tcmb_agent,
+    call_news_summarization_agent,
 ]

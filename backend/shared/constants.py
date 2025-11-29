@@ -9,6 +9,9 @@ import cohere
 from openai import OpenAI, AsyncOpenAI
 from pathlib import Path
 from concurrent_openai import ConcurrentOpenAI
+from langchain_core.tracers.stdout import ConsoleCallbackHandler
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
 
 load_dotenv()
 
@@ -158,9 +161,19 @@ BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
 BALANCE_PAYMENTS_DB_PATH_STR = str(BALANCE_PAYMENTS_DB_PATH)
 
 
-### Model Names ###
-OPENAI_MODEL = "gpt-4o"
-ANTHROPIC_MODEL = "litellm/anthropic/claude-sonnet-4-20250514"
+ANTHROPIC_MODEL = ChatAnthropic(
+    model_name="claude-sonnet-4-20250514",
+    api_key=os.getenv("ANTHROPIC_API_KEY"),
+    max_retries=5,
+    max_tokens=64000,
+    timeout=120,
+)
+
+OPENAI_MODEL = ChatOpenAI(
+    model="gpt-5.1",
+    temperature=0.0,
+    api_key=os.getenv("OPENAI_API_KEY"),
+)
 
 
 # Marketstack tickers

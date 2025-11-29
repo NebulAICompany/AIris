@@ -1,5 +1,5 @@
 from backend.shared.logger import get_logger
-from backend.shared.constants import openai_client, OPENAI_MODEL
+from backend.shared.constants import openai_client
 from typing import List
 from pydantic import BaseModel
 
@@ -27,7 +27,7 @@ def refine_query(user_query) -> RefinedQuery:
 
     try:
         response = openai_client.chat.completions.parse(
-            model=OPENAI_MODEL,
+            model="gpt-5.1",
             messages=[
                 {
                     "role": "system",
