@@ -548,9 +548,7 @@
 
       try {
         this.setProcessing(true);
-        if (!fileNameOverride) {
-          this.setFeedback("Running agent…", "info");
-        }
+        this.setFeedback("Running agent…", "info");
 
         if (fileNameOverride) {
           this.currentFileName = fileNameOverride;
@@ -559,7 +557,7 @@
         const replaceExisting =
           typeof replaceOverride === "boolean"
             ? replaceOverride
-            : false;
+            : true;
         const result = await this.api.processBalanceWorkbook(
           selectedFile,
           replaceExisting
@@ -641,11 +639,14 @@
         this.currentFileName = uploadedName;
 
         this.setFeedback(
-          `Uploaded ${uploadedName}. Running agent…`,
-          "info"
+          `File ${uploadedName} uploaded successfully. Click "Run Agent" to process.`,
+          "success"
         );
-
-        await this.handleProcess(uploadedName, true);
+        
+        // Enable the process button
+        if (this.processButton) {
+          this.processButton.disabled = false;
+        }
       } catch (error) {
         logger.error(`Balance upload error: ${error}`, "BALANCE");
         this.setFeedback(
@@ -1113,6 +1114,13 @@
   document.addEventListener("DOMContentLoaded", () => {
     if (document.querySelector(".balance-app")) {
       window.balanceCalendarApp = new BalanceCalendarApp();
+      
+      // Load initial data once on startup
+      setTimeout(() => {
+        if (window.balanceCalendarApp) {
+          window.balanceCalendarApp.loadInitialDataIfNeeded();
+        }
+      }, 500);
     }
     
     // Initialize category charts

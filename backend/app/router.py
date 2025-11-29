@@ -832,13 +832,11 @@ def get_balance_of_payments_calendar(
                 status_code=400, detail="Invalid endDate format. Use YYYY-MM-DD"
             )
     else:
-        if latest_activity:
-            end_date = latest_activity
-        else:
-            end_date = datetime.today().date()
+        # Use today's date as the end date for calendar view
+        end_date = datetime.today().date()
 
-    start_date = end_date - relativedelta(months=months - 2)
-    start_date = start_date - timedelta(days=start_date.weekday())
+    # Calculate start date by going back 'months' number of months
+    start_date = end_date.replace(day=1) - relativedelta(months=months - 1)
 
     end_weekday = end_date.weekday()
     if end_weekday != 6:  # extend to Sunday for full week display
