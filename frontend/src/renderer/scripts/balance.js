@@ -381,7 +381,20 @@
     }
 
     attachDayHandlers() {
-      // Day cells are now non-interactive, only showing visual data
+      // Make day cells clickable to open month modal
+      this.heatmapContainer
+        .querySelectorAll(".balance-day[data-date]")
+        .forEach((dayCell) => {
+          dayCell.addEventListener("click", (e) => {
+            e.stopPropagation(); // Prevent event from bubbling to month handler
+            // Find the parent month block to get the month key
+            const monthBlock = dayCell.closest(".balance-month");
+            if (monthBlock) {
+              const monthKey = monthBlock.getAttribute("data-month");
+              this.openMonthModal(monthKey);
+            }
+          });
+        });
     }
 
     attachMonthHandlers() {
@@ -389,7 +402,7 @@
         .querySelectorAll(".balance-month")
         .forEach((monthBlock) => {
           monthBlock.addEventListener("click", (e) => {
-            // Don't open modal if clicking on a day cell
+            // Don't open modal if clicking on a day cell (day cells handle their own clicks)
             if (e.target.closest(".balance-day")) {
               return;
             }
