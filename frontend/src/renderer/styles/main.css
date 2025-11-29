@@ -662,8 +662,10 @@ input:checked + .slider:before {
   max-width: 100%;
   box-sizing: border-box;
   /* Fix scroll behavior to prevent content shifting */
-  scroll-behavior: smooth;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  will-change: scroll-position;
 }
 
 /* Specific handling for calculator tab to prevent double scrolling */
@@ -687,7 +689,6 @@ input:checked + .slider:before {
 #verification-tab {
   overflow-y: auto;
   /* Ensure proper scroll behavior without content shifting */
-  scroll-behavior: smooth;
   overscroll-behavior: contain;
 }
 

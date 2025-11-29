@@ -625,6 +625,7 @@ body.dark-theme .chart-caption {
   flex-direction: column;
   gap: 24px;
   width: 100%;
+  contain: layout style;
 }
 
 .balance-month-layout[data-scale="normal"] {
@@ -675,8 +676,9 @@ body.dark-theme .chart-caption {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  box-shadow: var(--shadow-sm, 0 10px 28px rgba(15, 23, 42, 0.08));
   width: 100%;
+  contain: layout style paint;
+  transform: translateZ(0);
 }
 
 .balance-month-layout[data-scale="normal"] .balance-month {
@@ -786,6 +788,7 @@ body.dark-theme .chart-caption {
   display: grid;
   grid-template-columns: repeat(7, 40px);
   gap: 7px;
+  contain: layout style;
 }
 
 .balance-month-layout[data-scale="normal"] .balance-month-grid {
@@ -811,37 +814,34 @@ body.dark-theme .chart-caption {
 .balance-day {
   width: 40px;
   height: 40px;
-  border-radius: 7px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  backdrop-filter: blur(6px);
+  contain: layout style paint;
+  transform: translateZ(0);
+  cursor: pointer;
 }
 
 .balance-month-layout[data-scale="normal"] .balance-day {
   width: 42px;
   height: 42px;
-  border-radius: 7px;
 }
 
 .balance-month-layout[data-scale="medium"] .balance-day {
   width: 36px;
   height: 36px;
-  border-radius: 6px;
 }
 
 .balance-month-layout[data-scale="small"] .balance-day {
   width: 30px;
   height: 30px;
-  border-radius: 5px;
 }
 
 .balance-month-layout[data-scale="tiny"] .balance-day {
   width: 26px;
   height: 26px;
-  border-radius: 4px;
 }
 
 .balance-day.placeholder {
@@ -1012,11 +1012,6 @@ body.dark-theme .chart-caption {
   height: 16px;
 }
 
-.balance-month:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
-  transition: all 0.2s ease;
-}
 
 .balance-detail-panel {
   background: var(--bg-secondary, #ffffff);
@@ -8356,7 +8351,6 @@ body.nebula-theme .web-search-button:hover {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: smooth;
   scroll-padding-top: 20px;
 }
 
