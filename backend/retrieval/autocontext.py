@@ -123,7 +123,7 @@ Requirements:
 
 Document summary:"""
 
-            response = await generate_answer(summary_prompt, agent)
+            response, _, _ = await generate_answer(summary_prompt, agent)
             # Clean up the response
             summary = response.strip()
             # Remove any quotes
