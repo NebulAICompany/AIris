@@ -292,11 +292,12 @@ async def TxtParser(file_path: str):
 
     return content
 
-async def ExcelParser(file_path: str) -> str:
+async def ExcelParser(file_path: str) -> str:    
     df = pd.read_excel(file_path, sheet_name=None)
     table_name = Path(file_path).stem
     contents = []
     for sheet_name, sheet_data in df.items():
+        
         sheet_data.fillna("", inplace=True)
         contents.append(f"**[Table Name: {table_name}]**\n**[Sheet Name:{sheet_name}]**\n\n{sheet_data.to_markdown()}\n")
 

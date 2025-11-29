@@ -16,6 +16,8 @@ from backend.utils.balance_payments_database import (
 from backend.core.prompts import balance_of_payments_agent_prompt
 from backend.shared.constants import OPENAI_MODEL
 from langchain.agents import create_agent
+from langchain.agents.structured_output import ToolStrategy
+from backend.core.agents import MainAgentResponse
 
 logger = get_logger("BALANCE_TOOLS")
 
@@ -74,11 +76,6 @@ def _normalize_category(raw_category: Optional[str]) -> str:
 
         alias_match = ALIAS_LOOKUP.get(candidate.lower())
         if alias_match:
-            logger.info(
-                "Received category '{}' mapped to canonical '{}'",
-                raw_category,
-                alias_match,
-            )
             return alias_match
 
     raise ValueError(
@@ -98,7 +95,15 @@ def _normalize_transaction_date(raw_date: Optional[str]) -> str:
         return date.today().isoformat()
 
     # Accept a few common ledger date formats in addition to ISO.
-    candidate_formats = ["%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%d-%m-%Y"]
+    candidate_formats = [
+        "%Y-%m-%d",           # ISO format
+        "%Y-%m-%d %H:%M:%S",  # ISO with time (from Excel)
+        "%d.%m.%Y",           # Turkish format
+        "%d/%m/%Y",           # Common format
+        "%d-%m-%Y",           # Dash separated
+        "%m/%d/%Y",           # US format
+        "%Y/%m/%d",           # Alternative ISO
+    ]
 
     for fmt in candidate_formats:
         try:
@@ -166,13 +171,6 @@ def add_income_transaction(
         )
         return str(exc)
 
-    logger.info(
-        "Adding income transaction of amount {} for {} with category {}",
-        amount,
-        normalized_date,
-        normalized_category,
-    )
-
     transaction = BalanceTransaction(
         transaction_date=normalized_date,
         amount=float(amount),
@@ -209,13 +207,6 @@ def add_expense_transaction(
         )
         return str(exc)
 
-    logger.info(
-        "Adding expense transaction of amount {} for {} with category {}",
-        amount,
-        normalized_date,
-        normalized_category,
-    )
-
     transaction = BalanceTransaction(
         transaction_date=normalized_date,
         amount=float(amount),
@@ -233,6 +224,7 @@ def create_balance_payments_agent():
         model=OPENAI_MODEL,
         tools=[add_expense_transaction, add_income_transaction],
         system_prompt=instructions,
+        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent
 

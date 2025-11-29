@@ -1423,9 +1423,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
         break;
 
       case "balance":
-        if (window.balanceCalendarApp?.refreshOnActivate) {
-          await window.balanceCalendarApp.refreshOnActivate();
-        }
+        // Lazy loading: data is loaded only when user clicks refresh button
+        // No automatic refresh on tab activation
         break;
       case "verification":
         await this.loadVerificationTab();
