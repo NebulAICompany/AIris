@@ -76,11 +76,6 @@ def _normalize_category(raw_category: Optional[str]) -> str:
 
         alias_match = ALIAS_LOOKUP.get(candidate.lower())
         if alias_match:
-            logger.info(
-                "Received category '{}' mapped to canonical '{}'",
-                raw_category,
-                alias_match,
-            )
             return alias_match
 
     raise ValueError(
@@ -100,7 +95,15 @@ def _normalize_transaction_date(raw_date: Optional[str]) -> str:
         return date.today().isoformat()
 
     # Accept a few common ledger date formats in addition to ISO.
-    candidate_formats = ["%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%d-%m-%Y"]
+    candidate_formats = [
+        "%Y-%m-%d",           # ISO format
+        "%Y-%m-%d %H:%M:%S",  # ISO with time (from Excel)
+        "%d.%m.%Y",           # Turkish format
+        "%d/%m/%Y",           # Common format
+        "%d-%m-%Y",           # Dash separated
+        "%m/%d/%Y",           # US format
+        "%Y/%m/%d",           # Alternative ISO
+    ]
 
     for fmt in candidate_formats:
         try:

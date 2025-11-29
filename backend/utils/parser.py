@@ -292,11 +292,25 @@ async def TxtParser(file_path: str):
 
     return content
 
-async def ExcelParser(file_path: str) -> str:
+async def ExcelParser(file_path: str) -> str:    
     df = pd.read_excel(file_path, sheet_name=None)
     table_name = Path(file_path).stem
     contents = []
     for sheet_name, sheet_data in df.items():
+        logger.info(f"Processing sheet: {sheet_name} with {len(sheet_data)} rows")
+        
+        # Log column types before conversion
+        for col in sheet_data.columns:
+            logger.info(f"Column '{col}' dtype: {sheet_data[col].dtype}")
+            if pd.api.types.is_datetime64_any_dtype(sheet_data[col]):
+                # Log first few datetime values before conversion
+                logger.info(f"Sample datetime values in '{col}': {sheet_data[col].head(3).tolist()}")
+        
+        # Convert datetime columns to ISO format strings for better date parsing
+        for col in sheet_data.columns:
+            if pd.api.types.is_datetime64_any_dtype(sheet_data[col]):
+                sheet_data[col] = sheet_data[col].dt.strftime('%Y-%m-%d %H:%M:%S')
+        
         sheet_data.fillna("", inplace=True)
         contents.append(f"**[Table Name: {table_name}]**\n**[Sheet Name:{sheet_name}]**\n\n{sheet_data.to_markdown()}\n")
 
