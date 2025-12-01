@@ -102,11 +102,13 @@ initSidebar() {
   const subMenu = document.querySelector('.sub-menu');
   const subItems = document.querySelectorAll('.sub-item');
   const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
+  const sidebar = document.querySelector('.sidebar');
 
+  // --- 1. Temizlik ve Başlangıç Ayarları ---
   // İlk yüklemede tüm aktiflikleri temizle
   navItems.forEach(item => item.classList.remove('active'));
   subItems.forEach(item => item.classList.remove('active'));
-  if(collapsible) collapsible.classList.remove('active');
+  if (collapsible) collapsible.classList.remove('active');
   balanceSections.forEach(sec => sec.classList.remove('active'));
 
   // Sayfa açıldığında chat nav varsayılan aktif olsun
@@ -117,18 +119,22 @@ initSidebar() {
     if (chatTab) chatTab.classList.add('active');
   }
 
-  // Nav item click
+  // --- 2. Normal Nav Item Tıklama ---
   navItems.forEach(item => {
     item.addEventListener('click', () => {
+      // Temizlik
       navItems.forEach(i => i.classList.remove('active'));
       subItems.forEach(i => i.classList.remove('active'));
-      if(collapsible) collapsible.classList.remove('active');
+      
+      // Collapsible'ın aktifliğini kaldır
+      if (collapsible) collapsible.classList.remove('active');
+      
       balanceSections.forEach(sec => sec.classList.remove('active'));
 
       item.classList.add('active');
 
-      // Sidebar açıkken subMenu kapat
-      if (subMenu && !document.querySelector('.sidebar.collapsed')) {
+      // Sidebar açıkken subMenu kapat (başka menüye geçildi)
+      if (subMenu && !sidebar.classList.contains('collapsed')) {
         subMenu.classList.remove('open');
         subMenu.style.maxHeight = null;
       }
@@ -140,67 +146,90 @@ initSidebar() {
     });
   });
 
-  // Collapsible tıklama
+  // --- 3. Collapsible (Finansal Analiz) Mantığı ---
   if (collapsible && subMenu) {
+    
+    // A) TIKLAMA (CLICK) İŞLEMİ
+    // A) TIKLAMA (CLICK) İŞLEMİ
     collapsible.addEventListener('click', () => {
-      const isCollapsed = document.querySelector('.sidebar.collapsed');
+      const isCollapsed = sidebar.classList.contains('collapsed');
 
-      // Sidebar açık → normal toggle
-      if(!isCollapsed) {
+      // Diğer her şeyi temizle
+      navItems.forEach(i => i.classList.remove('active'));
+      subItems.forEach(i => i.classList.remove('active'));
+      
+      // Ana başlığı aktif yap
+      collapsible.classList.add('active');
+
+      if (!isCollapsed) {
+        // Sidebar AÇIK
         subMenu.classList.toggle('open');
         subMenu.style.maxHeight = subMenu.classList.contains('open')
           ? subMenu.scrollHeight + 'px'
           : null;
       } else {
-        // Sidebar kapalı → floating submenu sadece burada açılır
+        // Sidebar KAPALI
         this.setupFloatingSubmenu(collapsible, subMenu);
       }
-
-      // Collapsible kendisi tıklanabilir: active yap
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      collapsible.classList.add('active');
-
-      // Tab göster
-      const tabId = collapsible.dataset.page.replace('#','') + '-tab';
+      
+      // Tabı göster
+      const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
       const tab = document.getElementById(tabId);
-      if(tab) {
-        balanceSections.forEach(sec => sec.classList.remove('active'));
-        tab.classList.add('active');
+      if (tab) {
+         balanceSections.forEach(sec => sec.classList.remove('active'));
+         tab.classList.add('active');
+      }
+    });
+
+    // B) HOVER (MOUSEENTER) İŞLEMİ
+    collapsible.addEventListener('mouseenter', () => {
+      // Sadece sidebar KAPALIYKEN hover çalışsın
+      if (sidebar.classList.contains('collapsed')) {
+        this.setupFloatingSubmenu(collapsible, subMenu);
+      }
+    });
+
+    // C) MOUSELEAVE İŞLEMİ
+    collapsible.addEventListener('mouseleave', () => {
+      if (sidebar.classList.contains('collapsed')) {
+        // Kullanıcı mouse'u ikondan menüye kaydırırken menü kapanmasın diye gecikme
+        setTimeout(() => {
+          const floatingMenu = document.querySelector('.floating-sub-menu');
+          // Eğer mouse şu an floating menünün üzerinde değilse kapat
+          if (floatingMenu && !floatingMenu.matches(':hover')) {
+            floatingMenu.remove();
+          }
+        }, 100);
       }
     });
   }
 
-  // Sub-item tıklama
+ // --- 4. Sub-item (Alt Menü) Tıklama ---
   subItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const isCollapsed = document.querySelector('.sidebar.collapsed');
+    item.addEventListener('click', (e) => {
+      e.stopPropagation(); // Üst menü tıklamasını engelle
+      const isCollapsed = sidebar.classList.contains('collapsed');
 
-      // Aktiflikleri temizle
+      // 1. Tüm aktiflikleri temizle
       navItems.forEach(i => i.classList.remove('active'));
       subItems.forEach(i => i.classList.remove('active'));
-      if(collapsible) collapsible.classList.remove('active');
       balanceSections.forEach(sec => sec.classList.remove('active'));
+      
+      // 2. ÖNEMLİ DEĞİŞİKLİK: Üst menünün aktifliğini kaldır
+      if (collapsible) collapsible.classList.remove('active');
 
+      // 3. Sadece tıklanan alt öğeyi aktif yap
       item.classList.add('active');
 
-      // Tab aç
+      // 4. İlgili Tabı aç
       const sectionId = item.dataset.page.replace('#', '') + '-tab';
       const section = document.getElementById(sectionId);
       if (section) section.classList.add('active');
 
-      if (!isCollapsed) {
-        // Sidebar açık → subMenu açık kalsın
-        if (subMenu) {
-          subMenu.classList.add('open');
-          subMenu.style.maxHeight = subMenu.scrollHeight + 'px';
-        }
-      } else {
-        // Sidebar kapalı → floating submenu zaten DOM’da yok
-        if (subMenu) {
-          subMenu.classList.remove('open');
-          subMenu.style.maxHeight = null;
-        }
+      // Sidebar kapalıysa floating menüyü kapat
+      if (isCollapsed) {
+         const floatingMenu = document.querySelector('.floating-sub-menu');
+         if(floatingMenu) floatingMenu.remove();
       }
 
       location.hash = item.dataset.page;
@@ -208,49 +237,69 @@ initSidebar() {
   });
 }
 
-// Floating submenu sidebar kapalıyken açmak için
+// --- Floating Submenu Helper (Sidebar Kapalıyken) ---
 setupFloatingSubmenu(collapsible, subMenu) {
+  const sidebar = document.querySelector('.sidebar');
   // Sadece sidebar kapalıysa çalışmalı
-  if (!document.querySelector('.sidebar.collapsed')) return;
+  if (!sidebar.classList.contains('collapsed')) return;
 
-  // Önce varsa eski floating submenuyi kaldır
+  // Önce varsa eski floating menüyü temizle
   const existing = document.querySelector('.floating-sub-menu');
-  if(existing) existing.remove();
+  if (existing) existing.remove();
 
   // Yeni floating submenu klonla
   const clone = subMenu.cloneNode(true);
   clone.classList.add('floating-sub-menu');
+  
+  // Stil Ayarları (JS ile zorunlu stiller)
   clone.style.position = 'absolute';
-  clone.style.zIndex = 4000;
+  clone.style.zIndex = '4000';
   clone.style.display = 'flex';
   clone.style.flexDirection = 'column';
   clone.style.maxHeight = '500px';
-  clone.style.top = collapsible.offsetTop + 'px';
-  clone.style.left = (collapsible.offsetWidth + 8) + 'px';
-  document.querySelector('.sidebar').appendChild(clone);
+  clone.style.minWidth = '180px';
+  clone.style.padding = '0px';
+  clone.style.backgroundColor = 'var(--bg-secondary)'; // Temanızdaki değişken
+  clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Gölge
+  clone.style.borderRadius = '8px';
+  clone.style.border = '1px solid var(--border-color)';
 
-  // Hover efektleri için mouseleave
+  // KONUM HESAPLAMASI (getBoundingClientRect ile ekran koordinatları)
+  const rect = collapsible.getBoundingClientRect();
+  
+  // Sidebar'ın sağına hizala
+  clone.style.top = rect.top + 'px';
+  clone.style.left = (rect.right + 10) + 'px'; // +10px boşluk
+
+  // Body'ye ekle (Sidebar overflow'undan kurtulmak için)
+  document.body.appendChild(clone);
+
+  // --- Floating Menü Olayları ---
+
+  // 1. Mouse menüden çıkınca kapat
   clone.addEventListener('mouseleave', () => {
     clone.remove();
   });
 
-  // Floating submenu içindeki sub-item click
+  // 2. Alt öğelere tıklanınca orijinal mantığı çalıştır
   clone.querySelectorAll('.sub-item').forEach(item => {
     item.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item, .sub-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      collapsible.classList.add('active');
-
-      // Tab göster
-      const sectionId = item.dataset.page.replace('#','') + '-tab';
-      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.remove('active'));
-      const tab = document.getElementById(sectionId);
-      if(tab) tab.classList.add('active');
-
+      // Orijinal öğeyi bul ve tıkla (Bütün mantık initSidebar'da tek yerde)
+      const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
+      if (originalItem) originalItem.click();
+      
       clone.remove();
-      location.hash = item.dataset.page;
     });
   });
+  
+  // 3. Dışarı tıklayınca kapat (Güvenlik önlemi)
+  const closeMenu = (e) => {
+      if (!clone.contains(e.target) && !collapsible.contains(e.target)) {
+          clone.remove();
+          document.removeEventListener('click', closeMenu);
+      }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 0);
 }
 
 
