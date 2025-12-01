@@ -66,7 +66,7 @@ class CurrencyService {
       USD_TRY: 27.85,
       EUR_TRY: 30.42,
       USD_EUR: 0.915,
-      goldPrice: 1945.5,
+      goldPrice: 4217.5,
     };
 
     this.dailyCycleOffset = 0;
