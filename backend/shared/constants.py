@@ -162,7 +162,7 @@ BALANCE_PAYMENTS_DB_PATH_STR = str(BALANCE_PAYMENTS_DB_PATH)
 
 
 ANTHROPIC_MODEL = ChatAnthropic(
-    model_name="claude-sonnet-4-20250514",
+    model_name="claude-sonnet-4-5-20250929",
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     max_retries=5,
     max_tokens=64000,
