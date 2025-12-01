@@ -167,12 +167,14 @@ ANTHROPIC_MODEL = ChatAnthropic(
     max_retries=5,
     max_tokens=64000,
     timeout=120,
+    callbacks=[ConsoleCallbackHandler()],
 )
 
 OPENAI_MODEL = ChatOpenAI(
     model="gpt-5.1",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
+    callbacks=[ConsoleCallbackHandler()],
 )
 
 
