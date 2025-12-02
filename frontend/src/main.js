@@ -125,7 +125,70 @@ class AIrisApp {
     ipcMain.removeAllListeners("upload-file");
     ipcMain.removeAllListeners("check-health");
     ipcMain.removeAllListeners("open-dev-tools");
-  ipcMain.removeAllListeners("open-external-url");
+    ipcMain.removeAllListeners("open-external-url");
+    ipcMain.removeAllListeners("read-gold-cache");
+    ipcMain.removeAllListeners("write-gold-cache");
+
+    // Handle gold cache read
+    ipcMain.handle("read-gold-cache", async () => {
+      try {
+        const cachePath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "backend",
+          "database",
+          "gold_cache.json"
+        );
+        
+        if (!fs.existsSync(cachePath)) {
+          return {
+            success: true,
+            data: { lastFetched: null, data: null }
+          };
+        }
+
+        const cacheData = fs.readFileSync(cachePath, "utf8");
+        return {
+          success: true,
+          data: JSON.parse(cacheData)
+        };
+      } catch (error) {
+        logger.error(`Failed to read gold cache: ${error.message}`, "IPC");
+        return {
+          success: false,
+          error: error.message,
+          data: { lastFetched: null, data: null }
+        };
+      }
+    });
+
+    // Handle gold cache write
+    ipcMain.handle("write-gold-cache", async (event, cacheData) => {
+      try {
+        const cachePath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "backend",
+          "database",
+          "gold_cache.json"
+        );
+        
+        fs.writeFileSync(cachePath, JSON.stringify(cacheData, null, 2), "utf8");
+        logger.info("Gold cache updated successfully", "IPC");
+        
+        return {
+          success: true
+        };
+      } catch (error) {
+        logger.error(`Failed to write gold cache: ${error.message}`, "IPC");
+        return {
+          success: false,
+          error: error.message
+        };
+      }
+    });
 
     // Handle file selection dialog
     ipcMain.handle("select-file", async () => {
