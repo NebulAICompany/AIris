@@ -613,12 +613,7 @@ input:checked + .slider:before {
   display: block; /* veya slide efekti istersen transition ile */
 }
 .sidebar.collapsed .sub-menu {
-    top: 37%;
-    max-width: 170px;
-    left: 60px;
-    position: absolute;
-    z-index: 1000;
-    padding-left: 0;
+  display: none;
 }
 
 @keyframes tooltipFadeIn {
