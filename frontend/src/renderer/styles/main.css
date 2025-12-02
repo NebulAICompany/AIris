@@ -570,9 +570,9 @@ input:checked + .slider:before {
   padding-left: 8px;
 }
 
-/* Keep submenu visible if hovering over parent or submenu */
-.nav-item.collapsible:hover + .sub-menu,
-.sub-menu:hover {
+/* Keep submenu visible if hovering over parent or submenu (only when sidebar is expanded) */
+.sidebar:not(.collapsed) .nav-item.collapsible:hover + .sub-menu,
+.sidebar:not(.collapsed) .sub-menu:hover {
   max-height: 500px;
 }
 
@@ -613,12 +613,7 @@ input:checked + .slider:before {
   display: block; /* veya slide efekti istersen transition ile */
 }
 .sidebar.collapsed .sub-menu {
-    top: 37%;
-    max-width: 170px;
-    left: 60px;
-    position: absolute;
-    z-index: 1000;
-    padding-left: 0;
+    display: none !important; /* Hide original submenu when collapsed - floating menu handles it */
 }
 
 @keyframes tooltipFadeIn {
