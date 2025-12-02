@@ -6217,11 +6217,11 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   max-width: 60% !important; /* Match chat page max-width */
   width: 100% !important;
   z-index: 9999 !important;
-  background: var(--bg-primary) !important;
-  padding: 8px 24px !important;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;
+  background: transparent !important; /* Remove background */
+  padding: 16px 24px !important; /* Increase padding for breathing room */
+  box-shadow: none !important; /* Remove shadow */
   margin: 0 !important;
-  border-top: 1px solid var(--border-color) !important;
+  border-top: none !important; /* Remove top border */
   pointer-events: auto !important;
   will-change: transform !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -6324,11 +6324,12 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   display: flex;
   gap: 8px; /* Reduced from 12px */
   align-items: center;
-  background-color: transparent;
+  background-color: var(--bg-primary); /* Solid background for readability */
   border: 2px solid rgba(147, 112, 219, 0.3); /* Light purple border */
   border-radius: 32px; /* More oval/rounded */
   padding: 8px 16px; /* Add padding to wrapper */
   transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Add subtle shadow for depth */
 }
 
 /* Reduce padding when Q&A container is active */
@@ -6344,7 +6345,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   font-family: var(--font-primary);
   font-size: 14px;
   line-height: 1.4;
-  background-color: transparent; /* Transparent background */
+  background-color: var(--bg-primary); /* Solid background */
   color: var(--text-primary);
   resize: none;
   min-height: 44px;
