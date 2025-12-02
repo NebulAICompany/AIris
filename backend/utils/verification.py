@@ -135,7 +135,20 @@ async def verify_document(file_path: str) -> dict:
         )
         logger.info("Verification Deep Agent completed successfully")
 
-        result_data = extract_result_data(verification_result)
+        # Extract structured output (same pattern as main agent)
+        if (
+            not isinstance(verification_result, dict)
+            or "structured_response" not in verification_result
+        ):
+            logger.error("No structured_response found in verification result")
+            return {
+                "error": "Yapılandırılmış yanıt alınamadı",
+                "status": "başarısız",
+                "timestamp": datetime.now().isoformat(),
+            }
+
+        structured_data = verification_result["structured_response"]
+        result_data = structured_data.model_dump()
         logger.info(f"Result data extracted - Keys: {list(result_data.keys())}")
 
         if not result_data:
@@ -156,33 +169,6 @@ async def verify_document(file_path: str) -> dict:
             "status": "başarısız",
             "timestamp": datetime.now().isoformat(),
         }
-
-
-def extract_result_data(verification_result: Any) -> Dict[str, Any]:
-    """Extract result data from Deep Agent structured output"""
-    if not isinstance(verification_result, dict):
-        logger.warning(
-            f"Verification result is not a dict: {type(verification_result).__name__}"
-        )
-        return {}
-
-    if "structured_response" in verification_result:
-        structured_data = verification_result["structured_response"]
-
-        if hasattr(structured_data, "model_dump"):
-            return structured_data.model_dump()
-        elif hasattr(structured_data, "dict"):
-            return structured_data.dict()
-        elif isinstance(structured_data, dict):
-            return structured_data
-        else:
-            logger.warning(
-                f"Cannot convert structured_response to dict: {type(structured_data).__name__}"
-            )
-            return {}
-
-    logger.error("No structured_response found in verification result")
-    return {}
 
 
 def format_result_for_frontend(

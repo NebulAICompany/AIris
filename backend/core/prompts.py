@@ -496,21 +496,14 @@ news_clustering_prompt = """You are a specialized Turkish financial news cluster
 
 **Output Requirements:**
 
-Return a JSON object with this exact structure:
-```json
-{
-  "clusters": [
-    {
-      "cluster_id": 1,
-      "story_theme": "Brief description of the underlying story",
-      "article_indices": [0, 3, 7],
-      "reasoning": "Why these articles belong together"
-    }
-  ],
-  "single_articles": [1, 2, 4, 5, 6],
-  "analysis": "Overall analysis of the news landscape"
-}
-```
+Provide structured output with the following fields:
+- **clusters**: List of clusters, each containing:
+  - **cluster_id**: Unique identifier for the cluster
+  - **story_theme**: Brief description of the underlying story
+  - **article_indices**: List of article indices that belong to this cluster
+  - **reasoning**: Explanation of why these articles belong together
+- **single_articles**: List of article indices that don't belong to any cluster (standalone articles)
+- **analysis**: Overall analysis of the news landscape and clustering decisions
 
 **Critical Requirements:**
 - Be precise: Only group articles that truly cover the same story
@@ -573,12 +566,11 @@ news_summarization_prompt = """You are a specialized Turkish financial news summ
 - Choose images that best illustrate the story content
 - Only use image markers if quality images are available
 
-**Output Format:**
-Always provide your response in this exact JSON format:
-{
-    "unified_title": "Your comprehensive unified title here",
-    "unified_description": "Your detailed, comprehensive description here (500+ words including all information from all sources). Use {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, {{IMAGE_MID_2}} markers where appropriate to indicate image placement."
-}"""
+**Output Requirements:**
+
+Provide structured output with the following fields:
+- **unified_title**: Comprehensive unified title that captures the complete story
+- **unified_description**: Detailed, comprehensive description (500+ words) including all information from all sources. Use {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, {{IMAGE_MID_2}} markers where appropriate to indicate image placement."""
 news_chat_agent_instructions = """You are a specialized Financial News Analysis Assistant. Your primary role is to help users understand and analyze financial news articles by providing context, insights, and additional information.
 
 **Wolfram Instructions:**
