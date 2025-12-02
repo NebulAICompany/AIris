@@ -52,6 +52,50 @@ class MainAgentResponse(BaseModel):
     )
 
 
+class NewsCluster(BaseModel):
+    """Represents a cluster of related news articles"""
+
+    cluster_id: int = Field(..., description="Unique identifier for the cluster")
+    story_theme: str = Field(
+        ..., description="Brief description of the underlying story or theme"
+    )
+    article_indices: List[int] = Field(
+        ..., description="List of article indices that belong to this cluster"
+    )
+    reasoning: str = Field(
+        ..., description="Explanation of why these articles belong together"
+    )
+
+
+class NewsClusteringResponse(BaseModel):
+    """Structured output for news clustering agent"""
+
+    clusters: List[NewsCluster] = Field(
+        default_factory=list,
+        description="List of clusters containing related articles covering the same story",
+    )
+    single_articles: List[int] = Field(
+        default_factory=list,
+        description="List of article indices that don't belong to any cluster (standalone articles)",
+    )
+    analysis: str = Field(
+        ...,
+        description="Overall analysis of the news landscape and clustering decisions",
+    )
+
+
+class NewsSummarizationResponse(BaseModel):
+    """Structured output for news summarization agent"""
+
+    unified_title: str = Field(
+        ..., description="Comprehensive unified title that captures the complete story"
+    )
+    unified_description: str = Field(
+        ...,
+        description="Detailed, comprehensive description (500+ words) including all information from all sources. Use {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, {{IMAGE_MID_2}} markers where appropriate.",
+    )
+
+
 main_agent_tools = [
     wolfram_alpha_query,
     time_now,
@@ -141,7 +185,7 @@ def create_news_summarization_agent(
         model="gpt-4o-mini",
         tools=[web_search_tool] if web_search_enabled else [],
         system_prompt=agent_instructions,
-        response_format=ToolStrategy(MainAgentResponse),
+        response_format=ToolStrategy(NewsSummarizationResponse),
     )
     return agent
 
@@ -152,7 +196,7 @@ def create_clustering_agent(instructions: str):
         model="gpt-4o-mini",
         tools=[],
         system_prompt=instructions,
-        response_format=ToolStrategy(MainAgentResponse),
+        response_format=ToolStrategy(NewsClusteringResponse),
     )
     return agent
 
