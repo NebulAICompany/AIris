@@ -4766,7 +4766,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 .news-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 12px;
+  padding: 0 12px 120px 12px; /* Add bottom padding to prevent content from hiding behind fixed input */
   box-sizing: border-box;
 }
 
@@ -5284,7 +5284,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 
 @media (max-width: 768px) {
   .news-container {
-    padding: 0 8px;
+    padding: 0 8px 100px 8px; /* Add bottom padding for mobile to prevent content from hiding behind fixed input */
   }
 
   .news-header h2 {
@@ -5917,6 +5917,8 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   display: flex;
   flex-direction: column;
   padding: 0;
+  position: static !important; /* Ensure no positioning context */
+  transform: none !important; /* Remove any transforms that affect fixed positioning */
 }
 
 .news-detail-header {
@@ -6137,10 +6139,12 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 /* News Chat Styles */
 .news-chat-section {
   margin-top: 40px;
-  padding: 24px;
-  background-color: var(--bg-secondary);
+  padding: 0 !important; /* Remove padding that affects layout */
+  background-color: transparent !important;
   border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
+  border: none !important;
+  position: static !important; /* Ensure it doesn't create positioning context */
+  transform: none !important;
 }
 
 /* Reduce spacing when Q&A container exists */
@@ -6204,22 +6208,24 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   margin: 0;
 }
 
+#news-chat-input-container,
 .news-chat-input-container {
-  transition: var(--transition);
   position: fixed !important;
   bottom: 0 !important;
-  left: var(--sidebar-collapsed-width) !important;
-  right: 0 !important;
-  z-index: 5;
-  background: var(--bg-primary);
-  /* Ana içerik ile aynı arka plan */
-  padding: 12px 24px;
-  /* subtle top shadow to separate from content */
-  box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.04);
-  margin-left: 0;
-  margin-right: 0;
-  border-top: 1px solid var(--border-color);
-  /* Hafif ayırıcı çizgi */
+  left: 50% !important;
+  transform: translateX(-50%) translateZ(0) !important;
+  max-width: 60% !important; /* Match chat page max-width */
+  width: 100% !important;
+  z-index: 9999 !important;
+  background: var(--bg-primary) !important;
+  padding: 8px 24px !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06) !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--border-color) !important;
+  pointer-events: auto !important;
+  will-change: transform !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  contain: layout !important;
 }
 
 /* Fixed chat bar for news detail page */
@@ -6249,30 +6255,34 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 }
 
 /* Adjust news chat input when sidebar is expanded or hovered */
+.sidebar.expanded~.content-area #news-chat-input-container,
 .sidebar.expanded~.content-area .news-chat-input-container,
+.sidebar:hover~.content-area #news-chat-input-container,
 .sidebar:hover~.content-area .news-chat-input-container {
-  left: var(--sidebar-width) !important;
+  max-width: 55% !important; /* Slightly narrower when sidebar is open */
 }
 
 /* Ensure proper positioning when sidebar is collapsed */
+.sidebar.collapsed~.content-area #news-chat-input-container,
 .sidebar.collapsed~.content-area .news-chat-input-container {
-  left: var(--sidebar-collapsed-width) !important;
+  max-width: 60% !important;
 }
 
 /* Add padding to news content to prevent overlap with fixed input */
 .news-detail-article {
-  padding-bottom: 80px;
-  /* Space for fixed input */
+  padding-bottom: 120px;
+  /* Space for fixed input - increased to ensure no overlap */
 }
 
 /* Responsive adjustments for news chat input */
 @media (max-width: 768px) {
-  .news-chat-input-container {
-    padding: 8px 16px;
-    left: 0 !important;
-    /* Full width on mobile */
-    right: 0 !important;
-    /* Full width on mobile */
+  .news-chat-input-container,
+  #news-chat-input-container {
+    padding: 8px 16px !important;
+    width: calc(100% - 32px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateZ(0) !important;
+    max-width: none !important;
   }
 
   .news-chat-fixed {
@@ -6312,12 +6322,12 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 
 .news-chat-input-wrapper {
   display: flex;
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px */
   align-items: center;
   background-color: transparent;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 0;
+  border: 2px solid rgba(147, 112, 219, 0.3); /* Light purple border */
+  border-radius: 32px; /* More oval/rounded */
+  padding: 8px 16px; /* Add padding to wrapper */
   transition: var(--transition);
 }
 
@@ -6328,13 +6338,13 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 
 .news-chat-input {
   flex: 1;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 12px 16px;
+  border: none; /* Remove border since wrapper has it */
+  border-radius: 0;
+  padding: 8px 12px; /* Reduced padding */
   font-family: var(--font-primary);
   font-size: 14px;
   line-height: 1.4;
-  background-color: var(--bg-primary);
+  background-color: transparent; /* Transparent background */
   color: var(--text-primary);
   resize: none;
   min-height: 44px;
@@ -6349,8 +6359,11 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 
 .news-chat-input:focus {
   outline: none;
+}
+
+.news-chat-input-wrapper:focus-within {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(147, 112, 219, 0.1);
 }
 
 .news-chat-send-btn {

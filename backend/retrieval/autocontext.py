@@ -236,7 +236,6 @@ Document summary:"""
                 # Fall back to original chunk
                 processed_chunks.append(chunk)
         logger.info(f"Processed {len(processed_chunks)} chunks")
-        logger.info(f"Processed chunks: {processed_chunks}")
         return processed_chunks
 
 
