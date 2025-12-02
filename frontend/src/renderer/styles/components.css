@@ -2145,12 +2145,12 @@ body.dark-theme .image-caption {
   overflow-x: hidden;
   padding: 16px 24px;
   background-color: transparent;
-  margin: 0;
+  margin: 0 auto;
   width: 100%;
-  max-width: 60%;
-  align-self: center;
+  max-width: 1000px;  /* sabit ve ideal */
   box-sizing: border-box;
 }
+
 
 .welcome-message {
   text-align: center;
@@ -2285,7 +2285,6 @@ body.dark-theme .image-caption {
 }
 
 .message.user-message .message-time {
-  text-align: left;
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -2480,8 +2479,9 @@ body.dark-theme .image-caption {
   padding: 16px;
   border-radius: var(--border-radius-lg);
   width: 100%;
-  max-width: 60%;
+  max-width: 986px;
   align-self: center;
+  margin-left: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
