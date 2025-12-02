@@ -1,11 +1,10 @@
-import json
 from typing import List, Dict, Any
 from dataclasses import dataclass
-from backend.core.runner import generate_answer
 from backend.core.agents import create_clustering_agent
 from backend.core.prompts import news_clustering_prompt
 from backend.shared.logger import get_logger
 from backend.utils.news import NewsArticle
+from langchain_core.messages import HumanMessage
 
 logger = get_logger("LLM_CLUSTERING")
 
@@ -50,50 +49,12 @@ class LLMNewsClusterer:
 
             prompt += f"[{i}] {article.source}: {title}{summary_snippet}\n"
 
-        prompt += f"""
+        prompt += """
 **Task:** Group articles covering the same Turkish financial story/event. 
-
-**Output JSON:**
-{{
-  "clusters": [
-    {{"cluster_id": 1, "story_theme": "theme", "article_indices": [0,3,7], "reasoning": "why"}}
-  ],
-  "analysis": "brief analysis"
-}}
 
 Be conservative - only cluster truly related stories. You don't need to include all indices."""
 
         return prompt
-
-    def _parse_clustering_response(
-        self, response: str, total_articles: int
-    ) -> ClusterResult:
-        """Parse LLM response into structured cluster result - simplified"""
-        try:
-            # Try to extract JSON from response
-            json_start = response.find("{")
-            json_end = response.rfind("}") + 1
-
-            if json_start == -1 or json_end == 0:
-                logger.warning("No JSON found in LLM response, using fallback")
-                return self._create_fallback_result(total_articles)
-
-            json_str = response[json_start:json_end]
-            parsed = json.loads(json_str)
-
-            # Basic structure check only
-            if "clusters" not in parsed:
-                parsed["clusters"] = []
-
-            logger.info(f"LLM clustering parsed: {len(parsed['clusters'])} clusters")
-
-            return ClusterResult(
-                clusters=parsed["clusters"],
-                analysis=parsed.get("analysis", "LLM clustering completed"),
-            )
-        except Exception as e:
-            logger.warning(f"Error parsing response: {e}, using fallback")
-            return self._create_fallback_result(total_articles)
 
     def _create_fallback_result(self, total_articles: int) -> ClusterResult:
         """Create fallback result when LLM parsing fails"""
@@ -131,16 +92,32 @@ Be conservative - only cluster truly related stories. You don't need to include 
 
             try:
                 # Add timeout to prevent hanging (2 minutes max)
-                response = await asyncio.wait_for(
-                    generate_answer(analysis_prompt, agent), timeout=120  # 2 minutes
+                result = await asyncio.wait_for(
+                    agent.ainvoke(
+                        {"messages": [HumanMessage(content=analysis_prompt)]}
+                    ),
+                    timeout=120,  # 2 minutes
                 )
-                logger.info(f"LLM response received ({len(response)} chars)")
+                logger.info("LLM response received")
             except asyncio.TimeoutError:
                 logger.error("LLM clustering timed out after 2 minutes")
                 return self._create_fallback_result(len(articles))
 
-            # Parse response (simplified validation)
-            cluster_result = self._parse_clustering_response(response, len(articles))
+            # Extract structured output (same pattern as main agent)
+            if not isinstance(result, dict) or "structured_response" not in result:
+                logger.error("No structured_response found in result")
+                return self._create_fallback_result(len(articles))
+
+            structured_data = result["structured_response"]
+            data = structured_data.model_dump()
+
+            # Extract clusters and analysis
+            clusters = data.get("clusters", [])
+            analysis = data.get("analysis", "LLM clustering completed")
+
+            logger.info(f"LLM clustering parsed: {len(clusters)} clusters")
+
+            cluster_result = ClusterResult(clusters=clusters, analysis=analysis)
 
             # Log final results
             multi_clusters = len(
