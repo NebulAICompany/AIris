@@ -664,8 +664,8 @@ input:checked + .slider:before {
   /* Fix scroll behavior to prevent content shifting */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  transform: translateZ(0);
-  will-change: scroll-position;
+  /* Remove transform that affects fixed children */
+  position: relative;
 }
 
 /* Specific handling for calculator tab to prevent double scrolling */
@@ -694,9 +694,12 @@ input:checked + .slider:before {
 
 /* Special layout for news tab - full page scrolling */
 #news-tab {
-  padding: 24px 0;
+  padding: 24px 0 120px 0; /* Add bottom padding for fixed input bar */
   overflow-y: auto;
+  overflow-x: hidden;
   margin: 0;
+  position: static !important; /* Don't create positioning context */
+  transform: none !important; /* Remove any transform */
 }
 
 /* Utility Classes */
