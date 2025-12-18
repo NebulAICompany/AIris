@@ -27,7 +27,6 @@ async def generate_fusion_queries(
         agent = create_main_agent(
             local_context="",
             web_search_enabled=False,
-            query=original_query,
             instruction="Generate multiple search queries based on the input query",
         )
 
@@ -94,7 +93,10 @@ Generated queries:"""
         return [original_query]
 
 
-def fuse_results(search_results_dict: Dict[str, List[Dict[str, Any]]], combination_method: str = "rrf") -> List[Dict[str, Any]]:
+def fuse_results(
+    search_results_dict: Dict[str, List[Dict[str, Any]]],
+    combination_method: str = "rrf",
+) -> List[Dict[str, Any]]:
     """
     Fuse multiple results into a single result.
     """
@@ -104,7 +106,9 @@ def fuse_results(search_results_dict: Dict[str, List[Dict[str, Any]]], combinati
         return search_results_dict
 
 
-def reciprocal_rank_fusion(search_results_dict: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+def reciprocal_rank_fusion(
+    search_results_dict: Dict[str, List[Dict[str, Any]]],
+) -> List[Dict[str, Any]]:
     """
     Apply Reciprocal Rank Fusion to combine search results from multiple queries.
 
