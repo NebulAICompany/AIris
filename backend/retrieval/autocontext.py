@@ -7,6 +7,7 @@ import re
 
 logger = get_logger("AUTOCONTEXT")
 
+
 class AutoContextProcessor:
     """
     AutoContext processor that creates contextual chunk headers for improved RAG retrieval.
@@ -49,7 +50,6 @@ class AutoContextProcessor:
             agent = create_main_agent(
                 local_context="",
                 web_search_enabled=False,
-                query="Generate document title",
                 instruction="Create a short and descriptive title for the document. Write the title in the language of the document.",
             )
 
@@ -103,7 +103,6 @@ Generated title:"""
             agent = create_main_agent(
                 local_context="",
                 web_search_enabled=False,
-                query="Generate document summary",
                 instruction="Generate a comprehensive summary of the document. Write the summary in the language of the document.",
             )
             summary_prompt = f"""You are a document analyst. Generate a comprehensive summary of the document below.
@@ -186,7 +185,7 @@ Document summary:"""
         Returns:
             List of chunks with contextual headers
         """
-        if not chunks: 
+        if not chunks:
             return chunks
 
         # Reconstruct document text from chunks
@@ -194,10 +193,14 @@ Document summary:"""
 
         # Generate document title if not provided
         if not document_title:
-            document_title = await self.generate_document_title(document_text, file_name)
+            document_title = await self.generate_document_title(
+                document_text, file_name
+            )
 
         # Generate document summary
-        document_summary = await self.generate_document_summary(document_text, document_title)
+        document_summary = await self.generate_document_summary(
+            document_text, document_title
+        )
 
         # Process each chunk
         processed_chunks = []
@@ -205,10 +208,7 @@ Document summary:"""
             try:
                 # Create contextual header
                 contextual_chunk_text = self.create_contextual_header(
-                    chunk.page_content,
-                    file_name,
-                    document_title,
-                    document_summary
+                    chunk.page_content, file_name, document_title, document_summary
                 )
 
                 # Create new chunk with contextual header
@@ -228,7 +228,9 @@ Document summary:"""
                     }
                 )
 
-                processed_chunk = Document(page_content=contextual_chunk_text, metadata=new_metadata)
+                processed_chunk = Document(
+                    page_content=contextual_chunk_text, metadata=new_metadata
+                )
                 processed_chunks.append(processed_chunk)
 
             except Exception as e:
@@ -264,7 +266,9 @@ async def apply_autocontext(
     if not enabled or not chunks:
         return chunks
     try:
-        return await autocontext_processor.process_document_chunks(chunks, document_title=document_title, file_name=file_name)
+        return await autocontext_processor.process_document_chunks(
+            chunks, document_title=document_title, file_name=file_name
+        )
     except Exception as e:
         logger.error(f"AutoContext processing failed: {e}")
         return chunks  # Return original chunks if processing fails
