@@ -2,7 +2,6 @@ import time
 from typing import Tuple, List, Dict, Any
 from backend.monitoring.metrics import llm_duration_seconds
 from backend.shared.logger import get_logger
-from langchain_core.messages import HumanMessage
 
 logger = get_logger("AGENT_RUNNER")
 
@@ -19,7 +18,9 @@ async def generate_answer(
     try:
         start_time = time.time()
 
-        result = await agent.ainvoke({"messages": [HumanMessage(content=prompt)]})
+        result = await agent.ainvoke(
+            {"messages": [{"role": "user", "content": prompt}]}
+        )
 
         if not isinstance(result, dict) or "structured_response" not in result:
             logger.error("No structured_response found in result")

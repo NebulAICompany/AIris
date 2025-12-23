@@ -171,7 +171,7 @@ ANTHROPIC_MODEL = ChatAnthropic(
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-5.1",
+    model="gpt-5.2",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
     callbacks=[ConsoleCallbackHandler()],
