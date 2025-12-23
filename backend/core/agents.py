@@ -1,6 +1,5 @@
 from langchain.agents import create_agent
 from .prompts import (
-    wolfram_instructions,
     main_agent_instructions,
     news_chat_agent_instructions,
 )
@@ -16,6 +15,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.visual import image_visualizer, redescribe_image_content
+from .tools.rag import search_local_documents
 from backend.shared.constants import OPENAI_MODEL
 
 
@@ -97,6 +97,7 @@ class NewsSummarizationResponse(BaseModel):
 
 
 main_agent_tools = [
+    search_local_documents,  # RAG search tool for agentic retrieval
     wolfram_alpha_query,
     time_now,
     image_visualizer,
@@ -107,16 +108,17 @@ main_agent_tools = [
 
 
 def create_main_agent(
-    local_context: str,
-    web_search_enabled: bool,
-    query: str,
+    local_context: str = None,
+    web_search_enabled: bool = False,
     instruction: str = None,
     conversation_history: List = None,
+    selected_files: List[str] = None,
 ):
     """
-    Create a Deep Agent for main assistant functionality.
+    Create a Deep Agent for main assistant functionality with agentic RAG.
 
     Returns a Deep Agent configured with tools, subagents, and custom instructions.
+    The agent can use search_local_documents tool to retrieve information on demand.
     """
     instruction_part = (
         f"**Special Instructions:**\n{instruction}\n" if instruction else ""
@@ -144,11 +146,8 @@ def create_main_agent(
         tools.append(web_search_tool)
 
     agent_instructions = main_agent_instructions.format(
-        wolfram_instructions=wolfram_instructions,
-        local_context=local_context,
         web_context_part=web_context_part,
         conversation_context_part=conversation_context_part,
-        query=query,
         instruction_part=instruction_part,
     )
 
@@ -203,7 +202,6 @@ def create_clustering_agent(instructions: str):
 
 def create_news_chat_agent(
     news_context: str,
-    query: str,
     conversation_history: List = None,
 ):
     """
@@ -222,10 +220,8 @@ def create_news_chat_agent(
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
-        wolfram_instructions=wolfram_instructions,
         news_context=news_context,
         conversation_context_part=conversation_context_part,
-        query=query,
     )
 
     agent = create_agent(
