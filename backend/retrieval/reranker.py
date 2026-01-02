@@ -3,11 +3,12 @@ from backend.shared.logger import get_logger
 
 logger = get_logger("RERANKER")
 
+
 def rerank(
     query: str,
     documents: List[Dict[str, Any]],
     with_score: bool = True,
-    model_name: str = "rerank-v3.5",
+    model_name: str = "rerank-v4.0-fast",
     top_n: int = 3,
 ) -> List[Dict[str, Any]]:
 
@@ -16,6 +17,7 @@ def rerank(
 
     try:
         from backend.shared.constants import co
+
         doc_contents = [doc["content"] for doc in documents]
 
         response = co.rerank(
