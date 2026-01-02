@@ -48,7 +48,6 @@ class AutoContextProcessor:
         try:
             # Create a simple agent for title generation
             agent = create_main_agent(
-                local_context="",
                 web_search_enabled=False,
                 instruction="Create a short and descriptive title for the document. Write the title in the language of the document.",
             )
@@ -101,7 +100,6 @@ Generated title:"""
         try:
             # Create a simple agent for summary generation
             agent = create_main_agent(
-                local_context="",
                 web_search_enabled=False,
                 instruction="Generate a comprehensive summary of the document. Write the summary in the language of the document.",
             )

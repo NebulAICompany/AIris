@@ -70,7 +70,6 @@ async def run_orchestration(
     agent = create_main_agent(
         web_search_enabled=web_search_enabled,
         conversation_history=conversation_context,
-        selected_files=selected_files,  # Pass selected files so agent can filter searches
     )
     # Generate initial answer with structured output
     answer, web_sources, api_sources = await generate_answer(

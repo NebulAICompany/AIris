@@ -25,7 +25,6 @@ async def generate_fusion_queries(
     try:
         # Create a simple agent for query generation
         agent = create_main_agent(
-            local_context="",
             web_search_enabled=False,
             instruction="Generate multiple search queries based on the input query",
         )
