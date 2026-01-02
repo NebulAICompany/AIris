@@ -3,6 +3,7 @@ from .prompts import (
     main_agent_instructions,
     news_chat_agent_instructions,
 )
+from langgraph.store.postgres import PostgresStore
 from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
@@ -108,11 +109,9 @@ main_agent_tools = [
 
 
 def create_main_agent(
-    local_context: str = None,
     web_search_enabled: bool = False,
     instruction: str = None,
     conversation_history: List = None,
-    selected_files: List[str] = None,
 ):
     """
     Create a Deep Agent for main assistant functionality with agentic RAG.
