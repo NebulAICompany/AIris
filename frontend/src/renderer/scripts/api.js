@@ -4,7 +4,7 @@ class APIService {
   constructor() {
     this.isElectron = typeof window.airisAPI !== "undefined";
     this.baseURL = "http://localhost:8001";
-    this.timeout = 300000; // Increased from 30s to 45s
+    this.timeout = 600000; // 10 minutes timeout
 
     // Always set up axios for API calls, regardless of environment
     this.setupAxios();
@@ -160,8 +160,8 @@ class APIService {
   ) {
     try {
       // Determine timeout based on enabled features
-      let timeout = 300000; // Base timeout: 90 seconds
-      if (webSearchEnabled) timeout += 30000; // Add 30s for web search
+      let timeout = 600000; // Base timeout: 10 minutes
+      if (webSearchEnabled) timeout += 60000; // Add 1 minute for web search
       // RAG Fusion disabled - no timeout adjustment needed
 
       console.log(
