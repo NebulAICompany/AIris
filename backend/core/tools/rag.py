@@ -1,21 +1,13 @@
 from langchain_core.tools import tool
 from typing import List, Optional
 from backend.retrieval.retriever import (
-    load_vectorstore,
+    get_vectorstore,
     retrieve_top_k,
 )
 from backend.retrieval.reranker import rerank
-from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 
 logger = get_logger("RAG_TOOL")
-
-# Initialize vectorstore client at module level
-try:
-    _vectorstore_client = load_vectorstore(VECTORSTORE_PATH_STR)
-except Exception as e:
-    logger.warning(f"Failed to load vectorstore at module initialization: {e}")
-    _vectorstore_client = None
 
 
 @tool
@@ -46,18 +38,21 @@ def search_local_documents(
         # Limit max_results to reasonable bounds
         max_results = min(max(1, max_results), 10)
 
+        # Get the global vectorstore client
+        client = get_vectorstore()
+        
         # Check if client is available
-        if _vectorstore_client is None:
+        if client is None:
             return "Vectorstore is not available. Please ensure documents are uploaded."
 
         # Check if collection exists
-        if not _vectorstore_client.collection_exists(collection_name="test_collection"):
+        if not client.collection_exists(collection_name="test_collection"):
             logger.info("No collection found in vectorstore")
             return "No documents have been uploaded to the knowledge base yet."
 
         # Retrieve documents using vector search
         retrieved_docs = retrieve_top_k(
-            client=_vectorstore_client,
+            client=client,
             query=query,
             k=15,
             selected_files=selected_files,
