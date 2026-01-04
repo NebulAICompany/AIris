@@ -106,7 +106,6 @@ BALANCE_TRANSACTION_CATEGORY_ALIASES = {
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
-VERIFICATION_UPLOADS_PATH = DATABASE_DIR / "verification_uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
