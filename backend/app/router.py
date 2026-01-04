@@ -567,23 +567,24 @@ def delete_file(filename: str):
                 json.dump(pii_maps, f, ensure_ascii=False, indent=2)
 
         try:
-            from backend.retrieval.retriever import load_vectorstore
+            from backend.retrieval.retriever import get_vectorstore
 
-            client = load_vectorstore(VECTORSTORE_PATH_STR)
-            logger.info(f"Vector store loaded successfully")
-
-            client.delete(
-                collection_name="test_collection",
-                points_selector=models.Filter(
-                    must=[
-                        models.FieldCondition(
-                            key="metadata.file_name",
-                            match=models.MatchValue(value=base_filename),
-                        )
-                    ]
-                ),
-            )
-            client.close()
+            client = get_vectorstore()
+            if client is not None:
+                logger.info(f"Vector store loaded successfully")
+                client.delete(
+                    collection_name="test_collection",
+                    points_selector=models.Filter(
+                        must=[
+                            models.FieldCondition(
+                                key="metadata.file_name",
+                                match=models.MatchValue(value=base_filename),
+                            )
+                        ]
+                    ),
+                )
+            else:
+                logger.warning("Vector store client not available for deletion")
         except Exception as e:
             logger.error(f"Error deleting chunks from vector store: {e}")
 
