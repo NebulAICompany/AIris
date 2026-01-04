@@ -7,6 +7,7 @@ from backend.retrieval.keyword_search import keyword_search
 
 logger = get_logger("RETRIEVER")
 
+_qdrant_client: Optional[QdrantClient] = None
 
 def _get_embeddings() -> Embeddings:
     try:
@@ -31,19 +32,39 @@ def _get_embeddings() -> Embeddings:
 
 
 def load_vectorstore(path: str) -> QdrantClient:
+    global _qdrant_client
+    
+    if _qdrant_client is not None:
+        return _qdrant_client
+    
     try:
-        client = QdrantClient(path=path)
+        _qdrant_client = QdrantClient(path=path)
         logger.info(f"✅ Vectorstore loaded from {path}")
-        if client.collection_exists(collection_name="test_collection"):
+        if _qdrant_client.collection_exists(collection_name="test_collection"):
             logger.info(
-                f"📦 Contains {client.count(collection_name='test_collection')} document chunks"
+                f"📦 Contains {_qdrant_client.count(collection_name='test_collection')} document chunks"
             )
         else:
             logger.info("No collection found")
-        return client
+        return _qdrant_client
     except Exception as e:
         raise RuntimeError(f"Failed to load vectorstore from {path}: {e}") from e
 
+
+def get_vectorstore() -> Optional[QdrantClient]:
+    return _qdrant_client
+
+
+def close_vectorstore() -> None:
+    global _qdrant_client
+    if _qdrant_client is not None:
+        try:
+            _qdrant_client.close()
+            logger.info("Qdrant client closed")
+        except Exception as e:
+            logger.warning(f"Error closing Qdrant client: {e}")
+        finally:
+            _qdrant_client = None
 
 def retrieve_top_k(
     client: QdrantClient,
