@@ -9,7 +9,7 @@ from backend.app.router import router as query_router
 from backend.utils.market_data import init_market_data
 from backend.shared.logger import get_logger
 from fastapi.staticfiles import StaticFiles
-from backend.retrieval.retriever import load_vectorstore
+from backend.retrieval.retriever import load_vectorstore, close_vectorstore
 from backend.shared.constants import (
     VECTORSTORE_PATH_STR,
     FRONTEND_RENDERER_DIR,
@@ -75,6 +75,7 @@ async def lifespan(app: FastAPI):
         from backend.core.checkpointer import close_checkpointer
 
         await close_checkpointer()
+        close_vectorstore()
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
 

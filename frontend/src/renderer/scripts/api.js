@@ -4,7 +4,7 @@ class APIService {
   constructor() {
     this.isElectron = typeof window.airisAPI !== "undefined";
     this.baseURL = "http://localhost:8001";
-    this.timeout = 300000; // Increased from 30s to 45s
+    this.timeout = 600000; // 10 minutes timeout
 
     // Always set up axios for API calls, regardless of environment
     this.setupAxios();
@@ -160,8 +160,8 @@ class APIService {
   ) {
     try {
       // Determine timeout based on enabled features
-      let timeout = 300000; // Base timeout: 90 seconds
-      if (webSearchEnabled) timeout += 30000; // Add 30s for web search
+      let timeout = 600000; // Base timeout: 10 minutes
+      if (webSearchEnabled) timeout += 60000; // Add 1 minute for web search
       // RAG Fusion disabled - no timeout adjustment needed
 
       console.log(
@@ -816,136 +816,6 @@ class APIService {
         response: null,
       };
     }
-  }
-
-  // Document Verification API methods
-
-  async verifyDocument(file, verificationType = "auto", progressCallback) {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("verification_type", verificationType);
-
-      const config = {
-        timeout: 120000, // 2 minutes for document verification
-      };
-
-      // Call progress callback for start
-      if (progressCallback) {
-        progressCallback(0, "Doğrulama Başlatılıyor...");
-      }
-
-      const response = await this.api.post("/api/verify", formData, config);
-
-      // Call progress callback for completion
-      if (progressCallback) {
-        progressCallback(100, "Verification completed");
-      }
-
-      return {
-        success: true,
-        data: response.data,
-        verificationResult: response.data,
-        status: response.data.status,
-        confidenceScore: response.data.confidence_score || 0,
-        stages: response.data.stages || {},
-        warnings: response.data.warnings || [],
-        errors: response.data.errors || [],
-      };
-    } catch (error) {
-      console.error("Document verification API error:", error);
-
-      let errorMessage = "Document verification failed";
-
-      if (error.name === "AbortError" || error.message.includes("timeout")) {
-        errorMessage =
-          "Verification took too long to complete. Please try with a smaller file or try again.";
-      } else if (error.message.includes("fetch")) {
-        errorMessage =
-          "Unable to connect to the verification service. Please check your connection.";
-      } else if (error.message.includes("500")) {
-        errorMessage =
-          "The verification service is temporarily unavailable. Please try again.";
-      } else if (error.message.includes("400")) {
-        errorMessage =
-          "Invalid file format or request. Please check the file and try again.";
-      } else {
-        errorMessage = error.message;
-      }
-
-      return {
-        success: false,
-        error: errorMessage,
-        verificationResult: null,
-        status: "error",
-      };
-    }
-  }
-
-  // Batch document verification
-  async batchVerifyDocuments(
-    files,
-    verificationType = "auto",
-    progressCallback
-  ) {
-    const results = [];
-    let completed = 0;
-
-    for (const file of files) {
-      try {
-        const result = await this.verifyDocument(
-          file,
-          verificationType,
-          (fileProgress, status) => {
-            if (progressCallback) {
-              const totalProgress = Math.round(
-                ((completed + fileProgress / 100) / files.length) * 100
-              );
-              progressCallback(totalProgress, file.name, status);
-            }
-          }
-        );
-
-        results.push({
-          file: file.name,
-          ...result,
-        });
-
-        completed++;
-
-        if (progressCallback) {
-          progressCallback(
-            Math.round((completed / files.length) * 100),
-            file.name,
-            "Completed"
-          );
-        }
-      } catch (error) {
-        results.push({
-          file: file.name,
-          success: false,
-          error: error.message,
-          status: "error",
-        });
-        completed++;
-      }
-    }
-
-    return {
-      success: true,
-      results,
-      summary: {
-        total: files.length,
-        verified: results.filter((r) => r.success && r.status === "verified")
-          .length,
-        rejected: results.filter((r) => r.success && r.status === "rejected")
-          .length,
-        reviewRequired: results.filter(
-          (r) => r.success && r.status === "review_required"
-        ).length,
-        failed: results.filter((r) => !r.success).length,
-      },
-    };
   }
 
   // Dev tools (handled by main process)
