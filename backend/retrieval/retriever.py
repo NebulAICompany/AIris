@@ -78,8 +78,10 @@ def retrieve_top_k(
             logger.info("No collection found")
             return None
 
-        logger.info(f"📊 Searching through {client.count(collection_name='test_collection')} document chunks")
-        
+        logger.info(
+            f"📊 Searching through {client.count(collection_name='test_collection')} document chunks"
+        )
+
         if selected_files:
             selected_files = [file.split(".")[0] for file in selected_files]
             logger.info(f"🔍 Searching through {selected_files} document chunks")
@@ -137,6 +139,7 @@ def retrieve_top_k(
         logger.error(f"❌ Error during retrieval: {e}")
         return []
 
+
 def retrieve_with_keyword_helping(
     client: QdrantClient,
     query: str,
@@ -148,10 +151,14 @@ def retrieve_with_keyword_helping(
         logger.info(f"🔍 Vector + keyword search helping for: '{query}' (limit: {k}+3)")
 
         # Perform keyword search
-        vector_results = retrieve_top_k(client, query, k=k, selected_files=selected_files)
+        vector_results = retrieve_top_k(
+            client, query, k=k, selected_files=selected_files
+        )
         results = keyword_search(query_terms, k=3, selected_files=selected_files)
         results = vector_results + results
-        logger.info(f"✅ Retrieved {len(results)} documents via vector + keyword search helping")
+        logger.info(
+            f"✅ Retrieved {len(results)} documents via vector + keyword search helping"
+        )
 
         return results
 
