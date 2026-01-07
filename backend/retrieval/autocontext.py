@@ -1,8 +1,8 @@
 from typing import List
-from backend.core.runner import generate_answer
-from backend.core.agents import create_main_agent
 from backend.shared.logger import get_logger
+from backend.shared.constants import OPENAI_MODEL
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage
 import re
 
 logger = get_logger("AUTOCONTEXT")
@@ -46,12 +46,6 @@ class AutoContextProcessor:
             return existing_title.strip()
 
         try:
-            # Create a simple agent for title generation
-            agent = create_main_agent(
-                web_search_enabled=False,
-                instruction="Create a short and descriptive title for the document. Write the title in the language of the document.",
-            )
-
             title_prompt = f"""You are a document analyst. Create a short and descriptive title for the document below.
 
 Document content (first 2000 characters):
@@ -67,9 +61,11 @@ Requirements:
 
 Generated title:"""
 
-            response = await generate_answer(title_prompt, agent)
+            # Use standard API call instead of agent
+            response = await OPENAI_MODEL.ainvoke([HumanMessage(content=title_prompt)])
+            title = response.content.strip()
+
             # Clean up the response
-            title = response.strip()
             # Remove quotes if present
             title = re.sub(r'^["\']|["\']$', "", title)
             # Limit length
@@ -98,11 +94,6 @@ Generated title:"""
             return ""
 
         try:
-            # Create a simple agent for summary generation
-            agent = create_main_agent(
-                web_search_enabled=False,
-                instruction="Generate a comprehensive summary of the document. Write the summary in the language of the document.",
-            )
             summary_prompt = f"""You are a document analyst. Generate a comprehensive summary of the document below.
 
 Document Title: {document_title}
@@ -120,9 +111,13 @@ Requirements:
 
 Document summary:"""
 
-            response, _, _ = await generate_answer(summary_prompt, agent)
+            # Use standard API call instead of agent
+            response = await OPENAI_MODEL.ainvoke(
+                [HumanMessage(content=summary_prompt)]
+            )
+            summary = response.content.strip()
+
             # Clean up the response
-            summary = response.strip()
             # Remove any quotes
             summary = re.sub(r'^["\']|["\']$', "", summary)
             return summary

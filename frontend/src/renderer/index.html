@@ -114,16 +114,6 @@
             </button>
             <button
               class="nav-item"
-              data-tab="verification"
-              data-tooltip="Document Verification"
-            >
-              <i class="fas fa-shield-alt"></i>
-              <span data-i18n="documentVerification"
-                >Document Verification</span
-              >
-            </button>
-            <button
-              class="nav-item"
               data-tab="calculator"
               data-tooltip="Calculations"
             >
@@ -484,12 +474,14 @@
           <div id="created-documents-tab" class="tab-content">
             <div class="files-container">
               <div class="files-header">
-                <h2 data-i18n="createdDocumentsLibrary">
-                  Created Documents Library
-                </h2>
-                <p data-i18n="manageCreatedDocuments">
-                  View and manage AI-generated financial documents
-                </p>
+                <div class="file-header-text">
+                  <h2 data-i18n="createdDocumentsLibrary">
+                    Created Documents Library
+                  </h2>
+                  <p data-i18n="manageCreatedDocuments">
+                    View and manage AI-generated financial documents
+                  </p>
+                </div>
               </div>
 
               <div class="files-grid" id="created-documents-grid">
@@ -507,197 +499,6 @@
                     data-i18n="startChatBtn"
                   >
                     Start Chat
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Document Verification Tab -->
-          <div id="verification-tab" class="tab-content">
-            <div class="verification-container">
-              <div class="verification-header">
-                <h2 data-i18n="documentVerificationTitle">
-                  Document Verification
-                </h2>
-                <p data-i18n="verifyDocumentsDesc">
-                  Upload documents to verify their authenticity and detect
-                  potential fraud
-                </p>
-              </div>
-
-              <!-- Verification Upload Area -->
-              <div class="verification-upload-section">
-                <div
-                  class="verification-upload-area"
-                  id="verification-upload-area"
-                >
-                  <div class="upload-content">
-                    <div class="upload-icon">
-                      <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <h3 data-i18n="verificationDragDrop">
-                      Drop Document to Verify
-                    </h3>
-                    <p>
-                      <span data-i18n="or">or</span>
-                      <button
-                        class="upload-browse-btn"
-                        id="verification-browse-files"
-                        data-i18n="browseFiles"
-                      >
-                        browse files
-                      </button>
-                    </p>
-                    <div class="supported-formats">
-                      <span data-i18n="verificationSupportedFormats"
-                        >Supported: PDF, JPG, PNG, TIFF, BMP</span
-                      >
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Hidden file input for verification -->
-                <input
-                  type="file"
-                  id="verification-file-input"
-                  accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif,.bmp"
-                  style="display: none"
-                />
-
-                <!-- Verification Type Selection -->
-                <div class="verification-options">
-                  <div class="verification-type-section">
-                    <label for="verification-type" data-i18n="documentType"
-                      >Document Type:</label
-                    >
-                    <select
-                      id="verification-type"
-                      class="verification-type-select"
-                    >
-                      <option value="auto" data-i18n="autoDetect">
-                        Auto Detect
-                      </option>
-                      <option value="invoice" data-i18n="invoice">
-                        Invoice (Fatura)
-                      </option>
-                      <option value="receipt" data-i18n="receipt">
-                        Receipt (Fiş/Makbuz)
-                      </option>
-                      <option value="bank_statement" data-i18n="bankStatement">
-                        Bank Statement
-                      </option>
-                      <option value="payslip" data-i18n="payslip">
-                        Payslip (Maaş Bordrosu)
-                      </option>
-                      <option value="contract" data-i18n="contract">
-                        Contract (Sözleşme)
-                      </option>
-                      <option
-                        value="tax_declaration"
-                        data-i18n="taxDeclaration"
-                      >
-                        Tax Declaration
-                      </option>
-                      <option value="other" data-i18n="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div class="verification-actions">
-                    <button
-                      id="verify-document-btn"
-                      class="btn btn-primary"
-                      disabled
-                    >
-                      <i class="fas fa-shield-alt"></i>
-                      <span data-i18n="verifyDocument">Verify Document</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Verification Results -->
-              <div
-                class="verification-results"
-                id="verification-results"
-                style="display: none"
-              >
-                <div class="verification-results-header">
-                  <h3 data-i18n="verificationResults">Verification Results</h3>
-                  <div class="verification-status" id="verification-status">
-                    <span
-                      class="status-badge"
-                      id="verification-status-badge"
-                      data-i18n="processing"
-                      >Processing...</span
-                    >
-                  </div>
-                </div>
-
-                <!-- Overall Result -->
-                <div class="verification-summary">
-                  <div class="verification-score-card">
-                    <div class="score-circle" id="verification-score-circle">
-                      <div class="score-value" id="verification-score-value">
-                        0%
-                      </div>
-                      <div class="score-label" data-i18n="confidence">
-                        Confidence
-                      </div>
-                    </div>
-                    <div class="verification-details">
-                      <div class="detail-item">
-                        <label data-i18n="documentType">Document Type:</label>
-                        <span id="detected-document-type">-</span>
-                      </div>
-                      <div class="detail-item">
-                        <label data-i18n="verificationStatus">Status:</label>
-                        <span id="verification-final-status">-</span>
-                      </div>
-                      <div class="detail-item">
-                        <label data-i18n="fraudRisk">Fraud Risk:</label>
-                        <span id="fraud-risk-level">-</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Verification Stages -->
-                <div class="verification-stages">
-                  <h4 data-i18n="verificationStages">Verification Stages</h4>
-                  <div class="stages-grid" id="verification-stages-grid">
-                    <!-- Stages will be populated dynamically -->
-                  </div>
-                </div>
-
-                <!-- Warnings and Errors -->
-                <div
-                  class="verification-issues"
-                  id="verification-issues"
-                  style="display: none"
-                >
-                  <div class="issues-section">
-                    <h4 data-i18n="issuesFound">Issues Found</h4>
-                    <div class="issues-list" id="verification-issues-list">
-                      <!-- Issues will be populated dynamically -->
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Download Report -->
-                <div class="verification-actions-bottom">
-                  <button
-                    id="download-verification-report"
-                    class="btn btn-secondary"
-                  >
-                    <i class="fas fa-download"></i>
-                    <span data-i18n="downloadReport">Download Report</span>
-                  </button>
-                  <button id="verify-another-document" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    <span data-i18n="verifyAnother"
-                      >Verify Another Document</span
-                    >
                   </button>
                 </div>
               </div>
@@ -2066,7 +1867,7 @@
                     <label for="timeout" data-i18n="requestTimeout"
                       >Request Timeout (ms)</label
                     >
-                    <input type="number" id="timeout" value="30000" />
+                    <input type="number" id="timeout" value="600000" />
                   </div>
                 </div>
 
