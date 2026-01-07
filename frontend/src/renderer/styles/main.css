@@ -685,13 +685,6 @@ input:checked + .slider:before {
   margin: 0;
 }
 
-/* Special layout for verification tab - prevent content shifting */
-#verification-tab {
-  overflow-y: auto;
-  /* Ensure proper scroll behavior without content shifting */
-  overscroll-behavior: contain;
-}
-
 /* Special layout for news tab - full page scrolling */
 #news-tab {
   padding: 24px 0 120px 0; /* Add bottom padding for fixed input bar */
