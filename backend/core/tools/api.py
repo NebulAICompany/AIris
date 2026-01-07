@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 
 @tool
-async def time_now(tz: str = "Europe/Istanbul") -> str:
+def time_now(tz: str = "Europe/Istanbul") -> str:
     """
     Get the current date and time in ISO 8601 format for a specified timezone.
 

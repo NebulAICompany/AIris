@@ -30,11 +30,6 @@ async def run_orchestration(
     # Add user message to chat history
     chat_history_manager.add_message(session_id, MessageRole.USER, query)
 
-    # Get conversation context
-    conversation_context = chat_history_manager.get_conversation_context(
-        session_id, max_messages=10
-    )
-
     # Reduce history if too long
     session = chat_history_manager.get_session(session_id)
     if session and len(session.messages) > 30:
@@ -69,11 +64,10 @@ async def run_orchestration(
 
     agent = create_main_agent(
         web_search_enabled=web_search_enabled,
-        conversation_history=conversation_context,
     )
     # Generate initial answer with structured output
     answer, web_sources, api_sources = await generate_answer(
-        prompt=masked_query, agent=agent
+        prompt=masked_query, agent=agent, thread_id=session_id
     )
     # 6. Unmask
     final_answer = unmask_text(answer)

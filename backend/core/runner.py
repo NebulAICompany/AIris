@@ -7,19 +7,25 @@ logger = get_logger("AGENT_RUNNER")
 
 
 async def generate_answer(
-    prompt: str, agent: Any
+    prompt: str, agent: Any, thread_id: str = None
 ) -> Tuple[str, List[Dict[str, str]], List[Dict[str, str]]]:
     """
-    Generate answer from Deep Agent and extract web sources and API sources
+    Generate answer from agent and extract web sources and API sources
+
+    Args:
+        prompt: The user's query
+        agent: The agent to invoke
+        thread_id: Optional thread ID for checkpoint persistence (maps to session_id)
 
     Returns:
         Tuple[str, List[Dict[str, str]], List[Dict[str, str]]]: (answer, list of web sources, list of API sources)
     """
     try:
         start_time = time.time()
+        config = {"configurable": {"thread_id": thread_id}}
 
         result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]}
+            {"messages": [{"role": "user", "content": prompt}]}, config=config
         )
 
         if not isinstance(result, dict) or "structured_response" not in result:

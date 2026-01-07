@@ -15,10 +15,12 @@ from backend.shared.constants import (
     FRONTEND_RENDERER_DIR,
     FRONTEND_ASSETS_DIR,
 )
+
 if sys.platform == "win32":
     # Use ProactorEventLoop for Windows subprocess support
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 logger = get_logger("MAIN")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,23 +42,39 @@ async def lifespan(app: FastAPI):
         else:
             logger.warning("Vectorstore not found. Please upload files to create it.")
 
-        # Initialize company info once (skips if already present)
-        await init_market_data()
-
     except Exception as e:
         import traceback
 
-        logger.error(f"Error during startup: {e}")
+        logger.error(f"Error loading vectorstore: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        # Depending on the desired behavior, you might want to raise the exception
-        # to prevent the app from starting with a misconfigured state.
-        # raise e
+    try:
+        await init_market_data()
+        logger.info("Market data initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing market data: {e}")
+    try:
+        from backend.core.checkpointer import setup_checkpointer
+
+        checkpointer_success = await setup_checkpointer()
+        if checkpointer_success:
+            logger.info("✅ AsyncSqlite checkpointer initialized successfully")
+        else:
+            logger.warning(
+                "AsyncSqlite checkpointer initialization failed. Agents will run without persistent state."
+            )
+
+    except Exception as e:
+        logger.error(f"Error setting up checkpointer: {e}")
+        logger.warning("Agents will run without persistent checkpointing")
 
     yield
 
     # Shutdown
     try:
         logger.info("Shutting down AIris Backend API...")
+        from backend.core.checkpointer import close_checkpointer
+
+        await close_checkpointer()
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
 
