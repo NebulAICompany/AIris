@@ -298,46 +298,84 @@ class APIService {
     }
   }
 
-  // Upload file to backend
+  // Upload file to backend with progress tracking
   async uploadFile(file, options = {}, progressCallback) {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    return new Promise((resolve, reject) => {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
 
-      if (options && options.photoLessMode !== undefined) {
-        formData.append(
-          "photoLessMode",
-          options.photoLessMode ? "true" : "false"
-        );
+        if (options && options.photoLessMode !== undefined) {
+          formData.append(
+            "photoLessMode",
+            options.photoLessMode ? "true" : "false"
+          );
+        }
+
+        // Use XMLHttpRequest for progress tracking
+        const xhr = new XMLHttpRequest();
+        const baseURL = this.api.defaults.baseURL || "http://localhost:8001";
+
+        // Set up progress tracking
+        if (progressCallback) {
+          xhr.upload.addEventListener("progress", (e) => {
+            if (e.lengthComputable) {
+              const percentComplete = Math.round((e.loaded / e.total) * 100);
+              progressCallback(percentComplete);
+            } else {
+              // Indeterminate progress
+              progressCallback(null);
+            }
+          });
+        }
+
+        // Handle successful upload
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              if (progressCallback) {
+                progressCallback(100);
+              }
+              resolve({
+                success: true,
+                data: response,
+                message: response.message || "File uploaded successfully",
+              });
+            } catch (error) {
+              reject(new Error("Invalid response format"));
+            }
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
+
+        // Handle upload error
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed"));
+        });
+
+        // Handle upload abort
+        xhr.addEventListener("abort", () => {
+          reject(new Error("Upload aborted"));
+        });
+
+        // Start upload
+        xhr.open("POST", `${baseURL}/api/upload`);
+        
+        // Set timeout
+        xhr.timeout = 180000; // 3 minutes
+        
+        xhr.addEventListener("timeout", () => {
+          reject(new Error("Upload timeout"));
+        });
+
+        // Send request
+        xhr.send(formData);
+      } catch (error) {
+        reject(error);
       }
-
-      const config = {
-        timeout: 180000, // 3 minutes for file uploads (increased for larger files)
-      };
-
-      // Note: Fetch API doesn't support upload progress natively
-      // For now, we'll call the progress callback with indeterminate progress
-      if (progressCallback) {
-        progressCallback(0);
-      }
-
-      const response = await this.api.post("/api/upload", formData, config);
-
-      if (progressCallback) {
-        progressCallback(100);
-      }
-
-      return {
-        success: true,
-        data: response.data,
-        message: response.data.message || "File uploaded successfully",
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
+    });
   }
 
   async uploadBalanceDocument(file, options = {}, progressCallback) {
