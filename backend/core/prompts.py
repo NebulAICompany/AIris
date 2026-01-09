@@ -543,16 +543,17 @@ Use the image_visualizer tool with img_uniqueid, fig_uniqueid, or table_uniqueid
 - Displaying the actual images would enhance user understanding of the response
 - For tables: When user asks about table data, structure, or content that would benefit from visual representation
 - Do not add images to the answer because it is already in attachments after the tool is called.
+- CRITICAL: Only call image_visualizer ONCE per image ID. Do not call it multiple times for the same image IDs.
 
 **For Image Content Analysis:**
-Use the redescribe_image_content tool when:
+Use the describe_image_content tool when:
 - You need to understand the content of an image based on a user's specific query
 - The existing image descriptions in the context are insufficient to answer the user's question
 - The user is asking specific questions about visual elements in an image
 - You need detailed analysis of charts, graphs, diagrams, text within images, or other visual information
 - The query requires extracting specific information from visual content
 
-Examples of when to use redescribe_image_content:
+Examples of when to use describe_image_content:
 - "What does the chart in file_name show about sales trends?"
 - "Can you read the text in this document image?"
 - "What are the key findings shown in this research diagram?"
