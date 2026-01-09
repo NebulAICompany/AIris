@@ -17,7 +17,10 @@ def get_image_datas():
 
 def set_image_datas(data):
     global IMAGE_DATA
-    IMAGE_DATA = data
+    if isinstance(data, list):
+        IMAGE_DATA.extend(data)
+    else:
+        IMAGE_DATA.append(data)
 
 
 def clear_image_datas():
