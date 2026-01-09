@@ -14,7 +14,7 @@ from azure.ai.documentintelligence.models import (
 from backend.shared.constants import (
     document_intelligence_client,
     IMAGES_PATH_STR,
-    concurrent_client,
+    co,
 )
 from pathlib import Path
 from backend.shared.logger import get_logger
@@ -62,52 +62,50 @@ def add_image_to_mapping(
         logger.info(f"Added {image_filename} to mapping for document {document_name}")
 
 
-async def build_messages_for_image(image_bytes: bytes):
+def image_to_base64_data_url(image_bytes: bytes, image_format: str = "png") -> str:
+    """Convert image bytes to base64 data URL format for Cohere API"""
     base64_image = base64.b64encode(image_bytes).decode("utf-8")
-    return [
-        {
-            "role": "system",
-            "content": "You are an expert image analyst. Please provide a detailed and clear explanation of the given image in English.",
-        },
-        {
-            "role": "user",
+    return f"data:image/{image_format};base64,{base64_image}"
+
+
+def embed_image_with_caption(image_bytes: bytes, caption: str, figure_id: str) -> list:
+    """
+    Embed an image with its caption using Cohere embed-v4.0 multimodal API.
+
+    Args:
+        image_bytes: Image data as bytes
+        caption: Caption text from Azure Document Intelligence
+        figure_id: Unique figure ID
+
+    Returns:
+        Embedding vector as list, or None on failure
+    """
+    try:
+        # Convert image to base64 data URL
+        base64_data_url = image_to_base64_data_url(image_bytes, "png")
+
+        # Always include figure_id, and include caption if it exists
+        caption_text = f"{caption} {figure_id}" if caption else f"Figure {figure_id}"
+        multimodal_input = {
             "content": [
-                {
-                    "type": "text",
-                    "text": "Please describe this image in detail and provide an explanatory analysis in English.",
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{base64_image}"},
-                },
-            ],
-        },
-    ]
+                {"type": "image_url", "image_url": {"url": base64_data_url}},
+                {"type": "text", "text": caption_text},
+            ]
+        }
 
+        # Embed using Cohere
+        response = co.embed(
+            inputs=[multimodal_input],
+            model="embed-v4.0",
+            input_type="search_document",
+            output_dimension=1536,
+            embedding_types=["float"],
+        )
 
-async def describe_images(image_bytes_list: list[bytes]) -> list[str]:
-    messages_list = []
-    for img in image_bytes_list:
-        messages = await build_messages_for_image(img)
-        messages_list.append(messages)
-
-    responses = await concurrent_client.create_many(
-        messages_list=messages_list,
-        model="gpt-4o",
-        max_tokens=700,
-        temperature=0.2,
-    )
-
-    descriptions = []
-    for resp in responses:
-        if isinstance(resp, Exception):
-            descriptions.append("Açıklama alınamadı.")
-        else:
-            content = getattr(resp, "content", None)
-            if not content:
-                content = resp.choices[0].message.content
-            descriptions.append(content)
-    return descriptions
+        return response.embeddings.float[0]
+    except Exception as e:
+        logger.error(f"Error embedding image {figure_id}: {e}")
+        return None
 
 
 async def AzureParser(file_path: str, photo_less_mode: bool = False):
@@ -122,9 +120,6 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
     operation_id = poller.details["operation_id"]
 
     figure_images = {}
-    image_bytes_batch = []
-    figure_order = []
-
     # Get document name for mapping
     document_name = os.path.splitext(os.path.basename(file_path))[0]
 
@@ -134,6 +129,7 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
     logger.info(f"Processing document: {document_name}")
 
     if not photo_less_mode and result.figures:
+        logger.info(f"Extracting {len(result.figures)} figure(s)...")
         for figure in result.figures:
             caption = figure.caption.content if figure.caption else ""
             if not figure.id:
@@ -168,16 +164,8 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
                 "base64": img_base64,
                 "caption": caption,
                 "image_path": image_path,
-                "description": None,
+                "image_bytes": img_data,
             }
-            image_bytes_batch.append(img_data)
-            figure_order.append(figure_id)
-
-        # Paralel ve rate-limit güvenli açıklama
-        if image_bytes_batch:
-            descriptions = await describe_images(image_bytes_batch)
-            for fid, desc in zip(figure_order, descriptions):
-                figure_images[fid]["description"] = desc
     else:
         logger.info("No figures found or photo_less mode is active.")
 
@@ -225,12 +213,10 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
             start = content.find("<figure>")
             if start != -1:
                 end = content.find("</figure>", start) + 9
-                caption = data["caption"] if data["caption"] else "no caption figure"
-                desc = data.get("description", "No description")
-                figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n{desc}\n"
+                caption = data["caption"] if data["caption"] else "Figure"
+                figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n"
                 content = content[:start] + figure_md + content[end:]
     else:
-        # Remove entire figure blocks in photo-less mode
         while True:
             start = content.find("<figure>")
             if start == -1:
@@ -245,14 +231,16 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
     for table_unique_id, data in table_images.items():
         start = content.find("<table>")
         if start != -1:
-            table_reference = (f"\n\n**[Table ID:{table_unique_id}]**\n\n{data['description']}\n")
+            table_reference = (
+                f"\n\n**[Table ID:{table_unique_id}]**\n\n{data['description']}\n"
+            )
             content = (
                 content[:start]
                 + table_reference
                 + content[start + len(table_reference) :]
             )
 
-    return content
+    return content, figure_images
 
 
 async def ImageParser(file_path: str, photo_less_mode: bool = False):
@@ -277,12 +265,10 @@ async def ImageParser(file_path: str, photo_less_mode: bool = False):
         document_name = os.path.splitext(os.path.basename(file_path))[0]
         add_image_to_mapping(image_filename, document_name, "image")
 
-        descriptions = await describe_images([image_bytes])
-        description = descriptions[0] if descriptions else "Açıklama alınamadı."
-
-        content = f"\n\n**[Image ID:{image_id}]**\n\n{description}\n"
+        caption = f"Image from {document_name}"
+        content = f"\n\n**[Image ID:{image_id}]**\n\n{caption}\n"
         return content
-    else: 
+    else:
         return "Photo-less mode enabled, image content omitted.\n"
 
 
@@ -292,14 +278,16 @@ async def TxtParser(file_path: str):
 
     return content
 
-async def ExcelParser(file_path: str) -> str:    
+
+async def ExcelParser(file_path: str) -> str:
     df = pd.read_excel(file_path, sheet_name=None)
     table_name = Path(file_path).stem
     contents = []
     for sheet_name, sheet_data in df.items():
-        
+
         sheet_data.fillna("", inplace=True)
-        contents.append(f"**[Table Name: {table_name}]**\n**[Sheet Name:{sheet_name}]**\n\n{sheet_data.to_markdown()}\n")
+        contents.append(
+            f"**[Table Name: {table_name}]**\n**[Sheet Name:{sheet_name}]**\n\n{sheet_data.to_markdown()}\n"
+        )
 
     return "\n====SHEET SEPARATOR====\n".join(contents)
-    
