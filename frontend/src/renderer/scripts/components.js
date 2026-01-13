@@ -28,6 +28,10 @@ class UIComponents {
     this.selectedProfileFiles = []; // Sadece profile modal için
     this.profileModal = null;
 
+    // Photo-less mode state
+    this.photoLessBtn = null;
+    this.photoLessMode = false;
+
     this.init();
     if (window.languageService) {
       window.languageService.subscribe(() => this.updateDynamicTexts());
@@ -799,14 +803,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
     });
 
     // Photo-less mode seçeneği
-    const photoLessBtn = document.getElementById("photoless-mode");
+    this.photoLessBtn = document.getElementById("photoless-mode");
 
-    photoLessBtn.addEventListener("click", () => {
+    this.photoLessBtn.addEventListener("click", () => {
       // Language
       const lang = window.languageService?.getCurrentLanguage() || "tr";
 
-      // Photoless mod durumunu global bir değişkene kaydedelim
-      window.isPhotoLessMode = true;
+      // Enable photo-less mode for the next file upload
+      this.photoLessMode = true;
+      this.photoLessBtn.classList.add("active");
 
       let msg = lang === "en"
         ? "Files will be processed without photos."
@@ -1578,6 +1583,9 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Handle file uploads with status messages
     let uploadedFiles = [];
     if (filesToUpload.length > 0) {
+      // Capture the current photo-less mode state for these files
+      const photoLessModeForThisUpload = this.photoLessMode;
+      
       // Show uploading status for each file
       for (const file of filesToUpload) {
         this.addFileStatusMessage(file.name, "uploading");
@@ -1588,7 +1596,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
         const file = filesToUpload[i];
         try {
           const response = await window.apiService.uploadFile(file, {
-            photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
+            photoLessMode: photoLessModeForThisUpload,
           });
           if (response.success) {
             uploadedFiles.push({
@@ -1606,6 +1614,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
           this.updateFileStatusMessage(file.name, "error", "Upload failed");
+        }
+      }
+      
+      // Reset photo-less mode after uploads complete
+      if (this.photoLessMode) {
+        this.photoLessMode = false;
+        if (this.photoLessBtn) {
+          this.photoLessBtn.classList.remove("active");
         }
       }
     }
@@ -3048,6 +3064,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
   handleNewFileSelect(event) {
     const files = Array.from(event.target.files);
     this.addFilesToChat(files, true); // Show notification for manual file selection
+    // Note: photoLessMode will be reset after upload in sendMessage
   }
 
   handleChatInputDragOver(event) {
