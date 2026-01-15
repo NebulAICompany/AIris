@@ -1750,9 +1750,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     }
 
     typingDiv.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas fa-robot"></i>
-      </div>
       <div class="message-content">
         <div class="typing-dots">
           <span></span>
@@ -1796,9 +1793,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     if (type === "user") {
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-text">${Utils.escapeHtml(content)}</div>
                     <div class="message-time">${timestamp}</div>
@@ -1917,9 +1911,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       }
 
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
                 <div class="message-content">
                     ${sourcesHTML}
                     <div class="message-text">${parsedContent}</div>
@@ -1990,9 +1981,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       }
     } else if (type === "error") {
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-text error">${Utils.escapeHtml(
         content
@@ -2358,9 +2346,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     typingDiv.id = "typing-indicator";
 
     typingDiv.innerHTML = `
-            <div class="message-avatar">
-                <i class="fas fa-robot"></i>
-            </div>
             <div class="message-content">
                 <div class="typing-dots">
                     <span></span>
@@ -6838,9 +6823,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       block.innerHTML = `
         <div class="message user-message">
-          <div class="message-avatar">
-            <i class="fas fa-user"></i>
-          </div>
           <div class="message-content">
             <div class="message-text">${Utils.escapeHtml(message)}</div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
@@ -6850,9 +6832,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
           </div>
         </div>
         <div class="message assistant-message">
-          <div class="message-avatar">
-            <i class="fas fa-robot"></i>
-          </div>
           <div class="message-content">
             <div class="message-text" id="${qaContentId}">
               <div class="news-qa-thinking">
@@ -6946,9 +6925,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     if (role === "user") {
       messageDiv.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-user"></i>
-        </div>
         <div class="message-content">
           <div class="message-text">${this.formatNewsChatMessage(content)}</div>
           <div class="message-time">${time}</div>
@@ -6956,9 +6932,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       `;
     } else if (role === "assistant") {
       messageDiv.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
         <div class="message-content">
           <div class="message-text">${this.formatNewsChatMessage(content)}</div>
           <div class="message-time">${time}</div>
@@ -7022,9 +6995,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     typingDiv.id = "news-chat-typing";
 
     typingDiv.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas fa-robot"></i>
-      </div>
       <div class="message-content">
         <div class="message-text">
           <span>AI is thinking</span>
