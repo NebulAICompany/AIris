@@ -6,6 +6,7 @@ from backend.retrieval.retriever import (
 )
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
+from backend.shared.constants import get_selected_files
 
 logger = get_logger("RAG_TOOL")
 
@@ -15,7 +16,6 @@ def search_local_documents(
     query: str,
     keywords: Optional[List[str]] = None,
     max_results: int = 5,
-    selected_files: Optional[List[str]] = None,
 ) -> str:
     """
     Search through uploaded local documents in the knowledge base.
@@ -25,7 +25,6 @@ def search_local_documents(
         query: The search query to find relevant information in local documents.
         keywords: Optional list of keywords/terms for keyword search. If provided, enables hybrid search combining vector and keyword matching.
         max_results: Maximum number of document chunks to return (default: 5, max: 10).
-        selected_files: Optional list of specific file names to search within. If not provided, searches all documents.
 
     Returns:
         A formatted string containing relevant document chunks with their sources.
@@ -34,7 +33,7 @@ def search_local_documents(
     Examples:
         - search_local_documents("What is the revenue for Q1?", keywords=["revenue", "Q1"])
         - search_local_documents("financial projections", keywords=["financial", "projections"], max_results=3)
-        - search_local_documents("budget analysis", keywords=["budget", "analysis"], selected_files=["budget_2024.pdf"])
+        - search_local_documents("budget analysis", keywords=["budget", "analysis"])
     """
     try:
         # Limit max_results to reasonable bounds
@@ -54,6 +53,13 @@ def search_local_documents(
 
         # Use provided keywords or empty list if not provided
         query_terms = keywords if keywords is not None else []
+
+        # Use global selected_files from shared state
+        selected_files = get_selected_files()
+
+        logger.info(
+            f"🔍 RAG Tool - Searching with selected files filter: {selected_files}"
+        )
 
         # Retrieve documents using hybrid search (vector + keyword)
         retrieved_docs = retrieve_with_keyword_helping(

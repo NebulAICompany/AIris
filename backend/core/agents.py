@@ -108,11 +108,9 @@ main_agent_tools = [
 
 
 def create_main_agent(
-    local_context: str = None,
     web_search_enabled: bool = False,
     instruction: str = None,
     conversation_history: List = None,
-    selected_files: List[str] = None,
 ):
     """
     Create a Deep Agent for main assistant functionality with agentic RAG.
