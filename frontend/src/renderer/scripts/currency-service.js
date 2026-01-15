@@ -4,9 +4,11 @@
  * Updated with working APIs as of June 2025
  * 
  * FREE GOLD API SETUP:
- * 2. API Ninjas - Sign up at https://www.api-ninjas.com/ for FREE API key  
-
- * Replace 'YOUR_FREE_API_KEY' with your actual API keys below.
+ * 1. GoldAPI - Sign up at https://www.goldapi.io/ for FREE API key
+ * 2. MetalpriceAPI - Sign up at https://www.metalpriceapi.com/ for FREE API key
+ * 
+ * Replace 'YOUR_API_KEY' with your actual API keys below.
+ * You can enable/disable each API manually by setting enabled to true/false in goldApiEndpoints.
  */
 class CurrencyService {
   constructor() {
@@ -32,14 +34,21 @@ class CurrencyService {
       },
     ];
 
-    // Gold price APIs
+    // Gold price APIs - You can manually enable/disable APIs by setting enabled to true/false
     this.goldApiEndpoints = [
       {
         name: "GoldAPI Main",
         baseUrl: "https://www.goldapi.io/api",
-        enabled: true,
+        enabled: false,
         type: "goldapi",
-        apiKey: "***REMOVED***", // Sign up at https://www.api-ninjas.com/
+        apiKey: "***REMOVED***", // Sign up at https://www.goldapi.io/
+      },
+      {
+        name: "MetalpriceAPI",
+        baseUrl: "https://api.metalpriceapi.com/v1",
+        enabled: true,
+        type: "metalpriceapi",
+        apiKey: "***REMOVED***", // Sign up at https://www.metalpriceapi.com/
       },
     ];
 
@@ -66,7 +75,7 @@ class CurrencyService {
       USD_TRY: 27.85,
       EUR_TRY: 30.42,
       USD_EUR: 0.915,
-      goldPrice: 1945.5,
+      goldPrice: 4217.5,
     };
 
     this.dailyCycleOffset = 0;
@@ -94,6 +103,9 @@ class CurrencyService {
 
     this.isRunning = true;
     logger.info("Starting currency service...", "CURRENCY");
+
+    // Load cached gold data from file
+    await this.loadGoldCache();
 
     // Initial fetch
     await this.fetchCurrencyData();
@@ -340,6 +352,9 @@ class CurrencyService {
             this.goldCache.data = data;
             this.goldCache.timestamp = Date.now();
 
+            // Save to persistent cache
+            await this.saveGoldCache();
+
             logger.info(
               `Gold price fetched successfully from ${endpoint.name}`,
               "CURRENCY"
@@ -369,18 +384,40 @@ class CurrencyService {
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
     try {
-      const url = `${endpoint.baseUrl}/XAU/USD`; 
-      const headers = {
-        Accept: "application/json",
-        "Cache-Control": "no-cache",
-        "X-Access-Token": endpoint.apiKey,
-        "Content-Type": "application/json",
-      };
+      let url, headers, response;
 
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers,
-      });
+      switch (endpoint.type) {
+        case "goldapi":
+          url = `${endpoint.baseUrl}/XAU/USD`;
+          headers = {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+            "X-Access-Token": endpoint.apiKey,
+            "Content-Type": "application/json",
+          };
+          response = await fetch(url, {
+            signal: controller.signal,
+            headers,
+          });
+          break;
+
+        case "metalpriceapi":
+          url = `${endpoint.baseUrl}/latest`;
+          response = await fetch(
+            `${url}?api_key=${endpoint.apiKey}&base=USD&currencies=XAU`,
+            {
+              signal: controller.signal,
+              headers: {
+                Accept: "application/json",
+                "Cache-Control": "no-cache",
+              },
+            }
+          );
+          break;
+
+        default:
+          throw new Error(`Unknown gold API type: ${endpoint.type}`);
+      }
 
       clearTimeout(timeoutId);
 
@@ -389,7 +426,7 @@ class CurrencyService {
       }
 
       const data = await response.json();
-      return this.normalizeGoldData(data);
+      return this.normalizeGoldData(data, endpoint.type);
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === "AbortError") {
@@ -399,37 +436,70 @@ class CurrencyService {
     }
   }
 
-  normalizeGoldData(data) {
-  try {
-    const toNumber = (v) =>
-      v === null || v === undefined || v === "" ? null : Number(v);
+  normalizeGoldData(data, type = "goldapi") {
+    try {
+      const toNumber = (v) =>
+        v === null || v === undefined || v === "" ? null : Number(v);
 
-    const gramUsd = toNumber(data.price_gram_24k);      // USD/gram (24k)
-    const ounceUsd =
-      toNumber(data.price) ||                         // USD/ounce
-      toNumber(data.ask) ||
-      (gramUsd ? gramUsd * this.OUNCE_TO_GRAM : null);
+      switch (type) {
+        case "goldapi": {
+          const gramUsd = toNumber(data.price_gram_24k); // USD/gram (24k)
+          const ounceUsd =
+            toNumber(data.price) || // USD/ounce
+            toNumber(data.ask) ||
+            (gramUsd ? gramUsd * this.OUNCE_TO_GRAM : null);
 
-    if (!ounceUsd) {
-      throw new Error("GoldAPI response missing price");
+          if (!ounceUsd) {
+            throw new Error("GoldAPI response missing price");
+          }
+
+          return {
+            price: ounceUsd, // ounce USD price
+            ounceUsd: ounceUsd,
+            gramUsd: gramUsd ?? ounceUsd / this.OUNCE_TO_GRAM,
+            open_price: toNumber(data.open_price),
+            low_price: toNumber(data.low_price),
+            high_price: toNumber(data.high_price),
+            timestamp: data.timestamp || Date.now(),
+            currency: data.currency || "USD",
+            source: "goldapi",
+            isOffline: false,
+          };
+        }
+
+        case "metalpriceapi": {
+          // Check if the API call was successful
+          if (!data.success) {
+            throw new Error("MetalpriceAPI response not successful");
+          }
+
+          const xauRate = toNumber(data.rates?.XAU);
+          if (!xauRate) {
+            throw new Error("MetalpriceAPI response missing XAU rate");
+          }
+
+          // rate = 1 USD / (ounce gold) => gold price per ounce = 1 / rate
+          const ounceUsd = 1.0 / xauRate;
+          const gramUsd = ounceUsd / this.OUNCE_TO_GRAM;
+
+          return {
+            price: ounceUsd, // ounce USD price
+            ounceUsd: ounceUsd,
+            gramUsd: gramUsd,
+            timestamp: Date.now(),
+            currency: "USD",
+            source: "metalpriceapi",
+            isOffline: false,
+          };
+        }
+
+        default:
+          throw new Error(`Unknown gold data type: ${type}`);
+      }
+    } catch (error) {
+      throw new Error(`Failed to normalize gold data: ${error.message}`);
     }
-
-    return {
-      price: ounceUsd,             // <-- ons USD fiyatı
-      ounceUsd: ounceUsd,
-      gramUsd: gramUsd ?? (ounceUsd / this.OUNCE_TO_GRAM),
-      open_price: toNumber(data.open_price),
-      low_price: toNumber(data.low_price),
-      high_price: toNumber(data.high_price),
-      timestamp: data.timestamp || Date.now(),
-      currency: data.currency || "USD",
-      source: "goldapi",
-      isOffline: false,
-    };
-  } catch (error) {
-    throw new Error(`Failed to normalize gold data: ${error.message}`);
   }
-}
 
 
   disableGoldEndpointTemporarily(endpoint) {
@@ -494,18 +564,89 @@ class CurrencyService {
   }
 
   async getGoldData() {
-    // Check if gold cache is valid
+    // Check if gold cache is valid (6 hours = 21600000 ms)
     if (
       this.goldCache.data &&
       this.goldCache.timestamp &&
       Date.now() - this.goldCache.timestamp < this.goldCache.cacheValidMs
     ) {
+      logger.info(
+        `Using cached gold data (age: ${Math.round((Date.now() - this.goldCache.timestamp) / 60000)} minutes)`,
+        "CURRENCY"
+      );
       return this.goldCache.data;
     }
 
-    // If no valid cache, fetch new data
+    // Cache expired or no cache, fetch new data
+    logger.info("Gold cache expired or missing, fetching fresh data...", "CURRENCY");
     await this.fetchGoldPrice();
     return this.goldCache.data;
+  }
+
+  /**
+   * Load gold cache from persistent storage
+   */
+  async loadGoldCache() {
+    try {
+      if (!window.airisAPI || !window.airisAPI.readGoldCache) {
+        logger.warn("Gold cache API not available", "CURRENCY");
+        return;
+      }
+
+      const result = await window.airisAPI.readGoldCache();
+      
+      if (result.success && result.data) {
+        const { lastFetched, data } = result.data;
+        
+        if (lastFetched && data) {
+          const age = Date.now() - lastFetched;
+          
+          // Check if cache is still valid (less than 6 hours old)
+          if (age < this.goldCache.cacheValidMs) {
+            this.goldCache.data = data;
+            this.goldCache.timestamp = lastFetched;
+            logger.info(
+              `Loaded gold cache from file (age: ${Math.round(age / 60000)} minutes)`,
+              "CURRENCY"
+            );
+          } else {
+            logger.info(
+              `Gold cache expired (age: ${Math.round(age / 3600000)} hours), will fetch fresh data`,
+              "CURRENCY"
+            );
+          }
+        }
+      }
+    } catch (error) {
+      logger.error(`Failed to load gold cache: ${error.message}`, "CURRENCY");
+    }
+  }
+
+  /**
+   * Save gold cache to persistent storage
+   */
+  async saveGoldCache() {
+    try {
+      if (!window.airisAPI || !window.airisAPI.writeGoldCache) {
+        logger.warn("Gold cache API not available", "CURRENCY");
+        return;
+      }
+
+      const cacheData = {
+        lastFetched: this.goldCache.timestamp,
+        data: this.goldCache.data
+      };
+
+      const result = await window.airisAPI.writeGoldCache(cacheData);
+      
+      if (result.success) {
+        logger.info("Gold cache saved to file", "CURRENCY");
+      } else {
+        logger.warn(`Failed to save gold cache: ${result.error}`, "CURRENCY");
+      }
+    } catch (error) {
+      logger.error(`Failed to save gold cache: ${error.message}`, "CURRENCY");
+    }
   }
 
   /**

@@ -570,9 +570,9 @@ input:checked + .slider:before {
   padding-left: 8px;
 }
 
-/* Keep submenu visible if hovering over parent or submenu */
-.nav-item.collapsible:hover + .sub-menu,
-.sub-menu:hover {
+/* Keep submenu visible if hovering over parent or submenu (only when sidebar is expanded) */
+.sidebar:not(.collapsed) .nav-item.collapsible:hover + .sub-menu,
+.sidebar:not(.collapsed) .sub-menu:hover {
   max-height: 500px;
 }
 
@@ -613,7 +613,7 @@ input:checked + .slider:before {
   display: block; /* veya slide efekti istersen transition ile */
 }
 .sidebar.collapsed .sub-menu {
-  display: none;
+    display: none !important; /* Hide original submenu when collapsed - floating menu handles it */
 }
 
 @keyframes tooltipFadeIn {
@@ -657,8 +657,10 @@ input:checked + .slider:before {
   max-width: 100%;
   box-sizing: border-box;
   /* Fix scroll behavior to prevent content shifting */
-  scroll-behavior: smooth;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Remove transform that affects fixed children */
+  position: relative;
 }
 
 /* Specific handling for calculator tab to prevent double scrolling */
@@ -678,19 +680,14 @@ input:checked + .slider:before {
   margin: 0;
 }
 
-/* Special layout for verification tab - prevent content shifting */
-#verification-tab {
-  overflow-y: auto;
-  /* Ensure proper scroll behavior without content shifting */
-  scroll-behavior: smooth;
-  overscroll-behavior: contain;
-}
-
 /* Special layout for news tab - full page scrolling */
 #news-tab {
-  padding: 24px 0;
+  padding: 24px 0 120px 0; /* Add bottom padding for fixed input bar */
   overflow-y: auto;
+  overflow-x: hidden;
   margin: 0;
+  position: static !important; /* Don't create positioning context */
+  transform: none !important; /* Remove any transform */
 }
 
 /* Utility Classes */

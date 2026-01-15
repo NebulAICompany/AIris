@@ -20,6 +20,10 @@ contextBridge.exposeInMainWorld("airisAPI", {
   deleteCreatedDocument: (fileName) =>
     ipcRenderer.invoke("delete-file", fileName, true),
 
+  // Gold cache operations
+  readGoldCache: () => ipcRenderer.invoke("read-gold-cache"),
+  writeGoldCache: (data) => ipcRenderer.invoke("write-gold-cache", data),
+
   // Health and monitoring
   checkHealth: () => ipcRenderer.invoke("check-health"),
   getMetrics: () => ipcRenderer.invoke("get-metrics"),

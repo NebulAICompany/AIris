@@ -1,18 +1,11 @@
 from typing import List, Optional, Dict, Any
-from backend.retrieval.reranker import rerank
 from backend.core.runner import generate_answer
 from backend.core.agents import create_main_agent, create_news_chat_agent
-from backend.retrieval.retriever import (
-    load_vectorstore,
-    retrieve_with_keyword_helping,
-)
+
+# Removed upfront retrieval imports - agent will use search_local_documents tool
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
-from backend.utils.query import (
-    refine_query,
-)
 from backend.core.chat import chat_history_manager, MessageRole
-from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
 from backend.core.tools.finance import get_chart_datas, clear_chart_datas
@@ -47,18 +40,8 @@ async def run_orchestration(
     if session and len(session.messages) > 30:
         chat_history_manager.reduce_history(session, target_messages=20)
 
-    client = load_vectorstore(VECTORSTORE_PATH_STR)
-
-    # 0. Selected files check - skip retrieval if no files selected
-    skip_retrieval = not selected_files or len(selected_files) == 0
-
-    # 1. Preprocessing and analysis
-    refined_result = refine_query(query)
-    preprocessed_query = refined_result.refined_query
-    query_keywords = refined_result.keywords
-
-    # 2. Input moderation (OpenAI moderation)
-    input_moderation = check_openai_moderation(preprocessed_query)
+    # 1. Input moderation (OpenAI moderation)
+    input_moderation = check_openai_moderation(query)
     if input_moderation["flagged"]:
         response_message = f"Your query contains inappropriate content: {input_moderation['violations']}"
 
@@ -74,74 +57,20 @@ async def run_orchestration(
             "generatedFiles": [],
         }
 
-    # 3. Mask sensitive information
-    masked_query_list = await mask_text([preprocessed_query], "query")
+    # 2. Mask sensitive information
+    masked_query_list = await mask_text([query], "query")
     masked_query = masked_query_list[0]
 
-    # 4. Enhanced Retrieval using vector + keyword helping
-    reranked_docs = None
-    unique_file_names = []
-
-    if skip_retrieval:
-        reranked_docs = []
-        logger.info(
-            f"📄 No documents used in retrieval for query '{query}' (no files selected)"
-        )
-    else:
-        preprocessed_query = (
-            preprocessed_query + " Selected Files: " + ", ".join(selected_files)
-        )
-        retrieved_docs = retrieve_with_keyword_helping(
-            client=client,
-            query=preprocessed_query,
-            query_terms=query_keywords,
-            k=15,
-            selected_files=selected_files,
-        )
-
-        if retrieved_docs:
-            # Extract only the content from the retrieved docs before reranking
-            doc_contents = [
-                {"content": doc["content"], "metadata": doc["metadata"]}
-                for doc in retrieved_docs
-            ]
-            reranked_docs = rerank(
-                preprocessed_query, doc_contents, with_score=False, top_n=5
-            )
-
-            if reranked_docs:
-                unique_file_names_set = set()
-                for doc in reranked_docs:
-                    file_name = doc.get("metadata", {}).get("file_name")
-                    if file_name:
-                        unique_file_names_set.add(file_name)
-
-                unique_file_names = sorted(list(unique_file_names_set))
-    context_entries = []
-
-    if reranked_docs:
-        for doc in reranked_docs:
-            content = doc["content"]
-            metadata = doc["metadata"]
-            metadata_str = ""
-            metadata_str += f"Source: {metadata.get('file_name')}\n"
-            context_entries.append(
-                f"Local Content: {content}\n\n Local Metadata:\n{metadata_str}"
-            )
-
-        local_context = "\n\n---\n\n".join(context_entries)
-    else:
-        # Determine the reason for empty context and provide appropriate message
-        if skip_retrieval:
-            local_context = "Local Content Status: No content could be retrieved from local documents because no files were selected."
-        else:
-            local_context = "Local Content Status: No relevant content could be found for your query in the selected files."
+    # 4. Agentic RAG: Let the agent decide when to search documents
+    # The agent has access to search_local_documents tool and will use it when needed
+    logger.info(
+        f"🤖 Agentic RAG: Agent will decide when to search documents for query '{query}'"
+    )
 
     agent = create_main_agent(
-        local_context=local_context,
         web_search_enabled=web_search_enabled,
-        query=masked_query,
         conversation_history=conversation_context,
+        selected_files=selected_files,  # Pass selected files so agent can filter searches
     )
     # Generate initial answer with structured output
     answer, web_sources, api_sources = await generate_answer(
@@ -151,7 +80,10 @@ async def run_orchestration(
     final_answer = unmask_text(answer)
 
     # 7. Combine document sources with web sources and API sources
-    all_sources = list(unique_file_names) if unique_file_names else []
+    # Note: Document sources will be tracked by the agent when it uses search_local_documents
+    all_sources = []
+    if selected_files:
+        all_sources.extend(selected_files)
     for web_source in web_sources:
         # Format as "Name|URL" for frontend to parse and display as clickable link
         name = web_source.get("name", "")
@@ -228,7 +160,6 @@ async def run_news_chat_orchestration(
     # Create specialized news agent
     agent = create_news_chat_agent(
         news_context=news_context_str,
-        query=query,
         conversation_history=conversation_context,
     )
 

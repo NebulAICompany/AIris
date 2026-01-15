@@ -13,6 +13,7 @@ import numpy as np
 
 logger = get_logger("NEWS_UTILS")
 
+
 # Financial news RSS sources configuration
 @dataclass
 class NewsSource:
@@ -241,9 +242,10 @@ def normalize_datetime(date_str: str) -> datetime.datetime:
     Normalize datetime strings to Turkish timezone (GMT+3) aware datetime objects.
     This ensures proper time display for Turkish users.
     """
+    # GMT+3 offset - define at the start so it's available in all code paths
+    turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
+
     if not date_str:
-        # GMT+3 offset
-        turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
         return datetime.datetime.min.replace(tzinfo=turkey_offset)
 
     try:
@@ -259,7 +261,6 @@ def normalize_datetime(date_str: str) -> datetime.datetime:
 
     except Exception as e:
         logger.warning(f"Failed to parse date '{date_str}': {e}")
-        turkey_offset = datetime.timezone(datetime.timedelta(hours=3))
         return datetime.datetime.min.replace(tzinfo=turkey_offset)
 
 
@@ -276,26 +277,20 @@ async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str
             "description": articles[0].summary or "No summary available",
         }
 
-    logger.info(
-        f"🤖 Generating comprehensive unified summary for {len(articles)} articles"
-    )
+    logger.info(f"🤖 Generating unified summary for {len(articles)} articles")
 
     try:
-        # Import agent infrastructure
         from backend.core.agents import create_news_summarization_agent
-        from backend.core.runner import generate_answer
         from backend.core.prompts import news_summarization_prompt
+        from langchain_core.messages import HumanMessage
 
-        # Create specialized summarization agent
+        # Create agent
         agent = create_news_summarization_agent(
             instructions=news_summarization_prompt,
             web_search_enabled=False,
         )
 
-        # Prepare comprehensive article data for the agent
-        sources = list(set([article.source for article in articles]))
-
-        # Collect available images from all articles
+        # Collect images
         available_images = []
         for i, article in enumerate(articles):
             if article.image_url and article.image_url.strip():
@@ -309,165 +304,59 @@ async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str
                     }
                 )
 
-        # Prepare article text with image information
-        articles_text = f"""
-**Story from {len(articles)} articles across {len(sources)} sources:**
+        # Build prompt
+        sources = list(set([article.source for article in articles]))
+        articles_text = f"**Story from {len(articles)} articles across {len(sources)} sources:**\n\n"
 
-**Available Images ({len(available_images)} total):**
-"""
+        if available_images:
+            articles_text += f"**Available Images ({len(available_images)} total):**\n"
+            for img in available_images:
+                articles_text += f"- {img['source']}: {img['url']} ({img['width']}x{img['height']})\n"
+            articles_text += "\n"
 
-        for img in available_images:
-            articles_text += f"- Image from {img['source']}: {img['url']} ({img['width']}x{img['height']})\n"
-
-        articles_text += "\n**Articles:**\n"
-
+        articles_text += "**Articles:**\n"
         for i, article in enumerate(articles):
-            published_info = ""
-            if article.published:
-                try:
-                    from datetime import datetime
-
-                    pub_date = datetime.fromisoformat(
-                        article.published.replace("Z", "+00:00")
-                    )
-                    published_info = (
-                        f" (Published: {pub_date.strftime('%Y-%m-%d %H:%M')})"
-                    )
-                except:
-                    published_info = f" (Published: {article.published})"
-
-            image_info = ""
-            if article.image_url and article.image_url.strip():
-                image_info = f"\n**Image:** {article.image_url} ({article.image_width}x{article.image_height})"
-
             articles_text += f"""
-**Article {i+1} - Source: {article.source}**{published_info}
+**Article {i+1} - {article.source}**
 **Title:** {article.title}
-**Content:** {article.summary or "No summary available"}{image_info}
+**Content:** {article.summary or "No summary available"}
 **Link:** {article.link}
 
 """
 
-        # Create comprehensive analysis prompt
         analysis_prompt = f"""{articles_text}
 
-**Task:** Create a comprehensive unified summary combining ALL information from these {len(articles)} articles.
+**Task:** Create a comprehensive unified summary combining ALL information from these {len(articles)} articles."""
 
-**Requirements:**
-1. Create a unified title that captures the complete story
-2. Write a LONG, DETAILED description (500+ words) that includes:
-   - Every important detail from all sources
-   - All numbers, percentages, dates, and specific data
-   - All quotes and statements from officials/analysts
-   - Complete context and background information
-   - All unique perspectives and angles from different sources
-   - Chronological flow of events if applicable
+        # Get summary from agent using structured output
+        result = await agent.ainvoke(
+            {"messages": [HumanMessage(content=analysis_prompt)]}
+        )
 
-**Turkish Financial Context:** Include relevant context about Turkish financial institutions, economic indicators, and market dynamics where applicable.
+        # Extract structured output (same pattern as main agent)
+        if not isinstance(result, dict) or "structured_response" not in result:
+            logger.error("No structured_response found in result")
+            return _create_fallback_summary(articles)
 
-Provide your response in JSON format as specified in your instructions."""
+        structured_data = result["structured_response"]
+        data = structured_data.model_dump()
 
-        # Get comprehensive summary from agent
-        logger.info("📝 Requesting comprehensive summary from AI agent...")
-        response = await generate_answer(analysis_prompt, agent)
-        logger.info(f"✅ AI summary response received ({len(response)} chars)")
+        title = data.get("unified_title", "").strip()
+        description = data.get("unified_description", "").strip()
 
-        # Parse JSON response with improved extraction
-        import json
-        import re
+        if title and description and len(description) > 50:
+            logger.info(f"✅ Successfully generated summary: {len(description)} chars")
+            return {
+                "title": title,
+                "description": description,
+                "available_images": available_images,
+            }
 
-        try:
-            # Clean up the response and extract JSON more robustly
-            response_clean = response.strip()
-
-            # Method 1: Try to find complete JSON object
-            json_pattern = r'\{[^{}]*"unified_title"[^{}]*"unified_description"[^{}]*\}'
-            json_match = re.search(json_pattern, response_clean, re.DOTALL)
-
-            json_str = None
-            if json_match:
-                json_str = json_match.group(0)
-            else:
-                # Method 2: Extract between first { and last }
-                json_start = response_clean.find("{")
-                json_end = response_clean.rfind("}") + 1
-
-                if json_start != -1 and json_end > json_start:
-                    potential_json = response_clean[json_start:json_end]
-
-                    # Try to fix common JSON formatting issues
-                    potential_json = potential_json.replace("\n", " ")
-                    potential_json = re.sub(
-                        r"\s+", " ", potential_json
-                    )  # Multiple spaces to single
-                    potential_json = potential_json.replace('": "', '": "').replace(
-                        '" : "', '": "'
-                    )
-
-                    # Check if it contains our required keys
-                    if (
-                        "unified_title" in potential_json
-                        and "unified_description" in potential_json
-                    ):
-                        json_str = potential_json
-
-            if json_str:
-                # Additional cleanup for common issues
-                json_str = json_str.replace('""', '"')  # Fix doubled quotes
-                json_str = re.sub(r'",\s*}', '"}', json_str)  # Fix trailing commas
-
-                parsed_response = json.loads(json_str)
-
-                unified_title = parsed_response.get("unified_title", "").strip()
-                unified_description = parsed_response.get(
-                    "unified_description", ""
-                ).strip()
-
-                # Validate the extracted content
-                if (
-                    unified_title
-                    and unified_description
-                    and len(unified_description) > 50
-                ):
-                    logger.info(
-                        f"📰 Successfully parsed AI summary: {len(unified_description)} chars"
-                    )
-
-                    # Return summary with available images for frontend processing
-                    return {
-                        "title": unified_title,
-                        "description": unified_description,
-                        "available_images": available_images,
-                    }
-                else:
-                    logger.warning(
-                        f"AI response has insufficient content: title={len(unified_title)}, desc={len(unified_description)}"
-                    )
-
-            else:
-                logger.warning(
-                    "Could not extract valid JSON structure from AI response"
-                )
-
-        except json.JSONDecodeError as e:
-            logger.warning(f"JSON parsing failed: {e}")
-            logger.debug(
-                f"Attempted to parse: {json_str[:300] if json_str else 'No JSON extracted'}..."
-            )
-            logger.debug(f"Full AI response preview: {response_clean[:500]}...")
-        except Exception as e:
-            logger.warning(f"Unexpected error in JSON parsing: {e}")
-            logger.debug(
-                f"Full AI response preview: {response_clean[:500] if 'response_clean' in locals() else response[:500]}..."
-            )
-
-        # Fallback to intelligent combination if AI fails
-        logger.info("🔄 Using intelligent fallback summarization")
+        logger.warning("AI summarization returned insufficient content, using fallback")
         return _create_fallback_summary(articles)
 
     except Exception as e:
-        logger.error(f"❌ AI summarization failed: {e}")
-        logger.info("🔄 Using intelligent fallback summarization")
+        logger.error(f"AI summarization error: {e}")
         return _create_fallback_summary(articles)
 
 

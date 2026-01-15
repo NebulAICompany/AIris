@@ -1,6 +1,5 @@
 from langchain.agents import create_agent
 from .prompts import (
-    wolfram_instructions,
     main_agent_instructions,
     news_chat_agent_instructions,
 )
@@ -16,6 +15,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.visual import image_visualizer, redescribe_image_content
+from .tools.rag import search_local_documents
 from backend.shared.constants import OPENAI_MODEL
 
 
@@ -52,7 +52,52 @@ class MainAgentResponse(BaseModel):
     )
 
 
+class NewsCluster(BaseModel):
+    """Represents a cluster of related news articles"""
+
+    cluster_id: int = Field(..., description="Unique identifier for the cluster")
+    story_theme: str = Field(
+        ..., description="Brief description of the underlying story or theme"
+    )
+    article_indices: List[int] = Field(
+        ..., description="List of article indices that belong to this cluster"
+    )
+    reasoning: str = Field(
+        ..., description="Explanation of why these articles belong together"
+    )
+
+
+class NewsClusteringResponse(BaseModel):
+    """Structured output for news clustering agent"""
+
+    clusters: List[NewsCluster] = Field(
+        default_factory=list,
+        description="List of clusters containing related articles covering the same story",
+    )
+    single_articles: List[int] = Field(
+        default_factory=list,
+        description="List of article indices that don't belong to any cluster (standalone articles)",
+    )
+    analysis: str = Field(
+        ...,
+        description="Overall analysis of the news landscape and clustering decisions",
+    )
+
+
+class NewsSummarizationResponse(BaseModel):
+    """Structured output for news summarization agent"""
+
+    unified_title: str = Field(
+        ..., description="Comprehensive unified title that captures the complete story"
+    )
+    unified_description: str = Field(
+        ...,
+        description="Detailed, comprehensive description (500+ words) including all information from all sources. Use {{IMAGE_LEAD}}, {{IMAGE_MID_1}}, {{IMAGE_MID_2}} markers where appropriate.",
+    )
+
+
 main_agent_tools = [
+    search_local_documents,  # RAG search tool for agentic retrieval
     wolfram_alpha_query,
     time_now,
     image_visualizer,
@@ -63,16 +108,17 @@ main_agent_tools = [
 
 
 def create_main_agent(
-    local_context: str,
-    web_search_enabled: bool,
-    query: str,
+    local_context: str = None,
+    web_search_enabled: bool = False,
     instruction: str = None,
     conversation_history: List = None,
+    selected_files: List[str] = None,
 ):
     """
-    Create a Deep Agent for main assistant functionality.
+    Create a Deep Agent for main assistant functionality with agentic RAG.
 
     Returns a Deep Agent configured with tools, subagents, and custom instructions.
+    The agent can use search_local_documents tool to retrieve information on demand.
     """
     instruction_part = (
         f"**Special Instructions:**\n{instruction}\n" if instruction else ""
@@ -100,11 +146,8 @@ def create_main_agent(
         tools.append(web_search_tool)
 
     agent_instructions = main_agent_instructions.format(
-        wolfram_instructions=wolfram_instructions,
-        local_context=local_context,
         web_context_part=web_context_part,
         conversation_context_part=conversation_context_part,
-        query=query,
         instruction_part=instruction_part,
     )
 
@@ -141,7 +184,7 @@ def create_news_summarization_agent(
         model="gpt-4o-mini",
         tools=[web_search_tool] if web_search_enabled else [],
         system_prompt=agent_instructions,
-        response_format=ToolStrategy(MainAgentResponse),
+        response_format=ToolStrategy(NewsSummarizationResponse),
     )
     return agent
 
@@ -152,14 +195,13 @@ def create_clustering_agent(instructions: str):
         model="gpt-4o-mini",
         tools=[],
         system_prompt=instructions,
-        response_format=ToolStrategy(MainAgentResponse),
+        response_format=ToolStrategy(NewsClusteringResponse),
     )
     return agent
 
 
 def create_news_chat_agent(
     news_context: str,
-    query: str,
     conversation_history: List = None,
 ):
     """
@@ -178,10 +220,8 @@ def create_news_chat_agent(
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
-        wolfram_instructions=wolfram_instructions,
         news_context=news_context,
         conversation_context_part=conversation_context_part,
-        query=query,
     )
 
     agent = create_agent(

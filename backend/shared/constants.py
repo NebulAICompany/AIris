@@ -106,7 +106,6 @@ BALANCE_TRANSACTION_CATEGORY_ALIASES = {
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
-VERIFICATION_UPLOADS_PATH = DATABASE_DIR / "verification_uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
@@ -162,17 +161,19 @@ BALANCE_PAYMENTS_DB_PATH_STR = str(BALANCE_PAYMENTS_DB_PATH)
 
 
 ANTHROPIC_MODEL = ChatAnthropic(
-    model_name="claude-sonnet-4-20250514",
+    model_name="claude-sonnet-4-5-20250929",
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     max_retries=5,
     max_tokens=64000,
     timeout=120,
+    callbacks=[ConsoleCallbackHandler()],
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-5.1",
+    model="gpt-5.2",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
+    callbacks=[ConsoleCallbackHandler()],
 )
 
 
