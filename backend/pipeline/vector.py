@@ -4,6 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 from langchain_core.documents import Document
 from backend.retrieval.autocontext import apply_autocontext
 from backend.retrieval.keyword_search import get_keyword_search
+from backend.retrieval.retriever import load_vectorstore
 from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 from backend.security.pii import mask_text
@@ -134,7 +135,8 @@ class VectorStorePipeline:
             # Apply PII masking to processed documents in batches
             await self._apply_pii_masking(processed_docs, document_name)
 
-            client = QdrantClient(path=VECTORSTORE_PATH_STR)
+            client = load_vectorstore(VECTORSTORE_PATH_STR)
+            
             if not client.collection_exists(collection_name="test_collection"):
                 client.create_collection(
                     collection_name="test_collection",
@@ -147,9 +149,7 @@ class VectorStorePipeline:
 
             # Create embeddings in batches for better performance
             await self._create_and_upload_embeddings(client, processed_docs)
-
-            client.close()
-
+            
             keyword_search = get_keyword_search()
 
             # Remove any existing documents from the same file first

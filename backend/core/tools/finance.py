@@ -1209,7 +1209,7 @@ def create_stock_chart(
     Optional:
         period (str): "daily" or "intraday" (default: "daily")
         chart_type (str): "candlestick", "ohlc", "line", "area" (default: "candlestick")
-        time_range_days (int): Days of historical data (default: 60)
+        time_range_days (int): Days of historical data (default: 180)
         include_volume (bool): Show volume chart (default: True)
         technical_indicators (list): ["sma", "ema", "bollinger", "rsi", "macd"] (default: ["sma"])
         layout_style (str): "professional", "dark", "minimal" (default: "professional")
@@ -1276,13 +1276,13 @@ def create_stock_chart(
             try:
                 # Fetch market data with increased limits
                 if period.lower() == "intraday":
-                    response = get_intraday_data(
+                    response = get_intraday_data.func(
                         symbols=symbol,
                         interval="1hour",
                         limit=min(time_range_days * 12, 1000),
                     )
                 else:
-                    response = get_eod_data(
+                    response = get_eod_data.func(
                         symbols=symbol, limit=min(max(time_range_days, 250), 1000)
                     )
 

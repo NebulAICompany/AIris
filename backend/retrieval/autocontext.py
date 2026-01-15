@@ -1,11 +1,12 @@
 from typing import List
-from backend.core.runner import generate_answer
-from backend.core.agents import create_main_agent
 from backend.shared.logger import get_logger
+from backend.shared.constants import OPENAI_MODEL
 from langchain_core.documents import Document
+from langchain_core.messages import HumanMessage
 import re
 
 logger = get_logger("AUTOCONTEXT")
+
 
 class AutoContextProcessor:
     """
@@ -45,14 +46,6 @@ class AutoContextProcessor:
             return existing_title.strip()
 
         try:
-            # Create a simple agent for title generation
-            agent = create_main_agent(
-                local_context="",
-                web_search_enabled=False,
-                query="Generate document title",
-                instruction="Create a short and descriptive title for the document. Write the title in the language of the document.",
-            )
-
             title_prompt = f"""You are a document analyst. Create a short and descriptive title for the document below.
 
 Document content (first 2000 characters):
@@ -68,9 +61,11 @@ Requirements:
 
 Generated title:"""
 
-            response = await generate_answer(title_prompt, agent)
+            # Use standard API call instead of agent
+            response = await OPENAI_MODEL.ainvoke([HumanMessage(content=title_prompt)])
+            title = response.content.strip()
+
             # Clean up the response
-            title = response.strip()
             # Remove quotes if present
             title = re.sub(r'^["\']|["\']$', "", title)
             # Limit length
@@ -99,13 +94,6 @@ Generated title:"""
             return ""
 
         try:
-            # Create a simple agent for summary generation
-            agent = create_main_agent(
-                local_context="",
-                web_search_enabled=False,
-                query="Generate document summary",
-                instruction="Generate a comprehensive summary of the document. Write the summary in the language of the document.",
-            )
             summary_prompt = f"""You are a document analyst. Generate a comprehensive summary of the document below.
 
 Document Title: {document_title}
@@ -123,9 +111,13 @@ Requirements:
 
 Document summary:"""
 
-            response, _, _ = await generate_answer(summary_prompt, agent)
+            # Use standard API call instead of agent
+            response = await OPENAI_MODEL.ainvoke(
+                [HumanMessage(content=summary_prompt)]
+            )
+            summary = response.content.strip()
+
             # Clean up the response
-            summary = response.strip()
             # Remove any quotes
             summary = re.sub(r'^["\']|["\']$', "", summary)
             return summary
@@ -186,7 +178,7 @@ Document summary:"""
         Returns:
             List of chunks with contextual headers
         """
-        if not chunks: 
+        if not chunks:
             return chunks
 
         # Reconstruct document text from chunks
@@ -194,10 +186,14 @@ Document summary:"""
 
         # Generate document title if not provided
         if not document_title:
-            document_title = await self.generate_document_title(document_text, file_name)
+            document_title = await self.generate_document_title(
+                document_text, file_name
+            )
 
         # Generate document summary
-        document_summary = await self.generate_document_summary(document_text, document_title)
+        document_summary = await self.generate_document_summary(
+            document_text, document_title
+        )
 
         # Process each chunk
         processed_chunks = []
@@ -205,10 +201,7 @@ Document summary:"""
             try:
                 # Create contextual header
                 contextual_chunk_text = self.create_contextual_header(
-                    chunk.page_content,
-                    file_name,
-                    document_title,
-                    document_summary
+                    chunk.page_content, file_name, document_title, document_summary
                 )
 
                 # Create new chunk with contextual header
@@ -228,7 +221,9 @@ Document summary:"""
                     }
                 )
 
-                processed_chunk = Document(page_content=contextual_chunk_text, metadata=new_metadata)
+                processed_chunk = Document(
+                    page_content=contextual_chunk_text, metadata=new_metadata
+                )
                 processed_chunks.append(processed_chunk)
 
             except Exception as e:
@@ -236,7 +231,6 @@ Document summary:"""
                 # Fall back to original chunk
                 processed_chunks.append(chunk)
         logger.info(f"Processed {len(processed_chunks)} chunks")
-        logger.info(f"Processed chunks: {processed_chunks}")
         return processed_chunks
 
 
@@ -265,7 +259,9 @@ async def apply_autocontext(
     if not enabled or not chunks:
         return chunks
     try:
-        return await autocontext_processor.process_document_chunks(chunks, document_title=document_title, file_name=file_name)
+        return await autocontext_processor.process_document_chunks(
+            chunks, document_title=document_title, file_name=file_name
+        )
     except Exception as e:
         logger.error(f"AutoContext processing failed: {e}")
         return chunks  # Return original chunks if processing fails

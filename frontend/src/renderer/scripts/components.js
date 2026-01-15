@@ -28,6 +28,10 @@ class UIComponents {
     this.selectedProfileFiles = []; // Sadece profile modal için
     this.profileModal = null;
 
+    // Photo-less mode state
+    this.photoLessBtn = null;
+    this.photoLessMode = false;
+
     this.init();
     if (window.languageService) {
       window.languageService.subscribe(() => this.updateDynamicTexts());
@@ -799,14 +803,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
     });
 
     // Photo-less mode seçeneği
-    const photoLessBtn = document.getElementById("photoless-mode");
+    this.photoLessBtn = document.getElementById("photoless-mode");
 
-    photoLessBtn.addEventListener("click", () => {
+    this.photoLessBtn.addEventListener("click", () => {
       // Language
       const lang = window.languageService?.getCurrentLanguage() || "tr";
 
-      // Photoless mod durumunu global bir değişkene kaydedelim
-      window.isPhotoLessMode = true;
+      // Enable photo-less mode for the next file upload
+      this.photoLessMode = true;
+      this.photoLessBtn.classList.add("active");
 
       let msg = lang === "en"
         ? "Files will be processed without photos."
@@ -1475,9 +1480,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
         // Lazy loading: data is loaded only when user clicks refresh button
         // No automatic refresh on tab activation
         break;
-      case "verification":
-        await this.loadVerificationTab();
-        break;
     }
   }
 
@@ -1581,6 +1583,9 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Handle file uploads with status messages
     let uploadedFiles = [];
     if (filesToUpload.length > 0) {
+      // Capture the current photo-less mode state for these files
+      const photoLessModeForThisUpload = this.photoLessMode;
+      
       // Show uploading status for each file
       for (const file of filesToUpload) {
         this.addFileStatusMessage(file.name, "uploading");
@@ -1591,7 +1596,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
         const file = filesToUpload[i];
         try {
           const response = await window.apiService.uploadFile(file, {
-            photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
+            photoLessMode: photoLessModeForThisUpload,
           });
           if (response.success) {
             uploadedFiles.push({
@@ -1609,6 +1614,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
           this.updateFileStatusMessage(file.name, "error", "Upload failed");
+        }
+      }
+      
+      // Reset photo-less mode after uploads complete
+      if (this.photoLessMode) {
+        this.photoLessMode = false;
+        if (this.photoLessBtn) {
+          this.photoLessBtn.classList.remove("active");
         }
       }
     }
@@ -3051,6 +3064,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
   handleNewFileSelect(event) {
     const files = Array.from(event.target.files);
     this.addFilesToChat(files, true); // Show notification for manual file selection
+    // Note: photoLessMode will be reset after upload in sendMessage
   }
 
   handleChatInputDragOver(event) {
@@ -5122,689 +5136,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       if (heading) heading.textContent = t("noDocuments");
       if (paragraph) paragraph.textContent = t("uploadToGetStarted");
       if (button) button.textContent = t("uploadFilesBtn");
-    }
-  }
-
-  // Document Verification functionality
-  setupVerificationEventListeners() {
-    const verificationUploadArea = document.getElementById(
-      "verification-upload-area"
-    );
-    const verificationFileInput = document.getElementById(
-      "verification-file-input"
-    );
-    const verificationBrowseBtn = document.getElementById(
-      "verification-browse-files"
-    );
-    const verifyDocumentBtn = document.getElementById("verify-document-btn");
-    const verifyAnotherBtn = document.getElementById("verify-another-document");
-    const downloadReportBtn = document.getElementById(
-      "download-verification-report"
-    );
-
-    if (verificationUploadArea) {
-      // Drag and drop functionality
-      verificationUploadArea.addEventListener(
-        "dragover",
-        this.handleVerificationDragOver.bind(this)
-      );
-      verificationUploadArea.addEventListener(
-        "dragleave",
-        this.handleVerificationDragLeave.bind(this)
-      );
-      verificationUploadArea.addEventListener(
-        "drop",
-        this.handleVerificationDrop.bind(this)
-      );
-      verificationUploadArea.addEventListener("click", () =>
-        verificationFileInput?.click()
-      );
-    }
-
-    if (verificationBrowseBtn) {
-      verificationBrowseBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        verificationFileInput?.click();
-      });
-    }
-
-    if (verificationFileInput) {
-      verificationFileInput.addEventListener(
-        "change",
-        this.handleVerificationFileSelect.bind(this)
-      );
-    }
-
-    if (verifyDocumentBtn) {
-      verifyDocumentBtn.addEventListener(
-        "click",
-        this.startDocumentVerification.bind(this)
-      );
-    }
-
-    if (verifyAnotherBtn) {
-      verifyAnotherBtn.addEventListener(
-        "click",
-        this.resetVerificationInterface.bind(this)
-      );
-    }
-
-    if (downloadReportBtn) {
-      downloadReportBtn.addEventListener(
-        "click",
-        this.downloadVerificationReport.bind(this)
-      );
-    }
-  }
-
-  loadVerificationTypes() {
-    // Static verification types - no need to fetch from backend
-    const verificationTypes = [
-      "invoice",
-      "receipt",
-      "bank_statement",
-      "payslip",
-      "contract",
-      "tax_declaration",
-      "expense_voucher",
-      "other",
-      "auto",
-    ];
-
-    this.verificationTypes = verificationTypes;
-    this.updateVerificationTypeSelect(verificationTypes);
-  }
-
-  // Map backend verification type keys to i18n keys
-  getVerificationTypeI18nKey(type) {
-    const mapping = {
-      bank_statement: "bankStatement",
-      tax_declaration: "taxDeclaration",
-      // Keep others as-is
-    };
-    return mapping[type] || type;
-  }
-
-  updateVerificationTypeSelect(types) {
-    const select = document.getElementById("verification-type");
-    if (!select || !types) return;
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-
-    // Preserve current selection
-    const previousValue = select.value;
-
-    // Ensure Auto Detect option exists and is translated
-    let autoOption = select.querySelector('option[value="auto"]');
-    if (!autoOption) {
-      autoOption = document.createElement("option");
-      autoOption.value = "auto";
-    }
-    autoOption.setAttribute("data-i18n", "autoDetect");
-    autoOption.textContent = t("autoDetect");
-
-    // Clear and re-append auto option
-    select.innerHTML = "";
-    select.appendChild(autoOption);
-
-    // Normalize types into a string array
-    const typeList = Array.isArray(types) ? types : Object.keys(types);
-
-    // Add options for each verification type using translations
-    typeList.forEach((type) => {
-      if (type === "auto") return;
-      const i18nKey = this.getVerificationTypeI18nKey(type);
-      const option = document.createElement("option");
-      option.value = type;
-      option.setAttribute("data-i18n", i18nKey);
-      option.textContent = t(i18nKey) || type;
-      select.appendChild(option);
-    });
-
-    // Restore previous selection if still available
-    if (
-      previousValue &&
-      Array.from(select.options).some((o) => o.value === previousValue)
-    ) {
-      select.value = previousValue;
-    }
-  }
-
-  handleVerificationDragOver(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const uploadArea = document.getElementById("verification-upload-area");
-    if (uploadArea) {
-      uploadArea.classList.add("drag-over");
-    }
-  }
-
-  handleVerificationDragLeave(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const uploadArea = document.getElementById("verification-upload-area");
-    if (uploadArea && !uploadArea.contains(e.relatedTarget)) {
-      uploadArea.classList.remove("drag-over");
-    }
-  }
-
-  handleVerificationDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const uploadArea = document.getElementById("verification-upload-area");
-    if (uploadArea) {
-      uploadArea.classList.remove("drag-over");
-    }
-
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      this.handleVerificationFiles(files);
-    }
-  }
-
-  handleVerificationFileSelect(e) {
-    const files = Array.from(e.target.files);
-    this.handleVerificationFiles(files);
-  }
-
-  handleVerificationFiles(files) {
-    if (files.length === 0) return;
-
-    // Take only the first file for verification
-    const file = files[0];
-
-    // Check file type
-    const allowedTypes = [
-      ".pdf",
-      ".jpg",
-      ".jpeg",
-      ".png",
-      ".tiff",
-      ".tif",
-      ".bmp",
-    ];
-    const fileExtension = "." + file.name.split(".").pop().toLowerCase();
-
-    if (!allowedTypes.includes(fileExtension)) {
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      this.showNotification(
-        `${t("unsupportedFileType")}: ${fileExtension}. ${t(
-          "verificationSupportedFormats"
-        )}`,
-        "error"
-      );
-      return;
-    }
-
-    // Store the selected file and enable verification button
-    this.selectedVerificationFile = file;
-    this.updateVerificationUI(file);
-  }
-
-  updateVerificationUI(file) {
-    const uploadArea = document.getElementById("verification-upload-area");
-    const verifyBtn = document.getElementById("verify-document-btn");
-
-    if (uploadArea && file) {
-      uploadArea.classList.add("file-hover");
-      const uploadIcon = uploadArea.querySelector(".upload-icon i");
-      if (uploadIcon) {
-        uploadIcon.className = "fas fa-file-check";
-      }
-
-      const uploadText = uploadArea.querySelector("h3");
-      if (uploadText) {
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        uploadText.textContent = `${t("selected")}: ${file.name}`;
-      }
-    }
-
-    if (verifyBtn) {
-      verifyBtn.disabled = !file;
-    }
-  }
-
-  async startDocumentVerification() {
-    if (!this.selectedVerificationFile) {
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      this.showNotification(t("pleaseSelectFile"), "warning");
-      return;
-    }
-
-    const verificationType =
-      document.getElementById("verification-type")?.value || "auto";
-    const verifyBtn = document.getElementById("verify-document-btn");
-    const resultsContainer = document.getElementById("verification-results");
-
-    try {
-      // Disable button and show loading state
-      if (verifyBtn) {
-        verifyBtn.disabled = true;
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        verifyBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${t(
-          "verifying"
-        )}</span>`;
-      }
-
-      // Show progress indicator
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      this.showVerificationProgress(t("startingVerification"));
-
-      // Call verification API
-      const result = await window.apiService.verifyDocument(
-        this.selectedVerificationFile,
-        verificationType,
-        (progress, status) => {
-          this.updateVerificationProgress(progress, status);
-        }
-      );
-
-      // Hide progress indicator
-      this.hideVerificationProgress();
-
-      if (result.success) {
-        // Show verification results
-        this.displayVerificationResults(result.verificationResult);
-
-        if (resultsContainer) {
-          resultsContainer.style.display = "block";
-          // Remove scrollIntoView to prevent content shifting
-          // resultsContainer.scrollIntoView({ behavior: "smooth" });
-        }
-
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        // Verification completed successfully - no notification needed
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error("Verification failed:", error);
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      this.showNotification(
-        `${t("verificationFailed")}: ${error.message}`,
-        "error"
-      );
-
-      this.hideVerificationProgress();
-    } finally {
-      // Re-enable button
-      if (verifyBtn) {
-        verifyBtn.disabled = false;
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        verifyBtn.innerHTML = `<i class="fas fa-shield-alt"></i> <span>${t(
-          "verifyDocument"
-        )}</span>`;
-      }
-    }
-  }
-
-  showVerificationProgress(message) {
-    const uploadSection = document.querySelector(
-      ".verification-upload-section"
-    );
-    if (!uploadSection) return;
-
-    // Remove existing progress indicator
-    const existingProgress = uploadSection.querySelector(
-      ".verification-progress"
-    );
-    if (existingProgress) {
-      existingProgress.remove();
-    }
-
-    // Create progress indicator
-    const progressDiv = document.createElement("div");
-    progressDiv.className = "verification-progress";
-    progressDiv.innerHTML = `
-      <i class="fas fa-spinner fa-spin"></i>
-      <span class="verification-progress-text">${message}</span>
-    `;
-
-    uploadSection.appendChild(progressDiv);
-  }
-
-  updateVerificationProgress(progress, status) {
-    const progressText = document.querySelector(".verification-progress-text");
-    if (progressText && status) {
-      progressText.textContent = status;
-    }
-  }
-
-  hideVerificationProgress() {
-    const progressDiv = document.querySelector(".verification-progress");
-    if (progressDiv) {
-      progressDiv.remove();
-    }
-  }
-
-  displayVerificationResults(result) {
-    this.currentVerificationResult = result;
-
-    // Update status badge
-    const statusBadge = document.getElementById("verification-status-badge");
-    if (statusBadge) {
-      statusBadge.textContent =
-        result.status || window.languageService?.get("unknown") || "Unknown";
-      statusBadge.className = `status-badge ${result.status || "processing"}`;
-    }
-
-    // Update confidence score
-    this.updateConfidenceScore(result.confidence_score || 0);
-
-    // Update verification details
-    this.updateVerificationDetails(result);
-
-    // Update verification stages
-    this.updateVerificationStages(result.stages || {});
-
-    // Show issues if any
-    this.updateVerificationIssues(result.warnings || [], result.errors || []);
-  }
-
-  updateConfidenceScore(score) {
-    const scoreValue = document.getElementById("verification-score-value");
-    const scoreCircle = document.getElementById("verification-score-circle");
-
-    if (scoreValue) {
-      scoreValue.textContent = `${Math.round(score * 100)}%`;
-    }
-
-    if (scoreCircle) {
-      // Update the conic gradient based on score
-      const percentage = score * 360; // Convert to degrees
-      const color =
-        score >= 0.8 ? "#22c55e" : score >= 0.6 ? "#f59e0b" : "#ef4444";
-
-      scoreCircle.style.background = `conic-gradient(
-        ${color} 0deg,
-        ${color} ${percentage}deg,
-        var(--border-color) ${percentage}deg,
-        var(--border-color) 360deg
-      )`;
-    }
-  }
-
-  updateVerificationDetails(result) {
-    const detectedType = document.getElementById("detected-document-type");
-    const finalStatus = document.getElementById("verification-final-status");
-    const fraudRisk = document.getElementById("fraud-risk-level");
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-
-    if (detectedType) {
-      const docType = result.verification_type || "unknown";
-      const i18nKey = this.getVerificationTypeI18nKey(docType);
-      // Try to translate using mapped key, fall back to original key, then raw text
-      const translatedType = t(i18nKey) || t(docType) || docType;
-      detectedType.textContent = translatedType;
-    }
-
-    if (finalStatus) {
-      finalStatus.textContent = result.status || t("unknown");
-      finalStatus.className = `detail-value ${result.status}`;
-    }
-
-    if (fraudRisk) {
-      const stages = result.stages || {};
-
-      // Support multiple possible keys for fraud analysis stage (EN/TR)
-      const fraudStage =
-        stages.fraud_analysis ||
-        stages["sahtekarlık analizi"] ||
-        stages["sahtekarlik analizi"] ||
-        stages["fraud analysis"] ||
-        stages.fraud ||
-        null;
-
-      let fraudLevel = (fraudStage && fraudStage.risk_level) || "unknown";
-
-      // Normalize to EN keys for class names; translate text for UI
-      let normalized = String(fraudLevel).toLowerCase();
-      if (normalized === "düşük") normalized = "low";
-      if (normalized === "yüksek") normalized = "high";
-      if (normalized === "orta") normalized = "medium";
-
-      const translatedLevel = t(normalized) || fraudLevel;
-      fraudRisk.textContent = translatedLevel;
-      fraudRisk.className = `detail-value risk-${normalized}`;
-    }
-  }
-
-  updateVerificationStages(stages) {
-    const stagesGrid = document.getElementById("verification-stages-grid");
-    if (!stagesGrid) return;
-
-    stagesGrid.innerHTML = "";
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-
-    const stageNames = {
-      quality_control: t("qualityControl"),
-      classification: t("documentClassification"),
-      text_extraction: t("textExtraction"),
-      template_validation: t("templateValidation"),
-      data_consistency: t("dataConsistency"),
-      fraud_analysis: t("fraudAnalysis"),
-    };
-
-    Object.entries(stages).forEach(([stageName, stageData]) => {
-      const stageCard = this.createStageCard(
-        stageNames[stageName] || stageName,
-        stageData
-      );
-      stagesGrid.appendChild(stageCard);
-    });
-  }
-
-  createStageCard(stageName, stageData) {
-    const card = document.createElement("div");
-    card.className = "stage-card";
-
-    // Determine stage status
-    let stageStatus = "warning";
-    let statusIcon = "fas fa-exclamation-triangle";
-    // console.log(stageName);
-    // console.log(stageData.passed, stageData.valid, stageData.consistent, stageData.risk_level, stageData.failed, stageData.score, stageData.confidence, stageData.quality_score);
-    if (
-      stageData.passed ||
-      stageData.valid ||
-      stageData.consistent ||
-      stageData.risk_level === "low" ||
-      stageData.risk_level === "düşük"
-    ) {
-      stageStatus = "passed";
-      statusIcon = "fas fa-check";
-    } else if (
-      stageData.failed ||
-      stageData.risk_level === "high" ||
-      stageData.risk_level === "yüksek"
-    ) {
-      stageStatus = "failed";
-      statusIcon = "fas fa-times";
-    }
-
-    // Get stage score
-    const score =
-      stageData.score || stageData.confidence || stageData.quality_score || 0;
-    const percentage = Math.round(score * 100);
-
-    // Get stage details
-    const issues = stageData.issues || stageData.indicators || [];
-    const details = Array.isArray(issues)
-      ? issues.join(", ")
-      : stageData.assessment ||
-      stageData.reasoning ||
-      (window.languageService
-        ? window.languageService.t("noDetailsAvailable")
-        : "No details available");
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-
-    card.innerHTML = `
-      <div class="stage-header">
-        <div class="stage-name">${stageName}</div>
-        <div class="stage-status ${stageStatus}">
-          <i class="${statusIcon}"></i>
-        </div>
-      </div>
-      <div class="stage-details">${Utils.escapeHtml(details)}</div>
-      <div class="stage-score">
-        <span class="stage-score-label">${t("score")}</span>
-        <span class="stage-score-value">${percentage}%</span>
-      </div>
-    `;
-
-    return card;
-  }
-
-  updateVerificationIssues(warnings, errors) {
-    const issuesContainer = document.getElementById("verification-issues");
-    const issuesList = document.getElementById("verification-issues-list");
-
-    const allIssues = [...warnings, ...errors];
-
-    if (allIssues.length === 0) {
-      if (issuesContainer) {
-        issuesContainer.style.display = "none";
-      }
-      return;
-    }
-
-    if (issuesContainer) {
-      issuesContainer.style.display = "block";
-    }
-
-    if (issuesList) {
-      issuesList.innerHTML = allIssues
-        .map(
-          (issue) => `
-        <div class="issue-item">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span class="issue-text">${Utils.escapeHtml(issue)}</span>
-        </div>
-      `
-        )
-        .join("");
-    }
-  }
-
-  resetVerificationInterface() {
-    // Reset file selection
-    this.selectedVerificationFile = null;
-
-    // Reset upload area
-    const uploadArea = document.getElementById("verification-upload-area");
-    const verifyBtn = document.getElementById("verify-document-btn");
-    const resultsContainer = document.getElementById("verification-results");
-    const fileInput = document.getElementById("verification-file-input");
-
-    if (uploadArea) {
-      uploadArea.classList.remove("file-hover");
-      const uploadIcon = uploadArea.querySelector(".upload-icon i");
-      if (uploadIcon) {
-        uploadIcon.className = "fas fa-shield-alt";
-      }
-
-      const uploadText = uploadArea.querySelector("h3");
-      if (uploadText) {
-        const t = window.languageService
-          ? window.languageService.t.bind(window.languageService)
-          : (key) => key;
-        uploadText.textContent = t("verificationDragDrop");
-      }
-    }
-
-    if (verifyBtn) {
-      verifyBtn.disabled = true;
-    }
-
-    if (resultsContainer) {
-      resultsContainer.style.display = "none";
-    }
-
-    if (fileInput) {
-      fileInput.value = "";
-    }
-
-    // Hide any progress indicators
-    this.hideVerificationProgress();
-
-    // Scroll back to top - removed to prevent content shifting
-    // const verificationContainer = document.querySelector(
-    //   ".verification-container"
-    // );
-    // if (verificationContainer) {
-    //   verificationContainer.scrollIntoView({ behavior: "smooth" });
-    // }
-  }
-
-  downloadVerificationReport() {
-    if (!this.currentVerificationResult) {
-      const t = window.languageService
-        ? window.languageService.t.bind(window.languageService)
-        : (key) => key;
-      this.showNotification(t("noVerificationDataToDownload"), "warning");
-      return;
-    }
-
-    // Create a comprehensive report
-    const report = {
-      document_name: this.selectedVerificationFile?.name || "Unknown Document",
-      verification_timestamp: new Date().toISOString(),
-      verification_result: this.currentVerificationResult,
-    };
-
-    // Convert to JSON and create download
-    const reportJson = JSON.stringify(report, null, 2);
-    const blob = new Blob([reportJson], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    // Create download link
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `verification_report_${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    const t = window.languageService
-      ? window.languageService.t.bind(window.languageService)
-      : (key) => key;
-    // Report downloaded successfully - no notification needed
-  }
-
-  // Initialize verification when tab loads
-  loadVerificationTab() {
-    if (!this.verificationInitialized) {
-      this.setupVerificationEventListeners();
-      this.loadVerificationTypes();
-      this.verificationInitialized = true;
     }
   }
 
