@@ -207,25 +207,16 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
 
     content = result.content
 
-    if not photo_less_mode:
-        # Process figures
-        for figure_id, data in figure_images.items():
-            start = content.find("<figure>")
-            if start != -1:
-                end = content.find("</figure>", start) + 9
-                caption = data["caption"] if data["caption"] else "Figure"
-                figure_md = f"\n\n**[{caption} ID:{figure_id}]**\n\n"
-                content = content[:start] + figure_md + content[end:]
-    else:
-        while True:
-            start = content.find("<figure>")
-            if start == -1:
-                break
-            end = content.find("</figure>", start)
-            if end == -1:
-                content = content[:start]
-                break
-            content = content[:start] + content[end + len("</figure>") :]
+    # Remove figure tags from text content (figures are embedded separately as multimodal embeddings)
+    while True:
+        start = content.find("<figure>")
+        if start == -1:
+            break
+        end = content.find("</figure>", start)
+        if end == -1:
+            content = content[:start]
+            break
+        content = content[:start] + content[end + len("</figure>") :]
 
     # Add table references to content (without removing table content)
     for table_unique_id, data in table_images.items():
