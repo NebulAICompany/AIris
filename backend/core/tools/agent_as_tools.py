@@ -7,6 +7,7 @@ from backend.core.prompts import (
     plotting_prompt,
     tcmb_data_agent_prompt,
 )
+from langchain.agents.middleware import ToolCallLimitMiddleware
 from .office import *
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
 from .api import time_now
@@ -30,10 +31,12 @@ from .finance import (
     get_index_info,
     get_tickers_list,
     get_ticker_info_detailed,
-    create_stock_chart,
 )
 from backend.shared.constants import OPENAI_MODEL
-from backend.core.tools.plotting import execute_code_and_save_image
+from backend.core.tools.plotting import (
+    create_custom_chart_from_code,
+    create_financial_stock_chart,
+)
 
 office_tools = [
     create_excel_file,
@@ -72,7 +75,6 @@ finance_tools = [
     get_index_info,
     get_tickers_list,
     get_ticker_info_detailed,
-    create_stock_chart,
 ]
 
 # Create subagents using create_agent
@@ -88,12 +90,26 @@ office_agent = create_agent(
     system_prompt=office_agent_prompt,
 )
 
+
 plotting_agent = create_agent(
     model=OPENAI_MODEL,
     tools=[
-        execute_code_and_save_image,
+        create_custom_chart_from_code,
+        create_financial_stock_chart,
     ],
     system_prompt=plotting_prompt,
+    middleware=[
+        ToolCallLimitMiddleware(
+            tool_name="create_custom_chart_from_code",
+            run_limit=1,
+            exit_behavior="continue",
+        ),
+        ToolCallLimitMiddleware(
+            tool_name="create_financial_stock_chart",
+            run_limit=1,
+            exit_behavior="continue",
+        ),
+    ],
 )
 
 tcmb_data_agent = create_agent(
@@ -112,17 +128,26 @@ news_summarization_agent = create_agent(
 # Wrap subagents as tools for the main agent
 @tool(
     "finance_agent",
-    description="""Use this tool for comprehensive financial data analysis including:
-    - Real-time stock quotes and company information
-    - Historical price data (intraday, daily, weekly, monthly)
-    - Technical analysis with moving averages and volume indicators
-    - Professional stock chart creation (candlestick, line, area)
-    - Multi-stock comparison charts with multiple layouts
-    - Market trend analysis and volatility assessment
-    - Marketstack API integration for market data
-    - Any financial data query requiring data retrieval or visualization
+    description="""Use this tool for comprehensive financial market data retrieval and analysis:
     
-    Input: Natural language query about financial data or analysis.""",
+    **Data Retrieval:**
+    - Real-time and historical stock price data (OHLCV)
+    - Intraday data with multiple intervals (1min to 24hour)
+    - End-of-day (EOD) data for long-term analysis
+    - Company information and ticker details
+    - Exchange rates, bonds, ETFs, dividends, and splits
+    - Market indexes and financial statistics
+    
+    **Analysis Capabilities:**
+    - Market data analysis and interpretation
+    - Financial data processing and aggregation
+    - Multi-timeframe analysis
+    - Marketstack API integration
+    
+    **IMPORTANT:** This agent retrieves and analyzes financial DATA only.
+    For financial chart visualization, the data will be passed to the plotting_agent.
+    
+    Input: Natural language query about financial data retrieval or analysis.""",
 )
 async def call_finance_agent(query: str) -> str:
     """Call the finance specialist agent."""
@@ -153,38 +178,45 @@ async def call_office_agent(query: str) -> str:
 
 @tool(
     "plotting_agent",
-    description="""Use this tool for creating charts and visualizations by executing Python code in a sandboxed environment:
+    description="""Use this tool for ALL chart creation and data visualization needs:
     
-    **Capabilities:**
-    - Execute Python code to generate charts (matplotlib, seaborn, plotly, etc.)
-    - Generate professional static chart images as PNG files
-    - Handle various data formats and visualization requirements
-    - Automatically save and display charts
+    **TWO VISUALIZATION METHODS:**
+    
+    1. **Financial Stock Charts (create_financial_stock_chart):**
+       USE FOR:
+       - Stock market price charts with OHLC data
+       - Candlestick, OHLC, line, and area charts
+       - Technical indicators (SMA, EMA, Bollinger, RSI, MACD)
+       - Volume analysis with subplots
+       - Multi-stock comparison (up to 4 stocks)
+       - Professional financial market visualizations
+       - Interactive charts with range selectors
+       
+       Automatically fetches market data and creates professional financial charts.
+    
+    2. **Custom Charts from Code (create_custom_chart_from_code):**
+       USE FOR:
+       - Statistical plots (histograms, box plots, scatter plots)
+       - Distribution analysis and correlations
+       - Custom data visualizations with matplotlib/seaborn/plotly
+       - Scientific charts and academic plots
+       - Any non-financial custom visualization
+       
+       Executes Python code in a sandbox to create custom charts.
     
     **Supported Libraries:**
-    - matplotlib (line, bar, scatter, pie, histogram, box plots, etc.)
-    - seaborn (advanced statistical visualizations)
-    - plotly (interactive charts)
-    - pandas (data manipulation and plotting)
-    - numpy (numerical operations)
+    - matplotlib, seaborn, plotly, pandas, numpy
     
-    **How it Works:**
-    1. The agent generates complete, executable Python code
-    2. Code is executed in a secure, isolated sandbox environment
-    3. Generated PNG charts are automatically saved and embedded
-    4. Charts are displayed above the response to the user
-    
-    **Code Requirements:**
-    - Must import necessary libraries (matplotlib, numpy, pandas, etc.)
-    - Must use plt.savefig() or similar to generate PNG output
-    - Code executes with a 30-second timeout
+    **Key Distinction:**
+    - Financial stock charts → Use create_financial_stock_chart (no code needed)
+    - Everything else → Use create_custom_chart_from_code (requires Python code)
     
     **Important:**
-    - Charts are automatically displayed above the response after creation
-    - Do NOT add chart HTML, image data, or chart content to the answer
-    - Focus on explaining the visualization and insights
+    - Charts are automatically displayed after creation
+    - Do NOT add chart content to the answer
+    - Focus on explaining insights and analysis
     
-    Input: Natural language request with data to visualize (the agent will generate the Python code).""",
+    Input: Natural language request describing the chart or visualization needed.""",
 )
 async def call_plotting_agent(query: str) -> str:
     """Call the plotting specialist agent."""
