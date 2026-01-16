@@ -33,12 +33,7 @@ from .finance import (
     create_stock_chart,
 )
 from backend.shared.constants import OPENAI_MODEL
-from backend.core.tools.plotting import (
-    get_suitable_plot_types,
-    create_html_plot,
-    extract_data_from_text,
-    convert_to_plottable_format,
-)
+from backend.core.tools.plotting import execute_code_and_save_image
 
 office_tools = [
     create_excel_file,
@@ -96,10 +91,7 @@ office_agent = create_agent(
 plotting_agent = create_agent(
     model=OPENAI_MODEL,
     tools=[
-        extract_data_from_text,
-        convert_to_plottable_format,
-        get_suitable_plot_types,
-        create_html_plot,
+        execute_code_and_save_image,
     ],
     system_prompt=plotting_prompt,
 )
@@ -161,34 +153,38 @@ async def call_office_agent(query: str) -> str:
 
 @tool(
     "plotting_agent",
-    description="""Use this tool for creating interactive HTML plots from various data sources:
+    description="""Use this tool for creating charts and visualizations by executing Python code in a sandboxed environment:
     
     **Capabilities:**
-    - Extract structured data from text, tables, JSON, CSV-like formats, markdown tables
-    - Convert data into plottable formats (lists, numpy arrays, pandas DataFrames)
-    - Determine the most suitable plot types for given data
-    - Create professional interactive HTML plots with Plotly
-    - Save charts to disk for display
+    - Execute Python code to generate charts (matplotlib, seaborn, plotly, etc.)
+    - Generate professional static chart images as PNG files
+    - Handle various data formats and visualization requirements
+    - Automatically save and display charts
     
-    **Supported Plot Types:**
-    line, bar, scatter, pie, histogram, box, heatmap, area, violin, bubble, 
-    waterfall, radar, funnel, candlestick, treemap, scatter_3d
+    **Supported Libraries:**
+    - matplotlib (line, bar, scatter, pie, histogram, box plots, etc.)
+    - seaborn (advanced statistical visualizations)
+    - plotly (interactive charts)
+    - pandas (data manipulation and plotting)
+    - numpy (numerical operations)
     
-    **Input Data Formats:**
-    - Markdown tables (| Col1 | Col2 | ...)
-    - CSV/TSV text (comma or tab separated)
-    - JSON objects or arrays
-    - Python lists, dictionaries
-    - Key-value pairs (Key: Value format)
-    - Natural language descriptions with numbers
+    **How it Works:**
+    1. The agent generates complete, executable Python code
+    2. Code is executed in a secure, isolated sandbox environment
+    3. Generated PNG charts are automatically saved and embedded
+    4. Charts are displayed above the response to the user
+    
+    **Code Requirements:**
+    - Must import necessary libraries (matplotlib, numpy, pandas, etc.)
+    - Must use plt.savefig() or similar to generate PNG output
+    - Code executes with a 30-second timeout
     
     **Important:**
     - Charts are automatically displayed above the response after creation
-    - Do NOT add chart HTML or chart content to the answer
+    - Do NOT add chart HTML, image data, or chart content to the answer
     - Focus on explaining the visualization and insights
-    - This tool handles the complete workflow: data extraction → formatting → plot creation → saving
     
-    Input: Natural language request with data to visualize.""",
+    Input: Natural language request with data to visualize (the agent will generate the Python code).""",
 )
 async def call_plotting_agent(query: str) -> str:
     """Call the plotting specialist agent."""
