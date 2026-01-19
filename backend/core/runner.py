@@ -22,7 +22,7 @@ async def generate_answer(
     """
     try:
         start_time = time.time()
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
 
         result = await agent.ainvoke(
             {"messages": [{"role": "user", "content": prompt}]}, config=config
@@ -55,5 +55,12 @@ async def generate_answer(
 
         return answer, web_sources, api_sources
     except Exception as e:
-        logger.error(f"Error in generate_answer: {str(e)}", exc_info=True)
-        return f"LLM yanıtı alınamadı: {str(e)}", [], []
+        error_str = str(e)
+        # Check if it's a checkpoint state issue
+        if "tool_call_id" in error_str or "tool_calls" in error_str:
+            logger.warning(
+                "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
+            )
+        # Use % formatting to avoid KeyError with curly braces in error messages
+        logger.error("Error in generate_answer: %s", error_str, exc_info=True)
+        return f"LLM yanıtı alınamadı: {error_str}", [], []
