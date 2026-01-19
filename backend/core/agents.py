@@ -3,7 +3,6 @@ from .prompts import (
     main_agent_instructions,
     news_chat_agent_instructions,
 )
-from langgraph.store.postgres import PostgresStore
 from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
