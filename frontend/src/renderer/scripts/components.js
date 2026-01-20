@@ -1995,15 +1995,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       const chartsContainer = document.createElement("div");
       chartsContainer.className = "message-charts";
 
-      const chartsHeader = document.createElement("div");
-      chartsHeader.className = "charts-header";
-      chartsHeader.innerHTML = `
-        <i class="fas fa-chart-line"></i>
-        <span>Interactive Charts</span>
-`;
-
-      chartsContainer.appendChild(chartsHeader);
-
       charts.forEach((chart, index) => {
         const chartWrapper = document.createElement("div");
         chartWrapper.className = "message-chart-wrapper";
