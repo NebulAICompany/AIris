@@ -3049,6 +3049,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
   handleNewFileSelect(event) {
     const files = Array.from(event.target.files);
     this.addFilesToChat(files, true); // Show notification for manual file selection
+    event.target.value = ""; // Clear input to allow re-selecting the same file
     // Note: photoLessMode will be reset after upload in sendMessage
   }
 
