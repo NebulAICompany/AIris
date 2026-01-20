@@ -3443,10 +3443,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       // 📂 Dosyaya tıklayınca aç
       fileItem.addEventListener("click", (e) => {
-        if (
-          !e.target.closest(".file-card-actions") &&
-          !e.target.closest(".file-card-preview")
-        ) {
+        if (!e.target.closest(".file-card-actions")) {
           this.openFile(file.name);
         }
       });
