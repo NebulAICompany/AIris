@@ -140,6 +140,7 @@ class VectorStorePipeline:
                                     "caption": caption,
                                     "file_name": document_name,
                                     "image_path": image_data.get("image_path", ""),
+                                    "contains_image": True,
                                 }
 
                                 hash_obj = hashlib.sha256(figure_id.encode("utf-8"))
@@ -151,12 +152,12 @@ class VectorStorePipeline:
                                     id=point_id,
                                     vector=embedding,
                                     payload={
-                                        **metadata,
+                                        "metadata": metadata,
                                         "page_content": page_content,
                                     },
                                 )
                                 image_points.append(point)
-
+                                logger.info(f"Added image in {document_name} with figure id {figure_id} to vectorstore")
                                 # Add to keyword search
                                 keyword_search.add_document(
                                     figure_id, page_content, metadata
