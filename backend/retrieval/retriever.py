@@ -1,3 +1,4 @@
+import json
 from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient, models
 from backend.shared.constants import co
@@ -102,14 +103,14 @@ def retrieve_top_k(
                     ]
                 ),
                 limit=k,
-                score_threshold=0.3,
+                score_threshold=0.2,
             ).points
         else:
             docs_with_scores = client.query_points(
                 collection_name="documents",
                 query=embed_query(query),
                 limit=k,
-                score_threshold=0.3,
+                score_threshold=0.2,
             ).points
         logger.info(f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore")
 
@@ -137,7 +138,7 @@ def retrieve_top_k(
                 }
             )
         logger.info(f"📈 Retrieved {len(results)} document chunks")
-
+        logger.info(f"Results: {json.dumps(results, indent=4)}")
         return results
 
     except Exception as e:
