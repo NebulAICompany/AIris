@@ -84,21 +84,19 @@ class AIrisApp {
     });
 
     // Filter out annoying DevTools console messages
-    this.mainWindow.webContents.on(
-      "console-message",
-      (event, level, message, line, sourceId) => {
-        // Suppress specific autofill-related DevTools errors
-        if (
-          message.includes("Request Autofill.enable failed") ||
-          message.includes("Request Autofill.setAddresses failed") ||
-          message.includes("'Autofill.enable' wasn't found") ||
-          message.includes("'Autofill.setAddresses' wasn't found")
-        ) {
-          event.preventDefault();
-          return;
-        }
+    this.mainWindow.webContents.on("console-message", (event, level, message, line, sourceId) => {
+      // Suppress specific autofill-related DevTools errors
+      if (
+        message &&
+        (message.includes("Request Autofill.enable failed") ||
+        message.includes("Request Autofill.setAddresses failed") ||
+        message.includes("'Autofill.enable' wasn't found") ||
+        message.includes("'Autofill.setAddresses' wasn't found"))
+      ) {
+        // These are harmless DevTools errors, just return early to suppress them
+        return;
       }
-    );
+    });
 
     // Open DevTools in development
     if (process.argv.includes("--dev")) {
