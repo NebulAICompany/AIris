@@ -44,7 +44,7 @@ class VectorStorePipeline:
         return len(enc.encode(text))
 
     def apply_pre_embedding_process(
-        self, docs: List[Document], file_name: str
+        self, docs: List[Document], file_name: str, file_path: str = None
     ) -> List[Document]:
         """
         Apply the selected pre-embedding process to the documents
@@ -54,31 +54,27 @@ class VectorStorePipeline:
             return docs
 
         elif self.pre_embedding_process == PreEmbeddingProcess.CCH:
-            logger.info(
-                f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}..."
-            )
+            logger.info(f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}...")
             try:
-                # Handle event loop properly for async AutoContext processing
                 def run_autocontext():
                     try:
                         loop = asyncio.get_event_loop()
                         if loop.is_running():
-                            # If loop is already running, create a new thread
                             import concurrent.futures
-
                             with concurrent.futures.ThreadPoolExecutor() as executor:
                                 future = executor.submit(
-                                    lambda: asyncio.run(apply_autocontext(docs, file_name=file_name, enabled=True)))
+                                    lambda: asyncio.run(apply_autocontext(
+                                        docs, file_name=file_name, file_path=file_path, enabled=True
+                                    )))
                                 return future.result()
                         else:
                             return loop.run_until_complete(
-                                apply_autocontext(
-                                    docs, file_name=file_name, enabled=True
-                                )
+                                apply_autocontext(docs, file_name=file_name, file_path=file_path, enabled=True)
                             )
                     except RuntimeError:
-                        # No event loop exists, create a new one
-                        return asyncio.run(apply_autocontext(docs, file_name=file_name, enabled=True))
+                        return asyncio.run(apply_autocontext(
+                            docs, file_name=file_name, file_path=file_path, enabled=True
+                        ))
 
                 processed_docs = run_autocontext()
                 logger.info(f"✅ Contextual Chunk Headers applied to {len(processed_docs)} chunks")
@@ -91,7 +87,8 @@ class VectorStorePipeline:
             logger.warning(f"⚠️ Unknown pre-embedding process: {self.pre_embedding_process}")
             return docs
 
-    async def run(self, text_content: str, document_name: str, file_extension: str = None):
+    async def run(self, text_content: str, document_name: str, 
+                   file_extension: str = None, file_path: str = None):
         """
         Process text content directly without reading from files
 
@@ -99,6 +96,7 @@ class VectorStorePipeline:
             text_content: The extracted text content from parser
             document_name: Name of the document (for metadata)
             file_extension: Extension of the document
+            file_path: Original file path for date extraction fallback
         """
         try:
             if not text_content or not text_content.strip():
@@ -118,18 +116,15 @@ class VectorStorePipeline:
 
             logger.info(f"✅ Document '{document_name}' split into {len(docs)} chunks")
 
-            # Add basic metadata to original chunks
             for doc in docs:
                 if not hasattr(doc, "metadata") or doc.metadata is None:
                     doc.metadata = {}
                 doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
-                doc.metadata["file_name"] = (
-                    f"{document_name}"  # Keep compatibility with existing code
-                )
+                doc.metadata["file_name"] = f"{document_name}"
                 chunk_idx += 1
 
-            # Apply selected pre-embedding process
-            processed_docs = self.apply_pre_embedding_process(docs, document_name)
+            # Apply selected pre-embedding process with file_path for date extraction
+            processed_docs = self.apply_pre_embedding_process(docs, document_name, file_path)
             logger.info(f"✅ {len(processed_docs)} documents processed")
 
             # Apply PII masking to processed documents in batches

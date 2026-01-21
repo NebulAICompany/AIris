@@ -108,6 +108,7 @@ async def process_file(
             text_content=extracted_text,
             document_name=original_stem,
             file_extension=file_extension,
+            file_path=file_path,
         )
 
         # Record the upload in the database
