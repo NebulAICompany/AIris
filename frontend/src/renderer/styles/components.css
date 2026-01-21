@@ -3041,9 +3041,18 @@ body.dark-theme .image-caption {
 }
 
 .file-status-message .status-icon {
-  font-size: 16px;
+  font-size: 18px;
   width: 20px;
   text-align: center;
+  flex-shrink: 0;
+}
+
+.file-status-message.success .status-icon {
+  color: var(--accent-success, #10b981);
+}
+
+.file-status-message.error .status-icon {
+  color: var(--error-color, #ef4444);
 }
 
 .file-status-message.uploading .status-icon {
