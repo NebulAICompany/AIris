@@ -3196,14 +3196,16 @@ setupFloatingSubmenu(collapsible, subMenu) {
       case "uploading":
         statusIcon =
           '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
-        statusText = "";
+        statusText = "Uploading";
         statusClass = "uploading";
         break;
       case "success":
-        statusText = `Uploaded`;
+        statusIcon = '<i class="fas fa-check-circle status-icon"></i>';
+        statusText = `Uploaded successfully`;
         statusClass = "success";
         break;
       case "error":
+        statusIcon = '<i class="fas fa-times-circle status-icon"></i>';
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -3212,10 +3214,11 @@ setupFloatingSubmenu(collapsible, subMenu) {
     const messageElement = document.createElement("div");
     messageElement.className = `file-status-message ${statusClass}`;
     messageElement.innerHTML = `
+      ${statusIcon}
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
       fileName
-    )}</span>: ${statusText}
+    )}</span>${statusText ? ': ' + statusText : ''}
       </div>
     `;
 
@@ -3236,10 +3239,12 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     switch (status) {
       case "success":
-        statusText = `Uploaded`;
+        statusIcon = '<i class="fas fa-check-circle status-icon"></i>';
+        statusText = `Uploaded successfully`;
         statusClass = "success";
         break;
       case "error":
+        statusIcon = '<i class="fas fa-times-circle status-icon"></i>';
         statusText = errorMessage || "Upload failed";
         statusClass = "error";
         break;
@@ -3248,6 +3253,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Update the message
     statusMessage.className = `file-status-message ${statusClass}`;
     statusMessage.innerHTML = `
+      ${statusIcon}
       <div class="status-text">
         <span class="file-name">${Utils.escapeHtml(
       fileName
