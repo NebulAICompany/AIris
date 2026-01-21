@@ -239,19 +239,48 @@ class VectorStorePipeline:
     ):
         """
         Apply PII masking to processed documents in batches
+        Handles documents larger than 5120 characters by splitting them
         """
+        MAX_CHARS = 5120
         doc_contents = [doc.page_content for doc in processed_docs]
+        
+        # Track which documents need splitting and their split parts
+        split_mapping = []  # List of (original_index, start_position, [split_parts])
+        contents_to_mask = []
+        
+        for idx, content in enumerate(doc_contents):
+            if len(content) > MAX_CHARS:
+                # Split large document into chunks
+                split_parts = []
+                for i in range(0, len(content), MAX_CHARS):
+                    split_parts.append(content[i:i + MAX_CHARS])
+                split_mapping.append((idx, len(contents_to_mask), split_parts))
+                contents_to_mask.extend(split_parts)
+                logger.info(f"📄 Document {idx} split into {len(split_parts)} parts for pii mask(original size: {len(content)} chars)")
+            else:
+                split_mapping.append((idx, len(contents_to_mask), [content]))
+                contents_to_mask.append(content)
 
         batch_size = 5
         masked_contents = []
 
-        for i in range(0, len(doc_contents), batch_size):
-            batch_group = doc_contents[i : i + batch_size]
+        for i in range(0, len(contents_to_mask), batch_size):
+            batch_group = contents_to_mask[i : i + batch_size]
             masked_group = await mask_text(
                 batch_group, f"{document_name}_batch_{i//batch_size + 1}"
             )
             masked_contents.extend(masked_group)
 
+        # Reconstruct documents by combining split parts
+        final_masked_contents = []
+        for orig_idx, start_pos, split_parts in split_mapping:
+            if len(split_parts) > 1:
+                # Recombine split parts
+                combined = "".join(masked_contents[start_pos:start_pos + len(split_parts)])
+                final_masked_contents.append(combined)
+            else:
+                final_masked_contents.append(masked_contents[start_pos])
+
         # Update documents with masked content
         for i, doc in enumerate(processed_docs):
-            doc.page_content = masked_contents[i]
+            doc.page_content = final_masked_contents[i]
