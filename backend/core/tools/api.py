@@ -92,7 +92,9 @@ def web_search_tool(query: str, max_results: int = 5) -> list:
         A list of search results.
     """
     try:
-        response = tavily_client.search(query, max_results=max_results)
+        response = tavily_client.search(
+            query, max_results=max_results, auto_parameters=True
+        )
         return response["results"]
     except Exception as e:
         return [{"error": str(e)}]

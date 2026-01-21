@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Real API test for stock chart creation functionality
-Tests the create_stock_chart function with actual API calls to Marketstack
+Tests the create_financial_stock_chart function with actual API calls to Marketstack
 Uses Microsoft (MSFT) stock for testing
 """
 
@@ -14,10 +14,10 @@ from datetime import datetime
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from backend.core.tools.finance import create_stock_chart
+from backend.core.tools.plotting import create_financial_stock_chart
 
 # Access the underlying function from the tool decorator
-create_stock_chart_func = create_stock_chart.func
+create_stock_chart_func = create_financial_stock_chart.func
 
 
 def test_msft_basic_chart():
