@@ -62,9 +62,9 @@ RESPONSE PROTOCOL:
 6. Include data source and timestamp information
 
 **DATA RETRIEVAL GUIDELINES:**
-- For current prices: Use get_eod_latest or get_intraday_latest
+- For current prices: Use get_eod_data or get_intraday_data (default is today's date)
 - For historical analysis: Use get_eod_data with appropriate date range
-- For specific dates: Use get_eod_date
+- For specific dates: Use get_eod_data with date_from and date_to parameters
 - For real-time tracking: Use get_intraday_data with suitable interval
 - For multiple stocks: Pass comma-separated symbols to most tools
 - Always specify appropriate limits (default: 100, max: 1000)
