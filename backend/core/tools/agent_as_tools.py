@@ -13,18 +13,11 @@ from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
 from .api import time_now
 from .finance import (
     get_eod_data,
-    get_eod_latest,
-    get_eod_date,
     get_intraday_data,
-    get_intraday_latest,
     get_exchanges,
     get_exchange_info,
     get_currencies,
     get_timezones,
-    get_bond_list,
-    get_bond_info,
-    get_etf_list,
-    get_etf_holdings,
     get_splits_data,
     get_dividends_data,
     get_index_list,
@@ -57,18 +50,11 @@ tcmb_tools = [
 
 finance_tools = [
     get_eod_data,
-    get_eod_latest,
-    get_eod_date,
     get_intraday_data,
-    get_intraday_latest,
     get_exchanges,
     get_exchange_info,
     get_currencies,
     get_timezones,
-    get_bond_list,
-    get_bond_info,
-    get_etf_list,
-    get_etf_holdings,
     get_splits_data,
     get_dividends_data,
     get_index_list,
@@ -135,7 +121,7 @@ news_summarization_agent = create_agent(
     - Intraday data with multiple intervals (1min to 24hour)
     - End-of-day (EOD) data for long-term analysis
     - Company information and ticker details
-    - Exchange rates, bonds, ETFs, dividends, and splits
+    - Exchange rates, currencies, timezones, dividends, and splits
     - Market indexes and financial statistics
     
     **Analysis Capabilities:**
