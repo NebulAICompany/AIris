@@ -28,22 +28,15 @@ def clear_image_datas():
     IMAGE_DATA.clear()
 
 
-@tool
+@tool(parse_docstring=True)
 def image_visualizer(image_ids: List[str]) -> str:
-    """
-    Load and display images to the frontend based on image IDs found in RAG context.
+    """Display images from RAG context to enhance user understanding.
 
-    This function should be called when the agent determines that displaying actual images
-    would enhance user understanding, based on image descriptions and references found in
-    the local context (patterns like "ID:img_12345678", "ID:fig_87654321", or "ID:table_12345678").
-    IMPORTANT: Do not call this tool multiple times for the same image IDs. Each image will only be loaded once per query.
+    Call this tool when image references (e.g., img_12345678, fig_87654321, table_12345678)
+    appear in local context and showing them would help the user. Only call once per set of IDs.
 
     Args:
-        image_ids: List of complete image identifiers including prefixes
-                  Examples: ["img_12345678", "fig_87654321", "table_12345678"] for corresponding image files
-
-    Returns:
-        str: Success message indicating how many images were loaded successfully
+        image_ids: List of image identifiers including prefixes (e.g., ["img_12345678", "fig_87654321"]).
     """
 
     logger.info(f"Loading images... {image_ids}")
@@ -86,21 +79,16 @@ def image_visualizer(image_ids: List[str]) -> str:
     return "Successfully loaded images into attachments. Do not add into answer, it is already in attachments."
 
 
-@tool
+@tool(parse_docstring=True)
 def describe_image_content(image_id: str, user_query: str) -> str:
-    """
-    Analyze an image based on a user query using OpenAI's vision capabilities.
+    """Analyze an image in relation to a user query using vision capabilities.
 
-    This tool should be used when you need to understand the content of an image
-    in relation to a specific user question. It will provide detailed analysis
-    focused on the query context.
+    Use this tool when you need to understand what is shown in an image
+    in order to answer a specific user question.
 
     Args:
-        image_id: Image identifier (e.g., "img_12345678", "fig_87654321", "table_12345678")
-        user_query: The user's question or query about the image
-
-    Returns:
-        str: Detailed analysis of the image content relevant to the query
+        image_id: Image identifier (for example, "img_12345678" or "fig_87654321").
+        user_query: The user's question or query about the image.
     """
 
     try:
