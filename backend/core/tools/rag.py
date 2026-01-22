@@ -11,29 +11,20 @@ from backend.shared.constants import get_selected_files
 logger = get_logger("RAG_TOOL")
 
 
-@tool
+@tool(parse_docstring=True)
 def search_local_documents(
     query: str,
     keywords: Optional[List[str]] = None,
     max_results: int = 5,
 ) -> str:
-    """
-    Search through uploaded local documents in the knowledge base.
-    Use this tool when you need to find information from documents that were previously uploaded.
+    """Search uploaded local documents in the knowledge base.
+
+    Use this when you need information from documents that were previously uploaded.
 
     Args:
-        query: The search query to find relevant information in local documents.
-        keywords: Optional list of keywords/terms for keyword search. If provided, enables hybrid search combining vector and keyword matching.
-        max_results: Maximum number of document chunks to return (default: 5, max: 10).
-
-    Returns:
-        A formatted string containing relevant document chunks with their sources.
-        Returns "No relevant documents found" if no matches are found.
-
-    Examples:
-        - search_local_documents("What is the revenue for Q1?", keywords=["revenue", "Q1"])
-        - search_local_documents("financial projections", keywords=["financial", "projections"], max_results=3)
-        - search_local_documents("budget analysis", keywords=["budget", "analysis"])
+        query: Search query to find relevant information in local documents.
+        keywords: Optional list of keywords for hybrid vector + keyword search.
+        max_results: Maximum number of document chunks to return (default 5, max 10).
     """
     try:
         # Limit max_results to reasonable bounds
