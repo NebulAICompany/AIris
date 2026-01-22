@@ -4,7 +4,7 @@ import json
 import time
 from datetime import date
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from langchain_core.tools import tool
 import pandas as pd
 
@@ -51,32 +51,27 @@ def make_request(
 # ============================================================================
 
 
-@tool
+@tool(parse_docstring=True)
 def get_eod_data(
     symbols: str,
-    date_from: str = None,
-    date_to: str = None,
-    exchange: str = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    exchange: Optional[str] = None,
     sort: str = "DESC",
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch end-of-day data for one or multiple stock tickers from Marketstack.
+) -> dict:
+    """Fetch end-of-day stock data from Marketstack.
 
-    Required:
-        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
-
-    Optional:
-        date_from (str): Filter results from date in YYYY-MM-DD format (defaults to today if not provided)
-        date_to (str): Filter results to date in YYYY-MM-DD format (defaults to today if not provided)
-        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
-        sort (str): Sort order - "DESC" (default) or "ASC"
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: End-of-day data with OHLCV values for specified symbols
+    Args:
+        symbols: One or more comma-separated stock symbols
+            (for example, "AAPL" or "AAPL,MSFT").
+        date_from: Start date in YYYY-MM-DD format for filtering results.
+        date_to: End date in YYYY-MM-DD format for filtering results.
+        exchange: Exchange MIC code to filter by (for example, "XNAS").
+        sort: Sort order for results, "DESC" (default) or "ASC".
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     today = date.today().strftime("%Y-%m-%d")
     date_from = date_from or today
@@ -99,34 +94,30 @@ def get_eod_data(
 # ============================================================================
 
 
-@tool
+@tool(parse_docstring=True)
 def get_intraday_data(
     symbols: str,
     interval: str = "1min",
-    date_from: str = None,
-    date_to: str = None,
-    exchange: str = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    exchange: Optional[str] = None,
     sort: str = "DESC",
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch intraday data for one or multiple stock tickers from Marketstack.
+) -> dict:
+    """Fetch intraday stock data from Marketstack.
 
-    Required:
-        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
-
-    Optional:
-        interval (str): Data interval - "1min", "5min", "15min", "30min", "1hour", "3hour", "6hour", "12hour", "24hour"
-        date_from (str): Filter results from date in YYYY-MM-DD format (defaults to today if not provided)
-        date_to (str): Filter results to date in YYYY-MM-DD format (defaults to today if not provided)
-        exchange (str): Filter by exchange MIC code (e.g., "XNAS")
-        sort (str): Sort order - "DESC" (default) or "ASC"
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: Intraday data with OHLCV values for specified symbols
+    Args:
+        symbols: One or more comma-separated stock symbols
+            (for example, "AAPL" or "AAPL,MSFT").
+        interval: Data interval such as "1min", "5min", "15min", "30min",
+            "1hour", "3hour", "6hour", "12hour", or "24hour".
+        date_from: Start date in YYYY-MM-DD format for filtering results.
+        date_to: End date in YYYY-MM-DD format for filtering results.
+        exchange: Exchange MIC code to filter by (for example, "XNAS").
+        sort: Sort order for results, "DESC" (default) or "ASC".
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     today = date.today().strftime("%Y-%m-%d")
     date_from = date_from or today
@@ -144,25 +135,20 @@ def get_intraday_data(
     }
     return make_request("intraday", params)
 
-
-@tool
+@tool(parse_docstring=True)
 def get_exchanges(
-    search: str = None,
-    country: str = None,
+    search: Optional[str] = None,
+    country: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch list of available exchanges from Marketstack.
+) -> dict:
+    """Fetch a list of available exchanges from Marketstack.
 
-    Optional:
-        search (str): Search term for exchange name
-        country (str): Filter by country code (e.g., "US")
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: List of available exchanges with their information
+    Args:
+        search: Optional search term to filter exchanges by name.
+        country: Optional country code to filter exchanges (for example, "US").
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     params = {
         **({"search": search} if search else {}),
@@ -172,19 +158,12 @@ def get_exchanges(
     }
     return make_request("exchanges", params)
 
+@tool(parse_docstring=True)
+def get_exchange_info(exchange: str) -> dict:
+    """Fetch detailed information for a specific exchange from Marketstack.
 
-@tool
-def get_exchange_info(
-    exchange: str,
-):
-    """
-    Fetch detailed information for a specific exchange from Marketstack.
-
-    Required:
-        exchange (str): Exchange MIC code (e.g., "XNAS")
-
-    Returns:
-        dict: Detailed information about the specified exchange
+    Args:
+        exchange: Exchange MIC code (for example, "XNAS").
     """
     return make_request(f"exchanges/{exchange}", {})
 
@@ -194,22 +173,18 @@ def get_exchange_info(
 # ============================================================================
 
 
-@tool
+@tool(parse_docstring=True)
 def get_currencies(
-    search: str = None,
+    search: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch list of available currencies from Marketstack.
+) -> dict:
+    """Fetch a list of available currencies from Marketstack.
 
-    Optional:
-        search (str): Search term for currency name or code
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: List of available currencies with their information
+    Args:
+        search: Optional search term to filter currencies by name or code.
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning. (default 0)
     """
     params = {
         **({"search": search} if search else {}),
@@ -219,22 +194,18 @@ def get_currencies(
     return make_request("currencies", params)
 
 
-@tool
+@tool(parse_docstring=True)
 def get_timezones(
-    search: str = None,
+    search: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch list of available timezones from Marketstack.
+) -> dict:
+    """Fetch a list of available timezones from Marketstack.
 
-    Optional:
-        search (str): Search term for timezone name
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: List of available timezones with their information
+    Args:
+        search: Optional search term to filter timezones by name.
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     params = {
         **({"search": search} if search else {}),
@@ -249,30 +220,25 @@ def get_timezones(
 # ============================================================================
 
 
-@tool
+@tool(parse_docstring=True)
 def get_splits_data(
     symbols: str,
-    date_from: str = None,
-    date_to: str = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     sort: str = "DESC",
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch stock splits data for one or multiple stock tickers.
+) -> dict:
+    """Fetch stock split data for one or more tickers.
 
-    Required:
-        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
-
-    Optional:
-        date_from (str): Filter results from date in YYYY-MM-DD format
-        date_to (str): Filter results to date in YYYY-MM-DD format
-        sort (str): Sort order - "DESC" (default) or "ASC"
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: Stock splits data with split factors and dates
+    Args:
+        symbols: One or more comma-separated stock symbols
+            (for example, "AAPL" or "AAPL,MSFT").
+        date_from: Start date in YYYY-MM-DD format for filtering results.
+        date_to: End date in YYYY-MM-DD format for filtering results.
+        sort: Sort order for results, "DESC" (default) or "ASC".
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     params = {
         "symbols": symbols,
@@ -285,30 +251,25 @@ def get_splits_data(
     return make_request("splits", params)
 
 
-@tool
+@tool(parse_docstring=True)
 def get_dividends_data(
     symbols: str,
-    date_from: str = None,
-    date_to: str = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     sort: str = "DESC",
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Fetch dividends data for one or multiple stock tickers.
+) -> dict:
+    """Fetch dividend data for one or more stock tickers.
 
-    Required:
-        symbols (str): One or multiple comma-separated stock symbols (e.g., "AAPL" or "AAPL,MSFT")
-
-    Optional:
-        date_from (str): Filter results from date in YYYY-MM-DD format
-        date_to (str): Filter results to date in YYYY-MM-DD format
-        sort (str): Sort order - "DESC" (default) or "ASC"
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: Dividends data with payment dates and amounts
+    Args:
+        symbols: One or more comma-separated stock symbols
+            (for example, "AAPL" or "AAPL,MSFT").
+        date_from: Start date in YYYY-MM-DD format for filtering results.
+        date_to: End date in YYYY-MM-DD format for filtering results.
+        sort: Sort order for results, "DESC" (default) or "ASC".
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     params = {
         "symbols": symbols,
@@ -326,21 +287,16 @@ def get_dividends_data(
 # ============================================================================
 
 
-@tool
+@tool(parse_docstring=True)
 def get_index_list(
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Get list of available stock market indexes.
-    Available for Basic Plan and higher.
+) -> dict:
+    """Get a list of available stock market indexes.
 
-    Optional:
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: List of available stock market indexes
+    Args:
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     params = {
         "limit": limit,
@@ -349,19 +305,12 @@ def get_index_list(
     return make_request("indexlist", params)
 
 
-@tool
-def get_index_info(
-    index: str,
-):
-    """
-    Get detailed information for a specific stock market index.
-    Available for Basic Plan and higher.
+@tool(parse_docstring=True)
+def get_index_info(index: str) -> dict:
+    """Get detailed information for a specific stock market index.
 
-    Required:
-        index (str): Index code (e.g., "australia_all_ordinaries")
-
-    Returns:
-        dict: Detailed information about the specified stock market index
+    Args:
+        index: Index code (for example, "australia_all_ordinaries").
     """
     params = {
         "index": index,
@@ -374,24 +323,20 @@ def get_index_info(
 # ============================================================================
 
 
-@tool
+@tool(parse_docstring=True)
 def get_tickers_list(
-    search: str = None,
-    exchange: str = None,
+    search: Optional[str] = None,
+    exchange: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
-):
-    """
-    Get the full list of supported tickers from Marketstack.
+) -> dict:
+    """Get the list of supported stock tickers from Marketstack.
 
-    Optional:
-        search (str): Search stock tickers by name or ticker symbol
-        exchange (str): Search stock tickers by exchange MIC
-        limit (int): Number of results per page (max 1000)
-        offset (int): Number of results to skip
-
-    Returns:
-        dict: List of available tickers with their information
+    Args:
+        search: Optional search term to filter tickers by name or symbol.
+        exchange: Optional exchange MIC code to filter tickers by exchange.
+        limit: Maximum number of results to return per page (default 100, max 1000).
+        offset: Number of results to skip from the beginning.
     """
     params = {
         **({"search": search} if search else {}),
@@ -402,18 +347,12 @@ def get_tickers_list(
     return make_request("tickerslist", params)
 
 
-@tool
-def get_ticker_info_detailed(
-    ticker: str,
-):
-    """
-    Get detailed information about a specific ticker.
+@tool(parse_docstring=True)
+def get_ticker_info_detailed(ticker: str) -> dict:
+    """Get detailed information about a specific stock ticker.
 
-    Required:
-        ticker (str): Stock ticker symbol (e.g., "MSFT")
-
-    Returns:
-        dict: Detailed information about the ticker including executives, addresses, etc.
+    Args:
+        ticker: Stock ticker symbol (for example, "MSFT").
     """
     params = {
         "ticker": ticker,
