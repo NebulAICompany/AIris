@@ -174,6 +174,8 @@ OPENAI_MODEL = ChatOpenAI(
     model="gpt-5.2",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
+    max_tokens=4000,  # Increased for complete responses
+    max_retries=3,  # Increased for better reliability
     callbacks=[ConsoleCallbackHandler()],
 )
 

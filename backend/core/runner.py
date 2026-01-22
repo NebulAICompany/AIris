@@ -19,7 +19,8 @@ async def generate_answer(
         start_time = time.time()
 
         result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]}
+            {"messages": [{"role": "user", "content": prompt}]},
+            {"recursion_limit": 30}   # ✅ maksimum step / tool-call döngüsü sınırı
         )
 
         if not isinstance(result, dict) or "structured_response" not in result:
