@@ -197,7 +197,7 @@ class VectorStorePipeline:
         return len(enc.encode(text))
 
     def apply_pre_embedding_process(
-        self, docs: List[Document], file_name: str
+        self, docs: List[Document], file_name: str, file_path: str = None
     ) -> List[Document]:
         """
         Apply the selected pre-embedding process to the documents
@@ -207,38 +207,27 @@ class VectorStorePipeline:
             return docs
 
         elif self.pre_embedding_process == PreEmbeddingProcess.CCH:
-            logger.info(
-                f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}..."
-            )
+            logger.info(f"🔗 Applying Contextual Chunk Headers (AutoContext) to {file_name}...")
             try:
-                # Handle event loop properly for async AutoContext processing
                 def run_autocontext():
                     try:
                         loop = asyncio.get_event_loop()
                         if loop.is_running():
-                            # If loop is already running, create a new thread
                             import concurrent.futures
-
                             with concurrent.futures.ThreadPoolExecutor() as executor:
                                 future = executor.submit(
-                                    lambda: asyncio.run(
-                                        apply_autocontext(
-                                            docs, file_name=file_name, enabled=True
-                                        )
-                                    )
-                                )
+                                    lambda: asyncio.run(apply_autocontext(
+                                        docs, file_name=file_name, file_path=file_path, enabled=True
+                                    )))
                                 return future.result()
                         else:
                             return loop.run_until_complete(
-                                apply_autocontext(
-                                    docs, file_name=file_name, enabled=True
-                                )
+                                apply_autocontext(docs, file_name=file_name, file_path=file_path, enabled=True)
                             )
                     except RuntimeError:
-                        # No event loop exists, create a new one
-                        return asyncio.run(
-                            apply_autocontext(docs, file_name=file_name, enabled=True)
-                        )
+                        return asyncio.run(apply_autocontext(
+                            docs, file_name=file_name, file_path=file_path, enabled=True
+                        ))
 
                 processed_docs = run_autocontext()
                 logger.info(
@@ -255,13 +244,8 @@ class VectorStorePipeline:
             )
             return docs
 
-    async def run(
-        self,
-        text_content: str,
-        document_name: str,
-        file_extension: str = None,
-        figure_images: dict = None,
-    ):
+    async def run(self, text_content: str, document_name: str, 
+                   file_extension: str = None, file_path: str = None, figure_images: dict = None):
         """
         Process text content directly without reading from files
 
@@ -270,6 +254,7 @@ class VectorStorePipeline:
             document_name: Name of the document (for metadata)
             file_extension: Extension of the document
             figure_images: Dictionary of figure images with their captions and image bytes
+            file_path: Original file path for date extraction fallback
         """
         try:
             if not text_content or not text_content.strip():
@@ -293,18 +278,15 @@ class VectorStorePipeline:
                 f"   ✅ Document '{document_name}' split into {len(docs)} chunks"
             )
 
-            # Add basic metadata to original chunks
             for doc in docs:
                 if not hasattr(doc, "metadata") or doc.metadata is None:
                     doc.metadata = {}
                 doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
-                doc.metadata["file_name"] = (
-                    f"{document_name}"  # Keep compatibility with existing code
-                )
+                doc.metadata["file_name"] = f"{document_name}"
                 chunk_idx += 1
 
-            # Apply selected pre-embedding process
-            processed_docs = self.apply_pre_embedding_process(docs, document_name)
+            # Apply selected pre-embedding process with file_path for date extraction
+            processed_docs = self.apply_pre_embedding_process(docs, document_name, file_path)
             logger.info(f"✅ {len(processed_docs)} documents processed")
 
             # Apply PII masking to processed documents in batches
@@ -356,19 +338,48 @@ class VectorStorePipeline:
     ):
         """
         Apply PII masking to processed documents in batches
+        Handles documents larger than 5120 characters by splitting them
         """
+        MAX_CHARS = 5120
         doc_contents = [doc.page_content for doc in processed_docs]
+        
+        # Track which documents need splitting and their split parts
+        split_mapping = []  # List of (original_index, start_position, [split_parts])
+        contents_to_mask = []
+        
+        for idx, content in enumerate(doc_contents):
+            if len(content) > MAX_CHARS:
+                # Split large document into chunks
+                split_parts = []
+                for i in range(0, len(content), MAX_CHARS):
+                    split_parts.append(content[i:i + MAX_CHARS])
+                split_mapping.append((idx, len(contents_to_mask), split_parts))
+                contents_to_mask.extend(split_parts)
+                logger.info(f"📄 Document {idx} split into {len(split_parts)} parts for pii mask(original size: {len(content)} chars)")
+            else:
+                split_mapping.append((idx, len(contents_to_mask), [content]))
+                contents_to_mask.append(content)
 
         batch_size = 5
         masked_contents = []
 
-        for i in range(0, len(doc_contents), batch_size):
-            batch_group = doc_contents[i : i + batch_size]
+        for i in range(0, len(contents_to_mask), batch_size):
+            batch_group = contents_to_mask[i : i + batch_size]
             masked_group = await mask_text(
                 batch_group, f"{document_name}_batch_{i//batch_size + 1}"
             )
             masked_contents.extend(masked_group)
 
+        # Reconstruct documents by combining split parts
+        final_masked_contents = []
+        for orig_idx, start_pos, split_parts in split_mapping:
+            if len(split_parts) > 1:
+                # Recombine split parts
+                combined = "".join(masked_contents[start_pos:start_pos + len(split_parts)])
+                final_masked_contents.append(combined)
+            else:
+                final_masked_contents.append(masked_contents[start_pos])
+
         # Update documents with masked content
         for i, doc in enumerate(processed_docs):
-            doc.page_content = masked_contents[i]
+            doc.page_content = final_masked_contents[i]

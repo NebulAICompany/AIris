@@ -28,6 +28,10 @@ class UIComponents {
     this.selectedProfileFiles = []; // Sadece profile modal için
     this.profileModal = null;
 
+    // Photo-less mode state
+    this.photoLessBtn = null;
+    this.photoLessMode = false;
+
     this.init();
     if (window.languageService) {
       window.languageService.subscribe(() => this.updateDynamicTexts());
@@ -799,14 +803,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
     });
 
     // Photo-less mode seçeneği
-    const photoLessBtn = document.getElementById("photoless-mode");
+    this.photoLessBtn = document.getElementById("photoless-mode");
 
-    photoLessBtn.addEventListener("click", () => {
+    this.photoLessBtn.addEventListener("click", () => {
       // Language
       const lang = window.languageService?.getCurrentLanguage() || "tr";
 
-      // Photoless mod durumunu global bir değişkene kaydedelim
-      window.isPhotoLessMode = true;
+      // Enable photo-less mode for the next file upload
+      this.photoLessMode = true;
+      this.photoLessBtn.classList.add("active");
 
       let msg = lang === "en"
         ? "Files will be processed without photos."
@@ -1578,6 +1583,9 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Handle file uploads with status messages
     let uploadedFiles = [];
     if (filesToUpload.length > 0) {
+      // Capture the current photo-less mode state for these files
+      const photoLessModeForThisUpload = this.photoLessMode;
+      
       // Show uploading status for each file
       for (const file of filesToUpload) {
         this.addFileStatusMessage(file.name, "uploading");
@@ -1621,6 +1629,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
           this.updateFileStatusMessage(file.name, "error", error?.message || "Upload failed");
+        }
+      }
+      
+      // Reset photo-less mode after uploads complete
+      if (this.photoLessMode) {
+        this.photoLessMode = false;
+        if (this.photoLessBtn) {
+          this.photoLessBtn.classList.remove("active");
         }
       }
     }
@@ -1749,9 +1765,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     }
 
     typingDiv.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas fa-robot"></i>
-      </div>
       <div class="message-content">
         <div class="typing-dots">
           <span></span>
@@ -1795,9 +1808,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     if (type === "user") {
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-text">${Utils.escapeHtml(content)}</div>
                     <div class="message-time">${timestamp}</div>
@@ -1916,9 +1926,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       }
 
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
                 <div class="message-content">
                     ${sourcesHTML}
                     <div class="message-text">${parsedContent}</div>
@@ -1989,9 +1996,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       }
     } else if (type === "error") {
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-text error">${Utils.escapeHtml(
         content
@@ -2005,15 +2009,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (charts && charts.length > 0) {
       const chartsContainer = document.createElement("div");
       chartsContainer.className = "message-charts";
-
-      const chartsHeader = document.createElement("div");
-      chartsHeader.className = "charts-header";
-      chartsHeader.innerHTML = `
-        <i class="fas fa-chart-line"></i>
-        <span>Interactive Charts</span>
-`;
-
-      chartsContainer.appendChild(chartsHeader);
 
       charts.forEach((chart, index) => {
         const chartWrapper = document.createElement("div");
@@ -2357,9 +2352,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     typingDiv.id = "typing-indicator";
 
     typingDiv.innerHTML = `
-            <div class="message-avatar">
-                <i class="fas fa-robot"></i>
-            </div>
             <div class="message-content">
                 <div class="typing-dots">
                     <span></span>
@@ -3063,6 +3055,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
   handleNewFileSelect(event) {
     const files = Array.from(event.target.files);
     this.addFilesToChat(files, true); // Show notification for manual file selection
+    event.target.value = ""; // Clear input to allow re-selecting the same file
+    // Note: photoLessMode will be reset after upload in sendMessage
   }
 
   handleChatInputDragOver(event) {
@@ -3475,10 +3469,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       // 📂 Dosyaya tıklayınca aç
       fileItem.addEventListener("click", (e) => {
-        if (
-          !e.target.closest(".file-card-actions") &&
-          !e.target.closest(".file-card-preview")
-        ) {
+        if (!e.target.closest(".file-card-actions")) {
           this.openFile(file.name);
         }
       });
@@ -6855,9 +6846,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       block.innerHTML = `
         <div class="message user-message">
-          <div class="message-avatar">
-            <i class="fas fa-user"></i>
-          </div>
           <div class="message-content">
             <div class="message-text">${Utils.escapeHtml(message)}</div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
@@ -6867,9 +6855,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
           </div>
         </div>
         <div class="message assistant-message">
-          <div class="message-avatar">
-            <i class="fas fa-robot"></i>
-          </div>
           <div class="message-content">
             <div class="message-text" id="${qaContentId}">
               <div class="news-qa-thinking">
@@ -6963,9 +6948,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     if (role === "user") {
       messageDiv.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-user"></i>
-        </div>
         <div class="message-content">
           <div class="message-text">${this.formatNewsChatMessage(content)}</div>
           <div class="message-time">${time}</div>
@@ -6973,9 +6955,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       `;
     } else if (role === "assistant") {
       messageDiv.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
         <div class="message-content">
           <div class="message-text">${this.formatNewsChatMessage(content)}</div>
           <div class="message-time">${time}</div>
@@ -7039,9 +7018,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     typingDiv.id = "news-chat-typing";
 
     typingDiv.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas fa-robot"></i>
-      </div>
       <div class="message-content">
         <div class="message-text">
           <span>AI is thinking</span>

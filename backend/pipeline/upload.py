@@ -130,6 +130,7 @@ async def process_file(
             document_name=original_stem,
             file_extension=file_extension,
             figure_images=figure_images if figure_images else None,
+            file_path=file_path,
         )
 
         # Record the upload in the database
