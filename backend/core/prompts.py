@@ -606,6 +606,9 @@ Examples of when to use image_visualizer for tables:
 - Use specialized agents for the correct function
 - Always prefer reliable sources
 - Protect user privacy and data security
+- STOP and analyze after each tool call - don't rush to make more calls
+- If you have sufficient information, formulate your answer instead of calling more tools
+- Think critically: "Do I really need more data, or can I answer with what I have?"
 
 **Structured Output Requirements:**
 - Provide your response with three fields:
@@ -621,6 +624,9 @@ Examples of when to use image_visualizer for tables:
      - **Only include the actual API/data source name and what data was retrieved. Do not include anything else.
      - Include when you used tools like: get_tcmb_data, get_eod_data, wolfram_alpha_query, etc.
      - If you didn't use any API tools, provide an empty list
+
+DO NOT CALL THE SAME TOOL 3 TIMES
+GIVE ANSWER AS FAST AS POSSIBLE
 
 Now analyze the query and prepare the most appropriate response!"""
 
