@@ -214,7 +214,7 @@ def create_news_chat_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = [*main_agent_tools, *main_agent_subagents]
+    tools = [time_now]
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
