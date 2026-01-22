@@ -1,7 +1,7 @@
+import json
 from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient, models
-from langchain_core.embeddings import Embeddings
-from backend.shared.constants import OPENAI_API_KEY, HUGGINGFACE_API_KEY
+from backend.shared.constants import co
 from backend.shared.logger import get_logger
 from backend.retrieval.keyword_search import keyword_search
 
@@ -9,40 +9,45 @@ logger = get_logger("RETRIEVER")
 
 _qdrant_client: Optional[QdrantClient] = None
 
-def _get_embeddings() -> Embeddings:
-    try:
-        from langchain_openai import OpenAIEmbeddings
 
-        return OpenAIEmbeddings(
-            model="text-embedding-3-small",
-            api_key=OPENAI_API_KEY,
-        )
-    except (ImportError, Exception) as e:
-        try:
-            from langchain_huggingface import HuggingFaceEmbeddings
+def embed_query(query: str) -> List[float]:
+    """Embed a single query using Cohere"""
+    query_input = [{"content": [{"type": "text", "text": query}]}]
+    query_emb = co.embed(
+        inputs=query_input,
+        model="embed-v4.0",
+        input_type="search_query",
+        output_dimension=1536,
+        embedding_types=["float"],
+    ).embeddings.float
+    return query_emb[0]
 
-            return HuggingFaceEmbeddings(
-                model_name="sentence-transformers/all-MiniLM-L6-v2",
-                api_key=HUGGINGFACE_API_KEY,
-            )
-        except (ImportError, Exception) as e:
-            raise ImportError(
-                "No suitable embeddings found. Please install either langchain_openai or langchain_community."
-            ) from e
+
+def embed_documents(documents: List[str]) -> List[List[float]]:
+    """Embed multiple documents using Cohere"""
+    embed_input = [{"content": [{"type": "text", "text": doc}]} for doc in documents]
+    doc_emb = co.embed(
+        inputs=embed_input,
+        model="embed-v4.0",
+        output_dimension=1536,
+        input_type="search_document",
+        embedding_types=["float"],
+    ).embeddings.float
+    return doc_emb
 
 
 def load_vectorstore(path: str) -> QdrantClient:
     global _qdrant_client
-    
+
     if _qdrant_client is not None:
         return _qdrant_client
-    
+
     try:
         _qdrant_client = QdrantClient(path=path)
         logger.info(f"✅ Vectorstore loaded from {path}")
-        if _qdrant_client.collection_exists(collection_name="test_collection"):
+        if _qdrant_client.collection_exists(collection_name="documents"):
             logger.info(
-                f"📦 Contains {_qdrant_client.count(collection_name='test_collection')} document chunks"
+                f"📦 Contains {_qdrant_client.count(collection_name='documents')} document chunks"
             )
         else:
             logger.info("No collection found")
@@ -66,6 +71,7 @@ def close_vectorstore() -> None:
         finally:
             _qdrant_client = None
 
+
 def retrieve_top_k(
     client: QdrantClient,
     query: str,
@@ -74,18 +80,20 @@ def retrieve_top_k(
 ) -> List[Dict[str, Any]]:
     try:
         logger.info(f"🔍 Retrieving top {k} documents for query: {query}")
-        if not client.collection_exists(collection_name="test_collection"):
+        if not client.collection_exists(collection_name="documents"):
             logger.info("No collection found")
             return None
 
-        logger.info(f"📊 Searching through {client.count(collection_name='test_collection')} document chunks")
-        
+        logger.info(
+            f"📊 Searching through {client.count(collection_name='documents')} document chunks"
+        )
+
         if selected_files:
             selected_files = [file.split(".")[0] for file in selected_files]
             logger.info(f"🔍 Searching through {selected_files} document chunks")
             docs_with_scores = client.query_points(
-                collection_name="test_collection",
-                query=_get_embeddings().embed_query(query),
+                collection_name="documents",
+                query=embed_query(query),
                 query_filter=models.Filter(
                     must=[
                         models.FieldCondition(
@@ -95,14 +103,14 @@ def retrieve_top_k(
                     ]
                 ),
                 limit=k,
-                score_threshold=0.3,
+                score_threshold=0.2,
             ).points
         else:
             docs_with_scores = client.query_points(
-                collection_name="test_collection",
-                query=_get_embeddings().embed_query(query),
+                collection_name="documents",
+                query=embed_query(query),
                 limit=k,
-                score_threshold=0.3,
+                score_threshold=0.2,
             ).points
         logger.info(f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore")
 
@@ -130,12 +138,13 @@ def retrieve_top_k(
                 }
             )
         logger.info(f"📈 Retrieved {len(results)} document chunks")
-
+        logger.info(f"Results: {json.dumps(results, indent=4)}")
         return results
 
     except Exception as e:
         logger.error(f"❌ Error during retrieval: {e}")
         return []
+
 
 def retrieve_with_keyword_helping(
     client: QdrantClient,
@@ -147,11 +156,24 @@ def retrieve_with_keyword_helping(
     try:
         logger.info(f"🔍 Vector + keyword search helping for: '{query}' (limit: {k}+3)")
 
+        # Perform vector search
+        vector_results = retrieve_top_k(
+            client, query, k=k, selected_files=selected_files
+        )
+
         # Perform keyword search
-        vector_results = retrieve_top_k(client, query, k=k, selected_files=selected_files)
-        results = keyword_search(query_terms, k=3, selected_files=selected_files)
-        results = vector_results + results
-        logger.info(f"✅ Retrieved {len(results)} documents via vector + keyword search helping")
+        keyword_results = keyword_search(
+            query_terms, k=3, selected_files=selected_files
+        )
+
+        # Combine results (handle None case)
+        if vector_results is None:
+            vector_results = []
+
+        results = vector_results + keyword_results
+        logger.info(
+            f"✅ Retrieved {len(results)} documents via vector + keyword search helping ({len(vector_results)} vector, {len(keyword_results)} keyword)"
+        )
 
         return results
 

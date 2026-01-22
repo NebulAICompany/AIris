@@ -1,4 +1,5 @@
 import os
+from typing import List, Optional
 from dotenv import load_dotenv
 from azure.ai.textanalytics.aio import TextAnalyticsClient as AsyncTextAnalyticsClient
 from azure.ai.textanalytics import TextAnalyticsClient
@@ -210,3 +211,17 @@ MARKETSTACK_TICKERS = [
     "ULKER.IS",
     "YKBNK.IS",
 ]
+
+# Global variable for selected files in RAG queries
+SELECTED_FILES: Optional[List[str]] = None
+
+
+def set_selected_files(files: Optional[List[str]]) -> None:
+    """Set the global selected files for RAG queries."""
+    global SELECTED_FILES
+    SELECTED_FILES = files
+
+
+def get_selected_files() -> Optional[List[str]]:
+    """Get the global selected files for RAG queries."""
+    return SELECTED_FILES

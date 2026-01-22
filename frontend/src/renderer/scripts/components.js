@@ -1595,25 +1595,40 @@ setupFloatingSubmenu(collapsible, subMenu) {
       for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         try {
-          const response = await window.apiService.uploadFile(file, {
-            photoLessMode: photoLessModeForThisUpload,
-          });
-          if (response.success) {
+          // Create progress callback
+          const progressCallback = (progress) => {
+            if (progress !== null && progress !== undefined) {
+              this.updateFileStatusMessage(file.name, "uploading", "", progress);
+            } else {
+              // Indeterminate progress - just show uploading state
+              this.updateFileStatusMessage(file.name, "uploading", "", null);
+            }
+          };
+
+          const response = await window.apiService.uploadFile(
+            file,
+            {
+              photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
+            },
+            progressCallback
+          );
+          
+          if (response && response.success) {
             uploadedFiles.push({
               name: file.name,
               size: file.size,
-              id: response.data.file_id || response.data.filename,
+              id: response.data?.file_id || response.data?.filename || file.name,
             });
 
             // Update status to success
             this.updateFileStatusMessage(file.name, "success");
           } else {
             // Update status to error
-            this.updateFileStatusMessage(file.name, "error", "Upload failed");
+            this.updateFileStatusMessage(file.name, "error", response?.error || "Upload failed");
           }
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
-          this.updateFileStatusMessage(file.name, "error", "Upload failed");
+          this.updateFileStatusMessage(file.name, "error", error?.message || "Upload failed");
         }
       }
       
@@ -3181,23 +3196,23 @@ setupFloatingSubmenu(collapsible, subMenu) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
-    let statusIcon, statusText, statusClass;
+    let statusIcon = "", statusText = "", statusClass = "";
 
     switch (status) {
       case "uploading":
         statusIcon =
           '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
-        statusText = "Uploading";
+        statusText = window.languageService?.get("uploading") || "Uploading...";
         statusClass = "uploading";
         break;
       case "success":
         statusIcon = '<i class="fas fa-check-circle status-icon"></i>';
-        statusText = `Uploaded successfully`;
+        statusText = window.languageService?.get("uploaded") || "Uploaded";
         statusClass = "success";
         break;
       case "error":
-        statusIcon = '<i class="fas fa-times-circle status-icon"></i>';
-        statusText = errorMessage || "Upload failed";
+        statusIcon = '<i class="fas fa-exclamation-circle status-icon"></i>';
+        statusText = errorMessage || (window.languageService?.get("uploadFailed") || "Upload failed");
         statusClass = "error";
         break;
     }
@@ -3205,12 +3220,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
     const messageElement = document.createElement("div");
     messageElement.className = `file-status-message ${statusClass}`;
     messageElement.innerHTML = `
-      ${statusIcon}
-      <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(
-      fileName
-    )}</span>${statusText ? ': ' + statusText : ''}
+      <div class="status-icon-container">
+        ${statusIcon}
       </div>
+      <div class="status-text">
+        <span class="file-name">${Utils.escapeHtml(fileName)}</span>
+        <span class="status-label">${statusText}</span>
+      </div>
+      ${status === "uploading" ? '<div class="upload-progress-bar"><div class="upload-progress-fill"></div></div>' : ''}
     `;
 
     chatMessages.appendChild(messageElement);
@@ -3218,25 +3235,34 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Store reference for updates
     messageElement.dataset.fileName = fileName;
+    
+    // Return the element for progress updates
+    return messageElement;
   }
 
-  updateFileStatusMessage(fileName, status, errorMessage = "") {
+  updateFileStatusMessage(fileName, status, errorMessage = "", progress = null) {
     const statusMessage = document.querySelector(
       `[data-file-name="${fileName}"]`
     );
     if (!statusMessage) return;
 
-    let statusIcon, statusText, statusClass;
+    let statusIcon = "", statusText = "", statusClass = "";
 
     switch (status) {
+      case "uploading":
+        statusIcon =
+          '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
+        statusText = window.languageService?.get("uploading") || "Uploading...";
+        statusClass = "uploading";
+        break;
       case "success":
         statusIcon = '<i class="fas fa-check-circle status-icon"></i>';
-        statusText = `Uploaded successfully`;
+        statusText = window.languageService?.get("uploaded") || "Uploaded";
         statusClass = "success";
         break;
       case "error":
-        statusIcon = '<i class="fas fa-times-circle status-icon"></i>';
-        statusText = errorMessage || "Upload failed";
+        statusIcon = '<i class="fas fa-exclamation-circle status-icon"></i>';
+        statusText = errorMessage || (window.languageService?.get("uploadFailed") || "Upload failed");
         statusClass = "error";
         break;
     }
@@ -3244,12 +3270,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Update the message
     statusMessage.className = `file-status-message ${statusClass}`;
     statusMessage.innerHTML = `
-      ${statusIcon}
-      <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(
-      fileName
-    )}</span>: ${statusText}
+      <div class="status-icon-container">
+        ${statusIcon}
       </div>
+      <div class="status-text">
+        <span class="file-name">${Utils.escapeHtml(fileName)}</span>
+        <span class="status-label">${statusText}${progress !== null ? ` (${progress}%)` : ''}</span>
+      </div>
+      ${status === "uploading" ? '<div class="upload-progress-bar"><div class="upload-progress-fill" style="width: ' + (progress || 0) + '%"></div></div>' : ''}
     `;
   }
 

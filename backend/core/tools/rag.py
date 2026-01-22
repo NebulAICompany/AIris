@@ -2,10 +2,11 @@ from langchain_core.tools import tool
 from typing import List, Optional
 from backend.retrieval.retriever import (
     get_vectorstore,
-    retrieve_top_k,
+    retrieve_with_keyword_helping,
 )
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
+from backend.shared.constants import get_selected_files
 
 logger = get_logger("RAG_TOOL")
 
@@ -13,8 +14,8 @@ logger = get_logger("RAG_TOOL")
 @tool
 def search_local_documents(
     query: str,
+    keywords: Optional[List[str]] = None,
     max_results: int = 5,
-    selected_files: Optional[List[str]] = None,
 ) -> str:
     """
     Search through uploaded local documents in the knowledge base.
@@ -22,17 +23,17 @@ def search_local_documents(
 
     Args:
         query: The search query to find relevant information in local documents.
+        keywords: Optional list of keywords/terms for keyword search. If provided, enables hybrid search combining vector and keyword matching.
         max_results: Maximum number of document chunks to return (default: 5, max: 10).
-        selected_files: Optional list of specific file names to search within. If not provided, searches all documents.
 
     Returns:
         A formatted string containing relevant document chunks with their sources.
         Returns "No relevant documents found" if no matches are found.
 
     Examples:
-        - search_local_documents("What is the revenue for Q1?")
-        - search_local_documents("financial projections", max_results=3)
-        - search_local_documents("budget analysis", selected_files=["budget_2024.pdf"])
+        - search_local_documents("What is the revenue for Q1?", keywords=["revenue", "Q1"])
+        - search_local_documents("financial projections", keywords=["financial", "projections"], max_results=3)
+        - search_local_documents("budget analysis", keywords=["budget", "analysis"])
     """
     try:
         # Limit max_results to reasonable bounds
@@ -40,20 +41,31 @@ def search_local_documents(
 
         # Get the global vectorstore client
         client = get_vectorstore()
-        
+
         # Check if client is available
         if client is None:
             return "Vectorstore is not available. Please ensure documents are uploaded."
 
         # Check if collection exists
-        if not client.collection_exists(collection_name="test_collection"):
+        if not client.collection_exists(collection_name="documents"):
             logger.info("No collection found in vectorstore")
             return "No documents have been uploaded to the knowledge base yet."
 
-        # Retrieve documents using vector search
-        retrieved_docs = retrieve_top_k(
+        # Use provided keywords or empty list if not provided
+        query_terms = keywords if keywords is not None else []
+
+        # Use global selected_files from shared state
+        selected_files = get_selected_files()
+
+        logger.info(
+            f"🔍 RAG Tool - Searching with selected files filter: {selected_files}"
+        )
+
+        # Retrieve documents using hybrid search (vector + keyword)
+        retrieved_docs = retrieve_with_keyword_helping(
             client=client,
             query=query,
+            query_terms=query_terms,
             k=15,
             selected_files=selected_files,
         )
