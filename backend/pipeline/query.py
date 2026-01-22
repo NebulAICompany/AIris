@@ -1,8 +1,6 @@
 from typing import List, Optional, Dict, Any
 from backend.core.runner import generate_answer
 from backend.core.agents import create_main_agent, create_news_chat_agent
-
-# Removed upfront retrieval imports - agent will use search_local_documents tool
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.core.chat import chat_history_manager, MessageRole
@@ -11,6 +9,7 @@ from backend.shared.logger import get_logger
 from backend.core.tools.finance import get_chart_datas, clear_chart_datas
 from backend.core.tools.office import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
+from backend.shared.constants import set_selected_files
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -21,11 +20,13 @@ async def run_orchestration(
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-
     # Clear previous attachments at the start of each new query
     clear_image_datas()
     clear_chart_datas()
     clear_generated_files()
+
+    # Set global selected files for RAG queries
+    set_selected_files(selected_files)
 
     # Add user message to chat history
     chat_history_manager.add_message(session_id, MessageRole.USER, query)
@@ -70,7 +71,6 @@ async def run_orchestration(
     agent = create_main_agent(
         web_search_enabled=web_search_enabled,
         conversation_history=conversation_context,
-        selected_files=selected_files,  # Pass selected files so agent can filter searches
     )
     # Generate initial answer with structured output
     answer, web_sources, api_sources = await generate_answer(

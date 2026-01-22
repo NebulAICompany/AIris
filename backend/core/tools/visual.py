@@ -17,7 +17,10 @@ def get_image_datas():
 
 def set_image_datas(data):
     global IMAGE_DATA
-    IMAGE_DATA = data
+    if isinstance(data, list):
+        IMAGE_DATA.extend(data)
+    else:
+        IMAGE_DATA.append(data)
 
 
 def clear_image_datas():
@@ -33,6 +36,7 @@ def image_visualizer(image_ids: List[str]) -> str:
     This function should be called when the agent determines that displaying actual images
     would enhance user understanding, based on image descriptions and references found in
     the local context (patterns like "ID:img_12345678", "ID:fig_87654321", or "ID:table_12345678").
+    IMPORTANT: Do not call this tool multiple times for the same image IDs. Each image will only be loaded once per query.
 
     Args:
         image_ids: List of complete image identifiers including prefixes
@@ -79,11 +83,11 @@ def image_visualizer(image_ids: List[str]) -> str:
 
     set_image_datas(images_data)
 
-    return "images loaded successfully into attachments. Do not add into answer, it is already in attachments."
+    return "Successfully loaded images into attachments. Do not add into answer, it is already in attachments."
 
 
 @tool
-def redescribe_image_content(image_name: str, user_query: str) -> str:
+def describe_image_content(image_id: str, user_query: str) -> str:
     """
     Analyze an image based on a user query using OpenAI's vision capabilities.
 
@@ -92,7 +96,7 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
     focused on the query context.
 
     Args:
-        image_name: Name of the image file
+        image_id: Image identifier (e.g., "img_12345678", "fig_87654321", "table_12345678")
         user_query: The user's question or query about the image
 
     Returns:
@@ -100,12 +104,25 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
     """
 
     try:
-        # Construct full path
-        full_path = f"{IMAGES_PATH_STR}/{image_name}"
+        full_path = None
+        found = False
 
-        # Check if file exists
-        if not os.path.exists(full_path):
-            return f"Error: Image file not found at {full_path}"
+        # Check if image_id already has an extension
+        if os.path.splitext(image_id)[1]:
+            # Has extension, try direct path
+            full_path = f"{IMAGES_PATH_STR}/{image_id}"
+            if os.path.exists(full_path):
+                found = True
+        else:
+            # No extension, try common extensions
+            for ext in [".jpg", ".jpeg", ".png"]:
+                full_path = f"{IMAGES_PATH_STR}/{image_id}{ext}"
+                if os.path.exists(full_path):
+                    found = True
+                    break
+
+        if not found or not full_path:
+            return f"Error: Image file not found for '{image_id}'. Tried paths with extensions: .jpg, .jpeg, .png"
 
         # Read and encode image
         with open(full_path, "rb") as image_file:
@@ -143,9 +160,11 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
             }
         ]
 
-        # Call OpenAI Vision API with error handling
         response = openai_client.chat.completions.create(
-            model="gpt-4o", messages=messages, max_tokens=1500, temperature=0.1
+            model="gpt-5.2",
+            messages=messages,
+            max_completion_tokens=1500,
+            temperature=0.1,
         )
 
         # Validate response
@@ -153,10 +172,10 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
             return "Error: No response received from OpenAI Vision API"
 
         analysis_result = response.choices[0].message.content
-        logger.info(f"Successfully analyzed image: {image_name}")
+        logger.info(f"Successfully analyzed image: {image_id}")
         return f"Image Analysis Results:\n\n{analysis_result}"
 
     except Exception as e:
-        error_msg = f"Error analyzing image {image_name}: {str(e)}"
+        error_msg = f"Error analyzing image {image_id}: {str(e)}"
         logger.error(error_msg)
         return error_msg

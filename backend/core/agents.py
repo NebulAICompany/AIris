@@ -14,7 +14,7 @@ from .tools.api import (
     list_uploaded_files,
 )
 from .tools.agent_as_tools import main_agent_subagents
-from .tools.visual import image_visualizer, redescribe_image_content
+from .tools.visual import image_visualizer, describe_image_content
 from .tools.rag import search_local_documents
 from backend.shared.constants import OPENAI_MODEL
 
@@ -101,18 +101,16 @@ main_agent_tools = [
     wolfram_alpha_query,
     time_now,
     image_visualizer,
-    redescribe_image_content,
+    describe_image_content,
     get_uploaded_files_count,
     list_uploaded_files,
 ]
 
 
 def create_main_agent(
-    local_context: str = None,
     web_search_enabled: bool = False,
     instruction: str = None,
     conversation_history: List = None,
-    selected_files: List[str] = None,
 ):
     """
     Create a Deep Agent for main assistant functionality with agentic RAG.
