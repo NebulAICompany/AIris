@@ -3,8 +3,7 @@ from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, IMAGES_PATH_STR
 import base64
 import os
-from langchain_core.tools import tool
-from backend.core.prompts import redescribe_image_prompt
+from backend.core.prompts import describe_image_prompt
 
 logger = get_logger("VISUAL")
 
@@ -28,7 +27,6 @@ def clear_image_datas():
     IMAGE_DATA.clear()
 
 
-@tool
 def image_visualizer(image_ids: List[str]) -> str:
     """
     Load and display images to the frontend based on image IDs found in RAG context.
@@ -86,7 +84,6 @@ def image_visualizer(image_ids: List[str]) -> str:
     return "Successfully loaded images into attachments. Do not add into answer, it is already in attachments."
 
 
-@tool
 def describe_image_content(image_id: str, user_query: str) -> str:
     """
     Analyze an image based on a user query using OpenAI's vision capabilities.
@@ -147,7 +144,7 @@ def describe_image_content(image_id: str, user_query: str) -> str:
                 "content": [
                     {
                         "type": "text",
-                        "text": f"{redescribe_image_prompt}\n\nUser Query: {user_query}",
+                        "text": f"{describe_image_prompt}\n\nUser Query: {user_query}",
                     },
                     {
                         "type": "image_url",
@@ -168,7 +165,7 @@ def describe_image_content(image_id: str, user_query: str) -> str:
         )
 
         # Validate response
-        if not response.choices or not response.choices[0].message.content:
+        if not response.choices[0].message.content:
             return "Error: No response received from OpenAI Vision API"
 
         analysis_result = response.choices[0].message.content

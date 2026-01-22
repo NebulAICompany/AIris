@@ -14,7 +14,6 @@ from .tools.api import (
     list_uploaded_files,
 )
 from .tools.agent_as_tools import main_agent_subagents
-from .tools.visual import image_visualizer, describe_image_content
 from .tools.rag import search_local_documents
 from backend.shared.constants import OPENAI_MODEL
 
@@ -97,11 +96,9 @@ class NewsSummarizationResponse(BaseModel):
 
 
 main_agent_tools = [
-    search_local_documents,  # RAG search tool for agentic retrieval
+    search_local_documents,
     wolfram_alpha_query,
     time_now,
-    image_visualizer,
-    describe_image_content,
     get_uploaded_files_count,
     list_uploaded_files,
 ]
