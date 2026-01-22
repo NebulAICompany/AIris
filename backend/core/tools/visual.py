@@ -7,19 +7,25 @@ from backend.core.prompts import describe_image_prompt
 
 logger = get_logger("VISUAL")
 
-IMAGE_DATA = []
+IMAGE_DATA = {}
 
 
 def get_image_datas():
-    return IMAGE_DATA
+    return list(IMAGE_DATA.values())
 
 
 def set_image_datas(data):
     global IMAGE_DATA
     if isinstance(data, list):
-        IMAGE_DATA.extend(data)
-    else:
-        IMAGE_DATA.append(data)
+        for item in data:
+            if isinstance(item, dict):
+                unique_id = item.get("reference")
+                if unique_id:
+                    IMAGE_DATA[unique_id] = item
+    elif isinstance(data, dict):
+        unique_id = data.get("reference")
+        if unique_id:
+            IMAGE_DATA[unique_id] = data
 
 
 def clear_image_datas():
