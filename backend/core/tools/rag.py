@@ -7,7 +7,7 @@ from backend.retrieval.retriever import (
 from backend.core.tools.visual import describe_image_content, image_visualizer
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
-from backend.shared.constants import get_selected_files
+from backend.shared.constants import get_selected_files, get_original_user_query
 
 logger = get_logger("RAG_TOOL")
 
@@ -99,7 +99,7 @@ def search_local_documents(
             if metadata.get("contains_image", False):
                 image_id = metadata.get("figure_id", "")
                 image_ids.append(image_id)
-                prompt = f"User Query: {query}, result text: {result_text}"
+                prompt = f"User Query: {get_original_user_query()}, result text: {result_text}"
                 image_description = describe_image_content(image_id, prompt)
                 result_text += f"{image_description}\n"
             results.append(result_text)
