@@ -9,20 +9,21 @@ logger = get_logger("AGENT_RUNNER")
 
 
 async def generate_answer(
-    prompt: str, agent: Any
+    prompt: str, agent: Any, thread_id: str = None
 ) -> Tuple[str, List[Dict[str, str]], List[Dict[str, str]], List[Dict[str, str]]]:
     """
-    Generate answer from Deep Agent and extract sources from tool artifacts
+    Generate answer from Agent and extract sources from tool artifacts
 
     Returns:
         Tuple[str, List[Dict], List[Dict], List[Dict]]: (answer, web_sources, api_sources, doc_sources)
     """
     try:
         start_time = time.time()
+        config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
+        config["recursion_limit"] = 30
 
         result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]},
-            {"recursion_limit": 30}   # ✅ maksimum step / tool-call döngüsü sınırı
+            {"messages": [{"role": "user", "content": prompt}]}, config=config
         )
 
         # Extract answer from the last AI message
@@ -83,5 +84,16 @@ async def generate_answer(
 
         return answer, web_sources, api_sources, doc_sources
     except Exception as e:
-        logger.error(f"Error in generate_answer: {str(e)}", exc_info=True)
-        return f"LLM yanıtı alınamadı: {str(e)}", [], [], []
+        error_str = str(e)
+        # Check if it's a checkpoint state issue
+        if "tool_call_id" in error_str or "tool_calls" in error_str:
+            logger.warning(
+                "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
+            )
+        # Use % formatting to avoid KeyError with curly braces in error messages
+        logger.error("Error in generate_answer: %s", error_str, exc_info=True)
+        return f"LLM yanıtı alınamadı: {error_str}", [], []
+    finally:
+        web_sources.clear()
+        api_sources.clear()
+        doc_sources.clear()
