@@ -578,8 +578,14 @@ Examples:
 - Use specialized agents for the correct function
 - Always prefer reliable sources
 - Protect user privacy and data security
+- STOP and analyze after each tool call - don't rush to make more calls
+- If you have sufficient information, formulate your answer instead of calling more tools
+- Think critically: "Do I really need more data, or can I answer with what I have?"
 
-Now analyze the query and prepare the most appropriate response!"""
+Now analyze the query and prepare the most appropriate response!
+DO NOT CALL THE SAME TOOL 3 TIMES
+GIVE ANSWER AS FAST AS POSSIBLE
+"""
 
 plotting_prompt = """You are a specialized data visualization agent with TWO distinct chart creation capabilities.
 
