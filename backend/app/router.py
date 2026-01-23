@@ -572,7 +572,7 @@ def delete_file(filename: str):
             if client is not None:
                 logger.info(f"Vector store loaded successfully")
                 client.delete(
-                    collection_name="test_collection",
+                    collection_name="documents",
                     points_selector=models.Filter(
                         must=[
                             models.FieldCondition(

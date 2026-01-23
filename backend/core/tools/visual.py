@@ -3,21 +3,30 @@ from backend.shared.logger import get_logger
 from backend.shared.constants import openai_client, IMAGES_PATH_STR
 import base64
 import os
+from backend.core.prompts import describe_image_prompt
 from langchain_core.tools import tool
-from backend.core.prompts import redescribe_image_prompt
 
 logger = get_logger("VISUAL")
 
-IMAGE_DATA = []
+IMAGE_DATA = {}
 
 
 def get_image_datas():
-    return IMAGE_DATA
+    return list(IMAGE_DATA.values())
 
 
 def set_image_datas(data):
     global IMAGE_DATA
-    IMAGE_DATA = data
+    if isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                unique_id = item.get("reference")
+                if unique_id:
+                    IMAGE_DATA[unique_id] = item
+    elif isinstance(data, dict):
+        unique_id = data.get("reference")
+        if unique_id:
+            IMAGE_DATA[unique_id] = data
 
 
 def clear_image_datas():
@@ -25,21 +34,15 @@ def clear_image_datas():
     IMAGE_DATA.clear()
 
 
-@tool
+@tool(parse_docstring=True)
 def image_visualizer(image_ids: List[str]) -> str:
-    """
-    Load and display images to the frontend based on image IDs found in RAG context.
+    """Display images from RAG context to enhance user understanding.
 
-    This function should be called when the agent determines that displaying actual images
-    would enhance user understanding, based on image descriptions and references found in
-    the local context (patterns like "ID:img_12345678", "ID:fig_87654321", or "ID:table_12345678").
+    Call this tool when image references (e.g., img_12345678, fig_87654321, table_12345678)
+    appear in local context and showing them would help the user. Only call once per set of IDs.
 
     Args:
-        image_ids: List of complete image identifiers including prefixes
-                  Examples: ["img_12345678", "fig_87654321", "table_12345678"] for corresponding image files
-
-    Returns:
-        str: Success message indicating how many images were loaded successfully
+        image_ids: List of image identifiers including prefixes (e.g., ["img_12345678", "fig_87654321"]).
     """
 
     logger.info(f"Loading images... {image_ids}")
@@ -79,33 +82,41 @@ def image_visualizer(image_ids: List[str]) -> str:
 
     set_image_datas(images_data)
 
-    return "images loaded successfully into attachments. Do not add into answer, it is already in attachments."
+    return "Successfully loaded images into attachments. Do not add into answer, it is already in attachments."
 
 
-@tool
-def redescribe_image_content(image_name: str, user_query: str) -> str:
-    """
-    Analyze an image based on a user query using OpenAI's vision capabilities.
+@tool(parse_docstring=True)
+def describe_image_content(image_id: str, user_query: str) -> str:
+    """Analyze an image in relation to a user query using vision capabilities.
 
-    This tool should be used when you need to understand the content of an image
-    in relation to a specific user question. It will provide detailed analysis
-    focused on the query context.
+    Use this tool when you need to understand what is shown in an image
+    in order to answer a specific user question.
 
     Args:
-        image_name: Name of the image file
-        user_query: The user's question or query about the image
-
-    Returns:
-        str: Detailed analysis of the image content relevant to the query
+        image_id: Image identifier (for example, "img_12345678" or "fig_87654321").
+        user_query: The user's question or query about the image.
     """
 
     try:
-        # Construct full path
-        full_path = f"{IMAGES_PATH_STR}/{image_name}"
+        full_path = None
+        found = False
 
-        # Check if file exists
-        if not os.path.exists(full_path):
-            return f"Error: Image file not found at {full_path}"
+        # Check if image_id already has an extension
+        if os.path.splitext(image_id)[1]:
+            # Has extension, try direct path
+            full_path = f"{IMAGES_PATH_STR}/{image_id}"
+            if os.path.exists(full_path):
+                found = True
+        else:
+            # No extension, try common extensions
+            for ext in [".jpg", ".jpeg", ".png"]:
+                full_path = f"{IMAGES_PATH_STR}/{image_id}{ext}"
+                if os.path.exists(full_path):
+                    found = True
+                    break
+
+        if not found or not full_path:
+            return f"Error: Image file not found for '{image_id}'. Tried paths with extensions: .jpg, .jpeg, .png"
 
         # Read and encode image
         with open(full_path, "rb") as image_file:
@@ -130,7 +141,7 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
                 "content": [
                     {
                         "type": "text",
-                        "text": f"{redescribe_image_prompt}\n\nUser Query: {user_query}",
+                        "text": f"{describe_image_prompt}\n\nUser Query: {user_query}",
                     },
                     {
                         "type": "image_url",
@@ -143,20 +154,22 @@ def redescribe_image_content(image_name: str, user_query: str) -> str:
             }
         ]
 
-        # Call OpenAI Vision API with error handling
         response = openai_client.chat.completions.create(
-            model="gpt-4o", messages=messages, max_tokens=1500, temperature=0.1
+            model="gpt-5.2",
+            messages=messages,
+            max_completion_tokens=1500,
+            temperature=0.1,
         )
 
         # Validate response
-        if not response.choices or not response.choices[0].message.content:
+        if not response.choices[0].message.content:
             return "Error: No response received from OpenAI Vision API"
 
         analysis_result = response.choices[0].message.content
-        logger.info(f"Successfully analyzed image: {image_name}")
+        logger.info(f"Successfully analyzed image: {image_id}")
         return f"Image Analysis Results:\n\n{analysis_result}"
 
     except Exception as e:
-        error_msg = f"Error analyzing image {image_name}: {str(e)}"
+        error_msg = f"Error analyzing image {image_id}: {str(e)}"
         logger.error(error_msg)
         return error_msg

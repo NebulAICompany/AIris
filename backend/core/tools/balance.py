@@ -14,10 +14,8 @@ from backend.utils.balance_payments_database import (
     balance_payments_db,
 )
 from backend.core.prompts import balance_of_payments_agent_prompt
-from backend.shared.constants import OPENAI_MODEL
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 from langchain.agents import create_agent
-from langchain.agents.structured_output import ToolStrategy
-from backend.core.agents import MainAgentResponse
 
 logger = get_logger("BALANCE_TOOLS")
 
@@ -144,13 +142,19 @@ def _store_transactions(transactions: List[BalanceTransaction]) -> str:
         return f"Error while storing transaction: {exc}"
 
 
-@tool
+@tool(parse_docstring=True)
 def add_income_transaction(
     amount: float,
     category: str,
     transaction_date: Optional[str] = None,
 ) -> str:
-    """Persist an income entry with categorized metadata."""
+    """Persist an income entry with categorized metadata.
+    
+    Args:
+        amount: The amount of the income transaction.
+        category: The category of the income transaction.
+        transaction_date: The date of the income transaction (optional).
+    """
 
     if amount is None or amount <= 0:
         return "Amount must be a positive number."
@@ -180,13 +184,19 @@ def add_income_transaction(
     return _store_transactions([transaction])
 
 
-@tool
+@tool(parse_docstring=True)
 def add_expense_transaction(
     amount: float,
     category: str,
     transaction_date: Optional[str] = None,
 ) -> str:
-    """Persist an expense entry with categorized metadata."""
+    """Persist an expense entry with categorized metadata.
+    
+    Args:
+        amount: The amount of the expense transaction.
+        category: The category of the expense transaction.
+        transaction_date: The date of the expense transaction (optional).
+    """
 
     if amount is None or amount <= 0:
         return "Amount must be a positive number."
@@ -221,10 +231,9 @@ def create_balance_payments_agent():
     instructions = f"{balance_of_payments_agent_prompt}\n\n"
 
     agent = create_agent(
-        model=OPENAI_MODEL,
+        model=ANTHROPIC_MODEL,
         tools=[add_expense_transaction, add_income_transaction],
         system_prompt=instructions,
-        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent
 

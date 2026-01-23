@@ -28,6 +28,10 @@ class UIComponents {
     this.selectedProfileFiles = []; // Sadece profile modal için
     this.profileModal = null;
 
+    // Photo-less mode state
+    this.photoLessBtn = null;
+    this.photoLessMode = false;
+
     this.init();
     if (window.languageService) {
       window.languageService.subscribe(() => this.updateDynamicTexts());
@@ -799,14 +803,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
     });
 
     // Photo-less mode seçeneği
-    const photoLessBtn = document.getElementById("photoless-mode");
+    this.photoLessBtn = document.getElementById("photoless-mode");
 
-    photoLessBtn.addEventListener("click", () => {
+    this.photoLessBtn.addEventListener("click", () => {
       // Language
       const lang = window.languageService?.getCurrentLanguage() || "tr";
 
-      // Photoless mod durumunu global bir değişkene kaydedelim
-      window.isPhotoLessMode = true;
+      // Enable photo-less mode for the next file upload
+      this.photoLessMode = true;
+      this.photoLessBtn.classList.add("active");
 
       let msg = lang === "en"
         ? "Files will be processed without photos."
@@ -1578,6 +1583,9 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Handle file uploads with status messages
     let uploadedFiles = [];
     if (filesToUpload.length > 0) {
+      // Capture the current photo-less mode state for these files
+      const photoLessModeForThisUpload = this.photoLessMode;
+      
       // Show uploading status for each file
       for (const file of filesToUpload) {
         this.addFileStatusMessage(file.name, "uploading");
@@ -1587,25 +1595,48 @@ setupFloatingSubmenu(collapsible, subMenu) {
       for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         try {
-          const response = await window.apiService.uploadFile(file, {
-            photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
-          });
-          if (response.success) {
+          // Create progress callback
+          const progressCallback = (progress) => {
+            if (progress !== null && progress !== undefined) {
+              this.updateFileStatusMessage(file.name, "uploading", "", progress);
+            } else {
+              // Indeterminate progress - just show uploading state
+              this.updateFileStatusMessage(file.name, "uploading", "", null);
+            }
+          };
+
+          const response = await window.apiService.uploadFile(
+            file,
+            {
+              photoLessMode: this.photoLessBtn?.classList.contains("active") || false,
+            },
+            progressCallback
+          );
+          
+          if (response && response.success) {
             uploadedFiles.push({
               name: file.name,
               size: file.size,
-              id: response.data.file_id || response.data.filename,
+              id: response.data?.file_id || response.data?.filename || file.name,
             });
 
             // Update status to success
             this.updateFileStatusMessage(file.name, "success");
           } else {
             // Update status to error
-            this.updateFileStatusMessage(file.name, "error", "Upload failed");
+            this.updateFileStatusMessage(file.name, "error", response?.error || "Upload failed");
           }
         } catch (error) {
           console.error("Failed to upload file:", file.name, error);
-          this.updateFileStatusMessage(file.name, "error", "Upload failed");
+          this.updateFileStatusMessage(file.name, "error", error?.message || "Upload failed");
+        }
+      }
+      
+      // Reset photo-less mode after uploads complete
+      if (this.photoLessMode) {
+        this.photoLessMode = false;
+        if (this.photoLessBtn) {
+          this.photoLessBtn.classList.remove("active");
         }
       }
     }
@@ -1734,9 +1765,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     }
 
     typingDiv.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas fa-robot"></i>
-      </div>
       <div class="message-content">
         <div class="typing-dots">
           <span></span>
@@ -1780,9 +1808,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     if (type === "user") {
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-text">${Utils.escapeHtml(content)}</div>
                     <div class="message-time">${timestamp}</div>
@@ -1901,9 +1926,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       }
 
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
                 <div class="message-content">
                     ${sourcesHTML}
                     <div class="message-text">${parsedContent}</div>
@@ -1974,9 +1996,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       }
     } else if (type === "error") {
       messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-text error">${Utils.escapeHtml(
         content
@@ -1990,15 +2009,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (charts && charts.length > 0) {
       const chartsContainer = document.createElement("div");
       chartsContainer.className = "message-charts";
-
-      const chartsHeader = document.createElement("div");
-      chartsHeader.className = "charts-header";
-      chartsHeader.innerHTML = `
-        <i class="fas fa-chart-line"></i>
-        <span>Interactive Charts</span>
-`;
-
-      chartsContainer.appendChild(chartsHeader);
 
       charts.forEach((chart, index) => {
         const chartWrapper = document.createElement("div");
@@ -2342,9 +2352,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     typingDiv.id = "typing-indicator";
 
     typingDiv.innerHTML = `
-            <div class="message-avatar">
-                <i class="fas fa-robot"></i>
-            </div>
             <div class="message-content">
                 <div class="typing-dots">
                     <span></span>
@@ -3048,6 +3055,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
   handleNewFileSelect(event) {
     const files = Array.from(event.target.files);
     this.addFilesToChat(files, true); // Show notification for manual file selection
+    event.target.value = ""; // Clear input to allow re-selecting the same file
+    // Note: photoLessMode will be reset after upload in sendMessage
   }
 
   handleChatInputDragOver(event) {
@@ -3187,21 +3196,23 @@ setupFloatingSubmenu(collapsible, subMenu) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
 
-    let statusIcon, statusText, statusClass;
+    let statusIcon = "", statusText = "", statusClass = "";
 
     switch (status) {
       case "uploading":
         statusIcon =
           '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
-        statusText = "";
+        statusText = window.languageService?.get("uploading") || "Uploading...";
         statusClass = "uploading";
         break;
       case "success":
-        statusText = `Uploaded`;
+        statusIcon = '<i class="fas fa-check-circle status-icon"></i>';
+        statusText = window.languageService?.get("uploaded") || "Uploaded";
         statusClass = "success";
         break;
       case "error":
-        statusText = errorMessage || "Upload failed";
+        statusIcon = '<i class="fas fa-exclamation-circle status-icon"></i>';
+        statusText = errorMessage || (window.languageService?.get("uploadFailed") || "Upload failed");
         statusClass = "error";
         break;
     }
@@ -3209,11 +3220,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
     const messageElement = document.createElement("div");
     messageElement.className = `file-status-message ${statusClass}`;
     messageElement.innerHTML = `
-      <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(
-      fileName
-    )}</span>: ${statusText}
+      <div class="status-icon-container">
+        ${statusIcon}
       </div>
+      <div class="status-text">
+        <span class="file-name">${Utils.escapeHtml(fileName)}</span>
+        <span class="status-label">${statusText}</span>
+      </div>
+      ${status === "uploading" ? '<div class="upload-progress-bar"><div class="upload-progress-fill"></div></div>' : ''}
     `;
 
     chatMessages.appendChild(messageElement);
@@ -3221,23 +3235,34 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Store reference for updates
     messageElement.dataset.fileName = fileName;
+    
+    // Return the element for progress updates
+    return messageElement;
   }
 
-  updateFileStatusMessage(fileName, status, errorMessage = "") {
+  updateFileStatusMessage(fileName, status, errorMessage = "", progress = null) {
     const statusMessage = document.querySelector(
       `[data-file-name="${fileName}"]`
     );
     if (!statusMessage) return;
 
-    let statusIcon, statusText, statusClass;
+    let statusIcon = "", statusText = "", statusClass = "";
 
     switch (status) {
+      case "uploading":
+        statusIcon =
+          '<div class="upload-animation"><div class="dots"><span></span><span></span><span></span></div></div>';
+        statusText = window.languageService?.get("uploading") || "Uploading...";
+        statusClass = "uploading";
+        break;
       case "success":
-        statusText = `Uploaded`;
+        statusIcon = '<i class="fas fa-check-circle status-icon"></i>';
+        statusText = window.languageService?.get("uploaded") || "Uploaded";
         statusClass = "success";
         break;
       case "error":
-        statusText = errorMessage || "Upload failed";
+        statusIcon = '<i class="fas fa-exclamation-circle status-icon"></i>';
+        statusText = errorMessage || (window.languageService?.get("uploadFailed") || "Upload failed");
         statusClass = "error";
         break;
     }
@@ -3245,11 +3270,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Update the message
     statusMessage.className = `file-status-message ${statusClass}`;
     statusMessage.innerHTML = `
-      <div class="status-text">
-        <span class="file-name">${Utils.escapeHtml(
-      fileName
-    )}</span>: ${statusText}
+      <div class="status-icon-container">
+        ${statusIcon}
       </div>
+      <div class="status-text">
+        <span class="file-name">${Utils.escapeHtml(fileName)}</span>
+        <span class="status-label">${statusText}${progress !== null ? ` (${progress}%)` : ''}</span>
+      </div>
+      ${status === "uploading" ? '<div class="upload-progress-bar"><div class="upload-progress-fill" style="width: ' + (progress || 0) + '%"></div></div>' : ''}
     `;
   }
 
@@ -3441,10 +3469,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       // 📂 Dosyaya tıklayınca aç
       fileItem.addEventListener("click", (e) => {
-        if (
-          !e.target.closest(".file-card-actions") &&
-          !e.target.closest(".file-card-preview")
-        ) {
+        if (!e.target.closest(".file-card-actions")) {
           this.openFile(file.name);
         }
       });
@@ -6821,9 +6846,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       block.innerHTML = `
         <div class="message user-message">
-          <div class="message-avatar">
-            <i class="fas fa-user"></i>
-          </div>
           <div class="message-content">
             <div class="message-text">${Utils.escapeHtml(message)}</div>
             <div class="message-time">${new Date().toLocaleTimeString([], {
@@ -6833,9 +6855,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
           </div>
         </div>
         <div class="message assistant-message">
-          <div class="message-avatar">
-            <i class="fas fa-robot"></i>
-          </div>
           <div class="message-content">
             <div class="message-text" id="${qaContentId}">
               <div class="news-qa-thinking">
@@ -6929,9 +6948,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     if (role === "user") {
       messageDiv.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-user"></i>
-        </div>
         <div class="message-content">
           <div class="message-text">${this.formatNewsChatMessage(content)}</div>
           <div class="message-time">${time}</div>
@@ -6939,9 +6955,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
       `;
     } else if (role === "assistant") {
       messageDiv.innerHTML = `
-        <div class="message-avatar">
-          <i class="fas fa-robot"></i>
-        </div>
         <div class="message-content">
           <div class="message-text">${this.formatNewsChatMessage(content)}</div>
           <div class="message-time">${time}</div>
@@ -7005,9 +7018,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     typingDiv.id = "news-chat-typing";
 
     typingDiv.innerHTML = `
-      <div class="message-avatar">
-        <i class="fas fa-robot"></i>
-      </div>
       <div class="message-content">
         <div class="message-text">
           <span>AI is thinking</span>

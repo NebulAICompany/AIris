@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from pathlib import Path
 import os
 import json
@@ -21,28 +21,18 @@ FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 logger = get_logger("OFFICE_TOOLS")
 
-
-@tool
+@tool(parse_docstring=True)
 def create_excel_file(
-    data: List[List[str]], file_name: str, sheet_name: str = "Sheet1"
+    data: List[List[str]],
+    file_name: str,
+    sheet_name: str = "Sheet1",
 ) -> Dict[str, Any]:
-    """
-    Create an Excel file from table data.
+    """Create an Excel file from table data.
 
     Args:
-        data: List of lists representing table rows and columns
-        file_name: Name of the Excel file to be created
-        sheet_name: Name of the Excel sheet (default: "Sheet1")
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Full path to the created Excel file (if successful)
-            - sheet_name (str): Name of the created sheet (if successful)
-            - rows (int): Number of rows in the data (if successful)
-            - columns (int): Number of columns in the data (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        data: List of rows, where each row is a list of cell values.
+        file_name: Name of the Excel file to create.
+        sheet_name: Name of the Excel sheet (default "Sheet1").
     """
     try:
         # Add .xlsx extension if not present
@@ -104,22 +94,13 @@ def create_excel_file(
         return {"success": False, "error": f"Failed to create Excel file: {str(e)}"}
 
 
-@tool
+@tool(parse_docstring=True)
 def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
-    """
-    Create a Word document with the specified content.
+    """Create a Word document with the specified content.
 
     Args:
-        content: Text content to be added to the document
-        file_name: Name of the file to be created
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Full path to the created Word document (if successful)
-            - paragraphs (int): Number of paragraphs created (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        content: Text content to add to the document.
+        file_name: Name of the Word document file to create.
     """
     try:
         # Add .docx extension if not present
@@ -178,25 +159,16 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
         return {"success": False, "error": f"Failed to create Word document: {str(e)}"}
 
 
-@tool
+@tool(parse_docstring=True)
 def create_powerpoint_presentation(
     title: str, slides_content: str, file_name: str
 ) -> Dict[str, Any]:
-    """
-    Create a PowerPoint presentation with multiple slides for investment committee presentations and client meetings.
+    """Create a PowerPoint presentation with multiple slides.
 
     Args:
-        title: Title of the presentation
-        slides_content: JSON string containing list of dictionaries with 'title' and 'content' keys for each slide
-        file_name: Name of the PowerPoint file to be created
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Full path to the created PowerPoint file (if successful)
-            - slides_count (int): Total number of slides including title slide (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        title: Title of the presentation.
+        slides_content: JSON string with list of slide objects, each containing 'title' and 'content' keys.
+        file_name: Name of the PowerPoint file to create.
     """
     try:
         # Parse JSON string
@@ -273,26 +245,17 @@ def create_powerpoint_presentation(
         }
 
 
-@tool
+@tool(parse_docstring=True)
 def add_powerpoint_slide(
     file_path: str, slide_title: str, slide_content: str, slide_position: int = -1
 ) -> Dict[str, Any]:
-    """
-    Add a new slide to an existing PowerPoint presentation for dynamic slide addition and template-based expansion.
+    """Add a new slide to an existing PowerPoint presentation.
 
     Args:
-        file_path: Path to the existing PowerPoint file
-        slide_title: Title of the new slide
-        slide_content: Content of the new slide
-        slide_position: Position to insert the slide (-1 for end)
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Path to the updated PowerPoint file (if successful)
-            - total_slides (int): Total number of slides in the presentation (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        file_path: Path to the existing PowerPoint file.
+        slide_title: Title of the new slide.
+        slide_content: Content of the new slide.
+        slide_position: Position to insert the slide (-1 for end, default -1).
     """
     try:
         # Load existing presentation
@@ -331,25 +294,16 @@ def add_powerpoint_slide(
         return {"success": False, "error": f"Failed to add slide: {str(e)}"}
 
 
-@tool
+@tool(parse_docstring=True)
 def modify_word_content(
     file_path: str, search_text: str, replace_text: str
 ) -> Dict[str, Any]:
-    """
-    Modify existing Word documents for updates and revisions.
+    """Modify an existing Word document by searching and replacing text.
 
     Args:
-        file_path: Path to the Word document
-        search_text: Text to search for
-        replace_text: Text to replace with
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Path to the updated Word document (if successful)
-            - replacements_made (int): Number of text replacements made (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        file_path: Path to the Word document to update.
+        search_text: Text to search for in the document.
+        replace_text: Text that will replace each occurrence of the search text.
     """
     try:
         # Load document
@@ -394,26 +348,16 @@ def modify_word_content(
         return {"success": False, "error": f"Failed to modify Word document: {str(e)}"}
 
 
-@tool
+@tool(parse_docstring=True)
 def modify_excel_cells(
-    file_path: str, updates: str, sheet_name: str = None
+    file_path: str, updates: str, sheet_name: Optional[str] = None
 ) -> Dict[str, Any]:
-    """
-    Update cell values in Excel for financial model parameters.
+    """Update cell values in an Excel file.
 
     Args:
-        file_path: Path to the Excel file
-        updates: JSON string containing list of dictionaries with 'cell', 'value' keys (e.g., "[{'cell': 'A1', 'value': 100}]")
-        sheet_name: Name of the sheet to modify (None for active sheet)
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Path to the updated Excel file (if successful)
-            - updates_applied (int): Number of cell updates applied (if successful)
-            - sheet_name (str): Name of the modified sheet (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        file_path: Path to the Excel file.
+        updates: JSON string with a list of objects containing 'cell' and 'value' keys. Example: "[{'cell': 'A1', 'value': 100}]".
+        sheet_name: Name of the sheet to modify (None for the active sheet).
     """
     try:
         # Parse JSON string
@@ -469,27 +413,17 @@ def modify_excel_cells(
         return {"success": False, "error": f"Failed to modify Excel cells: {str(e)}"}
 
 
-@tool
+@tool(parse_docstring=True)
 def create_excel_charts(
-    file_path: str, chart_data: str, sheet_name: str = None
+    file_path: str, chart_data: str, sheet_name: Optional[str] = None
 ) -> Dict[str, Any]:
-    """
-    Create performance charts, risk visualizations, and correlation heatmaps in Excel.
+    """Create charts in an Excel workbook.
 
     Args:
-        file_path: Path to the Excel file
-        chart_data: JSON string containing chart configuration dictionary
-        sheet_name: Name of the sheet (None for active sheet)
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - file_path (str): Path to the updated Excel file (if successful)
-            - chart_type (str): Type of chart created (if successful)
-            - chart_title (str): Title of the created chart (if successful)
-            - sheet_name (str): Name of the sheet where chart was added (if successful)
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        file_path: Path to the Excel file to update.
+        chart_data: JSON string with the chart configuration (for example,
+            chart type, ranges, and titles).
+        sheet_name: Name of the sheet to add the chart to (None for the active sheet).
     """
     try:
         # Parse JSON string

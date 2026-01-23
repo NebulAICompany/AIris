@@ -25,23 +25,26 @@ class UploadsDatabase:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         file_name TEXT NOT NULL,
                         file_type TEXT NOT NULL,
-                        upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        document_date TEXT
                     )
                 """
                 )
 
-                # Create index for faster file_name lookups
-                conn.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_file_name ON uploaded_files(file_name)
-                """
-                )
+                # Add document_date column if it doesn't exist (migration)
+                try:
+                    conn.execute("ALTER TABLE uploaded_files ADD COLUMN document_date TEXT")
+                except sqlite3.OperationalError:
+                    pass  # Column already exists
 
-                # Create index for date sorting
                 conn.execute(
-                    """
-                    CREATE INDEX IF NOT EXISTS idx_upload_date ON uploaded_files(upload_date DESC)
-                """
+                    "CREATE INDEX IF NOT EXISTS idx_file_name ON uploaded_files(file_name)"
+                )
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_upload_date ON uploaded_files(upload_date DESC)"
+                )
+                conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_document_date ON uploaded_files(document_date)"
                 )
 
                 conn.commit()
@@ -51,13 +54,14 @@ class UploadsDatabase:
             logger.error(f"❌ Uploads database initialization failed: {e}")
             raise
 
-    def add_upload_record(self, file_name: str, file_type: str) -> bool:
+    def add_upload_record(self, file_name: str, file_type: str, document_date: str = None) -> bool:
         """
         Add a new upload record to the database.
 
         Args:
             file_name: Name of the uploaded file
             file_type: File extension/type (e.g., '.pdf', '.docx')
+            document_date: Extracted document date (optional)
 
         Returns:
             bool: True if successful, False otherwise
@@ -65,14 +69,11 @@ class UploadsDatabase:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
-                    """
-                    INSERT INTO uploaded_files (file_name, file_type)
-                    VALUES (?, ?)
-                """,
-                    (file_name, file_type),
+                    "INSERT INTO uploaded_files (file_name, file_type, document_date) VALUES (?, ?, ?)",
+                    (file_name, file_type, document_date),
                 )
                 conn.commit()
-                logger.info(f"✅ Upload record added: {file_name} ({file_type})")
+                logger.info(f"✅ Upload record added: {file_name} ({file_type}) date: {document_date}")
                 return True
 
         except Exception as e:
@@ -82,38 +83,26 @@ class UploadsDatabase:
     def get_all_uploads(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Retrieve all upload records, ordered by most recent first.
-
-        Args:
-            limit: Maximum number of records to return
-
-        Returns:
-            List of dictionaries containing upload information
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
                 conn.row_factory = sqlite3.Row
                 cursor = conn.execute(
-                    """
-                    SELECT id, file_name, file_type, upload_date
-                    FROM uploaded_files
-                    ORDER BY upload_date DESC
-                    LIMIT ?
-                """,
+                    """SELECT id, file_name, file_type, upload_date, document_date
+                    FROM uploaded_files ORDER BY upload_date DESC LIMIT ?""",
                     (limit,),
                 )
 
-                results = []
-                for row in cursor:
-                    results.append(
-                        {
-                            "id": row["id"],
-                            "file_name": row["file_name"],
-                            "file_type": row["file_type"],
-                            "upload_date": row["upload_date"],
-                        }
-                    )
-
-                return results
+                return [
+                    {
+                        "id": row["id"],
+                        "file_name": row["file_name"],
+                        "file_type": row["file_type"],
+                        "upload_date": row["upload_date"],
+                        "document_date": row["document_date"],
+                    }
+                    for row in cursor
+                ]
 
         except Exception as e:
             logger.error(f"❌ Failed to retrieve uploads: {e}")
