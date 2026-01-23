@@ -4,9 +4,10 @@ from backend.retrieval.retriever import (
     get_vectorstore,
     retrieve_with_keyword_helping,
 )
+from backend.core.tools.visual import describe_image_content, image_visualizer
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
-from backend.shared.constants import get_selected_files
+from backend.shared.constants import get_selected_files, get_original_user_query
 
 logger = get_logger("RAG_TOOL")
 
@@ -76,19 +77,26 @@ def search_local_documents(
 
         # Format results
         results = []
+        image_ids = []
         for doc in reranked_docs:
             content = doc["content"]
             metadata = doc.get("metadata", {})
             file_name = metadata.get("file_name", "Unknown")
             page = metadata.get("page", "")
-
             result_text = f"Source: {file_name}"
+            result_text += f"\n{content}\n"
             if page:
                 result_text += f" (Page {page})"
-            result_text += f"\nContent: {content}\n"
+            if metadata.get("contains_image", False):
+                image_id = metadata.get("figure_id", "")
+                image_ids.append(image_id)
+                prompt = f"User Query: {get_original_user_query()}, result text: {result_text}"
+                image_description = describe_image_content(image_id, prompt)
+                result_text += f"{image_description}\n"
             results.append(result_text)
 
         formatted_results = "\n---\n".join(results)
+        image_visualizer(image_ids)
         return f"Found {len(reranked_docs)} relevant document chunk(s):\n\n{formatted_results}"
 
     except Exception as e:

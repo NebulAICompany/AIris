@@ -9,7 +9,7 @@ from backend.shared.logger import get_logger
 from backend.core.tools.finance import get_chart_datas, clear_chart_datas
 from backend.core.tools.office import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
-from backend.shared.constants import set_selected_files
+from backend.shared.constants import set_selected_files, set_original_user_query
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -27,6 +27,9 @@ async def run_orchestration(
 
     # Set global selected files for RAG queries
     set_selected_files(selected_files)
+
+    # Set global original user query for RAG queries
+    set_original_user_query(query)
 
     # Add user message to chat history
     chat_history_manager.add_message(session_id, MessageRole.USER, query)
