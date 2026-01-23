@@ -1,8 +1,6 @@
 from typing import List, Optional, Dict, Any
 from backend.core.runner import generate_answer
 from backend.core.agents import create_main_agent, create_news_chat_agent
-
-# Removed upfront retrieval imports - agent will use search_local_documents tool
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.core.chat import chat_history_manager, MessageRole
@@ -11,6 +9,7 @@ from backend.shared.logger import get_logger
 from backend.core.tools.finance import get_chart_datas, clear_chart_datas
 from backend.core.tools.office import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
+from backend.shared.constants import set_selected_files, set_original_user_query
 
 logger = get_logger("QUERY_PIPELINE")
 
@@ -21,11 +20,16 @@ async def run_orchestration(
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-
     # Clear previous attachments at the start of each new query
     clear_image_datas()
     clear_chart_datas()
     clear_generated_files()
+
+    # Set global selected files for RAG queries
+    set_selected_files(selected_files)
+
+    # Set global original user query for RAG queries
+    set_original_user_query(query)
 
     # Add user message to chat history
     chat_history_manager.add_message(session_id, MessageRole.USER, query)
@@ -64,19 +68,24 @@ async def run_orchestration(
 
     agent = create_main_agent(
         web_search_enabled=web_search_enabled,
+        conversation_history=conversation_context,
     )
     # Generate initial answer with structured output
-    answer, web_sources, api_sources = await generate_answer(
-        prompt=masked_query, agent=agent, thread_id=session_id
+    answer, web_sources, api_sources, doc_sources = await generate_answer(
+        prompt=masked_query, agent=agent
     )
     # 6. Unmask
     final_answer = unmask_text(answer)
 
     # 7. Combine document sources with web sources and API sources
-    # Note: Document sources will be tracked by the agent when it uses search_local_documents
     all_sources = []
-    if selected_files:
-        all_sources.extend(selected_files)
+
+    # Add document sources from RAG tool artifacts
+    for doc_source in doc_sources:
+        name = doc_source.get("name", "")
+        file_name = doc_source.get("file", "")
+        if name and file_name:
+            all_sources.append(f"{name}|doc://{file_name}")
     for web_source in web_sources:
         # Format as "Name|URL" for frontend to parse and display as clickable link
         name = web_source.get("name", "")
@@ -157,7 +166,9 @@ async def run_news_chat_orchestration(
     )
 
     # Generate answer
-    answer, web_sources, api_sources = await generate_answer(prompt=query, agent=agent)
+    answer, web_sources, api_sources, doc_sources = await generate_answer(
+        prompt=query, agent=agent
+    )
 
     # Combine web sources and API sources
     all_sources = []

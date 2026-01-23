@@ -7,24 +7,35 @@ from backend.pipeline.vector import PreEmbeddingProcess
 import pandas as pd
 from backend.shared.constants import UPLOADS_PATH
 from backend.utils.uploads_database import uploads_db
+
 logger = get_logger("UPLOAD")
 
-async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
+
+async def parse_document(file_path: str, photo_less_mode: bool = False):
     """
     Parse document and extract text based on file type.
     Args:
         file_path: Path to the file to parse
     Returns:
-        Extracted text content
+        Tuple of (extracted_text, figure_images_dict) or just extracted_text for non-PDF/docx files
     """
     try:
         file_extension = Path(file_path).suffix.lower()
+        figure_images = {}  # Initialize figure_images dict
+
         if file_extension in (".pdf", ".docx"):
-            extracted_text = await AzureParser(file_path, photo_less_mode=photo_less_mode)
+            parse_result = await AzureParser(file_path, photo_less_mode=photo_less_mode)
+            # AzureParser returns (content, figure_images_dict)
+            if isinstance(parse_result, tuple):
+                extracted_text, figure_images = parse_result
+            else:
+                extracted_text = parse_result
         elif file_extension == ".txt":
             extracted_text = await TxtParser(file_path)
         elif file_extension in (".jpg", ".jpeg", ".gif", ".bmp", ".png"):
-            extracted_text = await ImageParser(file_path, photo_less_mode=photo_less_mode)
+            extracted_text = await ImageParser(
+                file_path, photo_less_mode=photo_less_mode
+            )
         elif file_extension == ".xlsx":
             extracted_text = await ExcelParser(file_path)
         elif file_extension == ".xls":
@@ -42,6 +53,7 @@ async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
         elif file_extension == ".doc":
             # Convert .doc to .docx format using an external library
             from win32com import client as wc
+
             # Create a temporary .docx file path
             new_file_path = Path(UPLOADS_PATH) / f"{Path(file_path).stem}.docx"
 
@@ -49,13 +61,21 @@ async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
             try:
                 word = wc.Dispatch("Word.Application")
                 doc = word.Documents.Open(file_path)
-                doc.SaveAs(str(new_file_path), 16)  # 16 represents the value for .docx format
+                doc.SaveAs(
+                    str(new_file_path), 16
+                )  # 16 represents the value for .docx format
                 doc.Close()
                 word.Quit()
                 logger.info(f"Converted {file_path} to {new_file_path}")
 
                 # Parse the new docx file
-                extracted_text = await AzureParser(str(new_file_path), photo_less_mode=photo_less_mode)
+                parse_result = await AzureParser(
+                    str(new_file_path), photo_less_mode=photo_less_mode
+                )
+                if isinstance(parse_result, tuple):
+                    extracted_text, figure_images = parse_result
+                else:
+                    extracted_text = parse_result
 
                 # Delete the temporary docx file after processing
                 if os.path.exists(new_file_path):
@@ -67,7 +87,8 @@ async def parse_document(file_path: str, photo_less_mode: bool = False) -> str:
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
-        return extracted_text if extracted_text else ""
+        extracted_text = extracted_text if extracted_text else ""
+        return extracted_text, figure_images
 
     except Exception as e:
         logger.error(f"Document parsing failed: {str(e)}")
@@ -86,12 +107,13 @@ async def process_file(
     Returns:
         Dictionary with processing results
     """
+
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Uploaded file not found: {file_path}")
 
     try:
-        # Parse document using the new method
-        extracted_text = await parse_document(
+        # Parse document using the new method - returns (text, figure_images)
+        extracted_text, figure_images = await parse_document(
             file_path, photo_less_mode=photo_less_mode
         )
 
@@ -100,7 +122,6 @@ async def process_file(
             process_enum = PreEmbeddingProcess.CCH
         else:
             process_enum = PreEmbeddingProcess.NONE
-        logger.info(f"Pre-embedding process: {process_enum}")
         original_stem = Path(file_path).stem
         file_extension = Path(file_path).suffix.lower()
 
@@ -108,6 +129,8 @@ async def process_file(
             text_content=extracted_text,
             document_name=original_stem,
             file_extension=file_extension,
+            figure_images=figure_images if figure_images else None,
+            file_path=file_path,
         )
 
         # Record the upload in the database

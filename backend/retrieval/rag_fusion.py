@@ -1,9 +1,9 @@
 from typing import List, Dict, Any, Tuple
-from backend.core.runner import generate_answer
-from backend.core.agents import create_main_agent
 from backend.retrieval.retriever import retrieve_top_k
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from langchain_core.messages import HumanMessage
 from qdrant_client import QdrantClient
 
 logger = get_logger("RAG_FUSION")
@@ -23,12 +23,6 @@ async def generate_fusion_queries(
         List of generated queries including the original
     """
     try:
-        # Create a simple agent for query generation
-        agent = create_main_agent(
-            web_search_enabled=False,
-            instruction="Generate multiple search queries based on the input query",
-        )
-
         generation_prompt = f"""You are a helpful assistant that generates multiple search queries based on a single input query.
 
 Generate {num_queries} different search queries that are related to the original query but approach it from different angles or aspects. These queries should help retrieve comprehensive information about the topic.
@@ -50,7 +44,11 @@ Output format:
 
 Generated queries:"""
 
-        response = await generate_answer(generation_prompt, agent)
+        # Use standard API call instead of agent
+        response_obj = await ANTHROPIC_MODEL.ainvoke(
+            [HumanMessage(content=generation_prompt)]
+        )
+        response = response_obj.content.strip()
 
         # Parse the response to extract queries
         queries = [original_query]  # Always include the original query
