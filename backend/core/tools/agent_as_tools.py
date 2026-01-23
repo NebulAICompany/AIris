@@ -24,7 +24,7 @@ from .finance import (
     get_tickers_list,
     get_ticker_info_detailed,
 )
-from backend.shared.constants import OPENAI_MODEL
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 from backend.core.tools.plotting import (
     create_custom_chart_from_code,
     create_financial_stock_chart,
@@ -64,20 +64,20 @@ finance_tools = [
 
 # Create subagents using create_agent
 finance_agent = create_agent(
-    model=OPENAI_MODEL,
+    model=ANTHROPIC_MODEL,
     tools=finance_tools,
     system_prompt=finance_agent_prompt,
 )
 
 office_agent = create_agent(
-    model=OPENAI_MODEL,
+    model=ANTHROPIC_MODEL,
     tools=office_tools,
     system_prompt=office_agent_prompt,
 )
 
 
 plotting_agent = create_agent(
-    model=OPENAI_MODEL,
+    model=ANTHROPIC_MODEL,
     tools=[
         create_custom_chart_from_code,
         create_financial_stock_chart,
@@ -98,7 +98,7 @@ plotting_agent = create_agent(
 )
 
 tcmb_data_agent = create_agent(
-    model=OPENAI_MODEL,
+    model=ANTHROPIC_MODEL,
     tools=tcmb_tools,
     system_prompt=tcmb_data_agent_prompt,
 )
@@ -128,7 +128,7 @@ async def call_finance_agent(query: str) -> str:
     return result["messages"][-1].content
 
 @tool(
-    "office_operations",
+    "microsoft_office_operations",
     description=(
         "Use this tool for Microsoft Office document operations, including creating "
         "and updating Excel workbooks, Word documents, and PowerPoint presentations. "

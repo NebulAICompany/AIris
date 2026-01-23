@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from pathlib import Path
 import os
 import json
@@ -356,8 +356,7 @@ def modify_excel_cells(
 
     Args:
         file_path: Path to the Excel file.
-        updates: JSON string with a list of objects containing 'cell' and 'value'
-            keys (for example, "[{'cell': 'A1', 'value': 100}]").
+        updates: JSON string with a list of objects containing 'cell' and 'value' keys. Example: "[{'cell': 'A1', 'value': 100}]".
         sheet_name: Name of the sheet to modify (None for the active sheet).
     """
     try:

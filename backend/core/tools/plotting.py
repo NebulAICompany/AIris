@@ -1,3 +1,4 @@
+from typing import Optional, List
 from e2b_code_interpreter import Sandbox
 from pydantic import BaseModel, Field
 from langchain.tools import tool

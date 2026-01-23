@@ -167,6 +167,7 @@ ANTHROPIC_MODEL = ChatAnthropic(
     max_retries=5,
     max_tokens=64000,
     timeout=120,
+    temperature=0.0,
     callbacks=[ConsoleCallbackHandler()],
 )
 
