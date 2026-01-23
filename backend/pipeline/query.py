@@ -76,17 +76,21 @@ async def run_orchestration(
         conversation_history=conversation_context,
     )
     # Generate initial answer with structured output
-    answer, web_sources, api_sources = await generate_answer(
+    answer, web_sources, api_sources, doc_sources = await generate_answer(
         prompt=masked_query, agent=agent
     )
     # 6. Unmask
     final_answer = unmask_text(answer)
 
     # 7. Combine document sources with web sources and API sources
-    # Note: Document sources will be tracked by the agent when it uses search_local_documents
     all_sources = []
-    if selected_files:
-        all_sources.extend(selected_files)
+
+    # Add document sources from RAG tool artifacts
+    for doc_source in doc_sources:
+        name = doc_source.get("name", "")
+        file_name = doc_source.get("file", "")
+        if name and file_name:
+            all_sources.append(f"{name}|doc://{file_name}")
     for web_source in web_sources:
         # Format as "Name|URL" for frontend to parse and display as clickable link
         name = web_source.get("name", "")
@@ -167,7 +171,9 @@ async def run_news_chat_orchestration(
     )
 
     # Generate answer
-    answer, web_sources, api_sources = await generate_answer(prompt=query, agent=agent)
+    answer, web_sources, api_sources, doc_sources = await generate_answer(
+        prompt=query, agent=agent
+    )
 
     # Combine web sources and API sources
     all_sources = []
