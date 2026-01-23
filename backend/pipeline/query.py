@@ -34,11 +34,6 @@ async def run_orchestration(
     # Add user message to chat history
     chat_history_manager.add_message(session_id, MessageRole.USER, query)
 
-    # Get conversation context
-    conversation_context = chat_history_manager.get_conversation_context(
-        session_id, max_messages=10
-    )
-
     # Reduce history if too long
     session = chat_history_manager.get_session(session_id)
     if session and len(session.messages) > 30:

@@ -488,7 +488,6 @@ Use the search_local_documents tool to find information from uploaded documents 
 - You can make multiple searches with different queries to gather comprehensive information
 
 **Web Search Status:** {web_context_part}
-{conversation_context_part}
 
 **Language Requirements:**
 - CRITICAL: Always respond in the same language as the user's query
