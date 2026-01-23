@@ -4,6 +4,7 @@ from backend.shared.constants import openai_client, IMAGES_PATH_STR
 import base64
 import os
 from backend.core.prompts import describe_image_prompt
+from langchain_core.tools import tool
 
 logger = get_logger("VISUAL")
 
