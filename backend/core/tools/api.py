@@ -2,38 +2,16 @@ import requests
 import xml.etree.ElementTree as ET
 from langchain_core.tools import tool
 from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 
-@tool
-async def time_now(tz: str = "Europe/Istanbul") -> str:
-    """
-    Get the current date and time in ISO 8601 format for a specified timezone.
-
-    Args:
-        tz: IANA timezone identifier (e.g., 'Europe/Istanbul', 'America/New_York', 'UTC').
-            Defaults to 'Europe/Istanbul' if not specified.
-
-    Returns:
-        Current datetime as ISO 8601 formatted string (e.g., '2024-01-15T14:30:45+03:00').
-
-    Examples:
-        - time_now() -> '2024-01-15T14:30:45+03:00' (Istanbul time)
-        - time_now('UTC') -> '2024-01-15T11:30:45+00:00'
-        - time_now('America/New_York') -> '2024-01-15T06:30:45-05:00'
-    """
-    return datetime.now(ZoneInfo(tz)).isoformat()
-
-
-@tool
-def wolfram_alpha_query(query: str) -> str:
+@tool(response_format="content_and_artifact")
+def wolfram_alpha_query(query: str):
     """
     Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
     Args:
         query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
     Returns:
-        The result from Wolfram Alpha as a string
+        Tuple of (result string for LLM, artifact with source info)
     """
     url = "http://api.wolframalpha.com/v2/query"
     params = {"input": query, "appid": WOLFRAM_APP_ID, "output": "XML"}
@@ -41,14 +19,16 @@ def wolfram_alpha_query(query: str) -> str:
         response = requests.get(url, params=params)
 
         if response.status_code != 200:
-            return f"Error: HTTP {response.status_code}"
+            error_msg = f"Error: HTTP {response.status_code}"
+            return error_msg, {"name": "Wolfram Alpha", "description": "API error"}
 
         # Parse XML response
         root = ET.fromstring(response.text)
 
         # Check if query was successful
         if root.get("success") != "true":
-            return "Error: Query was not successful"
+            error_msg = "Error: Query was not successful"
+            return error_msg, {"name": "Wolfram Alpha", "description": "Query failed"}
 
         # Find pods with results
         pods = root.findall("pod")
@@ -63,7 +43,12 @@ def wolfram_alpha_query(query: str) -> str:
                 if plaintext is not None and plaintext.text:
                     # Return the first meaningful result
                     if title in ["Result", "Decimal approximation", "Solutions"]:
-                        return plaintext.text
+                        content = plaintext.text
+                        artifact = {
+                            "name": "Wolfram Alpha",
+                            "description": f"Mathematical computation: {query[:50]}...",
+                        }
+                        return content, artifact
 
         # If no specific result pod found, return first available text
         for pod in pods:
@@ -71,33 +56,66 @@ def wolfram_alpha_query(query: str) -> str:
             for subpod in subpods:
                 plaintext = subpod.find("plaintext")
                 if plaintext is not None and plaintext.text:
-                    return plaintext.text
+                    content = plaintext.text
+                    artifact = {
+                        "name": "Wolfram Alpha",
+                        "description": f"Query: {query[:50]}...",
+                    }
+                    return content, artifact
 
-        return "No results found"
+        no_results = "No results found"
+        return no_results, {"name": "Wolfram Alpha", "description": "No results"}
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        error_msg = f"Error: {str(e)}"
+        return error_msg, {"name": "Wolfram Alpha", "description": "Exception occurred"}
 
 
-@tool
-def web_search_tool(query: str, max_results: int = 5) -> list:
+@tool(response_format="content_and_artifact")
+def web_search_tool(query: str, search_depth: str = "basic"):
     """
     Perform a web search using Tavily and return the results.
 
     Args:
         query: The search query to perform.
-        max_results: The maximum number of results to return.
-
+        search_depth: The depth of the search (basic, advanced). Defaults to "basic".
     Returns:
-        A list of search results.
+        Content string for LLM
     """
     try:
         response = tavily_client.search(
-            query, max_results=max_results, auto_parameters=True
+            query,
+            max_results=10,
+            auto_parameters=True,
+            topic="finance",
+            search_depth=search_depth,
         )
-        return response["results"]
+        if not response:
+            return "No search results available.", []
+
+        # Build content text for LLM (without URLs)
+        content_parts = []
+        sources = []
+
+        results = response.get("results", [])
+
+        for r in results:
+            title = r.get("title", "No title")
+            content = r.get("content", "")
+            url = r.get("url", "")
+
+            content_parts.append(f"Title: {title}\nContent: {content}\n")
+
+            if url:
+                sources.append({"name": title, "url": url})
+
+        # Return content for LLM and artifact for system
+        content = "\n".join(content_parts)
+        artifact = sources
+
+        return content, artifact
     except Exception as e:
-        return [{"error": str(e)}]
+        return f"Error searching web: {str(e)}"
 
 
 @tool
