@@ -20,10 +20,10 @@ async def generate_answer(
     try:
         start_time = time.time()
         config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
+        config["recursion_limit"] = 30
 
         result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]}, config=config,
-            {"recursion_limit": 30}   # ✅ maksimum step / tool-call döngüsü sınırı
+            {"messages": [{"role": "user", "content": prompt}]}, config=config
         )
 
         # Extract answer from the last AI message
