@@ -165,6 +165,7 @@ ANTHROPIC_MODEL = ChatAnthropic(
     model_name="claude-sonnet-4-5-20250929",
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     max_retries=5,
+    temperature=0.0,
     max_tokens=64000,
     timeout=120,
     temperature=0.0,
@@ -172,9 +173,13 @@ ANTHROPIC_MODEL = ChatAnthropic(
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-5.2",
+    model="gpt-4o",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
+    frequency_penalty=0.7,
+    presence_penalty=0.4,
+    max_tokens=4000,  # Increased for complete responses
+    max_retries=3,  # Increased for better reliability
     callbacks=[ConsoleCallbackHandler()],
 )
 
@@ -216,6 +221,9 @@ MARKETSTACK_TICKERS = [
 # Global variable for selected files in RAG queries
 SELECTED_FILES: Optional[List[str]] = None
 
+# Global variable for original user query
+ORIGINAL_USER_QUERY: Optional[str] = None
+
 
 def set_selected_files(files: Optional[List[str]]) -> None:
     """Set the global selected files for RAG queries."""
@@ -226,3 +234,14 @@ def set_selected_files(files: Optional[List[str]]) -> None:
 def get_selected_files() -> Optional[List[str]]:
     """Get the global selected files for RAG queries."""
     return SELECTED_FILES
+
+
+def set_original_user_query(query: Optional[str]) -> None:
+    """Set the global original user query."""
+    global ORIGINAL_USER_QUERY
+    ORIGINAL_USER_QUERY = query
+
+
+def get_original_user_query() -> Optional[str]:
+    """Get the global original user query."""
+    return ORIGINAL_USER_QUERY
