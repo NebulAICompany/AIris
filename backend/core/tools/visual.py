@@ -34,7 +34,6 @@ def clear_image_datas():
     IMAGE_DATA.clear()
 
 
-@tool(parse_docstring=True)
 def image_visualizer(image_ids: List[str]) -> str:
     """Display images from RAG context to enhance user understanding.
 
@@ -85,7 +84,6 @@ def image_visualizer(image_ids: List[str]) -> str:
     return "Successfully loaded images into attachments. Do not add into answer, it is already in attachments."
 
 
-@tool(parse_docstring=True)
 def describe_image_content(image_id: str, user_query: str) -> str:
     """Analyze an image in relation to a user query using vision capabilities.
 
