@@ -7,9 +7,9 @@ from backend.core.prompts import (
     tcmb_data_agent_prompt,
 )
 from langchain.agents.middleware import ToolCallLimitMiddleware
+from datetime import datetime
 from .office import *
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
-from .api import time_now
 from .finance import (
     get_eod_data,
     get_intraday_data,
@@ -41,7 +41,6 @@ office_tools = [
 ]
 
 tcmb_tools = [
-    time_now,
     get_tcmb_subcategories,
     get_tcmb_series,
     get_tcmb_data,
@@ -100,7 +99,9 @@ plotting_agent = create_agent(
 tcmb_data_agent = create_agent(
     model=ANTHROPIC_MODEL,
     tools=tcmb_tools,
-    system_prompt=tcmb_data_agent_prompt,
+    system_prompt=tcmb_data_agent_prompt.format(
+        current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ),
 )
 
 
@@ -115,6 +116,7 @@ tcmb_data_agent = create_agent(
         "Input must be a natural language request describing the desired financial data "
         "or analysis (for example, 'get daily OHLCV for AAPL for the last 30 days')."
     ),
+    response_format="content_and_artifact",
 )
 async def call_finance_agent(query: str) -> str:
     """Route a financial data or analysis request to the finance specialist agent.
@@ -125,7 +127,12 @@ async def call_finance_agent(query: str) -> str:
     result = await finance_agent.ainvoke(
         {"messages": [{"role": "user", "content": query}]}
     )
-    return result["messages"][-1].content
+    content = result["messages"][-1].content
+    artifact = {
+        "name": "Marketstack API",
+        "description": f"Financial data: {query[:50]}...",
+    }
+    return content, artifact
 
 @tool(
     "microsoft_office_operations",
@@ -184,18 +191,25 @@ async def call_plotting_agent(query: str) -> str:
         "Input must be a natural language query about Turkish macroeconomic or monetary "
         "policy data, specifying the indicators and time period of interest "
         "(for example, 'monthly CPI inflation and policy rate for the last five years')."
+        "Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends."
     ),
+   response_format="content_and_artifact",
 )
-async def call_tcmb_agent(query: str) -> str:
+async def call_tcmb_agent(query: str):
     """Route Turkish economic data requests to the TCMB specialist agent.
-
+      
     Args:
         query: Natural language request describing the TCMB/EVDS data to retrieve or analyze.
     """
     result = await tcmb_data_agent.ainvoke(
         {"messages": [{"role": "user", "content": query}]}
     )
-    return result["messages"][-1].content
+    content = result["messages"][-1].content
+    artifact = {
+        "name": "TCMB EVDS",
+        "description": f"Turkish economic data: {query[:50]}...",
+    }
+    return content, artifact
 
 # List of subagent tools for the main agent
 main_agent_subagents = [
