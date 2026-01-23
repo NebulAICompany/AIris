@@ -16,7 +16,7 @@ from .tools.api import (
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.visual import image_visualizer, describe_image_content
 from .tools.rag import search_local_documents
-from backend.shared.constants import OPENAI_MODEL
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 
 
 class WebSource(BaseModel):
@@ -150,7 +150,7 @@ def create_main_agent(
     )
 
     agent = create_agent(
-        model=OPENAI_MODEL,
+        model=ANTHROPIC_MODEL,
         tools=tools,
         system_prompt=agent_instructions,
         response_format=ToolStrategy(MainAgentResponse),
