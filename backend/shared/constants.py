@@ -86,6 +86,9 @@ UPLOADS_DB_PATH = DATABASE_DIR / "uploads_tracking.db"
 # Balance of payments database path
 BALANCE_PAYMENTS_DB_PATH = DATABASE_DIR / "balance_payments.db"
 
+# Checkpointer database path (SQLite)
+CHECKPOINTER_DB_PATH = DATABASE_DIR / "checkpoints.db"
+
 # Balance of payments transaction categories
 BALANCE_TRANSACTION_CATEGORIES = (
     "İşletme Faaliyetleri",
@@ -159,6 +162,7 @@ LOGS_DIR_STR = str(LOGS_DIR)
 BACKEND_LOG_PATH_STR = str(BACKEND_LOG_PATH)
 BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
 BALANCE_PAYMENTS_DB_PATH_STR = str(BALANCE_PAYMENTS_DB_PATH)
+CHECKPOINTER_DB_PATH_STR = str(CHECKPOINTER_DB_PATH)
 
 
 ANTHROPIC_MODEL = ChatAnthropic(

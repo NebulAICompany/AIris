@@ -12,7 +12,6 @@ from backend.shared.constants import get_selected_files, get_original_user_query
 logger = get_logger("RAG_TOOL")
 
 
-
 @tool(parse_docstring=True, response_format="content_and_artifact")
 def search_local_documents(
     query: str,
