@@ -68,11 +68,10 @@ async def run_orchestration(
 
     agent = create_main_agent(
         web_search_enabled=web_search_enabled,
-        conversation_history=conversation_context,
     )
     # Generate initial answer with structured output
     answer, web_sources, api_sources, doc_sources = await generate_answer(
-        prompt=masked_query, agent=agent
+        prompt=masked_query, agent=agent, thread_id=session_id
     )
     # 6. Unmask
     final_answer = unmask_text(answer)
