@@ -65,22 +65,12 @@ def _get_evds_client():
     return evdsAPI(api_key)
 
 
-@tool
+@tool(parse_docstring=True)
 def get_tcmb_subcategories(category_id: int) -> Dict[str, Any]:
-    """
-    Get subcategories for a given TCMB main category ID.
+    """Get subcategories for a given TCMB main category ID.
 
     Args:
-        category_id: The main category ID (e.g., 1 for 'PİYASA VERİLERİ (TCMB)')
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - subcategories (List[Dict]): List of subcategories with DATAGROUP_CODE and DATAGROUP_NAME
-            - count (int): Number of subcategories found
-            - category_id (int): The queried category ID
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        category_id: The main category ID (for example, 1 for 'PİYASA VERİLERİ (TCMB)')
     """
     try:
         logger.info(f"Fetching subcategories for category_id: {category_id}")
@@ -126,22 +116,12 @@ def get_tcmb_subcategories(category_id: int) -> Dict[str, Any]:
         return {"success": False, "error": error_msg}
 
 
-@tool
+@tool(parse_docstring=True)
 def get_tcmb_series(datagroup_code: str) -> Dict[str, Any]:
-    """
-    Get series information for a given TCMB datagroup code.
+    """Get series information for a given TCMB datagroup code.
 
     Args:
-        datagroup_code: The datagroup code (e.g., 'bie_sekbil1122')
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - series (List[Dict]): List of series with SERIE_CODE, SERIE_NAME, and START_DATE
-            - count (int): Number of series found
-            - datagroup_code (str): The queried datagroup code
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        datagroup_code: The datagroup code (for example, 'bie_sekbil1122')
     """
     try:
         logger.info(f"Fetching series for datagroup_code: {datagroup_code}")
@@ -188,28 +168,16 @@ def get_tcmb_series(datagroup_code: str) -> Dict[str, Any]:
         return {"success": False, "error": error_msg}
 
 
-@tool
+@tool(parse_docstring=True)
 def get_tcmb_data(
     serie_codes: List[str], start_date: str, end_date: str
 ) -> Dict[str, Any]:
-    """
-    Get actual data for given TCMB serie codes within a date range.
+    """Get actual data for given TCMB serie codes within a date range.
 
     Args:
-        serie_codes: List of serie codes (e.g., ['TP.SEKBILTGA.A'])
-        start_date: Start date in format 'DD-MM-YYYY' (e.g., '01-01-2019')
-        end_date: End date in format 'DD-MM-YYYY' (e.g., '01-01-2020')
-
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - success (bool): True if operation succeeded, False otherwise
-            - data (Dict): Data in JSON format with dates as keys
-            - serie_codes (List[str]): The queried serie codes
-            - start_date (str): Start date of the query
-            - end_date (str): End date of the query
-            - rows (int): Number of data rows returned
-            - message (str): Success message (if successful)
-            - error (str): Error message (if failed)
+        serie_codes: List of serie codes (for example, ['TP.SEKBILTGA.A'])
+        start_date: Start date in format 'DD-MM-YYYY' (for example, '01-01-2019')
+        end_date: End date in format 'DD-MM-YYYY' (for example, '01-01-2020')
     """
     try:
         logger.info(

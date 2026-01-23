@@ -142,13 +142,19 @@ def _store_transactions(transactions: List[BalanceTransaction]) -> str:
         return f"Error while storing transaction: {exc}"
 
 
-@tool
+@tool(parse_docstring=True)
 def add_income_transaction(
     amount: float,
     category: str,
     transaction_date: Optional[str] = None,
 ) -> str:
-    """Persist an income entry with categorized metadata."""
+    """Persist an income entry with categorized metadata.
+    
+    Args:
+        amount: The amount of the income transaction.
+        category: The category of the income transaction.
+        transaction_date: The date of the income transaction (optional).
+    """
 
     if amount is None or amount <= 0:
         return "Amount must be a positive number."
@@ -178,13 +184,19 @@ def add_income_transaction(
     return _store_transactions([transaction])
 
 
-@tool
+@tool(parse_docstring=True)
 def add_expense_transaction(
     amount: float,
     category: str,
     transaction_date: Optional[str] = None,
 ) -> str:
-    """Persist an expense entry with categorized metadata."""
+    """Persist an expense entry with categorized metadata.
+    
+    Args:
+        amount: The amount of the expense transaction.
+        category: The category of the expense transaction.
+        transaction_date: The date of the expense transaction (optional).
+    """
 
     if amount is None or amount <= 0:
         return "Amount must be a positive number."
