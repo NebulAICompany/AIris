@@ -6,6 +6,7 @@ from .prompts import (
 from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
+from .checkpointer import get_checkpointer as _get_checkpointer
 from datetime import datetime
 from .tools.api import (
     web_search_tool,
@@ -73,10 +74,13 @@ main_agent_tools = [
 def create_main_agent(
     web_search_enabled: bool = False,
     instruction: str = None,
-    conversation_history: List = None,
 ):
     """
     Create a Deep Agent for main assistant functionality with agentic RAG.
+
+    Args:
+        web_search_enabled: Whether to enable web search
+        instruction: Optional custom instructions
 
     Returns a Deep Agent configured with tools, subagents, and custom instructions.
     The agent can use search_local_documents tool to retrieve information on demand.
@@ -92,15 +96,6 @@ def create_main_agent(
         else ""
     )
 
-    # Format conversation history
-    conversation_context_part = ""
-    if conversation_history and len(conversation_history) > 0:
-        conversation_context_part = "\n**Conversation History:**\n"
-        for msg in conversation_history[-5:]:  # Show last 5 messages
-            role = "User" if msg["role"] == "user" else "Assistant"
-            conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
-        conversation_context_part += "\n"
-
     # Start with a fresh list to avoid mutating the module-level list
     tools = [*main_agent_tools, *main_agent_subagents]
     if web_search_enabled:
@@ -109,7 +104,6 @@ def create_main_agent(
     agent_instructions = main_agent_instructions.format(
         current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         web_context_part=web_context_part,
-        conversation_context_part=conversation_context_part,
         instruction_part=instruction_part,
     )
 
@@ -117,8 +111,8 @@ def create_main_agent(
         model=ANTHROPIC_MODEL,
         tools=tools,
         system_prompt=agent_instructions,
+        checkpointer=_get_checkpointer(),
     )
-
     return agent
 
 
