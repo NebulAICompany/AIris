@@ -1,3 +1,4 @@
+import json
 import time
 from typing import Tuple, List, Dict, Any
 from backend.monitoring.metrics import llm_duration_seconds
@@ -65,8 +66,15 @@ async def generate_answer(
                 ):
                     api_sources.append(artifact)
 
-        logger.info(
-            f"Sources extracted - Web: {len(web_sources)}, API: {len(api_sources)}, Docs: {len(doc_sources)}"
+        # Deduplicate sources
+        web_sources = list(
+            {json.dumps(s, sort_keys=True): s for s in web_sources}.values()
+        )
+        api_sources = list(
+            {json.dumps(s, sort_keys=True): s for s in api_sources}.values()
+        )
+        doc_sources = list(
+            {json.dumps(s, sort_keys=True): s for s in doc_sources}.values()
         )
 
         duration = time.time() - start_time
