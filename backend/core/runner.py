@@ -93,3 +93,7 @@ async def generate_answer(
         # Use % formatting to avoid KeyError with curly braces in error messages
         logger.error("Error in generate_answer: %s", error_str, exc_info=True)
         return f"LLM yanıtı alınamadı: {error_str}", [], []
+    finally:
+        web_sources.clear()
+        api_sources.clear()
+        doc_sources.clear()

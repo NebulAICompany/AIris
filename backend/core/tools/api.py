@@ -4,11 +4,10 @@ from langchain_core.tools import tool
 from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
 
 
-
 @tool(parse_docstring=True, response_format="content_and_artifact")
 def wolfram_alpha_query(query: str):
     """Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
-    
+
     Args:
         query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
     """
@@ -70,7 +69,6 @@ def wolfram_alpha_query(query: str):
         return error_msg, {"name": "Wolfram Alpha", "description": "Exception occurred"}
 
 
-
 @tool(parse_docstring=True, response_format="content_and_artifact")
 def web_search_tool(query: str, search_depth: str = "basic"):
     """Perform a web search using Tavily and return the results.
@@ -84,7 +82,6 @@ def web_search_tool(query: str, search_depth: str = "basic"):
             query,
             max_results=10,
             auto_parameters=True,
-            topic="finance",
             search_depth=search_depth,
         )
         if not response:
@@ -117,8 +114,7 @@ def web_search_tool(query: str, search_depth: str = "basic"):
 
 @tool(parse_docstring=True)
 def get_uploaded_files_count() -> str:
-    """Get the total count of files uploaded to the system.
-    """
+    """Get the total count of files uploaded to the system."""
     try:
         from backend.utils.uploads_database import uploads_db
 
