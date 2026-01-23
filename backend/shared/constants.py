@@ -165,15 +165,20 @@ ANTHROPIC_MODEL = ChatAnthropic(
     model_name="claude-sonnet-4-5-20250929",
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     max_retries=5,
+    temperature=0.0,
     max_tokens=64000,
     timeout=120,
     callbacks=[ConsoleCallbackHandler()],
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-5.2",
+    model="gpt-4o",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
+    frequency_penalty=0.7,
+    presence_penalty=0.4,
+    max_tokens=4000,  # Increased for complete responses
+    max_retries=3,  # Increased for better reliability
     callbacks=[ConsoleCallbackHandler()],
 )
 
