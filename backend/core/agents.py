@@ -15,7 +15,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
-from backend.shared.constants import OPENAI_MODEL
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 
 
 class NewsCluster(BaseModel):
@@ -114,7 +114,7 @@ def create_main_agent(
     )
 
     agent = create_agent(
-        model=OPENAI_MODEL,
+        model=ANTHROPIC_MODEL,
         tools=tools,
         system_prompt=agent_instructions,
     )
@@ -177,7 +177,7 @@ def create_news_chat_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = [*main_agent_tools, *main_agent_subagents]
+    tools = [time_now]
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(

@@ -1,3 +1,4 @@
+from typing import Optional, List
 from e2b_code_interpreter import Sandbox
 from pydantic import BaseModel, Field
 from langchain.tools import tool
@@ -35,34 +36,18 @@ def set_chart_data(data):
         pass
 
 
-class CodeInterpreterInput(BaseModel):
-    code: str = Field(description="Python code to execute")
-
-
-@tool(
-    args_schema=CodeInterpreterInput,
-)
+@tool(parse_docstring=True)
 def create_custom_chart_from_code(code: str) -> dict:
-    """
-    Create custom charts by executing Python code in a sandboxed environment.
+    """Create custom charts by executing Python code in a sandboxed environment.
 
-    USE THIS TOOL FOR:
-    - Custom visualizations with matplotlib, seaborn, or plotly
-    - Statistical plots (histograms, box plots, scatter plots, etc.)
-    - Data distributions and correlations
-    - Scientific charts and custom data analysis plots
-    - Any non-financial chart requiring Python code execution
-
-    DO NOT USE FOR:
-    - Stock market charts with OHLC data → Use create_financial_stock_chart instead
-    - Financial technical analysis charts → Use create_financial_stock_chart instead
+    Use this tool for non-financial visualizations such as statistical plots,
+    scientific charts, and custom data analysis with libraries like matplotlib,
+    seaborn, or plotly.
 
     Args:
-        code: Complete Python code to execute. Must include imports and plt.savefig() or equivalent.
-              Code runs in a secure sandbox with 30-second timeout.
-
-    Returns:
-        dict: Execution result with chart metadata. Charts are automatically saved as PNG and displayed.
+        code: Complete Python code that generates and saves one or more charts.
+            The code must include all required imports and a save call
+            (for example, plt.savefig()).
     """
     sandbox = None
     try:
@@ -147,46 +132,32 @@ def create_custom_chart_from_code(code: str) -> dict:
                 pass
 
 
-@tool
+@tool(parse_docstring=True)
 def create_financial_stock_chart(
-    symbols: list,
+    symbols: List[str],
     period: str = "daily",
     chart_type: str = "candlestick",
     time_range_days: int = 180,
     include_volume: bool = True,
-    technical_indicators: list = None,
+    technical_indicators: Optional[List[str]] = None,
     layout_style: str = "professional",
-):
+) -> dict:
+    """Create professional financial stock charts with technical indicators.
+
+    Use this tool for stock price charts (candlestick, OHLC, line, area),
+    technical analysis (SMA, EMA, Bollinger Bands, RSI, MACD), and volume analysis
+    for up to 4 symbols.
+
+    Args:
+        symbols: List of stock symbols (for example, ["AAPL", "MSFT"]). Maximum 4 symbols.
+        period: "daily" or "intraday" (default "daily").
+        chart_type: "candlestick", "ohlc", "line", or "area" (default "candlestick").
+        time_range_days: Number of days of historical data to display (default 180, max 1000).
+        include_volume: Whether to show a volume subplot (default True).
+        technical_indicators: List of indicators such as "sma", "ema", "bollinger", "rsi", "macd".
+        layout_style: "professional", "dark", or "minimal" (default "professional").
     """
-    Create professional financial stock charts with advanced technical analysis and market data.
 
-    USE THIS TOOL FOR:
-    - Stock market price charts (candlestick, OHLC, line, area)
-    - Technical analysis with indicators (SMA, EMA, Bollinger Bands, RSI, MACD)
-    - Multi-stock comparison charts (up to 4 stocks)
-    - Volume analysis and trading patterns
-    - Professional financial market visualizations
-    - Interactive charts with range selectors and drawing tools
-
-    DO NOT USE FOR:
-    - Custom plots from raw data → Use create_custom_chart_from_code instead
-    - Non-financial visualizations → Use create_custom_chart_from_code instead
-    - Statistical plots → Use create_custom_chart_from_code instead
-
-    Required:
-        symbols (list): List of stock symbols (e.g., ["AAPL", "MSFT"]). Max 4 symbols for optimal visualization.
-
-    Optional:
-        period (str): "daily" or "intraday" (default: "daily")
-        chart_type (str): "candlestick", "ohlc", "line", "area" (default: "candlestick")
-        time_range_days (int): Days of historical data to display (default: 180, max: 1000)
-        include_volume (bool): Show volume subplot with color-coded bars (default: True)
-        technical_indicators (list): ["sma", "ema", "bollinger", "rsi", "macd"] (default: ["sma"])
-        layout_style (str): "professional", "dark", "minimal" (default: "professional")
-
-    Returns:
-        dict: Success message with chart creation details. Chart is automatically displayed as interactive HTML.
-    """
     try:
         # Input validation and defaults
         if not symbols or len(symbols) == 0:

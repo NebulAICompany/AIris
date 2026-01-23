@@ -2,7 +2,7 @@ from typing import List, Dict, Any, Tuple
 from backend.retrieval.retriever import retrieve_top_k
 from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
-from backend.shared.constants import OPENAI_MODEL
+from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 from langchain_core.messages import HumanMessage
 from qdrant_client import QdrantClient
 
@@ -45,7 +45,7 @@ Output format:
 Generated queries:"""
 
         # Use standard API call instead of agent
-        response_obj = await OPENAI_MODEL.ainvoke(
+        response_obj = await ANTHROPIC_MODEL.ainvoke(
             [HumanMessage(content=generation_prompt)]
         )
         response = response_obj.content.strip()

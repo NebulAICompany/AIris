@@ -4,14 +4,12 @@ from langchain_core.tools import tool
 from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
 
 
-@tool(response_format="content_and_artifact")
+
+@tool(parse_docstring=True, response_format="content_and_artifact")
 def wolfram_alpha_query(query: str):
-    """
-    Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
+    """Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
     Args:
         query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
-    Returns:
-        Tuple of (result string for LLM, artifact with source info)
     """
     url = "http://api.wolframalpha.com/v2/query"
     params = {"input": query, "appid": WOLFRAM_APP_ID, "output": "XML"}
@@ -71,16 +69,14 @@ def wolfram_alpha_query(query: str):
         return error_msg, {"name": "Wolfram Alpha", "description": "Exception occurred"}
 
 
-@tool(response_format="content_and_artifact")
+
+@tool(parse_docstring=True, response_format="content_and_artifact")
 def web_search_tool(query: str, search_depth: str = "basic"):
-    """
-    Perform a web search using Tavily and return the results.
+    """Perform a web search using Tavily and return the results.
 
     Args:
         query: The search query to perform.
         search_depth: The depth of the search (basic, advanced). Defaults to "basic".
-    Returns:
-        Content string for LLM
     """
     try:
         response = tavily_client.search(
@@ -118,13 +114,9 @@ def web_search_tool(query: str, search_depth: str = "basic"):
         return f"Error searching web: {str(e)}"
 
 
-@tool
+@tool(parse_docstring=True)
 def get_uploaded_files_count() -> str:
-    """
-    Get the total count of files uploaded to the system.
-
-    Returns:
-        A string containing the total count of uploaded files and breakdown by file type.
+    """Get the total count of files uploaded to the system.
     """
     try:
         from backend.utils.uploads_database import uploads_db
@@ -144,16 +136,12 @@ def get_uploaded_files_count() -> str:
         return f"Error retrieving upload count: {str(e)}"
 
 
-@tool
+@tool(parse_docstring=True)
 def list_uploaded_files(limit: int = 10) -> str:
-    """
-    List recently uploaded files with their details.
+    """List recently uploaded files with their details.
 
     Args:
-        limit: Maximum number of files to return (default: 10, max: 100)
-
-    Returns:
-        A formatted string containing information about uploaded files.
+        limit: Maximum number of files to return (default 10, max 100)
     """
     try:
         from backend.utils.uploads_database import uploads_db
