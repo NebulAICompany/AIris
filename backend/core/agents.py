@@ -6,49 +6,16 @@ from .prompts import (
 from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
+from datetime import datetime
 from .tools.api import (
     web_search_tool,
     wolfram_alpha_query,
-    time_now,
     get_uploaded_files_count,
     list_uploaded_files,
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
 from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
-
-
-class WebSource(BaseModel):
-    """Web source information"""
-
-    name: str = Field(..., description="Website or page name/title")
-    url: str = Field(..., description="Full URL of the website")
-
-
-class ApiSource(BaseModel):
-    """API data source information"""
-
-    name: str = Field(
-        ...,
-        description="API or data source name (e.g., 'TCMB EVDS', 'Marketstack', 'Wolfram Alpha')",
-    )
-    description: str = Field(
-        ..., description="Brief description of what data was retrieved from this API"
-    )
-
-
-class MainAgentResponse(BaseModel):
-    """Structured output for main agent response"""
-
-    answer: str = Field(..., description="The agent's answer to the user's query")
-    web_sources: List[WebSource] = Field(
-        default_factory=list,
-        description="List of websites used from web search (name and URL pairs). Only include when web_search_tool was used.",
-    )
-    api_sources: List[ApiSource] = Field(
-        default_factory=list,
-        description="List of APIs or data sources used (e.g., TCMB EVDS, Marketstack, Wolfram Alpha). Include when you used tools like get_tcmb_data, get_eod_data, wolfram_alpha_query, etc.",
-    )
 
 
 class NewsCluster(BaseModel):
@@ -98,7 +65,6 @@ class NewsSummarizationResponse(BaseModel):
 main_agent_tools = [
     search_local_documents,
     wolfram_alpha_query,
-    time_now,
     get_uploaded_files_count,
     list_uploaded_files,
 ]
@@ -141,6 +107,7 @@ def create_main_agent(
         tools.append(web_search_tool)
 
     agent_instructions = main_agent_instructions.format(
+        current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         web_context_part=web_context_part,
         conversation_context_part=conversation_context_part,
         instruction_part=instruction_part,
@@ -150,7 +117,6 @@ def create_main_agent(
         model=ANTHROPIC_MODEL,
         tools=tools,
         system_prompt=agent_instructions,
-        response_format=ToolStrategy(MainAgentResponse),
     )
 
     return agent
@@ -215,6 +181,7 @@ def create_news_chat_agent(
     tools.append(web_search_tool)
 
     agent_instructions = news_chat_agent_instructions.format(
+        current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         news_context=news_context,
         conversation_context_part=conversation_context_part,
     )
@@ -223,7 +190,6 @@ def create_news_chat_agent(
         model="gpt-4o-mini",
         tools=tools,
         system_prompt=agent_instructions,
-        response_format=ToolStrategy(MainAgentResponse),
     )
 
     return agent
@@ -235,6 +201,5 @@ def create_translation_agent(instructions: str):
         model="gpt-4o-mini",
         tools=[],
         system_prompt=instructions,
-        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent

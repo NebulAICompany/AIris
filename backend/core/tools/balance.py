@@ -16,8 +16,6 @@ from backend.utils.balance_payments_database import (
 from backend.core.prompts import balance_of_payments_agent_prompt
 from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
 from langchain.agents import create_agent
-from langchain.agents.structured_output import ToolStrategy
-from backend.core.agents import MainAgentResponse
 
 logger = get_logger("BALANCE_TOOLS")
 
@@ -224,7 +222,6 @@ def create_balance_payments_agent():
         model=ANTHROPIC_MODEL,
         tools=[add_expense_transaction, add_income_transaction],
         system_prompt=instructions,
-        response_format=ToolStrategy(MainAgentResponse),
     )
     return agent
 
