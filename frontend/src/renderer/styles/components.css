@@ -4028,6 +4028,7 @@ body.dark-theme .progress-bar {
   gap: 8px;
   opacity: 0;
   transition: opacity 0.2s ease;
+  flex-shrink: 0;
 }
 
 .file-card:hover .file-card-actions {
@@ -4073,6 +4074,7 @@ body.dark-theme .progress-bar {
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0;
 }
 
 .file-card-icon {
@@ -4113,12 +4115,17 @@ body.dark-theme .progress-bar {
 
 .file-card-info {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .file-card-name {
   font-weight: 600;
   margin-bottom: 4px;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .file-card-details {
