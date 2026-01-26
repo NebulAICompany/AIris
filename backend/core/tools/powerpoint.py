@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime
 from backend.shared.constants import POWERPOINT_DIR
 from backend.shared.logger import get_logger
+from backend.core.tools.office import set_generated_files
 
 load_dotenv()
 
@@ -55,6 +56,17 @@ def create_powerpoint_from_code(code: str) -> str:
             with open(output_path, "wb") as f:
                 f.write(pptx_content)
 
+            set_generated_files(
+                [
+                    {
+                        "filename": output_filename,
+                        "file_path": str(output_path),
+                        "file_type": "powerpoint",
+                        "created_at": datetime.now().isoformat(),
+                        "message": f"PowerPoint presentation created successfully: {output_filename}",
+                    }
+                ]
+            )
             return f"PowerPoint presentation created successfully: {output_filename}"
         except Exception as e:
             return f"Failed to save PowerPoint file: {str(e)}"
