@@ -12,7 +12,7 @@ load_dotenv()
 logger = get_logger("POWERPOINT_TOOLS")
 
 
-@tool(parse_docstring=True, return_direct=True)
+@tool(parse_docstring=True)
 def create_powerpoint_from_code(code: str) -> str:
     """Create PowerPoint presentations by executing Python code in a sandboxed environment.
 
@@ -51,7 +51,6 @@ def create_powerpoint_from_code(code: str) -> str:
         # Download the PPTX file from sandbox
         try:
             pptx_content = sandbox.files.read("/home/user/output.pptx", format="bytes")
-            logger.info(f"PPTX content: {pptx_content}")
 
             with open(output_path, "wb") as f:
                 f.write(pptx_content)

@@ -374,4 +374,4 @@ def clear_generated_files():
 
 def set_generated_files(files: List[Dict[str, Any]]):
     global GENERATED_FILES
-    GENERATED_FILES = files
+    GENERATED_FILES.extend(files)
