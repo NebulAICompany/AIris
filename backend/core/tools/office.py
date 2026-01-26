@@ -2,15 +2,19 @@ from typing import Any, Dict, List, Optional
 from pathlib import Path
 import os
 import json
+import uuid
 from datetime import datetime
 from docx import Document
 from openpyxl import Workbook, load_workbook
 from openpyxl.chart import BarChart, LineChart, PieChart, Reference
-from pptx import Presentation
+from e2b_code_interpreter import Sandbox
+from dotenv import load_dotenv
 from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH
 from backend.security.pii import unmask_text
 from langchain_core.tools import tool
+
+load_dotenv()
 
 # Global variable to track generated files
 GENERATED_FILES = []
@@ -20,6 +24,7 @@ FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 
 logger = get_logger("OFFICE_TOOLS")
+
 
 @tool(parse_docstring=True)
 def create_excel_file(
@@ -77,7 +82,7 @@ def create_excel_file(
             "created_at": datetime.now().isoformat(),
             "message": f"Excel file created successfully with {len(unmasked_data)} rows",
         }
-        GENERATED_FILES.append(file_info)
+        set_generated_files([file_info])
 
         return {
             "success": True,
@@ -144,7 +149,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
             "created_at": datetime.now().isoformat(),
             "message": f"Word document created successfully with {len(paragraphs)} paragraphs",
         }
-        GENERATED_FILES.append(file_info)
+        set_generated_files([file_info])
 
         return {
             "success": True,
@@ -157,141 +162,6 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error creating Word document: {str(e)}")
         return {"success": False, "error": f"Failed to create Word document: {str(e)}"}
-
-
-@tool(parse_docstring=True)
-def create_powerpoint_presentation(
-    title: str, slides_content: str, file_name: str
-) -> Dict[str, Any]:
-    """Create a PowerPoint presentation with multiple slides.
-
-    Args:
-        title: Title of the presentation.
-        slides_content: JSON string with list of slide objects, each containing 'title' and 'content' keys.
-        file_name: Name of the PowerPoint file to create.
-    """
-    try:
-        # Parse JSON string
-        slides_data = (
-            json.loads(slides_content)
-            if isinstance(slides_content, str)
-            else slides_content
-        )
-
-        # Add .pptx extension if not present
-        if not file_name.endswith(".pptx"):
-            file_name = f"{file_name}.pptx"
-
-        # Ensure file_path is absolute and in the documents directory
-        file_path = FILES_PATH / file_name
-
-        # Create directory if it doesn't exist
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-        # Create presentation
-        prs = Presentation()
-
-        # Unmask PII data before creating PowerPoint presentation
-        unmasked_title = unmask_text(title)
-
-        # Add title slide
-        title_slide_layout = prs.slide_layouts[0]  # Title slide layout
-        slide = prs.slides.add_slide(title_slide_layout)
-        title_shape = slide.shapes.title
-        title_shape.text = unmasked_title
-
-        # Add content slides
-        for slide_data in slides_data:
-            slide_layout = prs.slide_layouts[1]  # Title and content layout
-            slide = prs.slides.add_slide(slide_layout)
-
-            # Set slide title
-            if "title" in slide_data:
-                unmasked_slide_title = unmask_text(slide_data["title"])
-                slide.shapes.title.text = unmasked_slide_title
-
-            # Set slide content
-            if "content" in slide_data:
-                content_placeholder = slide.placeholders[1]
-                unmasked_slide_content = unmask_text(slide_data["content"])
-                content_placeholder.text = unmasked_slide_content
-
-        # Save presentation
-        prs.save(str(file_path))
-
-        # Add to generated files list
-        file_info = {
-            "filename": file_name,
-            "file_path": str(file_path),
-            "file_type": "powerpoint",
-            "created_at": datetime.now().isoformat(),
-            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides",
-        }
-        GENERATED_FILES.append(file_info)
-
-        return {
-            "success": True,
-            "file_path": str(file_path),
-            "slides_count": len(slides_data) + 1,  # +1 for title slide
-            "message": f"PowerPoint presentation created successfully with {len(slides_data) + 1} slides. File loaded successfully into attachments. You can view it directly from the attachments section below.",
-            "file_info": file_info,
-        }
-
-    except Exception as e:
-        logger.error(f"Error creating PowerPoint presentation: {str(e)}")
-        return {
-            "success": False,
-            "error": f"Failed to create PowerPoint presentation: {str(e)}",
-        }
-
-
-@tool(parse_docstring=True)
-def add_powerpoint_slide(
-    file_path: str, slide_title: str, slide_content: str, slide_position: int = -1
-) -> Dict[str, Any]:
-    """Add a new slide to an existing PowerPoint presentation.
-
-    Args:
-        file_path: Path to the existing PowerPoint file.
-        slide_title: Title of the new slide.
-        slide_content: Content of the new slide.
-        slide_position: Position to insert the slide (-1 for end, default -1).
-    """
-    try:
-        # Load existing presentation
-        prs = Presentation(file_path)
-
-        # Create new slide
-        slide_layout = prs.slide_layouts[1]  # Title and content layout
-
-        if slide_position == -1:
-            slide = prs.slides.add_slide(slide_layout)
-        else:
-            slide = prs.slides.add_slide(slide_layout)
-            # Move slide to desired position (simplified approach)
-
-        # Unmask PII data before adding slide
-        unmasked_slide_title = unmask_text(slide_title)
-        unmasked_slide_content = unmask_text(slide_content)
-
-        # Set slide content
-        slide.shapes.title.text = unmasked_slide_title
-        content_placeholder = slide.placeholders[1]
-        content_placeholder.text = unmasked_slide_content
-
-        # Save presentation
-        prs.save(file_path)
-
-        return {
-            "success": True,
-            "file_path": file_path,
-            "total_slides": len(prs.slides),
-            "message": f"Slide added successfully. Presentation now has {len(prs.slides)} slides.",
-        }
-
-    except Exception as e:
-        logger.error(f"Error adding slide to PowerPoint: {str(e)}")
-        return {"success": False, "error": f"Failed to add slide: {str(e)}"}
 
 
 @tool(parse_docstring=True)
@@ -497,6 +367,69 @@ def create_excel_charts(
         return {"success": False, "error": f"Failed to create Excel chart: {str(e)}"}
 
 
+@tool(parse_docstring=True)
+def create_powerpoint_from_code(code: str) -> str:
+    """Create PowerPoint presentations by executing Python code in a sandboxed environment.
+
+    Use this tool for creating PowerPoint presentations with python-pptx library.
+    The code should create a Presentation object, add slides, and save the file.
+
+    Args:
+        code: Complete Python code that creates and saves a PowerPoint presentation.
+            The code must include all required imports (from pptx import Presentation)
+            and save the presentation to a file named 'output.pptx' (e.g., prs.save('output.pptx')).
+            The saved file will be automatically moved to the documents directory.
+    """
+    sandbox = None
+    try:
+        # Generate unique filename for output
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = uuid.uuid4().hex[:8]
+        output_filename = f"presentation_{timestamp}_{unique_id}.pptx"
+        output_path = CREATED_DOCUMENTS_PATH / output_filename
+
+        # Create sandbox and execute code
+        sandbox = Sandbox.create(template="pptx-template", timeout=60)
+
+        # Execute the user's code
+        execution = sandbox.run_code(code)
+
+        # Check for execution errors
+        if execution.error:
+            return f"Code execution error: {execution.error.value}"
+
+        # Download the PPTX file from sandbox
+        try:
+            pptx_content = sandbox.files.read("/home/user/output.pptx", format="bytes")
+
+            with open(output_path, "wb") as f:
+                f.write(pptx_content)
+
+            set_generated_files(
+                [
+                    {
+                        "filename": output_filename,
+                        "file_path": str(output_path),
+                        "file_type": "powerpoint",
+                        "created_at": datetime.now().isoformat(),
+                        "message": f"PowerPoint presentation created successfully: {output_filename}",
+                    }
+                ]
+            )
+            return f"PowerPoint presentation created successfully: {output_filename}"
+        except Exception as e:
+            return f"Failed to save PowerPoint file: {str(e)}"
+
+    except Exception as e:
+        return f"Error executing code: {str(e)}"
+    finally:
+        if sandbox:
+            try:
+                sandbox.kill()
+            except Exception as e:
+                logger.warning(f"Failed to kill sandbox: {str(e)}")
+
+
 def get_generated_files() -> Dict[str, Any]:
     global GENERATED_FILES
     return GENERATED_FILES
@@ -505,3 +438,8 @@ def get_generated_files() -> Dict[str, Any]:
 def clear_generated_files():
     global GENERATED_FILES
     GENERATED_FILES.clear()
+
+
+def set_generated_files(files: List[Dict[str, Any]]):
+    global GENERATED_FILES
+    GENERATED_FILES.extend(files)

@@ -84,8 +84,9 @@ RESPONSE PROTOCOL:
 office_agent_prompt = """You are an advanced Microsoft Office automation and integration agent specializing in document processing, data extraction, and file format conversion.
 
 CORE CAPABILITIES:
-- Excel Operations: Create Excel workbooks from structured data
-- Document Creation: Generate new Word documents with custom content
+- Excel Operations: Create Excel workbooks from structured data, modify cells, and create charts
+- Word Documents: Generate new Word documents with custom content and modify existing documents
+- PowerPoint Presentations: Create professional PowerPoint presentations with custom layouts, slides, text, shapes, images, tables, and charts using python-pptx library
 
 INTERACTION GUIDELINES:
 1. Provide detailed feedback on operation results including file locations and data statistics
@@ -105,7 +106,8 @@ WORKFLOW OPTIMIZATION:
 
 TECHNICAL CONSIDERATIONS:
 - Supports multiple backends (python-docx, openpyxl, win32com) with automatic fallback
-- Handles various file formats (.docx, .doc, .xlsx, .xls, .pdf)
+- Handles various file formats (.docx, .doc, .xlsx, .xls, .pdf, .pptx)
+- PowerPoint creation uses python-pptx library in a secure sandbox environment
 - Maintains data integrity during format conversions
 - Provides detailed error reporting with suggested solutions
 
@@ -539,6 +541,7 @@ Use the plotting_agent tool for ALL chart creation needs:
 - For financial queries WITH charts: Call finance_agent for data, then plotting_agent for visualization
 - For stock charts: Call plotting_agent directly (it fetches market data automatically)
 - For financial data analysis only: Call finance_agent only
+
 
 **For Local Document Search (RAG):**
 Use the search_local_documents tool when:
