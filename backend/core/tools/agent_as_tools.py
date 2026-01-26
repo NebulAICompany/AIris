@@ -4,6 +4,7 @@ from backend.core.prompts import (
     finance_agent_prompt,
     office_agent_prompt,
     plotting_prompt,
+    powerpoint_agent_prompt,
     tcmb_data_agent_prompt,
 )
 from langchain.agents.middleware import ToolCallLimitMiddleware
@@ -29,12 +30,13 @@ from backend.core.tools.plotting import (
     create_custom_chart_from_code,
     create_financial_stock_chart,
 )
+from backend.core.tools.powerpoint import (
+    create_powerpoint_from_code,
+)
 
 office_tools = [
     create_excel_file,
     create_word_document,
-    create_powerpoint_presentation,
-    add_powerpoint_slide,
     modify_word_content,
     modify_excel_cells,
     create_excel_charts,
@@ -90,6 +92,21 @@ plotting_agent = create_agent(
         ),
         ToolCallLimitMiddleware(
             tool_name="create_financial_stock_chart",
+            run_limit=1,
+            exit_behavior="continue",
+        ),
+    ],
+)
+
+powerpoint_agent = create_agent(
+    model=ANTHROPIC_MODEL,
+    tools=[
+        create_powerpoint_from_code,
+    ],
+    system_prompt=powerpoint_agent_prompt,
+    middleware=[
+        ToolCallLimitMiddleware(
+            tool_name="create_powerpoint_from_code",
             run_limit=1,
             exit_behavior="continue",
         ),
@@ -182,6 +199,28 @@ async def call_plotting_agent(query: str) -> str:
 
 
 @tool(
+    "powerpoint_agent",
+    description=(
+        "Use this tool for creating PowerPoint presentations with custom designs and layouts. "
+        "It can generate professional presentations with multiple slides, custom formatting, "
+        "shapes, images, tables, and charts using python-pptx library. "
+        "Input must be a natural language request describing the presentation to create "
+        "(for example, 'create a 10-slide presentation about artificial intelligence with images and charts')."
+    ),
+)
+async def call_powerpoint_agent(query: str) -> str:
+    """Route PowerPoint presentation creation requests to the PowerPoint agent.
+
+    Args:
+        query: Natural language description of the PowerPoint presentation to create.
+    """
+    result = await powerpoint_agent.ainvoke(
+        {"messages": [{"role": "user", "content": query}]}
+    )
+    return result["messages"][-1].content
+
+
+@tool(
     "tcmb_economic_data",
     description=(
         "Use this tool to retrieve and analyze Turkish Central Bank (TCMB) economic data "
@@ -216,5 +255,6 @@ main_agent_subagents = [
     call_finance_agent,
     call_office_agent,
     call_plotting_agent,
+    call_powerpoint_agent,
     call_tcmb_agent,
 ]

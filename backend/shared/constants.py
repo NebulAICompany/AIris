@@ -113,6 +113,10 @@ UPLOADS_PATH = DATABASE_DIR / "uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
+# PowerPoint files directory
+POWERPOINT_DIR = DATABASE_DIR / "powerpoint"
+POWERPOINT_DIR.mkdir(parents=True, exist_ok=True)
+
 # Vectorstore paths
 VECTORSTORE_PATH = DATABASE_DIR / "vectorstore"
 PII_CHUNK_MAPS_PATH = VECTORSTORE_PATH / "pii_chunk_maps.json"
