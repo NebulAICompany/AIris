@@ -20,6 +20,7 @@ FILES_PATH.mkdir(parents=True, exist_ok=True)
 
 logger = get_logger("OFFICE_TOOLS")
 
+
 @tool(parse_docstring=True)
 def create_excel_file(
     data: List[List[str]],
@@ -76,7 +77,7 @@ def create_excel_file(
             "created_at": datetime.now().isoformat(),
             "message": f"Excel file created successfully with {len(unmasked_data)} rows",
         }
-        GENERATED_FILES.append(file_info)
+        set_generated_files([file_info])
 
         return {
             "success": True,
@@ -143,7 +144,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
             "created_at": datetime.now().isoformat(),
             "message": f"Word document created successfully with {len(paragraphs)} paragraphs",
         }
-        GENERATED_FILES.append(file_info)
+        set_generated_files([file_info])
 
         return {
             "success": True,
@@ -369,3 +370,8 @@ def get_generated_files() -> Dict[str, Any]:
 def clear_generated_files():
     global GENERATED_FILES
     GENERATED_FILES.clear()
+
+
+def set_generated_files(files: List[Dict[str, Any]]):
+    global GENERATED_FILES
+    GENERATED_FILES = files
