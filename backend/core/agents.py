@@ -18,6 +18,8 @@ from .tools.api import (
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
 from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from agentevals.trajectory.match import create_trajectory_match_evaluator
+
 
 
 class NewsCluster(BaseModel):
@@ -119,6 +121,10 @@ def create_main_agent(
         system_prompt=agent_instructions,
         checkpointer=_get_checkpointer(),
     )
+
+    evaluator = create_trajectory_match_evaluator(  
+        trajectory_match_mode="unordered",  
+    )  
     return agent
 
 
