@@ -3,7 +3,7 @@ from langchain.tools import tool
 from dotenv import load_dotenv
 import uuid
 from datetime import datetime
-from backend.shared.constants import POWERPOINT_DIR
+from backend.shared.constants import CREATED_DOCUMENTS_PATH
 from backend.shared.logger import get_logger
 from backend.core.tools.office import set_generated_files
 
@@ -31,7 +31,7 @@ def create_powerpoint_from_code(code: str) -> str:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = uuid.uuid4().hex[:8]
         output_filename = f"presentation_{timestamp}_{unique_id}.pptx"
-        output_path = POWERPOINT_DIR / output_filename
+        output_path = CREATED_DOCUMENTS_PATH / output_filename
 
         # Create sandbox and execute code
         sandbox = Sandbox.create(timeout=60)
