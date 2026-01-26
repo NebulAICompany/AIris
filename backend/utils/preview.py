@@ -12,9 +12,122 @@ from PIL import Image
 from docx2pdf import convert
 import fitz
 
+
 from backend.shared.logger import get_logger
 
 logger = get_logger("PREVIEW")
+
+
+def convert_pptx_to_pdf(pptx_path: str, pdf_path: str, max_retries: int = 2) -> bool:
+    """
+    Convert a PowerPoint file to PDF using COM automation.
+    
+    Args:
+        pptx_path: Path to the input PPTX file (must be absolute)
+        pdf_path: Path to the output PDF file (must be absolute)
+        max_retries: Number of retries on COM failure
+        
+    Returns:
+        bool: True if conversion was successful, False otherwise.
+    """
+    import sys
+    import os
+    import time
+    
+    if not sys.platform.startswith("win"):
+        logger.error("PPTX to PDF conversion is only supported on Windows")
+        return False
+        
+    for attempt in range(max_retries + 1):
+        try:
+            # Initialize COM for Windows (fresh initialization each attempt)
+            import pythoncom
+            from win32com import client
+            
+            # Try to uninitialize first in case there's a stale COM state
+            try:
+                pythoncom.CoUninitialize()
+            except:
+                pass
+            # Fresh initialization
+            pythoncom.CoInitialize()
+            
+            logger.info(f"COM initialized for PPTX conversion (attempt {attempt + 1})")
+            
+            powerpoint = None
+            presentation = None
+            try:
+                # Open PowerPoint application
+                powerpoint = client.Dispatch("PowerPoint.Application")
+                # powerpoint.Visible = True  # Sometimes needed for it to work properly
+                
+                # Open the presentation
+                # Read-only = True, Untitled = False, WithWindow = False
+                presentation = powerpoint.Presentations.Open(pptx_path, True, False, False)
+                
+                # Save as PDF
+                # 32 is the enum value for ppSaveAsPDF
+                presentation.SaveAs(pdf_path, 32)
+                
+                logger.info(f"PPTX converted to PDF successfully: {pdf_path}")
+                return True
+                
+            except Exception as e:
+                logger.error(f"Error during PowerPoint COM operations: {e}")
+                raise e
+            finally:
+                # Close presentation
+                if presentation:
+                    try:
+                        presentation.Close()
+                    except:
+                        pass
+                
+                # Quit PowerPoint application if we opened it? 
+                # Be careful not to close user's open PPT, but getting Dispatch usually gets running instance 
+                # or creates new. Typically we should be careful. 
+                # For safety in automation, we might want to Quit if we are sure we own it,
+                # but safer to just let it run or rely on it handling itself.
+                # However, many implementations Quit() to avoid zombie processes.
+                # Let's try to Quit() but wrap in try-except
+                if powerpoint:
+                    try:
+                        # Only quit if multiple presentations are not open?
+                        # Or just ignore to be safe and avoid killing user's session.
+                        # Ideally, a dedicated automation should run in isolation.
+                        # For now, let's NOT Quit the entire app to avoid closing user's other files,
+                        # unless we strictly launched it. 
+                        # But leaving it open might accumulate headers.
+                        # Let's verify standard practice: usually Quit is called if we want to clean up.
+                        pass  # Skipping Quit for now to avoid disrupting user workflow if they have it open
+                    except:
+                        pass
+
+        except Exception as e:
+            logger.error(f"PPTX conversion attempt {attempt + 1} failed: {e}")
+            
+            # Clean up COM
+            try:
+                import pythoncom
+                pythoncom.CoUninitialize()
+            except:
+                pass
+                
+            # Clean up potentially partial PDF
+            if os.path.exists(pdf_path):
+                try:
+                    os.unlink(pdf_path)
+                except:
+                    pass
+            
+            # If last attempt, return False
+            if attempt == max_retries:
+                return False
+                
+            # Wait before retry
+            time.sleep(1.0)
+            
+    return False
 
 
 class PreviewGenerator:
@@ -158,6 +271,8 @@ class PreviewGenerator:
                 return self._generate_excel_preview()
             elif self.file_extension in [".docx", ".doc"]:
                 return self._generate_docx_preview()
+            elif self.file_extension in [".pptx", ".ppt"]:
+                return self._generate_pptx_preview()
             elif self.file_extension == ".txt":
                 return self._generate_text_preview()
             else:
@@ -437,6 +552,70 @@ class PreviewGenerator:
 
         # This should never be reached, but just in case
         raise Exception("Unexpected error in conversion retry logic")
+
+    def _generate_pptx_preview(self) -> Dict[str, Any]:
+        """Generate preview for PowerPoint files via PDF conversion."""
+        cache_key = self._get_cache_key(str(self.file_path))
+        cached_preview = self._load_from_cache(cache_key)
+        if cached_preview:
+            return cached_preview
+
+        temp_pdf = None
+        try:
+            # Create a temporary PDF file path
+            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as temp_file:
+                temp_pdf = temp_file.name
+            
+            # Close the file so other processes can write to it
+            # (NamedTemporaryFile deletes on close by default unless delete=False)
+            
+            logger.info(f"Converting {self.file_path.name} to PDF for preview...")
+            
+            # Convert PPTX to PDF
+            success = convert_pptx_to_pdf(str(self.file_path), temp_pdf)
+            
+            if not success:
+                raise Exception("Failed to convert PowerPoint to PDF")
+
+            # Verify the PDF was created and is not empty
+            if not os.path.exists(temp_pdf) or os.path.getsize(temp_pdf) == 0:
+                raise Exception("Generated PDF is empty or doesn't exist")
+
+            logger.info(f"PPTX to PDF conversion successful for {self.file_path.name}")
+
+            # Use our PDF preview logic with the temporary PDF
+            result = self._generate_pdf_preview(temp_pdf)
+
+            # Clean up the temporary PDF file
+            try:
+                if os.path.exists(temp_pdf):
+                    os.unlink(temp_pdf)
+            except:
+                pass
+
+            # Update metadata
+            if result.get("type") == "image" and "metadata" in result:
+                result["metadata"]["title"] = "PPTX Preview - First Slide"
+                result["metadata"]["method"] = "pdf_conversion"
+
+            # Save to cache
+            self._save_to_cache(cache_key, result)
+            self._clear_old_cache()
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error generating PPTX preview: {e}")
+            
+            # Clean up temporary PDF file
+            if temp_pdf and os.path.exists(temp_pdf):
+                try:
+                    os.unlink(temp_pdf)
+                except:
+                    pass
+            
+            return {"type": "error", "data": f"Error generating PowerPoint preview: {str(e)}"}
+
 
     def _generate_text_preview(self) -> Dict[str, Any]:
         """Generate preview for text files - show first few lines."""
