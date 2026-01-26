@@ -2,14 +2,19 @@ from typing import Any, Dict, List, Optional
 from pathlib import Path
 import os
 import json
+import uuid
 from datetime import datetime
 from docx import Document
 from openpyxl import Workbook, load_workbook
 from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+from e2b_code_interpreter import Sandbox
+from dotenv import load_dotenv
 from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH
 from backend.security.pii import unmask_text
 from langchain_core.tools import tool
+
+load_dotenv()
 
 # Global variable to track generated files
 GENERATED_FILES = []
@@ -360,6 +365,69 @@ def create_excel_charts(
     except Exception as e:
         logger.error(f"Error creating Excel chart: {str(e)}")
         return {"success": False, "error": f"Failed to create Excel chart: {str(e)}"}
+
+
+@tool(parse_docstring=True)
+def create_powerpoint_from_code(code: str) -> str:
+    """Create PowerPoint presentations by executing Python code in a sandboxed environment.
+
+    Use this tool for creating PowerPoint presentations with python-pptx library.
+    The code should create a Presentation object, add slides, and save the file.
+
+    Args:
+        code: Complete Python code that creates and saves a PowerPoint presentation.
+            The code must include all required imports (from pptx import Presentation)
+            and save the presentation to a file named 'output.pptx' (e.g., prs.save('output.pptx')).
+            The saved file will be automatically moved to the documents directory.
+    """
+    sandbox = None
+    try:
+        # Generate unique filename for output
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = uuid.uuid4().hex[:8]
+        output_filename = f"presentation_{timestamp}_{unique_id}.pptx"
+        output_path = CREATED_DOCUMENTS_PATH / output_filename
+
+        # Create sandbox and execute code
+        sandbox = Sandbox.create(template="pptx-template", timeout=60)
+
+        # Execute the user's code
+        execution = sandbox.run_code(code)
+
+        # Check for execution errors
+        if execution.error:
+            return f"Code execution error: {execution.error.value}"
+
+        # Download the PPTX file from sandbox
+        try:
+            pptx_content = sandbox.files.read("/home/user/output.pptx", format="bytes")
+
+            with open(output_path, "wb") as f:
+                f.write(pptx_content)
+
+            set_generated_files(
+                [
+                    {
+                        "filename": output_filename,
+                        "file_path": str(output_path),
+                        "file_type": "powerpoint",
+                        "created_at": datetime.now().isoformat(),
+                        "message": f"PowerPoint presentation created successfully: {output_filename}",
+                    }
+                ]
+            )
+            return f"PowerPoint presentation created successfully: {output_filename}"
+        except Exception as e:
+            return f"Failed to save PowerPoint file: {str(e)}"
+
+    except Exception as e:
+        return f"Error executing code: {str(e)}"
+    finally:
+        if sandbox:
+            try:
+                sandbox.kill()
+            except Exception as e:
+                logger.warning(f"Failed to kill sandbox: {str(e)}")
 
 
 def get_generated_files() -> Dict[str, Any]:

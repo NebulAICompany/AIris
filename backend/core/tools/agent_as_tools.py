@@ -4,7 +4,6 @@ from backend.core.prompts import (
     finance_agent_prompt,
     office_agent_prompt,
     plotting_prompt,
-    powerpoint_agent_prompt,
     tcmb_data_agent_prompt,
 )
 from langchain.agents.middleware import ToolCallLimitMiddleware
@@ -30,9 +29,6 @@ from backend.core.tools.plotting import (
     create_custom_chart_from_code,
     create_financial_stock_chart,
 )
-from backend.core.tools.powerpoint import (
-    create_powerpoint_from_code,
-)
 
 office_tools = [
     create_excel_file,
@@ -40,6 +36,7 @@ office_tools = [
     modify_word_content,
     modify_excel_cells,
     create_excel_charts,
+    create_powerpoint_from_code,
 ]
 
 tcmb_tools = [
@@ -74,6 +71,13 @@ office_agent = create_agent(
     model=ANTHROPIC_MODEL,
     tools=office_tools,
     system_prompt=office_agent_prompt,
+    middleware=[
+        ToolCallLimitMiddleware(
+            tool_name="create_powerpoint_from_code",
+            run_limit=1,
+            exit_behavior="continue",
+        ),
+    ],
 )
 
 
@@ -92,21 +96,6 @@ plotting_agent = create_agent(
         ),
         ToolCallLimitMiddleware(
             tool_name="create_financial_stock_chart",
-            run_limit=1,
-            exit_behavior="continue",
-        ),
-    ],
-)
-
-powerpoint_agent = create_agent(
-    model=ANTHROPIC_MODEL,
-    tools=[
-        create_powerpoint_from_code,
-    ],
-    system_prompt=powerpoint_agent_prompt,
-    middleware=[
-        ToolCallLimitMiddleware(
-            tool_name="create_powerpoint_from_code",
             run_limit=1,
             exit_behavior="continue",
         ),
@@ -150,6 +139,7 @@ async def call_finance_agent(query: str) -> str:
         "description": f"Financial data: {query[:50]}...",
     }
     return content, artifact
+
 
 @tool(
     "microsoft_office_operations",
@@ -199,28 +189,6 @@ async def call_plotting_agent(query: str) -> str:
 
 
 @tool(
-    "powerpoint_agent",
-    description=(
-        "Use this tool for creating PowerPoint presentations with custom designs and layouts. "
-        "It can generate professional presentations with multiple slides, custom formatting, "
-        "shapes, images, tables, and charts using python-pptx library. "
-        "Input must be a natural language request describing the presentation to create "
-        "(for example, 'create a 10-slide presentation about artificial intelligence with images and charts')."
-    ),
-)
-async def call_powerpoint_agent(query: str) -> str:
-    """Route PowerPoint presentation creation requests to the PowerPoint agent.
-
-    Args:
-        query: Natural language description of the PowerPoint presentation to create.
-    """
-    result = await powerpoint_agent.ainvoke(
-        {"messages": [{"role": "user", "content": query}]}
-    )
-    return result["messages"][-1].content
-
-
-@tool(
     "tcmb_economic_data",
     description=(
         "Use this tool to retrieve and analyze Turkish Central Bank (TCMB) economic data "
@@ -232,11 +200,11 @@ async def call_powerpoint_agent(query: str) -> str:
         "(for example, 'monthly CPI inflation and policy rate for the last five years')."
         "Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends."
     ),
-   response_format="content_and_artifact",
+    response_format="content_and_artifact",
 )
 async def call_tcmb_agent(query: str):
     """Route Turkish economic data requests to the TCMB specialist agent.
-      
+
     Args:
         query: Natural language request describing the TCMB/EVDS data to retrieve or analyze.
     """
@@ -250,11 +218,11 @@ async def call_tcmb_agent(query: str):
     }
     return content, artifact
 
+
 # List of subagent tools for the main agent
 main_agent_subagents = [
     call_finance_agent,
     call_office_agent,
     call_plotting_agent,
-    call_powerpoint_agent,
     call_tcmb_agent,
 ]
