@@ -62,249 +62,249 @@ class UIComponents {
       window.languageService.updatePageTexts();
     }
   }
-setupInputResize() {
+  setupInputResize() {
     const textarea = document.getElementById('chat-input');
     if (!textarea) return;
 
     const adjustHeight = () => {
-        // 1. Önce yüksekliği "tek satır" boyutuna (24px) sabitle.
-        // 'auto' kullanmak bazen titremeye veya yanlış hesaplamaya (48px'e atlamaya) neden olur.
-        textarea.style.height = '24px';
+      // 1. Önce yüksekliği "tek satır" boyutuna (24px) sabitle.
+      // 'auto' kullanmak bazen titremeye veya yanlış hesaplamaya (48px'e atlamaya) neden olur.
+      textarea.style.height = '24px';
 
-        // 2. Şimdi içeriğin gerçekte ne kadar yer kapladığını ölç
-        let newHeight = textarea.scrollHeight;
+      // 2. Şimdi içeriğin gerçekte ne kadar yer kapladığını ölç
+      let newHeight = textarea.scrollHeight;
 
-        // 3. Eğer scrollHeight 24px'ten büyükse (yani yazı 2. satıra taştıysa) büyüt
-        // (Kırılganlık payı için > 24 yerine > 25 diyebiliriz ama > 24 genelde yeterlidir)
-        if (newHeight > 24) {
-            
-            if (newHeight > 96) {
-                textarea.style.height = '96px';
-                textarea.style.overflowY = 'auto';
-            } else {
-                textarea.style.height = newHeight + 'px';
-                textarea.style.overflowY = 'hidden';
-            }
-            
+      // 3. Eğer scrollHeight 24px'ten büyükse (yani yazı 2. satıra taştıysa) büyüt
+      // (Kırılganlık payı için > 24 yerine > 25 diyebiliriz ama > 24 genelde yeterlidir)
+      if (newHeight > 24) {
+
+        if (newHeight > 96) {
+          textarea.style.height = '96px';
+          textarea.style.overflowY = 'auto';
         } else {
-            // Eğer yazı tek satıra sığıyorsa, 24px olarak kalsın
-            // (Yukarıda zaten 24px'e eşitlemiştik, burada overflow'u gizlemek yeterli)
-            textarea.style.overflowY = 'hidden';
+          textarea.style.height = newHeight + 'px';
+          textarea.style.overflowY = 'hidden';
         }
+
+      } else {
+        // Eğer yazı tek satıra sığıyorsa, 24px olarak kalsın
+        // (Yukarıda zaten 24px'e eşitlemiştik, burada overflow'u gizlemek yeterli)
+        textarea.style.overflowY = 'hidden';
+      }
     };
 
     textarea.addEventListener('input', adjustHeight);
 
     // Başlangıçta bir kez çalıştır
     adjustHeight();
-}
-
-
-initSidebar() {
-  const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
-  const collapsible = document.querySelector('.nav-item.collapsible');
-  const subMenu = document.querySelector('.sub-menu');
-  const subItems = document.querySelectorAll('.sub-item');
-  const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
-  const sidebar = document.querySelector('.sidebar');
-
-  // --- 1. Temizlik ve Başlangıç Ayarları ---
-  // İlk yüklemede tüm aktiflikleri temizle
-  navItems.forEach(item => item.classList.remove('active'));
-  subItems.forEach(item => item.classList.remove('active'));
-  if (collapsible) collapsible.classList.remove('active');
-  balanceSections.forEach(sec => sec.classList.remove('active'));
-
-  // Sayfa açıldığında chat nav varsayılan aktif olsun
-  const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
-  if (chatNav) {
-    chatNav.classList.add('active');
-    const chatTab = document.getElementById('chat-tab');
-    if (chatTab) chatTab.classList.add('active');
   }
 
-  // --- 2. Normal Nav Item Tıklama ---
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      // Temizlik
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      
-      // Collapsible'ın aktifliğini kaldır
-      if (collapsible) collapsible.classList.remove('active');
-      
-      balanceSections.forEach(sec => sec.classList.remove('active'));
 
-      item.classList.add('active');
+  initSidebar() {
+    const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
+    const collapsible = document.querySelector('.nav-item.collapsible');
+    const subMenu = document.querySelector('.sub-menu');
+    const subItems = document.querySelectorAll('.sub-item');
+    const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
+    const sidebar = document.querySelector('.sidebar');
 
-      // Sidebar açıkken subMenu kapat (başka menüye geçildi)
-      if (subMenu && !sidebar.classList.contains('collapsed')) {
-        subMenu.classList.remove('open');
-        subMenu.style.maxHeight = null;
-      }
+    // --- 1. Temizlik ve Başlangıç Ayarları ---
+    // İlk yüklemede tüm aktiflikleri temizle
+    navItems.forEach(item => item.classList.remove('active'));
+    subItems.forEach(item => item.classList.remove('active'));
+    if (collapsible) collapsible.classList.remove('active');
+    balanceSections.forEach(sec => sec.classList.remove('active'));
 
-      // Tab göster
-      const tabId = item.dataset.tab + '-tab';
-      const tab = document.getElementById(tabId);
-      if (tab) tab.classList.add('active');
-    });
-  });
+    // Sayfa açıldığında chat nav varsayılan aktif olsun
+    const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
+    if (chatNav) {
+      chatNav.classList.add('active');
+      const chatTab = document.getElementById('chat-tab');
+      if (chatTab) chatTab.classList.add('active');
+    }
 
-  // --- 3. Collapsible (Finansal Analiz) Mantığı ---
-  if (collapsible && subMenu) {
-    
-    // A) TIKLAMA (CLICK) İŞLEMİ
-    // A) TIKLAMA (CLICK) İŞLEMİ
-    collapsible.addEventListener('click', () => {
-      const isCollapsed = sidebar.classList.contains('collapsed');
+    // --- 2. Normal Nav Item Tıklama ---
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        // Temizlik
+        navItems.forEach(i => i.classList.remove('active'));
+        subItems.forEach(i => i.classList.remove('active'));
 
-      // Diğer her şeyi temizle
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      
-      // Ana başlığı aktif yap
-      collapsible.classList.add('active');
+        // Collapsible'ın aktifliğini kaldır
+        if (collapsible) collapsible.classList.remove('active');
 
-      if (!isCollapsed) {
-        // Sidebar AÇIK
-        subMenu.classList.toggle('open');
-        subMenu.style.maxHeight = subMenu.classList.contains('open')
-          ? subMenu.scrollHeight + 'px'
-          : null;
-      } else {
-        // Sidebar KAPALI
-        this.setupFloatingSubmenu(collapsible, subMenu);
-      }
-      
-      // Tabı göster
-      const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
-      const tab = document.getElementById(tabId);
-      if (tab) {
-         balanceSections.forEach(sec => sec.classList.remove('active'));
-         tab.classList.add('active');
-      }
+        balanceSections.forEach(sec => sec.classList.remove('active'));
+
+        item.classList.add('active');
+
+        // Sidebar açıkken subMenu kapat (başka menüye geçildi)
+        if (subMenu && !sidebar.classList.contains('collapsed')) {
+          subMenu.classList.remove('open');
+          subMenu.style.maxHeight = null;
+        }
+
+        // Tab göster
+        const tabId = item.dataset.tab + '-tab';
+        const tab = document.getElementById(tabId);
+        if (tab) tab.classList.add('active');
+      });
     });
 
-    // B) HOVER (MOUSEENTER) İŞLEMİ
-    collapsible.addEventListener('mouseenter', () => {
-      // Sadece sidebar KAPALIYKEN hover çalışsın
-      if (sidebar.classList.contains('collapsed')) {
-        this.setupFloatingSubmenu(collapsible, subMenu);
-      }
-    });
+    // --- 3. Collapsible (Finansal Analiz) Mantığı ---
+    if (collapsible && subMenu) {
 
-    // C) MOUSELEAVE İŞLEMİ
-    collapsible.addEventListener('mouseleave', () => {
-      if (sidebar.classList.contains('collapsed')) {
-        // Kullanıcı mouse'u ikondan menüye kaydırırken menü kapanmasın diye gecikme
-        setTimeout(() => {
+      // A) TIKLAMA (CLICK) İŞLEMİ
+      // A) TIKLAMA (CLICK) İŞLEMİ
+      collapsible.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        // Diğer her şeyi temizle
+        navItems.forEach(i => i.classList.remove('active'));
+        subItems.forEach(i => i.classList.remove('active'));
+
+        // Ana başlığı aktif yap
+        collapsible.classList.add('active');
+
+        if (!isCollapsed) {
+          // Sidebar AÇIK
+          subMenu.classList.toggle('open');
+          subMenu.style.maxHeight = subMenu.classList.contains('open')
+            ? subMenu.scrollHeight + 'px'
+            : null;
+        } else {
+          // Sidebar KAPALI
+          this.setupFloatingSubmenu(collapsible, subMenu);
+        }
+
+        // Tabı göster
+        const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
+        const tab = document.getElementById(tabId);
+        if (tab) {
+          balanceSections.forEach(sec => sec.classList.remove('active'));
+          tab.classList.add('active');
+        }
+      });
+
+      // B) HOVER (MOUSEENTER) İŞLEMİ
+      collapsible.addEventListener('mouseenter', () => {
+        // Sadece sidebar KAPALIYKEN hover çalışsın
+        if (sidebar.classList.contains('collapsed')) {
+          this.setupFloatingSubmenu(collapsible, subMenu);
+        }
+      });
+
+      // C) MOUSELEAVE İŞLEMİ
+      collapsible.addEventListener('mouseleave', () => {
+        if (sidebar.classList.contains('collapsed')) {
+          // Kullanıcı mouse'u ikondan menüye kaydırırken menü kapanmasın diye gecikme
+          setTimeout(() => {
+            const floatingMenu = document.querySelector('.floating-sub-menu');
+            // Eğer mouse şu an floating menünün üzerinde değilse kapat
+            if (floatingMenu && !floatingMenu.matches(':hover')) {
+              floatingMenu.remove();
+            }
+          }, 100);
+        }
+      });
+    }
+
+    // --- 4. Sub-item (Alt Menü) Tıklama ---
+    subItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation(); // Üst menü tıklamasını engelle
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        // 1. Tüm aktiflikleri temizle
+        navItems.forEach(i => i.classList.remove('active'));
+        subItems.forEach(i => i.classList.remove('active'));
+        balanceSections.forEach(sec => sec.classList.remove('active'));
+
+        // 2. ÖNEMLİ DEĞİŞİKLİK: Üst menünün aktifliğini kaldır
+        if (collapsible) collapsible.classList.remove('active');
+
+        // 3. Sadece tıklanan alt öğeyi aktif yap
+        item.classList.add('active');
+
+        // 4. İlgili Tabı aç
+        const sectionId = item.dataset.page.replace('#', '') + '-tab';
+        const section = document.getElementById(sectionId);
+        if (section) section.classList.add('active');
+
+        // Sidebar kapalıysa floating menüyü kapat
+        if (isCollapsed) {
           const floatingMenu = document.querySelector('.floating-sub-menu');
-          // Eğer mouse şu an floating menünün üzerinde değilse kapat
-          if (floatingMenu && !floatingMenu.matches(':hover')) {
-            floatingMenu.remove();
-          }
-        }, 100);
-      }
+          if (floatingMenu) floatingMenu.remove();
+        }
+
+        location.hash = item.dataset.page;
+      });
     });
   }
 
- // --- 4. Sub-item (Alt Menü) Tıklama ---
-  subItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation(); // Üst menü tıklamasını engelle
-      const isCollapsed = sidebar.classList.contains('collapsed');
+  // --- Floating Submenu Helper (Sidebar Kapalıyken) ---
+  setupFloatingSubmenu(collapsible, subMenu) {
+    const sidebar = document.querySelector('.sidebar');
+    // Sadece sidebar kapalıysa çalışmalı
+    if (!sidebar.classList.contains('collapsed')) return;
 
-      // 1. Tüm aktiflikleri temizle
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      balanceSections.forEach(sec => sec.classList.remove('active'));
-      
-      // 2. ÖNEMLİ DEĞİŞİKLİK: Üst menünün aktifliğini kaldır
-      if (collapsible) collapsible.classList.remove('active');
+    // Önce varsa eski floating menüyü temizle
+    const existing = document.querySelector('.floating-sub-menu');
+    if (existing) existing.remove();
 
-      // 3. Sadece tıklanan alt öğeyi aktif yap
-      item.classList.add('active');
+    // Yeni floating submenu klonla
+    const clone = subMenu.cloneNode(true);
+    clone.classList.add('floating-sub-menu');
 
-      // 4. İlgili Tabı aç
-      const sectionId = item.dataset.page.replace('#', '') + '-tab';
-      const section = document.getElementById(sectionId);
-      if (section) section.classList.add('active');
+    // Stil Ayarları (JS ile zorunlu stiller)
+    clone.style.position = 'absolute';
+    clone.style.zIndex = '4000';
+    clone.style.display = 'flex';
+    clone.style.flexDirection = 'column';
+    clone.style.maxHeight = '500px';
+    clone.style.minWidth = '180px';
+    clone.style.padding = '0px';
+    clone.style.backgroundColor = 'var(--bg-secondary)'; // Temanızdaki değişken
+    clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Gölge
+    clone.style.borderRadius = '8px';
+    clone.style.border = '1px solid var(--border-color)';
 
-      // Sidebar kapalıysa floating menüyü kapat
-      if (isCollapsed) {
-         const floatingMenu = document.querySelector('.floating-sub-menu');
-         if(floatingMenu) floatingMenu.remove();
-      }
+    // KONUM HESAPLAMASI (getBoundingClientRect ile ekran koordinatları)
+    const rect = collapsible.getBoundingClientRect();
 
-      location.hash = item.dataset.page;
-    });
-  });
-}
+    // Sidebar'ın sağına hizala
+    clone.style.top = rect.top + 'px';
+    clone.style.left = (rect.right + 10) + 'px'; // +10px boşluk
 
-// --- Floating Submenu Helper (Sidebar Kapalıyken) ---
-setupFloatingSubmenu(collapsible, subMenu) {
-  const sidebar = document.querySelector('.sidebar');
-  // Sadece sidebar kapalıysa çalışmalı
-  if (!sidebar.classList.contains('collapsed')) return;
+    // Body'ye ekle (Sidebar overflow'undan kurtulmak için)
+    document.body.appendChild(clone);
 
-  // Önce varsa eski floating menüyü temizle
-  const existing = document.querySelector('.floating-sub-menu');
-  if (existing) existing.remove();
+    // --- Floating Menü Olayları ---
 
-  // Yeni floating submenu klonla
-  const clone = subMenu.cloneNode(true);
-  clone.classList.add('floating-sub-menu');
-  
-  // Stil Ayarları (JS ile zorunlu stiller)
-  clone.style.position = 'absolute';
-  clone.style.zIndex = '4000';
-  clone.style.display = 'flex';
-  clone.style.flexDirection = 'column';
-  clone.style.maxHeight = '500px';
-  clone.style.minWidth = '180px';
-  clone.style.padding = '0px';
-  clone.style.backgroundColor = 'var(--bg-secondary)'; // Temanızdaki değişken
-  clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Gölge
-  clone.style.borderRadius = '8px';
-  clone.style.border = '1px solid var(--border-color)';
-
-  // KONUM HESAPLAMASI (getBoundingClientRect ile ekran koordinatları)
-  const rect = collapsible.getBoundingClientRect();
-  
-  // Sidebar'ın sağına hizala
-  clone.style.top = rect.top + 'px';
-  clone.style.left = (rect.right + 10) + 'px'; // +10px boşluk
-
-  // Body'ye ekle (Sidebar overflow'undan kurtulmak için)
-  document.body.appendChild(clone);
-
-  // --- Floating Menü Olayları ---
-
-  // 1. Mouse menüden çıkınca kapat
-  clone.addEventListener('mouseleave', () => {
-    clone.remove();
-  });
-
-  // 2. Alt öğelere tıklanınca orijinal mantığı çalıştır
-  clone.querySelectorAll('.sub-item').forEach(item => {
-    item.addEventListener('click', () => {
-      // Orijinal öğeyi bul ve tıkla (Bütün mantık initSidebar'da tek yerde)
-      const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
-      if (originalItem) originalItem.click();
-      
+    // 1. Mouse menüden çıkınca kapat
+    clone.addEventListener('mouseleave', () => {
       clone.remove();
     });
-  });
-  
-  // 3. Dışarı tıklayınca kapat (Güvenlik önlemi)
-  const closeMenu = (e) => {
+
+    // 2. Alt öğelere tıklanınca orijinal mantığı çalıştır
+    clone.querySelectorAll('.sub-item').forEach(item => {
+      item.addEventListener('click', () => {
+        // Orijinal öğeyi bul ve tıkla (Bütün mantık initSidebar'da tek yerde)
+        const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
+        if (originalItem) originalItem.click();
+
+        clone.remove();
+      });
+    });
+
+    // 3. Dışarı tıklayınca kapat (Güvenlik önlemi)
+    const closeMenu = (e) => {
       if (!clone.contains(e.target) && !collapsible.contains(e.target)) {
-          clone.remove();
-          document.removeEventListener('click', closeMenu);
+        clone.remove();
+        document.removeEventListener('click', closeMenu);
       }
-  };
-  setTimeout(() => document.addEventListener('click', closeMenu), 0);
-}
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
 
 
 
@@ -317,7 +317,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
 
 
- setupSidebarToggle() {
+  setupSidebarToggle() {
     const sidebar = document.querySelector('.sidebar');
     const toggleBtn = document.querySelector('.toggle-btn');
     // Sub-menu ve collapsible elemanlarını da seçelim
@@ -329,46 +329,46 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // LocalStorage kontrolü (Mevcut kodun)
     const savedState = localStorage.getItem('sidebarState');
     if (savedState === 'expanded') {
-        sidebar.classList.add('expanded');
-        sidebar.classList.remove('collapsed');
+      sidebar.classList.add('expanded');
+      sidebar.classList.remove('collapsed');
     } else {
-        sidebar.classList.add('collapsed');
-        sidebar.classList.remove('expanded');
+      sidebar.classList.add('collapsed');
+      sidebar.classList.remove('expanded');
     }
 
     toggleBtn.addEventListener('click', () => {
-        const isCollapsed = sidebar.classList.contains('collapsed');
+      const isCollapsed = sidebar.classList.contains('collapsed');
 
-        if (isCollapsed) {
-            // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
-            sidebar.classList.remove('collapsed');
-            sidebar.classList.add('expanded');
-            localStorage.setItem('sidebarState', 'expanded');
-            
-            // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
-            // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
-            
-        } else {
-            // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
-            sidebar.classList.remove('expanded');
-            sidebar.classList.add('collapsed');
-            localStorage.setItem('sidebarState', 'collapsed');
+      if (isCollapsed) {
+        // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
+        sidebar.classList.remove('collapsed');
+        sidebar.classList.add('expanded');
+        localStorage.setItem('sidebarState', 'expanded');
 
-            // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
-            // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
-            if (subMenu && subMenu.classList.contains('open')) {
-                subMenu.classList.remove('open');
-                subMenu.style.maxHeight = null; // Inline stili temizle
-            }
+        // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
+        // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
 
-            // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
-            // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
-            if (collapsible) {
-                collapsible.classList.remove('active');
-            }
+      } else {
+        // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
+        sidebar.classList.remove('expanded');
+        sidebar.classList.add('collapsed');
+        localStorage.setItem('sidebarState', 'collapsed');
+
+        // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
+        // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
+        if (subMenu && subMenu.classList.contains('open')) {
+          subMenu.classList.remove('open');
+          subMenu.style.maxHeight = null; // Inline stili temizle
         }
+
+        // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
+        // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
+        if (collapsible) {
+          collapsible.classList.remove('active');
+        }
+      }
     });
-}
+  }
 
   // ---------------- Profile Modal ----------------
   loadProfiles() {
@@ -619,6 +619,21 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   setupEventListeners() {
+    // Listen for chart resize messages from plotting.py generated iframes
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.height) {
+        const iframes = document.querySelectorAll("iframe.message-chart, iframe.chart-fullscreen-frame");
+        iframes.forEach((iframe) => {
+          if (iframe.contentWindow === event.source) {
+            const { height, width } = event.data;
+            if (height) iframe.style.height = height + "px";
+            // Width is also received as requested: width
+          }
+        });
+      }
+    });
+
+
     // Navigation
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.addEventListener("click", (e) => this.handleNavigation(e));
@@ -1585,7 +1600,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (filesToUpload.length > 0) {
       // Capture the current photo-less mode state for these files
       const photoLessModeForThisUpload = this.photoLessMode;
-      
+
       // Show uploading status for each file
       for (const file of filesToUpload) {
         this.addFileStatusMessage(file.name, "uploading");
@@ -1612,7 +1627,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
             },
             progressCallback
           );
-          
+
           if (response && response.success) {
             uploadedFiles.push({
               name: file.name,
@@ -1631,7 +1646,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
           this.updateFileStatusMessage(file.name, "error", error?.message || "Upload failed");
         }
       }
-      
+
       // Reset photo-less mode after uploads complete
       if (this.photoLessMode) {
         this.photoLessMode = false;
@@ -1837,10 +1852,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
       // Build sources display
       let sourcesHTML = "";
       const hasSources = sources && sources.length > 0;
-      
+
       if (hasSources) {
         const itemsList = [];
-        
+
         // Add sources with file icon, web link icon, or API icon
         if (hasSources) {
           sources.forEach(source => {
@@ -1848,7 +1863,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
             const linkMatch = source.match(/^(.+)\|(.+)$/);
             if (linkMatch) {
               const [, name, url] = linkMatch;
-              
+
               // Check if it's an API source
               if (url.startsWith("api://")) {
                 // API source - show with database/API icon
@@ -1874,10 +1889,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 } catch (e) {
                   domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
                 }
-                
+
                 // Shorten title (max 60 chars)
                 const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
-                
+
                 itemsList.push(`
                   <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
                     <div class="source-icon">
@@ -1908,10 +1923,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
             }
           });
         }
-        
+
         const totalCount = sources.length;
         const labelText = `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}`;
-        
+
         sourcesHTML = `
           <div class="sources-container">
             <div class="sources-header">
@@ -1932,20 +1947,20 @@ setupFloatingSubmenu(collapsible, subMenu) {
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
-      
+
       // Add click event listener for sources toggle if sources exist
       if (sources && sources.length > 0) {
         const sourcesHeader = messageDiv.querySelector('.sources-header');
         if (sourcesHeader) {
-          sourcesHeader.addEventListener('click', function() {
+          sourcesHeader.addEventListener('click', function () {
             this.parentElement.classList.toggle('expanded');
           });
         }
-        
+
         // Handle source item clicks
         const sourceWebItems = messageDiv.querySelectorAll('.source-item-web');
         sourceWebItems.forEach(item => {
-          item.addEventListener('click', function(e) {
+          item.addEventListener('click', function (e) {
             e.stopPropagation();
             const url = this.dataset.url;
             if (url) {
@@ -1972,11 +1987,11 @@ setupFloatingSubmenu(collapsible, subMenu) {
             }
           });
         });
-        
+
         // Handle file source items (clickable to open files)
         const sourceFileItems = messageDiv.querySelectorAll('.source-item-file');
         sourceFileItems.forEach(item => {
-          item.addEventListener('click', async function(e) {
+          item.addEventListener('click', async function (e) {
             e.stopPropagation();
             const fileName = this.dataset.filename;
             if (fileName) {
@@ -2085,7 +2100,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
         chartHeader.appendChild(fullscreenBtn);
         chartWrapper.appendChild(chartHeader);
         chartWrapper.appendChild(chartFrame);
-        chartWrapper.appendChild(caption);
         chartsContainer.appendChild(chartWrapper);
       });
 
@@ -2430,7 +2444,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Get file extension and type info
     const fileExtension = file.filename.split(".").pop().toLowerCase();
     const fileName = file.filename;
-    
+
     // Determine file type and icon
     let iconClass = "fas fa-file";
     let fileTypeLabel = fileExtension.toUpperCase();
@@ -3309,7 +3323,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Store reference for updates
     messageElement.dataset.fileName = fileName;
-    
+
     // Return the element for progress updates
     return messageElement;
   }
