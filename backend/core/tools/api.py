@@ -6,7 +6,7 @@ from backend.shared.constants import tavily_client, WOLFRAM_APP_ID
 
 @tool(parse_docstring=True, response_format="content_and_artifact")
 def wolfram_alpha_query(query: str):
-    """Perform mathematical calculations, scientific computations, and get factual data using Wolfram Alpha.
+    """Perform mathematical calculations, scientific computations using Wolfram Alpha.
 
     Args:
         query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
