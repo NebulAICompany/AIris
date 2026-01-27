@@ -73,29 +73,57 @@ def create_custom_chart_from_code(code: str) -> dict:
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chart Preview</title>
+
     <style>
+        * {{
+            box-sizing: border-box;
+        }}
+
         body {{
             margin: 0;
-            padding: 20px;
+            padding: 32px;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background: white;
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         Roboto, Helvetica, Arial, sans-serif;
         }}
-        img {{
-            max-width: 100%;
+
+        .chart-wrapper {{
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 1400px;
+            width: 100%;
+        }}
+
+        .chart-wrapper img {{
+            width: 100%;
             height: auto;
+            border-radius: 12px;
             display: block;
-            margin: 0 auto;
+        }}
+
+        .chart-title {{
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #111827;
+            text-align: center;
         }}
     </style>
 </head>
+
 <body>
-    <img src="data:image/png;base64,{png_base64}" alt="Chart" />
+    <div class="chart-wrapper">
+        <img src="data:image/png;base64,{png_base64}" alt="Chart Image" />
+    </div>
 </body>
 </html>
 """
@@ -176,34 +204,37 @@ def create_financial_stock_chart(
         # Modern color palette
         COLORS = {
             "professional": {
-                "primary": ["#2E86C1", "#E74C3C", "#F39C12", "#8E44AD"],
-                "secondary": ["#5DADE2", "#EC7063", "#F7C71A", "#BB8FCE"],
+                "primary": ["#2962FF", "#00C853", "#FF6D00", "#6200EA"], # Distinct TradingView-style Blue
+                "secondary": ["#82B1FF", "#B9F6CA", "#FFD180", "#EA80FC"],
                 "background": "#FFFFFF",
-                "grid": "#F8F9FA",
-                "text": "#2C3E50",
-                "candlestick_up": "#00C851",
-                "candlestick_down": "#FF4444",
-                "volume": "rgba(70, 130, 180, 0.5)",
+                "grid": "#F2F4F7",
+                "text": "#101828", # Slate 900
+                "candlestick_up": "#089981", # TradingView Green
+                "candlestick_down": "#F23645", # TradingView Red
+                "volume": "rgba(41, 98, 255, 0.15)",
+                "fill_opacity": 0.1,
             },
             "dark": {
-                "primary": ["#00D4AA", "#FF6B6B", "#4ECDC4", "#45B7D1"],
-                "secondary": ["#96CEB4", "#FECA57", "#FF9FF3", "#54A0FF"],
-                "background": "#1E1E1E",
-                "grid": "#2D2D2D",
-                "text": "#FFFFFF",
-                "candlestick_up": "#00D4AA",
-                "candlestick_down": "#FF6B6B",
-                "volume": "rgba(0, 212, 170, 0.3)",
+                "primary": ["#2962FF", "#00BFA5", "#FFAB00", "#D500F9"],
+                "secondary": ["#2979FF", "#64FFDA", "#FFD740", "#E040FB"],
+                "background": "#131722", # TradingView Dark Background
+                "grid": "#2A2E39", # Subtle Dark Grid
+                "text": "#D1D4DC",
+                "candlestick_up": "#089981",
+                "candlestick_down": "#F23645",
+                "volume": "rgba(41, 98, 255, 0.15)",
+                "fill_opacity": 0.15,
             },
             "minimal": {
-                "primary": ["#6C5CE7", "#00B894", "#FDCB6E", "#E17055"],
-                "secondary": ["#A29BFE", "#00CEC9", "#FDCB6E", "#FD79A8"],
-                "background": "#FDFDFD",
-                "grid": "#F1F2F6",
-                "text": "#2D3436",
-                "candlestick_up": "#00B894",
-                "candlestick_down": "#E17055",
-                "volume": "rgba(108, 92, 231, 0.4)",
+                "primary": ["#111827", "#4B5563", "#9CA3AF", "#E5E7EB"],
+                "secondary": ["#374151", "#6B7280", "#D1D5DB", "#F3F4F6"],
+                "background": "#FFFFFF",
+                "grid": "transparent",
+                "text": "#111827",
+                "candlestick_up": "#111827",
+                "candlestick_down": "#9CA3AF",
+                "volume": "rgba(17, 24, 39, 0.05)",
+                "fill_opacity": 0.05,
             },
         }
 
@@ -368,7 +399,7 @@ def create_financial_stock_chart(
             rows=total_rows,
             cols=1,
             shared_xaxes=True,
-            vertical_spacing=0.015,  # Reduced spacing for more chart area
+            vertical_spacing=0.06,  # Reduced spacing for more chart area
             subplot_titles=subplot_titles,
             specs=specs,
             row_heights=row_heights,
@@ -443,7 +474,7 @@ def create_financial_stock_chart(
                         fill="tonexty",
                         name=f"{symbol}",
                         line=dict(color=color, width=2),
-                        fillcolor=f"rgba{tuple(list(bytes.fromhex(color.lstrip('#'))) + [0.1])}",
+                        fillcolor=f"rgba{tuple(list(bytes.fromhex(color.lstrip('#'))) + [color_scheme.get('fill_opacity', 0.1)])}",
                         showlegend=True,
                     ),
                     row=row,
@@ -685,69 +716,128 @@ def create_financial_stock_chart(
                     )
 
         # Update layout with modern styling
+
         fig.update_layout(
             title=dict(
-                text=f"Professional Stock Analysis: {', '.join(successful_symbols)}",
-                x=0.5,
+                text=f"{', '.join(successful_symbols)} Analysis",
+                x=0.01,
+                y=0.99,
+                xanchor="left",
+                yanchor="top",
                 font=dict(
-                    size=24, color=color_scheme["text"], family="Arial, sans-serif"
+                    size=26,
+                    color=color_scheme["text"],
+                    family='Inter, Segoe UI, Roboto, Arial, sans-serif',
+                    weight="bold",
                 ),
+                pad=dict(t=12, b=8),
             ),
             template="plotly_white" if layout_style != "dark" else "plotly_dark",
             plot_bgcolor=color_scheme["background"],
             paper_bgcolor=color_scheme["background"],
-            font=dict(color=color_scheme["text"], family="Arial, sans-serif"),
-            height=300
-            + (450 * len(successful_symbols))
-            + (200 * extra_rows),  # Increased height
-            margin=dict(l=60, r=60, t=120, b=100),  # Optimized margins
+            font=dict(
+                color=color_scheme["text"],
+                family='Inter, Segoe UI, Roboto, Arial, sans-serif',
+                size=14,
+            ),
+            height=340 + (420 * len(successful_symbols)) + (200 * extra_rows),
+            margin=dict(l=32, r=32, t=80, b=48, pad=8),
             hovermode="x unified",
+            hoverlabel=dict(
+                bgcolor="#22223B" if layout_style == "dark" else "#FFFFFF",
+                bordercolor="#2962FF",
+                font_size=15,
+                font_family='Inter, Segoe UI, Roboto, Arial, sans-serif',
+                font_color="#2962FF",
+                namelength=-1,
+            ),
+            showlegend=True,
             legend=dict(
                 orientation="h",
-                yanchor="top",
-                y=-0.05,
-                xanchor="center",
-                x=0.5,
-                bgcolor="rgba(255,255,255,0.8)",
-                bordercolor="rgba(0,0,0,0.2)",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                bgcolor="rgba(255,255,255,0.85)" if layout_style != "dark" else "rgba(19,23,34,0.85)",
+                bordercolor="#E5E7EB",
                 borderwidth=1,
+                font=dict(size=13, color=color_scheme["text"]),
+                itemclick="toggleothers",
+                itemdoubleclick="toggle",
+                itemsizing="constant",
+                title_text="Seriler",
+                title_font=dict(size=14, color="#2962FF"),
+                groupclick="toggleitem",
             ),
             xaxis=dict(
                 rangeslider=dict(visible=False),
                 rangeselector=dict(
-                    buttons=list(
-                        [
-                            dict(count=7, label="7D", step="day", stepmode="backward"),
-                            dict(
-                                count=30, label="30D", step="day", stepmode="backward"
-                            ),
-                            dict(
-                                count=60, label="60D", step="day", stepmode="backward"
-                            ),
-                            dict(
-                                count=90, label="90D", step="day", stepmode="backward"
-                            ),
-                            dict(step="all", label="ALL"),
-                        ]
-                    ),
-                    bgcolor=color_scheme["grid"],
+                    buttons=[
+                        dict(count=7, label="1Hf", step="day", stepmode="backward"),
+                        dict(count=1, label="1Ay", step="month", stepmode="backward"),
+                        dict(count=3, label="3Ay", step="month", stepmode="backward"),
+                        dict(count=6, label="6Ay", step="month", stepmode="backward"),
+                        dict(count=1, label="YTD", step="year", stepmode="todate"),
+                        dict(step="all", label="Tümü"),
+                    ],
+                    bgcolor=color_scheme.get("grid", "#f8f9fa"),
                     activecolor=color_scheme["primary"][0],
+                    font=dict(size=13),
+                    y=1.0,
+                    x=0.25,
+                    xanchor="left",
+                    bordercolor="rgba(0,0,0,0)",
+                    borderwidth=0,
                 ),
+                tickfont=dict(size=13, color=color_scheme.get("secondary", ["#888"])[0]),
+                showspikes=True,
+                spikemode="across+toaxis",
+                spikedash="solid",
+                spikecolor="#2962FF",
+                spikethickness=2,
+                showline=True,
+                linecolor="#2962FF",
+                mirror=True,
+                showgrid=True,
+                gridcolor=color_scheme["grid"],
+                gridwidth=1,
             ),
         )
 
         # Style all subplots
         fig.update_xaxes(
             gridcolor=color_scheme["grid"],
+            gridwidth=1.2,
             showline=True,
-            linecolor=color_scheme["grid"],
+            linecolor="#2962FF",
+            linewidth=2,
+            zeroline=False,
             mirror=True,
+            showspikes=True,
+            spikethickness=2,
+            spikedash="solid",
+            spikecolor="#2962FF",
+            spikemode="across+toaxis",
+            ticks="outside",
+            tickfont=dict(size=13, color=color_scheme.get("secondary", ["#888"])[0]),
+            title_font=dict(size=15, color="#2962FF"),
         )
         fig.update_yaxes(
             gridcolor=color_scheme["grid"],
+            gridwidth=1.2,
             showline=True,
-            linecolor=color_scheme["grid"],
+            linecolor="#2962FF",
+            linewidth=2,
+            zeroline=False,
             mirror=True,
+            tickfont=dict(size=13, color=color_scheme.get("secondary", ["#888"])[0]),
+            ticks="outside",
+            showspikes=True,
+            spikethickness=2,
+            spikedash="solid",
+            spikecolor="#2962FF",
+            spikemode="across+toaxis",
+            title_font=dict(size=15, color="#2962FF"),
         )
 
         # Generate unique chart ID and save
