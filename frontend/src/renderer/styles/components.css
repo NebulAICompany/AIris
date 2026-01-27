@@ -457,7 +457,6 @@ body.nebula-theme .attachment-action-btn:hover {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  padding: 16px;
   background: linear-gradient(135deg,
       rgba(16, 185, 129, 0.08),
       rgba(34, 197, 94, 0.08));
