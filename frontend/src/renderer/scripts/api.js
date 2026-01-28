@@ -235,6 +235,114 @@ class APIService {
     }
   }
 
+  // Send streaming query to AI system using Server-Sent Events
+  async sendQueryStream(
+    query,
+    webSearchEnabled = false,
+    sessionId = null,
+    selectedFiles = null,
+    callbacks = {}
+  ) {
+    const { onToken, onToolStart, onToolEnd, onDone, onError } = callbacks;
+
+    try {
+      console.log(`[API] Starting streaming query`);
+
+      const response = await fetch(`${this.baseURL}/api/query/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: query.trim(),
+          webSearchEnabled: webSearchEnabled,
+          sessionId: sessionId,
+          selectedFiles: selectedFiles,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE messages
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              switch (data.type) {
+                case "token":
+                  if (onToken) onToken(data.content);
+                  break;
+                case "tool_start":
+                  if (onToolStart) onToolStart(data.tool_name);
+                  break;
+                case "tool_end":
+                  if (onToolEnd) onToolEnd(data.tool_name);
+                  break;
+                case "done":
+                  if (onDone) {
+                    onDone({
+                      images: data.images || [],
+                      charts: data.charts || [],
+                      generatedFiles: data.generatedFiles || [],
+                      sources: data.sources || [],
+                    });
+                  }
+                  break;
+                case "error":
+                  if (onError) onError(data.content);
+                  break;
+              }
+            } catch (parseError) {
+              console.warn("[API] Failed to parse SSE data:", line, parseError);
+            }
+          }
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("[API] Streaming query error:", error);
+
+      let errorMessage = "Beklenmeyen bir hata oluştu";
+
+      if (error.message.includes("fetch") || error.message.includes("bağlan")) {
+        errorMessage =
+          "AI servisine bağlanılamıyor. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
+      } else if (error.message.includes("500")) {
+        errorMessage =
+          "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+      } else {
+        errorMessage = error.message;
+      }
+
+      if (onError) onError(errorMessage);
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
   // Chat Session Management
   async createChatSession() {
     try {

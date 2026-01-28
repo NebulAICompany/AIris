@@ -8872,3 +8872,59 @@ body.nebula-theme .drag-overlay-text h3 {
 .chat-container {
   position: relative;
 }
+
+/* Tool Status Indicator for Streaming Messages */
+.tool-status-indicator {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tool-status-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool-status-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.tool-status-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary, #8b5cf6);
+  animation: toolDotPulse 1.4s infinite ease-in-out;
+}
+
+.tool-status-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.tool-status-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes toolDotPulse {
+  0%, 60%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.tool-status-text {
+  font-weight: 500;
+  color: var(--accent-primary, #8b5cf6);
+}
