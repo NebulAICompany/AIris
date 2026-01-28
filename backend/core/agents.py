@@ -7,6 +7,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
 from langchain.agents.middleware import SummarizationMiddleware
+from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from .checkpointer import get_checkpointer as _get_checkpointer
 from datetime import datetime
 from .tools.api import (
@@ -114,7 +115,8 @@ def create_main_agent(
         middleware=[
             SummarizationMiddleware(
                 model="gpt-4o-mini", trigger=("tokens", 8000), keep=("messages", 5)
-            )
+            ),
+            AnthropicPromptCachingMiddleware(ttl="5m"),
         ],
         system_prompt=agent_instructions,
         checkpointer=_get_checkpointer(),
