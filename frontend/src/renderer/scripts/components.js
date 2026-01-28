@@ -1643,51 +1643,97 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Only send to AI if there's a text message
     if (message) {
-      // Show enhanced typing indicator
+      // Show enhanced typing indicator initially
       this.showEnhancedTypingIndicator(message);
 
+      let streamingStarted = false;
+      let hasError = false;
+
       try {
-        // Send to backend
-        const response = await this.sendQueryWithRetry(
+        // Send streaming query to backend
+        await window.apiService.sendQueryStream(
           message,
           this.webSearchEnabled,
           this.currentSessionId,
-          2,
-          this.selectedFiles.length > 0 ? this.selectedFiles : null
-        );
-
-        if (response) {
-          // Extract response content properly from API response
-          const responseContent =
-            response.response || response.content || response.data?.response;
-          const responseImages = response.images || response.data?.images || [];
-          const responseCharts = response.charts || response.data?.charts || [];
-          const responseGeneratedFiles =
-            response.generatedFiles || response.data?.generatedFiles || [];
-          const responseSources = response.sources || response.data?.sources || [];
-          if (responseContent) {
-            this.addMessageToChat(
-              "assistant",
-              responseContent,
-              responseImages,
-              responseCharts,
-              responseGeneratedFiles,
-              responseSources
-            );
-          } else {
-            console.warn("Empty response received:", response);
-            this.addMessageToChat(
-              "assistant",
-              "Response received but content was empty. Please try again."
-            );
+          this.selectedFiles.length > 0 ? this.selectedFiles : null,
+          {
+            onToken: (token) => {
+              // On first token, hide typing indicator and create streaming message
+              if (!streamingStarted) {
+                this.hideTypingIndicator();
+                this.createStreamingMessage();
+                streamingStarted = true;
+              }
+              this.appendToStreamingMessage(token);
+            },
+            onToolStart: (toolName) => {
+              console.log(`[Chat] Tool started: ${toolName}`);
+              // Update typing indicator or streaming tool status
+              if (!streamingStarted) {
+                this.updateTypingIndicatorMessage(`Using ${toolName}...`);
+              } else {
+                // Show tool status in the streaming message
+                this.showStreamingToolStatus(toolName);
+              }
+            },
+            onToolEnd: (toolName) => {
+              console.log(`[Chat] Tool completed: ${toolName}`);
+              // Hide the tool status indicator
+              if (streamingStarted) {
+                this.hideStreamingToolStatus();
+              }
+            },
+            onDone: (data) => {
+              // Finalize the streaming message with metadata
+              if (streamingStarted) {
+                this.finalizeStreamingMessage(
+                  data.images || [],
+                  data.charts || [],
+                  data.generatedFiles || [],
+                  data.sources || []
+                );
+              } else {
+                // No tokens were streamed, show empty response
+                this.hideTypingIndicator();
+                this.addMessageToChat(
+                  "assistant",
+                  "Response received but content was empty. Please try again."
+                );
+              }
+            },
+            onError: (errorMessage) => {
+              hasError = true;
+              this.hideTypingIndicator();
+              
+              // Remove streaming message if it was created
+              const streamingMsg = document.getElementById("streaming-message");
+              if (streamingMsg) {
+                streamingMsg.remove();
+              }
+              
+              this.addMessageToChat(
+                "error",
+                errorMessage || "Sorry, there was an error processing your request. Please try again."
+              );
+            },
           }
-        }
-      } catch (error) {
-        console.error("Chat error:", error);
-        this.addMessageToChat(
-          "error",
-          "Sorry, there was an error processing your request. Please try again."
         );
+      } catch (error) {
+        console.error("Chat streaming error:", error);
+        if (!hasError) {
+          this.hideTypingIndicator();
+          
+          // Remove streaming message if it was created
+          const streamingMsg = document.getElementById("streaming-message");
+          if (streamingMsg) {
+            streamingMsg.remove();
+          }
+          
+          this.addMessageToChat(
+            "error",
+            "Sorry, there was an error processing your request. Please try again."
+          );
+        }
       } finally {
         this.hideTypingIndicator();
       }
@@ -1788,6 +1834,459 @@ setupFloatingSubmenu(collapsible, subMenu) {
         statusElement.textContent = message;
       }
     }
+  }
+
+  // Create a streaming message element that will be updated with tokens
+  createStreamingMessage() {
+    const chatMessages = document.getElementById("chat-messages");
+    if (!chatMessages) return null;
+
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message assistant-message streaming-message";
+    messageDiv.id = "streaming-message";
+
+    const timestamp = new Date().toLocaleTimeString();
+
+    messageDiv.innerHTML = `
+      <div class="message-content">
+        <div class="sources-placeholder"></div>
+        <div class="tool-status-indicator" style="display: none;">
+          <div class="tool-status-content">
+            <div class="tool-status-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="tool-status-text"></span>
+          </div>
+        </div>
+        <div class="message-text"></div>
+        <div class="message-time">${timestamp}</div>
+      </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    return messageDiv;
+  }
+
+  // Show tool status indicator during streaming
+  showStreamingToolStatus(toolName) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    const toolStatus = messageDiv.querySelector(".tool-status-indicator");
+    if (toolStatus) {
+      const statusText = toolStatus.querySelector(".tool-status-text");
+      if (statusText) {
+        statusText.textContent = `Using ${toolName}...`;
+      }
+      toolStatus.style.display = "flex";
+      
+      // Scroll to bottom
+      const chatMessages = document.getElementById("chat-messages");
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+  }
+
+  // Hide tool status indicator
+  hideStreamingToolStatus() {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    const toolStatus = messageDiv.querySelector(".tool-status-indicator");
+    if (toolStatus) {
+      toolStatus.style.display = "none";
+    }
+  }
+
+  // Append token to streaming message
+  appendToStreamingMessage(token) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    const textElement = messageDiv.querySelector(".message-text");
+    if (textElement) {
+      // Append the raw token to a data attribute for accumulation
+      const currentRaw = textElement.dataset.rawContent || "";
+      const newRaw = currentRaw + token;
+      textElement.dataset.rawContent = newRaw;
+
+      // Process and render the accumulated content
+      let processedContent = newRaw;
+      processedContent = Utils.processMathExpressions(processedContent);
+
+      try {
+        textElement.innerHTML = marked.parse(processedContent);
+      } catch (error) {
+        textElement.innerHTML = Utils.escapeHtml(processedContent);
+      }
+
+      // Scroll to bottom
+      const chatMessages = document.getElementById("chat-messages");
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+  }
+
+  // Finalize streaming message with sources, images, etc.
+  finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = []) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    // Remove streaming class and ID
+    messageDiv.classList.remove("streaming-message");
+    messageDiv.removeAttribute("id");
+
+    // Remove tool status indicator if still visible
+    const toolStatus = messageDiv.querySelector(".tool-status-indicator");
+    if (toolStatus) {
+      toolStatus.remove();
+    }
+
+    // Add sources if available
+    if (sources && sources.length > 0) {
+      const sourcesPlaceholder = messageDiv.querySelector(".sources-placeholder");
+      if (sourcesPlaceholder) {
+        sourcesPlaceholder.innerHTML = this.buildSourcesHTML(sources);
+        
+        // Add click event listener for sources toggle
+        const sourcesHeader = messageDiv.querySelector('.sources-header');
+        if (sourcesHeader) {
+          sourcesHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
+        
+        // Handle source item clicks
+        this.attachSourceClickHandlers(messageDiv);
+      }
+    }
+
+    // Add charts (displayed before text content)
+    if (charts && charts.length > 0) {
+      this.appendChartsToMessage(messageDiv, charts);
+    }
+
+    // Add images and generated files as attachments (displayed after text)
+    if ((images && images.length > 0) || (generatedFiles && generatedFiles.length > 0)) {
+      this.appendAttachmentsToMessage(messageDiv, images, generatedFiles);
+    }
+
+    // Scroll to bottom after adding all content
+    const chatMessages = document.getElementById("chat-messages");
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Apply syntax highlighting
+    messageDiv.querySelectorAll("pre code").forEach((block) => {
+      if (typeof hljs !== "undefined") {
+        hljs.highlightBlock(block);
+      }
+    });
+  }
+
+  // Build sources HTML (extracted from addMessageToChat for reuse)
+  buildSourcesHTML(sources) {
+    const itemsList = [];
+
+    sources.forEach(source => {
+      const linkMatch = source.match(/^(.+)\|(.+)$/);
+      if (linkMatch) {
+        const [, name, url] = linkMatch;
+
+        if (url.startsWith("api://")) {
+          const apiName = url.replace("api://", "");
+          itemsList.push(`
+            <div class="source-item source-item-api" title="${Utils.escapeHtml(name)}">
+              <div class="source-icon">
+                <i class="fas fa-database"></i>
+              </div>
+              <div class="source-content">
+                <div class="source-title">${Utils.escapeHtml(name)}</div>
+                <div class="source-domain">API Data Source</div>
+              </div>
+            </div>
+          `);
+        } else if (url.startsWith("doc://")) {
+          const fileName = url.replace("doc://", "");
+          itemsList.push(`
+            <div class="source-item source-item-file" data-filename="${Utils.escapeHtml(fileName)}" title="Click to open ${Utils.escapeHtml(name)}">
+              <div class="source-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="source-content">
+                <div class="source-title">${Utils.escapeHtml(name)}</div>
+              </div>
+            </div>
+          `);
+        } else {
+          let domain = "";
+          try {
+            const urlObj = new URL(url);
+            domain = urlObj.hostname.replace(/^www\./, "");
+          } catch (e) {
+            domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+          }
+
+          const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
+
+          itemsList.push(`
+            <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
+              <div class="source-icon">
+                <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="source-favicon-fallback" style="display: none;">
+                  <i class="fas fa-globe"></i>
+                </div>
+              </div>
+              <div class="source-content">
+                <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
+                <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+              </div>
+            </div>
+          `);
+        }
+      } else {
+        itemsList.push(`
+          <div class="source-item source-item-file" data-filename="${Utils.escapeHtml(source)}" title="Click to open ${Utils.escapeHtml(source)}">
+            <div class="source-icon">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="source-content">
+              <div class="source-title">${Utils.escapeHtml(source)}</div>
+            </div>
+          </div>
+        `);
+      }
+    });
+
+    const labelText = `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}`;
+
+    return `
+      <div class="sources-container">
+        <div class="sources-header">
+          <span class="sources-label">${labelText}</span>
+          <span class="sources-toggle">></span>
+        </div>
+        <div class="sources-list">
+          <div>${itemsList.join("")}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Attach click handlers to source items
+  attachSourceClickHandlers(messageDiv) {
+    const sourceWebItems = messageDiv.querySelectorAll('.source-item-web');
+    sourceWebItems.forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const url = this.dataset.url;
+        if (url) {
+          if (window.airisAPI && window.airisAPI.openExternalUrl) {
+            window.airisAPI
+              .openExternalUrl(url)
+              .then((result) => {
+                if (!result.success) {
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              })
+              .catch(() => {
+                window.open(url, "_blank", "noopener,noreferrer");
+              });
+          } else {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        }
+      });
+    });
+
+    const sourceFileItems = messageDiv.querySelectorAll('.source-item-file');
+    sourceFileItems.forEach(item => {
+      item.addEventListener('click', async function(e) {
+        e.stopPropagation();
+        const fileName = this.dataset.filename;
+        if (fileName && window.airisAPI && window.airisAPI.openFile) {
+          try {
+            await window.airisAPI.openFile(fileName);
+          } catch (error) {
+            console.error("Error opening file:", error);
+          }
+        }
+      });
+    });
+  }
+
+  // Helper method to append charts to streaming message (using iframe like addMessageToChat)
+  appendChartsToMessage(messageDiv, charts) {
+    const messageContent = messageDiv.querySelector(".message-content");
+    if (!messageContent || !charts || charts.length === 0) return;
+
+    const chartsContainer = document.createElement("div");
+    chartsContainer.className = "message-charts";
+
+    charts.forEach((chart, index) => {
+      const chartWrapper = document.createElement("div");
+      chartWrapper.className = "message-chart-wrapper";
+
+      // Create chart header with controls
+      const chartHeader = document.createElement("div");
+      chartHeader.className = "chart-header";
+
+      // Create iframe for chart content
+      const chartFrame = document.createElement("iframe");
+      chartFrame.className = "message-chart";
+      chartFrame.srcdoc = chart.data || chart.content || chart;
+      chartFrame.style.cssText = `
+        width: 100%;
+        height: 600px;
+        border: none;
+        border-radius: 8px;
+        background: white;
+      `;
+
+      chartFrame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      chartFrame.setAttribute("loading", "lazy");
+
+      chartFrame.addEventListener("load", () => {
+        chartFrame.style.opacity = "1";
+        chartWrapper.classList.add("loaded");
+      });
+
+      chartFrame.style.opacity = "0";
+      chartFrame.style.transition = "opacity 0.5s ease";
+
+      // Create fullscreen button
+      const fullscreenBtn = document.createElement("button");
+      fullscreenBtn.className = "chart-fullscreen-btn";
+      fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+      fullscreenBtn.title = "Tam Ekran Yap";
+      fullscreenBtn.addEventListener("click", () => {
+        this.showChartFullscreen(chart, index);
+      });
+
+      // Create caption
+      const caption = document.createElement("div");
+      caption.className = "chart-caption";
+      const chartInfo = [];
+      if (chart.symbols && chart.symbols.length > 0) {
+        chartInfo.push(`Symbols: ${chart.symbols.join(", ")}`);
+      }
+      if (chart.chart_type) {
+        chartInfo.push(`Type: ${chart.chart_type.charAt(0).toUpperCase() + chart.chart_type.slice(1)}`);
+      }
+      caption.innerHTML = chartInfo.length > 0 ? chartInfo.join(" • ") : `📊 Type: Custom_plot`;
+
+      chartHeader.appendChild(fullscreenBtn);
+      chartWrapper.appendChild(chartHeader);
+      chartWrapper.appendChild(chartFrame);
+      chartWrapper.appendChild(caption);
+      chartsContainer.appendChild(chartWrapper);
+    });
+
+    // Insert charts at the beginning of message content (before text)
+    messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+  }
+
+  // Helper method to append images and generated files as attachments
+  appendAttachmentsToMessage(messageDiv, images, generatedFiles) {
+    const messageContent = messageDiv.querySelector(".message-content");
+    if (!messageContent) return;
+    if ((!images || images.length === 0) && (!generatedFiles || generatedFiles.length === 0)) return;
+
+    console.log(`Adding ${(images || []).length} images and ${(generatedFiles || []).length} generated files to streaming message`);
+
+    const attachmentsContainer = document.createElement("div");
+    attachmentsContainer.className = "message-images";
+
+    // Add header for attachments section
+    const attachmentsHeader = document.createElement("div");
+    attachmentsHeader.className = "images-header";
+    attachmentsHeader.innerHTML = `
+      <i class="fas fa-paperclip" style="font-size: 0.9em; opacity: 0.7;"></i>
+      <span style="font-size: 1em; opacity: 0.9;">${(images || []).length + (generatedFiles || []).length} attachment</span>
+      <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
+    `;
+    attachmentsHeader.style.cssText = `
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      margin: 0 0 8px 0;
+      font-weight: 500;
+    `;
+
+    // Create toggleable content container
+    const attachmentsContent = document.createElement("div");
+    attachmentsContent.className = "attachments-content";
+    attachmentsContent.style.display = "none";
+
+    // Add toggle functionality
+    let isExpanded = false;
+    const toggleIcon = attachmentsHeader.querySelector(".toggle-icon");
+    attachmentsHeader.addEventListener("click", () => {
+      isExpanded = !isExpanded;
+      if (isExpanded) {
+        attachmentsContent.style.display = "grid";
+        toggleIcon.style.transform = "rotate(180deg)";
+        toggleIcon.className = "fas fa-chevron-up toggle-icon";
+      } else {
+        attachmentsContent.style.display = "none";
+        toggleIcon.style.transform = "rotate(0deg)";
+        toggleIcon.className = "fas fa-chevron-down toggle-icon";
+      }
+    });
+
+    attachmentsContainer.appendChild(attachmentsHeader);
+    attachmentsContainer.appendChild(attachmentsContent);
+
+    // Add images
+    if (images && images.length > 0) {
+      images.forEach((image, index) => {
+        const imageWrapper = document.createElement("div");
+        imageWrapper.className = "message-image-wrapper";
+
+        const img = document.createElement("img");
+        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
+        img.alt = `Attached Image: ${image.filename}`;
+        img.className = "message-image";
+        img.style.cssText = `
+          max-width: 100%;
+          max-height: 300px;
+          object-fit: contain;
+          cursor: pointer;
+        `;
+
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
+        });
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.3s ease";
+
+        img.addEventListener("click", () => {
+          this.showImageModal(image);
+        });
+
+        const caption = document.createElement("div");
+        caption.className = "image-caption";
+        caption.innerHTML = `${image.filename}`;
+
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(caption);
+        attachmentsContent.appendChild(imageWrapper);
+      });
+    }
+
+    // Add generated files
+    if (generatedFiles && generatedFiles.length > 0) {
+      generatedFiles.forEach((file, index) => {
+        const fileCard = this.createModernAttachmentCard(file);
+        attachmentsContent.appendChild(fileCard);
+      });
+    }
+
+    messageContent.appendChild(attachmentsContainer);
   }
 
   addMessageToChat(
