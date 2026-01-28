@@ -84,7 +84,6 @@ def create_custom_chart_from_code(code: str) -> dict:
 
         body {{
             margin: 0;
-            padding: 32px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -96,10 +95,9 @@ def create_custom_chart_from_code(code: str) -> dict:
 
         .chart-wrapper {{
             background: #ffffff;
-            padding: 24px;
+            padding: 16px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            max-width: 1400px;
             width: 100%;
         }}
 
@@ -110,13 +108,6 @@ def create_custom_chart_from_code(code: str) -> dict:
             display: block;
         }}
 
-        .chart-title {{
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #111827;
-            text-align: center;
-        }}
     </style>
 </head>
 
@@ -124,6 +115,19 @@ def create_custom_chart_from_code(code: str) -> dict:
     <div class="chart-wrapper">
         <img src="data:image/png;base64,{png_base64}" alt="Chart Image" />
     </div>
+    <script>
+        const observer = new ResizeObserver(() => {{
+            const height = document.querySelector('.chart-wrapper').getBoundingClientRect().height;
+            window.parent.postMessage({{ height }}, '*');
+        }});
+        observer.observe(document.querySelector('.chart-wrapper'));
+        
+        // Initial send
+        window.addEventListener('load', () => {{
+             const height = document.querySelector('.chart-wrapper').getBoundingClientRect().height;
+             window.parent.postMessage({{ height }}, '*');
+        }});
+    </script>
 </body>
 </html>
 """
