@@ -12,6 +12,7 @@ class UIComponents {
     this.isProcessing = false;
     this.isDarkMode = false;
     this.webSearchEnabled = Utils.isWebSearchEnabled();
+    this.agentMode = Utils.getAgentMode() || "standard";
 
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
@@ -55,6 +56,10 @@ class UIComponents {
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
+
+    // Agent mode toggle initial state
+    const agentModeToggle = document.getElementById("agent-mode-toggle");
+    if (agentModeToggle && this.agentMode === "graph") agentModeToggle.classList.add("active");
 
     if (window.languageService) {
       const languageSetting = document.getElementById("language-setting");
@@ -729,6 +734,34 @@ setupFloatingSubmenu(collapsible, subMenu) {
       refreshNewsButton.addEventListener("click", () =>
         this.refreshFinanceNews()
       );
+    }
+
+    // Agent Mode toggle event (standard vs graph)
+    const agentModeToggle = document.getElementById("agent-mode-toggle");
+    if (agentModeToggle) {
+      agentModeToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.agentMode = this.agentMode === "standard" ? "graph" : "standard";
+        Utils.setAgentMode(this.agentMode);
+
+        // Update button state
+        if (this.agentMode === "graph") {
+          agentModeToggle.classList.add("active");
+          Utils.showSnackbar("Graph Agent Mode enabled - advanced planning & synthesis", "info", 2000);
+        } else {
+          agentModeToggle.classList.remove("active");
+          Utils.showSnackbar("Standard Agent Mode enabled", "info", 2000);
+        }
+
+        console.log("Agent mode:", this.agentMode);
+      });
+
+      // Set initial state
+      if (this.agentMode === "graph") {
+        agentModeToggle.classList.add("active");
+      }
+
+      console.log("agentMode:", this.agentMode);
     }
 
     // File selection button
@@ -1653,7 +1686,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
           this.webSearchEnabled,
           this.currentSessionId,
           2,
-          this.selectedFiles.length > 0 ? this.selectedFiles : null
+          this.selectedFiles.length > 0 ? this.selectedFiles : null,
+          this.agentMode
         );
 
         if (response) {
@@ -1704,19 +1738,21 @@ setupFloatingSubmenu(collapsible, subMenu) {
     webSearchEnabled,
     sessionId,
     maxRetries = 2,
-    selectedFiles = null
+    selectedFiles = null,
+    agentMode = "standard"
   ) {
     let lastError;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[Chat] Sending query attempt ${attempt}/${maxRetries}`);
+        console.log(`[Chat] Sending query attempt ${attempt}/${maxRetries} in ${agentMode} mode`);
 
         const response = await window.apiService.sendQuery(
           message,
           webSearchEnabled,
           sessionId,
-          selectedFiles
+          selectedFiles,
+          agentMode
         );
 
         return response;

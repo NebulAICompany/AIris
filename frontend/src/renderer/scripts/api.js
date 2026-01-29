@@ -156,18 +156,20 @@ class APIService {
     query,
     webSearchEnabled = false,
     sessionId = null,
-    selectedFiles = null
+    selectedFiles = null,
+    agentMode = "standard"  // "standard" or "graph"
   ) {
     try {
       // Determine timeout based on enabled features
       let timeout = 600000; // Base timeout: 10 minutes
       if (webSearchEnabled) timeout += 60000; // Add 1 minute for web search
+      if (agentMode === "graph") timeout += 120000; // Add 2 minutes for graph pipeline
       // RAG Fusion disabled - no timeout adjustment needed
 
       console.log(
         `[API] AI Query timeout set to: ${
           timeout / 1000
-        }s (Web: ${webSearchEnabled}, RAG Fusion: disabled)`
+        }s (Web: ${webSearchEnabled}, Agent Mode: ${agentMode})`
       );
 
       const response = await this.api.post(
@@ -177,6 +179,7 @@ class APIService {
           webSearchEnabled: webSearchEnabled,
           sessionId: sessionId,
           selectedFiles: selectedFiles,
+          agentMode: agentMode,
         },
         {
           timeout: timeout, // Dynamic timeout based on features

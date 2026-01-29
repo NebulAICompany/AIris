@@ -194,3 +194,102 @@ async def run_news_chat_orchestration(
         )
 
     return {"response": answer, "images": images, "session_id": session_id}
+
+
+async def run_graph_orchestration(
+    query: str,
+    session_id: Optional[str] = None,
+    selected_files: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Run the LangGraph-based agent pipeline with planning, approval, and document processing.
+    
+    This orchestration uses a stateful graph that supports:
+    - Intent clarification with LLM
+    - Strategic plan generation
+    - LLM-based plan approval detection
+    - Parallel document processing (map-reduce)
+    - Final synthesis
+    
+    Args:
+        query: The user's query/message
+        session_id: Session ID for conversation continuity
+        selected_files: List of selected files for RAG processing
+        
+    Returns:
+        Dict with response, images, charts, generated files, and sources
+    """
+    from backend.agent_graph.graph import graph
+    from langchain_core.messages import HumanMessage
+    
+    # Clear previous attachments at the start of each new query
+    clear_image_datas()
+    clear_chart_datas()
+    clear_generated_files()
+    
+    # Set global selected files for RAG queries
+    set_selected_files(selected_files)
+    set_original_user_query(query)
+    
+    # Add user message to chat history
+    chat_history_manager.add_message(session_id, MessageRole.USER, query)
+    
+    logger.info(f"🔀 Graph Pipeline: Starting graph-based agent for query '{query}'")
+    
+    try:
+        # Configure for session continuity
+        config = {"configurable": {"thread_id": session_id}} if session_id else {}
+        config["recursion_limit"] = 30
+        
+        # Invoke the graph with the user's message
+        # The graph maintains state across invocations via checkpointer
+        result = await graph.ainvoke(
+            {
+                "messages": [HumanMessage(content=query)],
+                "selected_documents": selected_files or [],
+            },
+            config=config
+        )
+        
+        # Extract the final answer from messages
+        answer = ""
+        if result.get("messages"):
+            for msg in reversed(result["messages"]):
+                if hasattr(msg, "content") and msg.content:
+                    answer = msg.content
+                    break
+        
+        logger.info(f"✅ Graph Pipeline: Completed with response length {len(answer)}")
+        
+    except Exception as e:
+        logger.error(f"❌ Graph Pipeline Error: {str(e)}", exc_info=True)
+        answer = f"An error occurred in the graph pipeline: {str(e)}"
+    
+    # Get any generated artifacts
+    images = get_image_datas()
+    charts = get_chart_datas()
+    generated_files = get_generated_files()
+    
+    # Build metadata for chat history
+    metadata = {}
+    if images:
+        metadata["images"] = images
+    if charts:
+        metadata["charts"] = charts
+    if generated_files:
+        metadata["generatedFiles"] = generated_files
+    
+    metadata = metadata if metadata else None
+    chat_history_manager.add_message(
+        session_id, MessageRole.ASSISTANT, answer, metadata
+    )
+    
+    return {
+        "response": answer,
+        "images": images,
+        "charts": charts,
+        "generatedFiles": generated_files,
+        "sources": [],  # Graph pipeline doesn't use artifact-based sources yet
+        "session_id": session_id,
+    }
+

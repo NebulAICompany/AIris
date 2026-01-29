@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
-from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
+from backend.pipeline.query import run_orchestration, run_news_chat_orchestration, run_graph_orchestration
 from backend.core.tools.balance import process_balance_of_payments
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
@@ -97,6 +97,7 @@ class QueryRequest(BaseModel):
     preEmbeddingProcess: str = "none"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
+    agentMode: str = "standard"  # "standard" or "graph"
 
 
 class NewsChatRequest(BaseModel):
@@ -195,6 +196,10 @@ async def handle_query(request: QueryRequest):
     """
     Receives the user's query,
     processes it through the pipeline, and returns the LLM response.
+    
+    Supports two agent modes:
+    - "standard": Uses the main agent with optional web search
+    - "graph": Uses the LangGraph-based agent with planning, approval, and synthesis
     """
     try:
 
@@ -202,13 +207,25 @@ async def handle_query(request: QueryRequest):
         web_search_enabled = request.webSearchEnabled
         session_id = request.sessionId
         selected_files = request.selectedFiles
+        agent_mode = request.agentMode
 
-        answer = await run_orchestration(
-            query,
-            web_search_enabled,
-            session_id,
-            selected_files,
-        )
+        logger.info(f"📨 Query received in {agent_mode} mode: {query[:50]}...")
+
+        if agent_mode == "graph":
+            # Use LangGraph-based agent pipeline
+            answer = await run_graph_orchestration(
+                query,
+                session_id,
+                selected_files,
+            )
+        else:
+            # Use standard agent pipeline
+            answer = await run_orchestration(
+                query,
+                web_search_enabled,
+                session_id,
+                selected_files,
+            )
         api_requests_total.labels(status="success").inc()
 
         return {

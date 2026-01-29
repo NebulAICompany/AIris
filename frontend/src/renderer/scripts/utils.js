@@ -372,6 +372,15 @@ class Utils {
     return this.storage.get("webSearchEnabled", false);
   }
 
+  // Agent Mode toggle helpers ("standard" or "graph")
+  static setAgentMode(mode) {
+    this.storage.set("agentMode", mode || "standard");
+  }
+
+  static getAgentMode() {
+    return this.storage.get("agentMode", "standard");
+  }
+
   // Show snackbar notification
   static showSnackbar(message, type = "info", duration = 4000) {
     const icons = {
