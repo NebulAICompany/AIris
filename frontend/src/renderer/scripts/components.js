@@ -1648,6 +1648,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       let streamingStarted = false;
       let hasError = false;
+      let pendingTools = []; // Track tools called before streaming starts
 
       try {
         // Send streaming query to backend
@@ -1663,6 +1664,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 this.hideTypingIndicator();
                 this.createStreamingMessage();
                 streamingStarted = true;
+                
+                // Add any pending tools to the history
+                pendingTools.forEach(tool => {
+                  this.addToolToHistory(tool.toolName, tool.parentAgent);
+                  if (tool.completed) {
+                    this.markToolComplete(tool.toolName, tool.parentAgent);
+                  }
+                });
+                pendingTools = [];
               }
               this.appendToStreamingMessage(token);
             },
@@ -1670,10 +1680,12 @@ setupFloatingSubmenu(collapsible, subMenu) {
               console.log(`[Chat] Tool started: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
               // Update typing indicator or streaming tool status
               if (!streamingStarted) {
-                const message = parentAgent 
+                const displayMessage = parentAgent 
                   ? `Using ${toolName} (via ${parentAgent})...`
                   : `Using ${toolName}...`;
-                this.updateTypingIndicatorMessage(message);
+                this.updateTypingIndicatorMessage(displayMessage);
+                // Track the tool for later
+                pendingTools.push({ toolName, parentAgent, completed: false });
               } else {
                 // Show tool status in the streaming message
                 this.showStreamingToolStatus(toolName, parentAgent);
@@ -1681,9 +1693,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
             },
             onToolEnd: (toolName, parentAgent) => {
               console.log(`[Chat] Tool completed: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
-              // Hide the tool status indicator
+              // Mark the tool as completed in the history
               if (streamingStarted) {
-                this.hideStreamingToolStatus();
+                this.hideStreamingToolStatus(toolName, parentAgent);
+              } else {
+                // Mark in pending tools
+                const pendingTool = pendingTools.find(t => t.toolName === toolName && !t.completed);
+                if (pendingTool) {
+                  pendingTool.completed = true;
+                }
               }
             },
             onDone: (data) => {
@@ -1850,15 +1868,19 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     const timestamp = new Date().toLocaleTimeString();
 
+    // Initialize tools history tracking
+    this.toolsHistory = [];
+
     messageDiv.innerHTML = `
       <div class="message-content">
         <div class="sources-placeholder"></div>
-        <div class="tool-status-indicator" style="display: none;">
-          <div class="tool-status-content">
-            <div class="tool-status-dots">
-              <span></span><span></span><span></span>
-            </div>
-            <span class="tool-status-text"></span>
+        <div class="tools-history-container" style="display: none;">
+          <div class="tools-history-header">
+            <span class="tools-history-label">Tools used</span>
+            <span class="tools-history-toggle">></span>
+          </div>
+          <div class="tools-history-list">
+            <div class="tools-history-items"></div>
           </div>
         </div>
         <div class="message-text"></div>
@@ -1872,38 +1894,117 @@ setupFloatingSubmenu(collapsible, subMenu) {
     return messageDiv;
   }
 
-  // Show tool status indicator during streaming
-  showStreamingToolStatus(toolName, parentAgent = null) {
+  // Add a tool to the history list during streaming
+  addToolToHistory(toolName, parentAgent = null) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
 
-    const toolStatus = messageDiv.querySelector(".tool-status-indicator");
-    if (toolStatus) {
-      const statusText = toolStatus.querySelector(".tool-status-text");
-      if (statusText) {
-        const message = parentAgent 
-          ? `Using ${toolName} (via ${parentAgent})...`
-          : `Using ${toolName}...`;
-        statusText.textContent = message;
+    // Generate unique ID for this tool entry
+    const toolId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Track the tool
+    if (!this.toolsHistory) this.toolsHistory = [];
+    this.toolsHistory.push({ id: toolId, toolName, parentAgent, completed: false });
+
+    // Get the tools history container and show it
+    const toolsContainer = messageDiv.querySelector(".tools-history-container");
+    const toolsItems = messageDiv.querySelector(".tools-history-items");
+    
+    if (toolsContainer && toolsItems) {
+      toolsContainer.style.display = "block";
+      // Expand by default during streaming
+      toolsContainer.classList.add("expanded");
+
+      // Create the tool item with loading animation
+      const displayName = parentAgent 
+        ? `${toolName} <span class="tool-parent">(via ${parentAgent})</span>`
+        : toolName;
+
+      const toolItem = document.createElement("div");
+      toolItem.className = "tool-history-item active";
+      toolItem.id = toolId;
+      toolItem.innerHTML = `
+        <div class="tool-history-icon">
+          <div class="tool-loading-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <span class="tool-history-name">${displayName}</span>
+      `;
+
+      toolsItems.appendChild(toolItem);
+
+      // Update the label
+      const label = toolsContainer.querySelector(".tools-history-label");
+      if (label) {
+        const count = this.toolsHistory.length;
+        label.textContent = count === 1 ? "Using 1 tool" : `Using ${count} tools`;
       }
-      toolStatus.style.display = "flex";
-      
+
       // Scroll to bottom
       const chatMessages = document.getElementById("chat-messages");
       if (chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
+
+    return toolId;
   }
 
-  // Hide tool status indicator
-  hideStreamingToolStatus() {
+  // Mark a tool as completed in the history
+  markToolComplete(toolName, parentAgent = null) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
 
-    const toolStatus = messageDiv.querySelector(".tool-status-indicator");
-    if (toolStatus) {
-      toolStatus.style.display = "none";
+    if (!this.toolsHistory) return;
+
+    // Find the matching tool (most recent uncompleted one with matching name)
+    const toolEntry = [...this.toolsHistory].reverse().find(
+      t => t.toolName === toolName && !t.completed
+    );
+
+    if (toolEntry) {
+      toolEntry.completed = true;
+
+      // Update the UI
+      const toolItem = messageDiv.querySelector(`#${toolEntry.id}`);
+      if (toolItem) {
+        toolItem.classList.remove("active");
+        toolItem.classList.add("completed");
+
+        // Replace loading dots with checkmark
+        const iconDiv = toolItem.querySelector(".tool-history-icon");
+        if (iconDiv) {
+          iconDiv.innerHTML = `<i class="fas fa-check"></i>`;
+        }
+      }
+
+      // Update label
+      const toolsContainer = messageDiv.querySelector(".tools-history-container");
+      if (toolsContainer) {
+        const label = toolsContainer.querySelector(".tools-history-label");
+        if (label) {
+          const completedCount = this.toolsHistory.filter(t => t.completed).length;
+          const totalCount = this.toolsHistory.length;
+          if (completedCount === totalCount) {
+            label.textContent = totalCount === 1 ? "Used 1 tool" : `Used ${totalCount} tools`;
+          } else {
+            label.textContent = `Using ${totalCount} tools`;
+          }
+        }
+      }
+    }
+  }
+
+  // Show tool status indicator during streaming (now uses history)
+  showStreamingToolStatus(toolName, parentAgent = null) {
+    this.addToolToHistory(toolName, parentAgent);
+  }
+
+  // Hide tool status indicator (now marks tool as complete)
+  hideStreamingToolStatus(toolName = null, parentAgent = null) {
+    if (toolName) {
+      this.markToolComplete(toolName, parentAgent);
     }
   }
 
@@ -1946,11 +2047,44 @@ setupFloatingSubmenu(collapsible, subMenu) {
     messageDiv.classList.remove("streaming-message");
     messageDiv.removeAttribute("id");
 
-    // Remove tool status indicator if still visible
-    const toolStatus = messageDiv.querySelector(".tool-status-indicator");
-    if (toolStatus) {
-      toolStatus.remove();
+    // Finalize tools history - collapse it and set up toggle
+    const toolsContainer = messageDiv.querySelector(".tools-history-container");
+    if (toolsContainer && this.toolsHistory && this.toolsHistory.length > 0) {
+      // Mark any remaining active tools as completed
+      const activeItems = messageDiv.querySelectorAll(".tool-history-item.active");
+      activeItems.forEach(item => {
+        item.classList.remove("active");
+        item.classList.add("completed");
+        const iconDiv = item.querySelector(".tool-history-icon");
+        if (iconDiv) {
+          iconDiv.innerHTML = `<i class="fas fa-check"></i>`;
+        }
+      });
+
+      // Update label to final count
+      const label = toolsContainer.querySelector(".tools-history-label");
+      if (label) {
+        const count = this.toolsHistory.length;
+        label.textContent = count === 1 ? "Used 1 tool" : `Used ${count} tools`;
+      }
+
+      // Collapse the tools history
+      toolsContainer.classList.remove("expanded");
+
+      // Add click handler for toggle
+      const toolsHeader = toolsContainer.querySelector(".tools-history-header");
+      if (toolsHeader) {
+        toolsHeader.addEventListener("click", function() {
+          toolsContainer.classList.toggle("expanded");
+        });
+      }
+    } else if (toolsContainer) {
+      // No tools were used, hide the container
+      toolsContainer.style.display = "none";
     }
+
+    // Clear the tools history tracking
+    this.toolsHistory = [];
 
     // Add sources if available
     if (sources && sources.length > 0) {
