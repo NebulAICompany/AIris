@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, get_
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END
-from langgraph.types import Command, interrupt
+from langgraph.types import Command
 from pydantic import BaseModel, Field
 from .prompts import (
     CLARIFY_WITH_USER_INSTRUCTIONS,
@@ -17,8 +17,8 @@ from .prompts import (
 from .state import AgentState, Plan, SubAgentInput, Summary, TodoItem
 
 
-REASONING_MODEL = "gpt-4o"
-FAST_MODEL = "gpt-4o-mini"
+REASONING_MODEL = "gpt-5"
+FAST_MODEL = "gpt-5-mini"
 MODEL_TEMPERATURE = 0.0
 
 llm_reasoning = ChatOpenAI(model=REASONING_MODEL, temperature=MODEL_TEMPERATURE, callbacks=[ConsoleCallbackHandler()])
@@ -87,12 +87,19 @@ async def clarify_intent_node(
         Command routing to either END (wait for user) or generate_plan_node.
     """
     messages = state["messages"]
+    selected_docs = state.get("selected_documents", [])
+    
+    # Build file context info
+    file_context = ""
+    if selected_docs:
+        file_names = [doc.split("/")[-1].split("\\")[-1] for doc in selected_docs]
+        file_context = f"\n\n**Available Files:** The user has already selected these files for analysis: {', '.join(file_names)}. Do NOT ask for files - they are already available."
     
     checker = llm_reasoning.with_structured_output(AmbiguityCheck)
     prompt_content = CLARIFY_WITH_USER_INSTRUCTIONS.format(
         messages=get_buffer_string(messages), 
         date=get_today_str()
-    )
+    ) + file_context
     
     result = await checker.ainvoke([HumanMessage(content=prompt_content)])
     
@@ -129,12 +136,19 @@ async def generate_plan_node(
         Command routing to human_approval_node with plan in state.
     """
     messages = state["messages"]
+    selected_docs = state.get("selected_documents", [])
+    
+    # Build file context info
+    file_context = ""
+    if selected_docs:
+        file_names = [doc.split("/")[-1].split("\\")[-1] for doc in selected_docs]
+        file_context = f"\n\n**Available Files for Analysis:** {', '.join(file_names)}. Include steps to analyze these documents in your plan."
     
     planner = llm_reasoning.with_structured_output(Plan)
     prompt_content = TRANSFORM_MESSAGES_INTO_PLAN_PROMPT.format(
         messages=get_buffer_string(messages),
         date=get_today_str()
-    )
+    ) + file_context
     
     plan = await planner.ainvoke([HumanMessage(content=prompt_content)])
     

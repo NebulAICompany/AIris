@@ -2,6 +2,7 @@ from typing import List, Literal, Union
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.types import Send
+from backend.core.checkpointer import get_checkpointer
 
 from .nodes import (
     clarify_intent_node,
@@ -95,7 +96,15 @@ def build_graph() -> StateGraph:
     
     return workflow
 
-workflow = build_graph()
-checkpointer = MemorySaver()
 
-graph = workflow.compile(checkpointer=checkpointer) 
+def get_compiled_graph():
+    """
+    Compiles and returns the graph with the global checkpointer.
+    similar to how create_agent works in agents.py
+    """
+    workflow = build_graph()
+    
+    checkpointer = get_checkpointer()
+    
+    return workflow.compile(checkpointer=checkpointer)
+ 

@@ -6,6 +6,8 @@ These are the messages that have been exchanged so far from the user asking for 
 
 Today's date is {date}.
 
+**IMPORTANT: Respond in the SAME LANGUAGE as the user's messages. If the user writes in Turkish, respond in Turkish. If the user writes in English, respond in English. Always match their language.**
+
 Assess whether you need to ask a clarifying question, or if the user has already provided enough information for you to start research.
 IMPORTANT: If you can see in the messages history that you have already asked a clarifying question, you almost always do not need to ask another one. Only ask another question if ABSOLUTELY NECESSARY.
 
@@ -47,6 +49,8 @@ The messages that have been exchanged so far between yourself and the user are:
 </Messages>
 
 Today's date is {date}.
+
+**IMPORTANT: The plan summary should be in the SAME LANGUAGE as the user's messages. If the user writes in Turkish, write the plan in Turkish. If the user writes in English, write in English.**
 
 You will return a strategic plan with actionable steps.
 
@@ -127,6 +131,8 @@ Here are the findings from the research that you conducted:
 <Findings>
 {findings}
 </Findings>
+
+**IMPORTANT: Write the report in the SAME LANGUAGE as the user's messages. If the user writes in Turkish, write the entire report in Turkish. If the user writes in English, write in English. Always match their language.**
 
 Please create a detailed answer to the overall research brief that:
 1. Is well-organized with proper headings (# for title, ## for sections, ### for subsections)

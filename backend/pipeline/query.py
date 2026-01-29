@@ -219,8 +219,10 @@ async def run_graph_orchestration(
     Returns:
         Dict with response, images, charts, generated files, and sources
     """
-    from backend.agent_graph.graph import graph
-    from langchain_core.messages import HumanMessage
+    from backend.agent_graph.graph import get_compiled_graph
+    from langchain_core.messages import HumanMessage, AIMessage
+    
+    graph = get_compiled_graph()
     
     # Clear previous attachments at the start of each new query
     clear_image_datas()
@@ -241,11 +243,29 @@ async def run_graph_orchestration(
         config = {"configurable": {"thread_id": session_id}} if session_id else {}
         config["recursion_limit"] = 30
         
-        # Invoke the graph with the user's message
-        # The graph maintains state across invocations via checkpointer
+        # Build messages list including chat history
+        # The checkpointer should maintain state, but we also provide history as fallback
+        messages_to_send = []
+        
+        # Get conversation history from chat manager
+        conversation_context = chat_history_manager.get_conversation_context(
+            session_id, max_messages=20
+        )
+        
+        # Convert chat history to LangChain messages (excluding the current query we just added)
+        for msg in conversation_context[:-1]:  # Exclude last message (current query)
+            if msg.get("role") == "user":
+                messages_to_send.append(HumanMessage(content=msg.get("content", "")))
+            else:
+                messages_to_send.append(AIMessage(content=msg.get("content", "")))
+        
+        # Add current query
+        messages_to_send.append(HumanMessage(content=query))
+        
+        # Invoke the graph with the user's message and history
         result = await graph.ainvoke(
             {
-                "messages": [HumanMessage(content=query)],
+                "messages": messages_to_send,
                 "selected_documents": selected_files or [],
             },
             config=config
@@ -258,11 +278,7 @@ async def run_graph_orchestration(
                 if hasattr(msg, "content") and msg.content:
                     answer = msg.content
                     break
-        
-        logger.info(f"✅ Graph Pipeline: Completed with response length {len(answer)}")
-        
     except Exception as e:
-        logger.error(f"❌ Graph Pipeline Error: {str(e)}", exc_info=True)
         answer = f"An error occurred in the graph pipeline: {str(e)}"
     
     # Get any generated artifacts

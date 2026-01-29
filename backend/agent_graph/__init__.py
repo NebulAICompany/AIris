@@ -1,8 +1,8 @@
-from .graph import graph
+from .graph import get_compiled_graph
 from .state import AgentInputState, AgentState
 
 __all__ = [
-    "graph",
+    "get_compiled_graph",
     "AgentState",
     "AgentInputState",
 ]
