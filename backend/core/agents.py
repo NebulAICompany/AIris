@@ -78,13 +78,13 @@ def create_main_agent(
     instruction: str = None,
 ):
     """
-    Create a Deep Agent for main assistant functionality with agentic RAG.
+    Create a LLM Agent for main assistant functionality with agentic RAG.
 
     Args:
         web_search_enabled: Whether to enable web search
         instruction: Optional custom instructions
 
-    Returns a Deep Agent configured with tools, subagents, and custom instructions.
+    Returns a LLM Agent configured with tools, subagents, and custom instructions.
     The agent can use search_local_documents tool to retrieve information on demand.
     """
     instruction_part = (
