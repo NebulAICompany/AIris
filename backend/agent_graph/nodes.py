@@ -383,6 +383,10 @@ async def synthesis_node(
         Command routing to END with final report in messages.
     """
     global_context = state.get("global_context", [])
+    selected_docs = state.get("selected_documents", [])
+
+    if len(global_context) < len(selected_docs):
+        return Command(goto=END)
 
     if global_context:
         findings_str = "\n\n".join(
