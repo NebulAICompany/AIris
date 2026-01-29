@@ -33,11 +33,10 @@ from backend.core.tools.plotting import (
 office_tools = [
     create_excel_file,
     create_word_document,
-    create_powerpoint_presentation,
-    add_powerpoint_slide,
     modify_word_content,
     modify_excel_cells,
     create_excel_charts,
+    create_powerpoint_from_code,
 ]
 
 tcmb_tools = [
@@ -72,6 +71,13 @@ office_agent = create_agent(
     model=ANTHROPIC_MODEL,
     tools=office_tools,
     system_prompt=office_agent_prompt,
+    middleware=[
+        ToolCallLimitMiddleware(
+            tool_name="create_powerpoint_from_code",
+            run_limit=1,
+            exit_behavior="continue",
+        ),
+    ],
 )
 
 
@@ -134,6 +140,7 @@ async def call_finance_agent(query: str) -> str:
     }
     return content, artifact
 
+
 @tool(
     "microsoft_office_operations",
     description=(
@@ -193,11 +200,11 @@ async def call_plotting_agent(query: str) -> str:
         "(for example, 'monthly CPI inflation and policy rate for the last five years')."
         "Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends."
     ),
-   response_format="content_and_artifact",
+    response_format="content_and_artifact",
 )
 async def call_tcmb_agent(query: str):
     """Route Turkish economic data requests to the TCMB specialist agent.
-      
+
     Args:
         query: Natural language request describing the TCMB/EVDS data to retrieve or analyze.
     """
@@ -210,6 +217,7 @@ async def call_tcmb_agent(query: str):
         "description": f"Turkish economic data: {query[:50]}...",
     }
     return content, artifact
+
 
 # List of subagent tools for the main agent
 main_agent_subagents = [

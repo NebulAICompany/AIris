@@ -2122,30 +2122,16 @@ setupFloatingSubmenu(collapsible, subMenu) {
         <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
       `;
       attachmentsHeader.style.cssText = `
-        grid-column: 1 / -1;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.75em;
+        font-size: 0.85em;
         color: var(--text-secondary);
-        margin: 8px 0 4px 0;
-        padding: 6px 8px;
-        border-radius: 6px;
-        cursor: pointer;
-        user-select: none;
-        transition: background-color 0.2s ease;
+        margin: 0 0 8px 0;
+        font-weight: 500;
       `;
 
       // Create minimal content container that will be toggleable
       const attachmentsContent = document.createElement("div");
       attachmentsContent.className = "attachments-content";
-      attachmentsContent.style.cssText = `
-        display: none;
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-        gap: 8px;
-        padding: 4px 0;
-        animation: slideDown 0.2s ease-out;
-      `;
+      attachmentsContent.style.display = "none";
 
       // Add toggle functionality
       let isExpanded = false;
@@ -2211,29 +2197,9 @@ setupFloatingSubmenu(collapsible, subMenu) {
       // Add generated files after images
       if (generatedFiles && generatedFiles.length > 0) {
         generatedFiles.forEach((file, index) => {
-          const fileWrapper = document.createElement("div");
-          fileWrapper.className = "message-image-wrapper"; // Use same class as images for consistent styling
-
-          // Create file preview based on file type
-          const filePreview = this.createFilePreview(file);
-
-          const caption = document.createElement("div");
-          caption.className = "image-caption"; // Use same class as images for consistent styling
-          caption.innerHTML = `${file.filename}`;
-          caption.style.cssText = `
-          font-size: 0.65em;
-          color: var(--text-secondary);
-          text-align: center;
-          max-width: 80px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          opacity: 0.8;
-        `;
-
-          fileWrapper.appendChild(filePreview);
-          fileWrapper.appendChild(caption);
-          attachmentsContent.appendChild(fileWrapper);
+          // Create modern attachment card
+          const fileCard = this.createModernAttachmentCard(file);
+          attachmentsContent.appendChild(fileCard);
         });
       }
 
@@ -2455,6 +2421,114 @@ setupFloatingSubmenu(collapsible, subMenu) {
     });
 
     return filePreview;
+  }
+
+  createModernAttachmentCard(file) {
+    const card = document.createElement("div");
+    card.className = "modern-attachment-card";
+
+    // Get file extension and type info
+    const fileExtension = file.filename.split(".").pop().toLowerCase();
+    const fileName = file.filename;
+    
+    // Determine file type and icon
+    let iconClass = "fas fa-file";
+    let fileTypeLabel = fileExtension.toUpperCase();
+    let fileTypeClass = "default";
+
+    switch (fileExtension) {
+      case "xlsx":
+      case "xls":
+        iconClass = "fas fa-file-excel";
+        fileTypeLabel = "Excel";
+        fileTypeClass = "excel";
+        break;
+      case "docx":
+      case "doc":
+        iconClass = "fas fa-file-word";
+        fileTypeLabel = "Word";
+        fileTypeClass = "word";
+        break;
+      case "pptx":
+      case "ppt":
+        iconClass = "fas fa-file-powerpoint";
+        fileTypeLabel = "PowerPoint";
+        fileTypeClass = "powerpoint";
+        break;
+      case "pdf":
+        iconClass = "fas fa-file-pdf";
+        fileTypeLabel = "PDF";
+        fileTypeClass = "pdf";
+        break;
+      case "txt":
+        iconClass = "fas fa-file-alt";
+        fileTypeLabel = "Text";
+        break;
+      case "csv":
+        iconClass = "fas fa-file-csv";
+        fileTypeLabel = "CSV";
+        break;
+      case "zip":
+      case "rar":
+      case "7z":
+        iconClass = "fas fa-file-archive";
+        fileTypeLabel = "Archive";
+        break;
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+      case "webp":
+        iconClass = "fas fa-file-image";
+        fileTypeLabel = "Image";
+        break;
+    }
+
+    // Format file size if available
+    let fileSizeDisplay = "";
+    if (file.size) {
+      const sizeInKB = file.size / 1024;
+      if (sizeInKB < 1024) {
+        fileSizeDisplay = `${sizeInKB.toFixed(1)} KB`;
+      } else {
+        fileSizeDisplay = `${(sizeInKB / 1024).toFixed(2)} MB`;
+      }
+    }
+
+    // Create card structure
+    card.innerHTML = `
+      <div class="attachment-card-icon ${fileTypeClass}">
+        <i class="${iconClass}"></i>
+      </div>
+      <div class="attachment-card-content">
+        <div class="attachment-card-name" title="${fileName}">${fileName}</div>
+        <div class="attachment-card-meta">
+          <span class="attachment-card-type">${fileTypeLabel}</span>
+          ${fileSizeDisplay ? `<span class="attachment-card-size">${fileSizeDisplay}</span>` : ''}
+        </div>
+      </div>
+      <div class="attachment-card-actions">
+        <button class="attachment-action-btn" title="Open File" aria-label="Open File">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+      </div>
+    `;
+
+    // Add click handler to open file
+    const openBtn = card.querySelector(".attachment-action-btn");
+    openBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.openGeneratedFile(file);
+    });
+
+    // Make entire card clickable
+    card.addEventListener("click", (e) => {
+      if (!e.target.closest(".attachment-card-actions")) {
+        this.openGeneratedFile(file);
+      }
+    });
+
+    return card;
   }
 
   // Image modal for full-size viewing

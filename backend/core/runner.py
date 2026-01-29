@@ -17,6 +17,10 @@ async def generate_answer(
     Returns:
         Tuple[str, List[Dict], List[Dict], List[Dict]]: (answer, web_sources, api_sources, doc_sources)
     """
+    web_sources = []
+    api_sources = []
+    doc_sources = []
+
     try:
         start_time = time.time()
         config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
@@ -35,9 +39,6 @@ async def generate_answer(
                     break
 
         # Extract sources from tool artifacts
-        web_sources = []
-        api_sources = []
-        doc_sources = []
 
         if "messages" in result:
             for msg in result["messages"]:
@@ -92,7 +93,7 @@ async def generate_answer(
             )
         # Use % formatting to avoid KeyError with curly braces in error messages
         logger.error("Error in generate_answer: %s", error_str, exc_info=True)
-        return f"LLM yanıtı alınamadı: {error_str}", [], []
+        return f"LLM yanıtı alınamadı: {error_str}", [], [], []
     finally:
         web_sources.clear()
         api_sources.clear()
