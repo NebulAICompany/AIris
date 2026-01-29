@@ -58,8 +58,11 @@ class UIComponents {
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
 
     // Agent mode toggle initial state
+    // Agent mode toggle initial state
     const agentModeToggle = document.getElementById("agent-mode-toggle");
-    if (agentModeToggle && this.agentMode === "graph") agentModeToggle.classList.add("active");
+    if (agentModeToggle) {
+        agentModeToggle.checked = this.agentMode === "graph";
+    }
 
     if (window.languageService) {
       const languageSetting = document.getElementById("language-setting");
@@ -739,29 +742,31 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Agent Mode toggle event (standard vs graph)
     const agentModeToggle = document.getElementById("agent-mode-toggle");
     if (agentModeToggle) {
-      agentModeToggle.addEventListener("click", (e) => {
-        e.preventDefault();
-        this.agentMode = this.agentMode === "standard" ? "graph" : "standard";
+      agentModeToggle.addEventListener("change", (e) => {
+        // Checking if we should allow change
+        const chatMessages = document.getElementById("chat-messages");
+        // Check if there are user messages (excluding welcome message)
+        const hasUserMessages = chatMessages && chatMessages.querySelectorAll('.user-message').length > 0;
+        
+        if (hasUserMessages) {
+             e.preventDefault();
+             // Revert the toggle visually
+             agentModeToggle.checked = !agentModeToggle.checked;
+             Utils.showSnackbar("If you want to use normal mode create a new chat", "warning", 3000);
+             return;
+        }
+
+        this.agentMode = agentModeToggle.checked ? "graph" : "standard";
         Utils.setAgentMode(this.agentMode);
 
-        // Update button state
-        if (this.agentMode === "graph") {
-          agentModeToggle.classList.add("active");
-          Utils.showSnackbar("Graph Agent Mode enabled - advanced planning & synthesis", "info", 2000);
-        } else {
-          agentModeToggle.classList.remove("active");
-          Utils.showSnackbar("Standard Agent Mode enabled", "info", 2000);
-        }
+        // Notifications removed as per user request
+        console.log("Agent mode:", this.agentMode);
 
         console.log("Agent mode:", this.agentMode);
       });
-
-      // Set initial state
-      if (this.agentMode === "graph") {
-        agentModeToggle.classList.add("active");
-      }
-
-      console.log("agentMode:", this.agentMode);
+      
+      // Set initial state based on stored value
+      agentModeToggle.checked = this.agentMode === "graph";
     }
 
     // File selection button
@@ -2883,6 +2888,15 @@ setupFloatingSubmenu(collapsible, subMenu) {
   async startNewChat() {
     // Clear current chat
     this.clearChat();
+
+    // Reset Agent Mode to Standard for the new chat
+    this.agentMode = "standard";
+    Utils.setAgentMode("standard");
+    const agentModeToggle = document.getElementById("agent-mode-toggle");
+    if (agentModeToggle) {
+        agentModeToggle.checked = false;
+        // Utils.showSnackbar("New chat started - Agent Mode reset to Standard", "info", 2000);
+    }
 
     // Create a new session - this will also reload the sessions list
     const sessionId = await this.createNewChatSession();

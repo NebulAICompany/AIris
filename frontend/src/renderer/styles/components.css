@@ -8491,7 +8491,8 @@ body.nebula-theme .web-search-button:hover {
 /* Container */
 #snackbar-container {
   position: fixed;
-  top: 20px;
+  top: auto;
+  bottom: 20px;
   right: 20px;
   display: flex;
   flex-direction: column;

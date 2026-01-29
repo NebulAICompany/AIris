@@ -1027,8 +1027,9 @@ input:checked + .slider:before {
 /* Notifications */
 .notification {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
+  top: auto;
+  bottom: 24px;
+  right: 24px;
   padding: 1rem 1.5rem;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-lg);
