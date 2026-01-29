@@ -221,6 +221,17 @@ MARKETSTACK_TICKERS = [
     "YKBNK.IS",
 ]
 
+RESEARCH_LLM_REASONING = ChatOpenAI(
+    model="gpt-5",
+    temperature=0.0,
+    callbacks=[ConsoleCallbackHandler()],
+)
+RESEARCH_LLM_FAST = ChatOpenAI(
+    model="gpt-5-mini",
+    temperature=0.0,
+    callbacks=[ConsoleCallbackHandler()],
+)
+
 # Global variable for selected files in RAG queries
 SELECTED_FILES: Optional[List[str]] = None
 
