@@ -1666,18 +1666,21 @@ setupFloatingSubmenu(collapsible, subMenu) {
               }
               this.appendToStreamingMessage(token);
             },
-            onToolStart: (toolName) => {
-              console.log(`[Chat] Tool started: ${toolName}`);
+            onToolStart: (toolName, parentAgent) => {
+              console.log(`[Chat] Tool started: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
               // Update typing indicator or streaming tool status
               if (!streamingStarted) {
-                this.updateTypingIndicatorMessage(`Using ${toolName}...`);
+                const message = parentAgent 
+                  ? `Using ${toolName} (via ${parentAgent})...`
+                  : `Using ${toolName}...`;
+                this.updateTypingIndicatorMessage(message);
               } else {
                 // Show tool status in the streaming message
-                this.showStreamingToolStatus(toolName);
+                this.showStreamingToolStatus(toolName, parentAgent);
               }
             },
-            onToolEnd: (toolName) => {
-              console.log(`[Chat] Tool completed: ${toolName}`);
+            onToolEnd: (toolName, parentAgent) => {
+              console.log(`[Chat] Tool completed: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
               // Hide the tool status indicator
               if (streamingStarted) {
                 this.hideStreamingToolStatus();
@@ -1870,7 +1873,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   // Show tool status indicator during streaming
-  showStreamingToolStatus(toolName) {
+  showStreamingToolStatus(toolName, parentAgent = null) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
 
@@ -1878,7 +1881,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (toolStatus) {
       const statusText = toolStatus.querySelector(".tool-status-text");
       if (statusText) {
-        statusText.textContent = `Using ${toolName}...`;
+        const message = parentAgent 
+          ? `Using ${toolName} (via ${parentAgent})...`
+          : `Using ${toolName}...`;
+        statusText.textContent = message;
       }
       toolStatus.style.display = "flex";
       

@@ -292,10 +292,10 @@ class APIService {
                   if (onToken) onToken(data.content);
                   break;
                 case "tool_start":
-                  if (onToolStart) onToolStart(data.tool_name);
+                  if (onToolStart) onToolStart(data.tool_name, data.parent_agent);
                   break;
                 case "tool_end":
-                  if (onToolEnd) onToolEnd(data.tool_name);
+                  if (onToolEnd) onToolEnd(data.tool_name, data.parent_agent);
                   break;
                 case "done":
                   if (onDone) {

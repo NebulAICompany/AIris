@@ -105,6 +105,7 @@ async def generate_answer_stream(
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """
     Stream answer chunks from Agent and extract sources from tool artifacts.
+    Uses astream with multiple modes for clean main agent streaming.
 
     Yields dicts with keys:
         - "type": "token" | "tool_start" | "tool_end" | "done" | "error"
@@ -115,25 +116,64 @@ async def generate_answer_stream(
     web_sources = []
     api_sources = []
     doc_sources = []
-    last_tool_name = None
 
     try:
         start_time = time.time()
         config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
         config["recursion_limit"] = 30
 
-        # Use astream with multiple stream modes for token streaming AND updates
-        # When using multiple modes, each chunk is (mode_name, data)
+        # Use astream with multiple modes:
+        # - "messages": streams main agent's message tokens (not nested sub-agents)
+        # - "updates": gives us tool call events from all levels
+        # - "custom": receives custom events from sub-agents via get_stream_writer
+        last_tool_name = None
+        current_inner_tool = None
+        
         async for stream_chunk in agent.astream(
             {"messages": [{"role": "user", "content": prompt}]},
             config=config,
-            stream_mode=["messages", "updates"],
+            stream_mode=["messages", "updates", "custom"],
         ):
-            # Handle tuple format from multiple stream modes
+            # Handle tuple format from multiple stream modes: (mode_name, data)
             if isinstance(stream_chunk, tuple) and len(stream_chunk) == 2:
                 mode_name, data = stream_chunk
                 
-                if mode_name == "messages":
+                if mode_name == "custom":
+                    # Custom events from sub-agents via get_stream_writer
+                    if isinstance(data, dict):
+                        event_type = data.get("event")
+                        
+                        if event_type == "subagent_start":
+                            # A sub-agent has started
+                            logger.debug(f"Subagent started: {data.get('agent')}")
+                        
+                        elif event_type == "inner_tool_start":
+                            # An inner tool within a sub-agent has started
+                            tool_name = data.get("tool_name", "unknown")
+                            parent_agent = data.get("agent")
+                            current_inner_tool = tool_name
+                            yield {
+                                "type": "tool_start",
+                                "tool_name": tool_name,
+                                "parent_agent": parent_agent,
+                            }
+                        
+                        elif event_type == "inner_tool_end":
+                            # An inner tool within a sub-agent has completed
+                            tool_name = data.get("tool_name", "unknown")
+                            parent_agent = data.get("agent")
+                            current_inner_tool = None
+                            yield {
+                                "type": "tool_end",
+                                "tool_name": tool_name,
+                                "parent_agent": parent_agent,
+                            }
+                        
+                        elif event_type == "subagent_end":
+                            # A sub-agent has finished
+                            logger.debug(f"Subagent ended: {data.get('agent')}")
+                
+                elif mode_name == "messages":
                     # Messages mode: data is (message, metadata) tuple
                     msg = data[0] if isinstance(data, tuple) else data
                     
@@ -153,7 +193,7 @@ async def generate_answer_stream(
                                     elif block.get("type") == "tool_use":
                                         tool_name = block.get("name", "unknown")
                                         if tool_name != last_tool_name:
-                                            yield {"type": "tool_start", "tool_name": tool_name}
+                                            yield {"type": "tool_start", "tool_name": tool_name, "parent_agent": None}
                                             last_tool_name = tool_name
                     
                     elif isinstance(msg, ToolMessage):
@@ -192,7 +232,7 @@ async def generate_answer_stream(
                                         for tool_call in msg.tool_calls:
                                             tool_name = tool_call.get("name", "unknown")
                                             if tool_name != last_tool_name:
-                                                yield {"type": "tool_start", "tool_name": tool_name}
+                                                yield {"type": "tool_start", "tool_name": tool_name, "parent_agent": None}
                                                 last_tool_name = tool_name
                             
                             # Check for tool results in tools node
