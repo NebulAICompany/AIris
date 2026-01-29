@@ -154,12 +154,301 @@
   }
 }
 
+.images-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
 .images-header:hover {
-  background: rgba(59, 130, 246, 0.02);
+  background: rgba(59, 130, 246, 0.05);
 }
 
 .toggle-icon {
   transition: transform 0.2s ease;
+}
+
+.attachments-content {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(300px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.modern-attachment-card {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Responsive: single column on smaller screens */
+@media (max-width: 600px) {
+  .attachments-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modern Attachment Cards */
+.modern-attachment-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: attachmentSlideIn 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.modern-attachment-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-primary, #3b82f6);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.modern-attachment-card:hover {
+  background: var(--bg-hover, rgba(59, 130, 246, 0.04));
+  border-color: var(--accent-primary, #3b82f6);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+}
+
+.modern-attachment-card:hover::before {
+  transform: scaleY(1);
+}
+
+.modern-attachment-card:active {
+  transform: translateX(0);
+}
+
+.attachment-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.attachment-card-icon i {
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.modern-attachment-card:hover .attachment-card-icon i {
+  transform: scale(1.1);
+}
+
+/* File type specific icon colors */
+.attachment-card-icon.excel {
+  background: linear-gradient(135deg, rgba(33, 115, 70, 0.1), rgba(33, 115, 70, 0.15));
+  color: #217346;
+}
+
+.attachment-card-icon.word {
+  background: linear-gradient(135deg, rgba(43, 87, 154, 0.1), rgba(43, 87, 154, 0.15));
+  color: #2b579a;
+}
+
+.attachment-card-icon.powerpoint {
+  background: linear-gradient(135deg, rgba(210, 71, 38, 0.1), rgba(210, 71, 38, 0.15));
+  color: #d24726;
+}
+
+.attachment-card-icon.pdf {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.15));
+  color: #dc3545;
+}
+
+.attachment-card-icon.default {
+  background: linear-gradient(135deg, rgba(108, 117, 125, 0.1), rgba(108, 117, 125, 0.15));
+  color: #6c757d;
+}
+
+.attachment-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attachment-card-name {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.attachment-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75em;
+}
+
+.attachment-card-type {
+  color: var(--text-secondary, #6b7280);
+  font-weight: 500;
+  padding: 2px 6px;
+  background: var(--bg-tertiary, rgba(0, 0, 0, 0.04));
+  border-radius: 4px;
+}
+
+.attachment-card-size {
+  color: var(--text-muted, #9ca3af);
+  font-weight: 400;
+}
+
+.attachment-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.attachment-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.modern-attachment-card:hover .attachment-action-btn {
+  opacity: 1;
+}
+
+.attachment-action-btn:hover {
+  background: var(--bg-hover, rgba(59, 130, 246, 0.1));
+  color: var(--accent-primary, #3b82f6);
+  transform: scale(1.1);
+}
+
+.attachment-action-btn:active {
+  transform: scale(0.95);
+}
+
+.attachment-action-btn i {
+  font-size: 0.85em;
+}
+
+@keyframes attachmentSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark theme support for attachment cards */
+body.dark-theme .modern-attachment-card {
+  background: var(--bg-secondary, rgba(31, 41, 55, 0.6));
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+body.dark-theme .modern-attachment-card:hover {
+  background: var(--bg-hover, rgba(59, 130, 246, 0.15));
+  border-color: var(--accent-primary, #3b82f6);
+}
+
+body.dark-theme .attachment-card-name {
+  color: var(--text-primary, #f9fafb);
+}
+
+body.dark-theme .attachment-card-type {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary, #d1d5db);
+}
+
+body.dark-theme .attachment-card-size {
+  color: var(--text-muted, #9ca3af);
+}
+
+body.dark-theme .attachment-action-btn {
+  color: var(--text-secondary, #d1d5db);
+}
+
+body.dark-theme .attachment-action-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--accent-primary, #60a5fa);
+}
+
+/* Nebula theme support for attachment cards */
+body.nebula-theme .modern-attachment-card {
+  background: rgba(30, 30, 50, 0.4);
+  border-color: rgba(138, 43, 226, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+body.nebula-theme .modern-attachment-card:hover {
+  background: rgba(138, 43, 226, 0.15);
+  border-color: rgba(138, 43, 226, 0.4);
+  box-shadow: 0 2px 12px rgba(138, 43, 226, 0.2);
+}
+
+body.nebula-theme .modern-attachment-card::before {
+  background: rgba(138, 43, 226, 0.8);
+}
+
+body.nebula-theme .attachment-card-icon.excel {
+  background: linear-gradient(135deg, rgba(33, 115, 70, 0.2), rgba(33, 115, 70, 0.25));
+  color: #4ade80;
+}
+
+body.nebula-theme .attachment-card-icon.word {
+  background: linear-gradient(135deg, rgba(43, 87, 154, 0.2), rgba(43, 87, 154, 0.25));
+  color: #60a5fa;
+}
+
+body.nebula-theme .attachment-card-icon.powerpoint {
+  background: linear-gradient(135deg, rgba(210, 71, 38, 0.2), rgba(210, 71, 38, 0.25));
+  color: #f87171;
+}
+
+body.nebula-theme .attachment-card-icon.pdf {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(220, 53, 69, 0.25));
+  color: #f87171;
+}
+
+body.nebula-theme .attachment-card-icon.default {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(138, 43, 226, 0.25));
+  color: #a78bfa;
+}
+
+body.nebula-theme .attachment-action-btn:hover {
+  background: rgba(138, 43, 226, 0.2);
+  color: #a78bfa;
 }
 
 /* Chart Display Styles */
@@ -3739,6 +4028,7 @@ body.dark-theme .progress-bar {
   gap: 8px;
   opacity: 0;
   transition: opacity 0.2s ease;
+  flex-shrink: 0;
 }
 
 .file-card:hover .file-card-actions {
@@ -3784,6 +4074,7 @@ body.dark-theme .progress-bar {
   align-items: center;
   gap: 12px;
   flex: 1;
+  min-width: 0;
 }
 
 .file-card-icon {
@@ -3824,12 +4115,17 @@ body.dark-theme .progress-bar {
 
 .file-card-info {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .file-card-name {
   font-weight: 600;
   margin-bottom: 4px;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .file-card-details {
