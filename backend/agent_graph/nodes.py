@@ -4,6 +4,7 @@ from langchain_core.messages import (
     AIMessage,
     HumanMessage,
     SystemMessage,
+    ToolMessage,
     get_buffer_string,
     RemoveMessage,
 )
@@ -281,10 +282,22 @@ Current TODO List:
     updates: Dict[str, Any] = {"messages": [response]}
 
     if response.tool_calls:
+        tool_outputs = []
         for tool_call in response.tool_calls:
             if tool_call["name"] == "WriteTodos":
                 new_todos_raw = tool_call["args"].get("todos", [])
                 updates["todo_queue"] = [TodoItem(**t) for t in new_todos_raw]
+                
+                tool_outputs.append(
+                    ToolMessage(
+                        content="Todos updated successfully.",
+                        tool_call_id=tool_call["id"],
+                        name=tool_call["name"],
+                    )
+                )
+        
+        if tool_outputs:
+            updates["messages"].extend(tool_outputs)
 
     return updates
 
@@ -326,7 +339,7 @@ async def document_sub_agent_node(input_data: SubAgentInput) -> Dict[str, Any]:
 
     if ai_msg.tool_calls:
         for tool_call in ai_msg.tool_calls:
-            if tool_call["name"] == "search_specific_document_for_research":
+            if tool_call["name"] == "search_specific_document":
                 tool_output = await search_specific_document_for_research.ainvoke(
                     tool_call["args"]
                 )
