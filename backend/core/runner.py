@@ -128,6 +128,9 @@ async def generate_answer_stream(
         # - "custom": receives custom events from sub-agents via get_stream_writer
         last_tool_name = None
         current_inner_tool = None
+        # Track whether we're in the final response phase (no more tool calls)
+        # Only stream tokens when this is True to avoid showing agent's thinking
+        is_final_response = False
         
         async for stream_chunk in agent.astream(
             {"messages": [{"role": "user", "content": prompt}]},
@@ -151,18 +154,24 @@ async def generate_answer_stream(
                             # An inner tool within a sub-agent has started
                             tool_name = data.get("tool_name", "unknown")
                             parent_agent = data.get("agent")
+                            query = data.get("query")
                             current_inner_tool = tool_name
-                            yield {
+                            logger.debug(f"[custom] Received inner_tool_start: {tool_name}, query: {query[:50] if query else 'None'}...")
+                            event = {
                                 "type": "tool_start",
                                 "tool_name": tool_name,
                                 "parent_agent": parent_agent,
                             }
+                            if query:
+                                event["query"] = query
+                            yield event
                         
                         elif event_type == "inner_tool_end":
                             # An inner tool within a sub-agent has completed
                             tool_name = data.get("tool_name", "unknown")
                             parent_agent = data.get("agent")
                             current_inner_tool = None
+                            logger.debug(f"[custom] Received inner_tool_end: {tool_name}")
                             yield {
                                 "type": "tool_end",
                                 "tool_name": tool_name,
@@ -180,21 +189,26 @@ async def generate_answer_stream(
                     if isinstance(msg, AIMessageChunk):
                         content = msg.content
                         
-                        # Handle string content
-                        if isinstance(content, str) and content:
-                            yield {"type": "token", "content": content}
-                        
-                        # Handle list content (Anthropic content blocks)
-                        elif isinstance(content, list):
-                            for block in content:
-                                if isinstance(block, dict):
-                                    if block.get("type") == "text" and block.get("text"):
-                                        yield {"type": "token", "content": block["text"]}
-                                    elif block.get("type") == "tool_use":
+                        # Only stream tokens when in final response phase
+                        # (after agent has finished calling tools)
+                        if is_final_response:
+                            # Handle string content
+                            if isinstance(content, str) and content:
+                                yield {"type": "token", "content": content}
+                            
+                            # Handle list content (Anthropic content blocks)
+                            elif isinstance(content, list):
+                                for block in content:
+                                    if isinstance(block, dict):
+                                        if block.get("type") == "text" and block.get("text"):
+                                            yield {"type": "token", "content": block["text"]}
+                        else:
+                            # Check for tool_use blocks (agent is still thinking/calling tools)
+                            if isinstance(content, list):
+                                for block in content:
+                                    if isinstance(block, dict) and block.get("type") == "tool_use":
                                         tool_name = block.get("name", "unknown")
-                                        if tool_name != last_tool_name:
-                                            yield {"type": "tool_start", "tool_name": tool_name, "parent_agent": None}
-                                            last_tool_name = tool_name
+                                        logger.debug(f"[messages] tool_use block detected: {tool_name} (skipping - will use updates mode)")
                     
                     elif isinstance(msg, ToolMessage):
                         if last_tool_name:
@@ -223,17 +237,68 @@ async def generate_answer_stream(
                 elif mode_name == "updates":
                     # Updates mode: data is dict with node updates
                     if isinstance(data, dict):
+                        # Debug: log all nodes in updates
+                        logger.debug(f"[updates] Nodes in update: {list(data.keys())}")
                         for node_name, node_data in data.items():
-                            # Check for tool calls in agent node
-                            if node_name == "agent" and isinstance(node_data, dict):
+                            # Check for tool calls in agent or model node
+                            # (LangGraph uses "agent" for react agents, but "model" for other setups)
+                            if node_name in ("agent", "model") and isinstance(node_data, dict):
                                 messages = node_data.get("messages", [])
+                                logger.debug(f"[updates] {node_name} node has {len(messages)} messages")
                                 for msg in messages:
-                                    if hasattr(msg, "tool_calls") and msg.tool_calls:
+                                    has_tool_calls = hasattr(msg, "tool_calls") and bool(msg.tool_calls)
+                                    logger.debug(f"[updates] Message type: {type(msg).__name__}, has_tool_calls: {has_tool_calls}")
+                                    
+                                    if has_tool_calls:
+                                        # Agent is calling tools - not final response yet
+                                        is_final_response = False
                                         for tool_call in msg.tool_calls:
-                                            tool_name = tool_call.get("name", "unknown")
+                                            # tool_call can be dict or object
+                                            if isinstance(tool_call, dict):
+                                                tool_name = tool_call.get("name", "unknown")
+                                                tool_args = tool_call.get("args", {})
+                                            else:
+                                                tool_name = getattr(tool_call, "name", "unknown")
+                                                tool_args = getattr(tool_call, "args", {})
+                                            
+                                            logger.debug(f"[updates] Tool call: {tool_name}, args type: {type(tool_args)}, args keys: {list(tool_args.keys()) if isinstance(tool_args, dict) else 'N/A'}, args: {str(tool_args)[:150]}")
+                                            
                                             if tool_name != last_tool_name:
-                                                yield {"type": "tool_start", "tool_name": tool_name, "parent_agent": None}
+                                                # Extract descriptive parameter from tool args
+                                                query = None
+                                                if isinstance(tool_args, dict):
+                                                    # Priority list of parameters to look for
+                                                    for param in ["query", "content", "file_name", "symbol", "code", "prompt"]:
+                                                        if param in tool_args and tool_args[param]:
+                                                            val = tool_args[param]
+                                                            if isinstance(val, str) and len(val) > 0:
+                                                                query = val
+                                                                break
+                                                
+                                                logger.debug(f"[updates] Yielding tool_start: {tool_name}, query={query[:50] if query else 'None'}...")
+                                                event = {"type": "tool_start", "tool_name": tool_name, "parent_agent": None}
+                                                if query:
+                                                    event["query"] = query[:200] if len(query) > 200 else query
+                                                yield event
                                                 last_tool_name = tool_name
+                                    else:
+                                        # No tool calls - this is the final response
+                                        # Extract and yield the content directly from updates mode
+                                        # (more reliable than messages mode which streams before we know if tool calls are coming)
+                                        is_final_response = True
+                                        logger.debug("[updates] No tool calls - yielding final response content")
+                                        
+                                        # Extract content from the message
+                                        if hasattr(msg, "content") and msg.content:
+                                            content = msg.content
+                                            if isinstance(content, str) and content:
+                                                yield {"type": "token", "content": content}
+                                            elif isinstance(content, list):
+                                                for block in content:
+                                                    if isinstance(block, dict) and block.get("type") == "text":
+                                                        text = block.get("text", "")
+                                                        if text:
+                                                            yield {"type": "token", "content": text}
                             
                             # Check for tool results in tools node
                             elif node_name == "tools" and isinstance(node_data, dict):

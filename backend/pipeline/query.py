@@ -267,10 +267,21 @@ async def run_orchestration_stream(
             yield f"data: {json.dumps({'type': 'token', 'content': chunk['content']})}\n\n"
 
         elif chunk["type"] == "tool_start":
-            yield f"data: {json.dumps({'type': 'tool_start', 'tool_name': chunk['tool_name']})}\n\n"
+            event_data = {
+                'type': 'tool_start',
+                'tool_name': chunk['tool_name'],
+                'parent_agent': chunk.get('parent_agent'),
+                'query': chunk.get('query'),
+            }
+            yield f"data: {json.dumps(event_data)}\n\n"
 
         elif chunk["type"] == "tool_end":
-            yield f"data: {json.dumps({'type': 'tool_end', 'tool_name': chunk['tool_name']})}\n\n"
+            event_data = {
+                'type': 'tool_end',
+                'tool_name': chunk['tool_name'],
+                'parent_agent': chunk.get('parent_agent'),
+            }
+            yield f"data: {json.dumps(event_data)}\n\n"
 
         elif chunk["type"] == "error":
             yield f"data: {json.dumps({'type': 'error', 'content': chunk['content']})}\n\n"
