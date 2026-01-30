@@ -142,7 +142,11 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
         self.current_tool = tool_name
         
         # Priority list of parameters to look for (most descriptive first)
-        param_priority = ["query", "content", "file_name", "symbol", "code", "prompt"]
+        param_priority = [
+            "query", "content", "file_name", "symbol", "code", "prompt",
+            # TCMB-specific parameters
+            "category_id", "datagroup_code", "serie_codes", "start_date", "end_date"
+        ]
         
         # Try to extract a descriptive parameter from various sources
         query = None
@@ -163,14 +167,53 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
             elif isinstance(input_str, dict):
                 input_data = input_str
             
-            # Extract from input_data based on priority
+            # Handle specific tools with multiple parameters
             if input_data and isinstance(input_data, dict) and not query:
-                for param in param_priority:
-                    if param in input_data and input_data[param]:
-                        val = input_data[param]
-                        if isinstance(val, str) and len(val) > 0:
-                            query = val
-                            break
+                # Special handling for TCMB get_tcmb_data - show serie_codes with date range
+                if tool_name == "get_tcmb_data":
+                    serie_codes = input_data.get("serie_codes")
+                    start_date = input_data.get("start_date")
+                    end_date = input_data.get("end_date")
+                    if serie_codes:
+                        codes_str = str(serie_codes) if isinstance(serie_codes, list) else serie_codes
+                        date_range = f", {start_date} to {end_date}" if start_date and end_date else ""
+                        query = f"{codes_str}{date_range}"
+                # Special handling for TCMB get_tcmb_subcategories - show category_id
+                elif tool_name == "get_tcmb_subcategories":
+                    category_id = input_data.get("category_id")
+                    if category_id is not None:
+                        query = f"category_id: {category_id}"
+                # Special handling for TCMB get_tcmb_series - show datagroup_code
+                elif tool_name == "get_tcmb_series":
+                    datagroup_code = input_data.get("datagroup_code")
+                    if datagroup_code:
+                        query = f"datagroup: {datagroup_code}"
+                # Special handling for finance/plotting tools with symbols
+                elif tool_name == "create_financial_stock_chart":
+                    symbols = input_data.get("symbols")
+                    chart_type = input_data.get("chart_type", "candlestick")
+                    period = input_data.get("period", "daily")
+                    if symbols:
+                        symbols_str = ", ".join(symbols) if isinstance(symbols, list) else symbols
+                        query = f"{symbols_str} ({chart_type}, {period})"
+                elif tool_name in ("get_eod_data", "get_intraday_data", "get_splits_data", "get_dividends_data"):
+                    symbols = input_data.get("symbols")
+                    if symbols:
+                        query = f"symbols: {symbols}"
+                else:
+                    # Default: Extract from input_data based on priority
+                    for param in param_priority:
+                        if param in input_data and input_data[param]:
+                            val = input_data[param]
+                            if isinstance(val, str) and len(val) > 0:
+                                query = val
+                                break
+                            elif isinstance(val, (int, float)):
+                                query = str(val)
+                                break
+                            elif isinstance(val, list) and len(val) > 0:
+                                query = str(val)
+                                break
                         
         except (json.JSONDecodeError, Exception) as e:
             logger.debug(f"Could not extract query: {e}")
