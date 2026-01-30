@@ -87,6 +87,8 @@ When you are completely satisfied with the research findings, indicate completio
 You have access to:
 1. **WriteTodos**: Update the Todo List with progress and new tasks
 2. **DocumentSubAgent**: Delegate research tasks to specialized sub-agents (implicit via Send)
+3. **web_search_tool**: Search the internet for external information (market trends, news)
+4. **load_skill**: Load specialized instructions for complex topics (e.g. for 'Churn' analysis, call load_skill('Churn'))
 
 </Available Tools>
 
@@ -97,6 +99,12 @@ Think like a research manager with limited time and resources. Follow these step
 2. **Prioritize tasks** - Which tasks should be executed next?
 3. **Update the TODO list** - Mark tasks as in_progress or completed as appropriate.
 4. **Decide on delegation** - If documents need processing, ensure they are selected.
+
+<Managing Sub-Agents>
+When you have documents to analyze (selected_documents), you MUST provide clear instructions to your sub-agents using the `sub_agent_todos` field in `WriteTodos`.
+- Do NOT assume sub-agents know what to look for.
+- Create a concrete list of questions or checks (e.g., "1. Extract premium changes", "2. Look for keywords: cancel, switch, expensive").
+</Managing Sub-Agents>
 </Instructions>
 """
 
@@ -108,6 +116,14 @@ You are EXCLUSIVELY responsible for analyzing the document: "{file_name}".
 When calling `search_specific_document`, you MUST set `file_name='{file_name}'`.
 
 Then, you must analyze the retrieved content and extract key findings.
+
+<Strict Compliance>
+You will receive a list of "Orchestrator Assigned Tasks" in your user prompt.
+You MUST address every single item in that list in your findings.
+- If the document contains the answer, extract it.
+- If the document does NOT contain the answer, explicitly state "Not found".
+- Do not ignore any item on the checklist.
+</Strict Compliance>
 </Task>
 
 <Instructions>

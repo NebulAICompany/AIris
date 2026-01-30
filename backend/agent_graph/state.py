@@ -109,6 +109,7 @@ class AgentState(MessagesState):
     human_approval_status: str  # "pending", "approved", "rejected"
     is_ambiguous: bool
     summary: str
+    sub_agent_todos: List[TodoItem]
 
 
 class SubAgentInput(TypedDict):
@@ -122,3 +123,4 @@ class SubAgentInput(TypedDict):
     """
 
     document_name: str
+    todos: List[TodoItem]

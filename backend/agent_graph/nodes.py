@@ -22,6 +22,8 @@ from backend.agent_graph.prompts import (
 from backend.agent_graph.state import AgentState, Plan, SubAgentInput, Summary, TodoItem
 from backend.shared.constants import RESEARCH_LLM_REASONING, RESEARCH_LLM_FAST
 from backend.core.tools.rag import search_specific_document_for_research
+from backend.core.tools.api import web_search_tool
+from backend.core.tools.skills import load_skill
 
 
 def get_today_str() -> str:
@@ -52,6 +54,9 @@ class WriteTodos(BaseModel):
 
     todos: List[TodoItem] = Field(
         description="The full updated list of todo items with their current statuses."
+    )
+    sub_agent_todos: List[TodoItem] = Field(
+        description="A list of specific tasks that EVERY sub-agent must execute for their assigned document. Each item must have a 'task' and a 'status' (default 'pending')."
     )
 
 
@@ -264,7 +269,7 @@ async def orchestrator_node(
     todos = state.get("todo_queue", [])
     messages = state["messages"]
 
-    llm_with_tools = RESEARCH_LLM_REASONING.bind_tools([WriteTodos], tool_choice="auto")
+    llm_with_tools = RESEARCH_LLM_REASONING.bind_tools([WriteTodos, web_search_tool, load_skill], tool_choice="auto")
 
     system_prompt = LEAD_RESEARCHER_PROMPT.format(date=get_today_str())
     context_prompt = f"""
@@ -286,11 +291,34 @@ Current TODO List:
         for tool_call in response.tool_calls:
             if tool_call["name"] == "WriteTodos":
                 new_todos_raw = tool_call["args"].get("todos", [])
+                sub_todos_raw = tool_call["args"].get("sub_agent_todos", [])
                 updates["todo_queue"] = [TodoItem(**t) for t in new_todos_raw]
-                
+                if sub_todos_raw:
+                    updates["sub_agent_todos"] = [TodoItem(**t) for t in sub_todos_raw]
+            elif tool_call["name"] == "web_search_tool":
+                tool_output = await web_search_tool.ainvoke(tool_call["args"])
+                if isinstance(tool_output, tuple):
+                    content, _ = tool_output
+                else:
+                    content = str(tool_output)
+
                 tool_outputs.append(
                     ToolMessage(
-                        content="Todos updated successfully.",
+                        content=str(content),
+                        tool_call_id=tool_call["id"],
+                        name=tool_call["name"],
+                    )
+                )
+            elif tool_call["name"] == "load_skill":
+                tool_output = await load_skill.ainvoke(tool_call["args"])
+                if isinstance(tool_output, tuple):
+                    content, _ = tool_output
+                else:
+                    content = str(tool_output)
+
+                tool_outputs.append(
+                    ToolMessage(
+                        content=str(content),
                         tool_call_id=tool_call["id"],
                         name=tool_call["name"],
                     )
@@ -321,6 +349,15 @@ async def document_sub_agent_node(input_data: SubAgentInput) -> Dict[str, Any]:
     from langchain_core.messages import ToolMessage
 
     doc_name = input_data["document_name"]
+    todos_list = input_data.get("todos", [])
+    
+    # Format TodoItems into a string list for the prompt
+    # todos_list is a list of TodoItem objects (or dicts if not pushed as objects)
+    todos_str = ""
+    if todos_list:
+        todos_str = "\n".join([f"{i+1}. [ ] {t.task if hasattr(t, 'task') else t.get('task')}" for i, t in enumerate(todos_list)])
+    else:
+        todos_str = "No specific sub-tasks provided."
 
     model_with_tools = RESEARCH_LLM_FAST.bind_tools(
         [search_specific_document_for_research]
@@ -331,7 +368,7 @@ async def document_sub_agent_node(input_data: SubAgentInput) -> Dict[str, Any]:
     )
     messages = [
         SystemMessage(content=system_prompt),
-        HumanMessage(content=f"Research Topic: {doc_name}"),
+        HumanMessage(content=f"Research Topic: {doc_name}\n\n**Orchestrator Assigned Tasks**:\nYou must address the following points about this document:\n{todos_str}"),
     ]
 
     ai_msg = await model_with_tools.ainvoke(messages)

@@ -54,11 +54,12 @@ def route_orchestrator(
     """
     selected_docs = state.get("selected_documents", [])
     context = state.get("global_context", [])
+    sub_agent_todos = state.get("sub_agent_todos", [])
 
     # Fan-out: Process documents in parallel if we have docs but no context yet
     if selected_docs and not context:
         return [
-            Send("document_sub_agent_node", {"document_name": doc_name})
+            Send("document_sub_agent_node", {"document_name": doc_name, "todos": sub_agent_todos})
             for doc_name in selected_docs
         ]
 

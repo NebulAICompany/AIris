@@ -711,7 +711,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
         
         // Prevent clicking if Archive Researcher is enabled
         if (this.agentMode === "graph") {
-          Utils.showSnackbar("Web search is not available while Archive Researcher is enabled", "warning", 3000);
+          Utils.showSnackbar(window.languageService.t("webSearchForcedOn") || "Web search is required when Archive Researcher is enabled", "warning", 3000);
           return;
         }
         
@@ -730,12 +730,12 @@ setupFloatingSubmenu(collapsible, subMenu) {
         // Example: window.airisAPI.setWebSearchEnabled?.(this.webSearchEnabled);
       });
 
-      // Set initial state - disable if Archive Researcher is enabled
+      // Set initial state - enable and lock if Archive Researcher is enabled
       if (this.agentMode === "graph") {
         webSearchToggle.classList.add("disabled");
-        webSearchToggle.classList.remove("active");
-        this.webSearchEnabled = false;
-        Utils.setWebSearchEnabled(false);
+        webSearchToggle.classList.add("active");
+        this.webSearchEnabled = true;
+        Utils.setWebSearchEnabled(true);
       } else if (this.webSearchEnabled) {
         webSearchToggle.classList.add("active");
       }
@@ -775,11 +775,11 @@ setupFloatingSubmenu(collapsible, subMenu) {
         const webSearchBtn = document.getElementById("web-search-toggle");
         if (webSearchBtn) {
           if (this.agentMode === "graph") {
-            // Disable web search when Archive Researcher is enabled
+            // Enable and lock web search when Archive Researcher is enabled
             webSearchBtn.classList.add("disabled");
-            webSearchBtn.classList.remove("active");
-            this.webSearchEnabled = false;
-            Utils.setWebSearchEnabled(false);
+            webSearchBtn.classList.add("active");
+            this.webSearchEnabled = true;
+            Utils.setWebSearchEnabled(true);
           } else {
             // Enable web search when Archive Researcher is disabled
             webSearchBtn.classList.remove("disabled");

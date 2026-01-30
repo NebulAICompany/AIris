@@ -131,7 +131,7 @@ def search_local_documents(
 def search_specific_document_for_research(
     query: str,
     file_name: str,
-    max_results: int = 5,
+    max_results: int = 3,
 ) -> str:
     """Search for information within a SPECIFIC local document.
 
@@ -140,10 +140,10 @@ def search_specific_document_for_research(
     Args:
         query: Search query to find relevant information.
         file_name: The exact name of the file to search within.
-        max_results: Maximum number of document chunks to return (default 5, max 10).
+        max_results: Maximum number of document chunks to return (default 3, max 5).
     """
     try:
-        max_results = min(max(1, max_results), 10)
+        max_results = min(max(1, max_results), 5)
         client = get_vectorstore()
 
         if client is None:

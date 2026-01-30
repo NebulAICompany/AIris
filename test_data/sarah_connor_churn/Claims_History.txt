@@ -1,0 +1,101 @@
+SYSTEM EXPORT: CLAIMS_MANAGEMENT_DB_V4.2
+EXPORT DATE: 2025-01-30 14:22:15 UTC
+USER: SYSTEM_ADMIN_BATCH
+FILTER: POLICY_ID = 'P-12-345-99'
+FORMAT: FULL_AUDIT_LOG
+
+********************************************************************************
+* CLAIM FILE SUMMARY
+********************************************************************************
+CLAIM NUMBER: CLM-2024-8892
+POLICY: P-12-345-99
+INSURED: SARAH CONNOR
+LOSS DATE: 2024-11-15
+LOSS TYPE: COLLISION / SINGLE VEHICLE (MINOR)
+STATUS: ACTIVE / IN_PROGRESS / PENDING_SUPPLEMENT
+ADJUSTER: T-1000 (Primary) | AUTOMATED_BOT_7 (Intake)
+TOTAL RESERVES: $2,500.00
+TOTAL PAID: $0.00
+
+********************************************************************************
+* ACTIVITY LOG (REVERSE CHRONOLOGICAL ORDER)
+********************************************************************************
+
+[2025-01-29 09:15:22] [SYSTEM] [AUTO_EMAIL_GEN]
+Subject: "Claim Status Update - Still Pending"
+To: s.connor@example.com
+Body: Dear Sarah, we are writing to inform you that your claim CLM-2024-8892 is still under review. We are waiting for additional documentation from the repair facility. No action is required from you at this time...
+
+[2025-01-28 16:00:01] [SYSTEM] [SLA_MONITOR]
+ALERT: Claim has exceeded 60-day cycle time target.
+Priority Level escalated to: MEDIUM.
+Notification sent to Supervisor queue (SUP_QUEUE_WEST_COAST).
+
+[2025-01-20 14:30:00] [USER: T-1000] [NOTE]
+Reviewed file. Shop (TechNoir Repairs) submitted supplemental estimate #2 for hidden bracket damage. Photos uploaded are blurry. Requested re-upload. Shop manager says they are short-staffed and will get to it "next week".
+Action: Status set to PENDING_VENDOR.
+
+[2025-01-15 10:12:44] [SYSTEM] [VOICEMAIL_TRANSCRIPT]
+Caller: Sarah Connor (+1-213-555-0199)
+Duration: 00:45
+Transcript: "Hi, this is Sarah. I'm calling again about my bumper. It's been like... two months? I'm trying to figure out if I can get my car back. The rental allowance is going to run out soon. Can someone please call me back? I feel like I'm in limbo here."
+Action: Alert sent to Adjuster T-1000.
+
+[2025-01-10 09:00:00] [USER: T-1000] [NOTE]
+Workload high. 45 new files assigned this week due to storm surge in NorCal. Rolling this file to next week review cycle.
+Action: None.
+
+[2024-12-28 11:22:55] [SYSTEM] [RENTAL_AUTH]
+Rental Vehicle Authorization Code sent to Enterprise.
+Days Authorized: 5 (Extension)
+Reason: Shop Delay (Parts Backorder - Bumper Assembly OEM)
+
+[2024-12-20 08:15:33] [USER: S_CONNOR] [EMAIL_INGEST]
+From: s.connor@example.com
+Subject: Rental Car Extension?
+Body: "My car is still in the shop. They are saying the part is backordered. My rental coverage mentions a 30-day max. I'm at day 25. What happens if the shop isn't done? Do I have to pay out of pocket? This seems unfair since it's a supply chain issue."
+
+[2024-12-05 15:44:12] [SYSTEM] [PART_ORDER_TRACK]
+Part #: HON-71101-TLA-A00ZZ (Face Bar, Front Bumper)
+Status: BACKORDERED
+ETA: Unknown - Manufacturer Delay (Global Logistics)
+
+[2024-12-01 09:05:00] [USER: PHONE_REP_2] [CALL_LOG]
+Inbound Call from Insured.
+Rep: "Hello, verified identity."
+Insured: "Just checking status."
+Rep: "Informed insured that estimate was approved, waiting on parts."
+Insured: "Okay, thanks."
+Duration: 02:30
+
+[2024-11-20 13:00:00] [USER: T-1000] [ESTIMATE_UPLOAD]
+Initial Estimate Completed.
+Gross Total: $1,245.50
+Deductible: $500.00
+Net Payable: $745.50
+Status: APPROVED
+Note: Initial visual inspection only. Tear-down may reveal hidden damage.
+
+[2024-11-16 10:00:00] [SYSTEM] [ASSIGNMENT]
+Claim assigned to Adjuster T-1000 (Region: LA Metro).
+Workload balance: 112% (Overloaded).
+
+[2024-11-15 18:30:15] [SYSTEM] [FNOL_INTAKE]
+First Notice of Loss filed via Mobile App.
+Date/Time of Loss: 2024-11-15 17:45
+Location: Parking Lot, Grocery Store.
+Description: "Backed into a concrete bollard I didn't see. Cracked rear bumper and taillight."
+Photos Uploaded: 4
+Police Report: None (Private Property).
+Injuries: None.
+Drivable: Yes.
+
+[2024-11-15 18:30:10] [SYSTEM] [FRAUD_CHECK]
+Score: 12 (Low Risk)
+Flags: None.
+Verdict: FAST_TRACK_ELIGIBLE
+
+[... END OF LOG EXPORT ...]
+Run Time: 0.45s
+Rows Returned: 14
+********************************************************************************
