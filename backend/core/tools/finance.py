@@ -2,12 +2,12 @@ import httpx
 import sys
 import json
 import time
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional
 from langchain_core.tools import tool
 import pandas as pd
-
+from backend.shared.logger import get_logger
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -18,7 +18,7 @@ from backend.shared.constants import (
     MARKETSTACK_BASE_URL,
 )
 
-
+logger = get_logger("FINANCE")
 def make_request(
     endpoint: str, params: Dict[str, Any], retries: int = 3, timeout: float = 10.0
 ) -> Dict[str, Any]:
@@ -73,10 +73,10 @@ def get_eod_data(
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
-    today = date.today().strftime("%Y-%m-%d")
-    date_from = date_from or today
-    date_to = date_to or today
-
+    today = date.today()
+    one_month_ago = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    date_from = date_from or one_month_ago
+    date_to = date_to or today.strftime("%Y-%m-%d")
     params = {
         "symbols": symbols,
         "date_from": date_from,
@@ -119,9 +119,10 @@ def get_intraday_data(
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
-    today = date.today().strftime("%Y-%m-%d")
-    date_from = date_from or today
-    date_to = date_to or today
+    today = date.today()
+    one_month_ago = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    date_from = date_from or one_month_ago
+    date_to = date_to or today.strftime("%Y-%m-%d")
 
     params = {
         "symbols": symbols,
@@ -240,6 +241,10 @@ def get_splits_data(
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
+    today = date.today()
+    one_month_ago = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    date_from = date_from or one_month_ago
+    date_to = date_to or today.strftime("%Y-%m-%d")
     params = {
         "symbols": symbols,
         **({"date_from": date_from} if date_from else {}),
@@ -271,6 +276,10 @@ def get_dividends_data(
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
+    today = date.today()
+    one_month_ago = (today - timedelta(days=30)).strftime("%Y-%m-%d")
+    date_from = date_from or one_month_ago
+    date_to = date_to or today.strftime("%Y-%m-%d")
     params = {
         "symbols": symbols,
         **({"date_from": date_from} if date_from else {}),
