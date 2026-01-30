@@ -257,6 +257,7 @@ async def run_orchestration_stream(
     # Accumulate full answer for chat history
     full_answer = ""
     all_sources = []
+    all_tools = []  # Track tools used during streaming
 
     # Stream the response
     async for chunk in generate_answer_stream(
@@ -267,11 +268,16 @@ async def run_orchestration_stream(
             yield f"data: {json.dumps({'type': 'token', 'content': chunk['content']})}\n\n"
 
         elif chunk["type"] == "tool_start":
-            event_data = {
-                'type': 'tool_start',
+            tool_info = {
                 'tool_name': chunk['tool_name'],
                 'parent_agent': chunk.get('parent_agent'),
                 'query': chunk.get('query'),
+            }
+            all_tools.append(tool_info)
+            
+            event_data = {
+                'type': 'tool_start',
+                **tool_info,
             }
             yield f"data: {json.dumps(event_data)}\n\n"
 
@@ -330,6 +336,8 @@ async def run_orchestration_stream(
                 metadata["generatedFiles"] = generated_files
             if all_sources:
                 metadata["sources"] = all_sources
+            if all_tools:
+                metadata["tools"] = all_tools
 
             metadata = metadata if metadata else None
             chat_history_manager.add_message(
@@ -337,4 +345,4 @@ async def run_orchestration_stream(
             )
 
             # Send final done event with all metadata
-            yield f"data: {json.dumps({'type': 'done', 'images': images, 'charts': charts, 'generatedFiles': generated_files, 'sources': all_sources})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'images': images, 'charts': charts, 'generatedFiles': generated_files, 'sources': all_sources, 'tools': all_tools})}\n\n"

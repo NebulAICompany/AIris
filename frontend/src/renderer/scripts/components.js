@@ -2447,7 +2447,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
     images = [],
     charts = [],
     generatedFiles = [],
-    sources = []
+    sources = [],
+    tools = []
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -2576,9 +2577,58 @@ setupFloatingSubmenu(collapsible, subMenu) {
         `;
       }
 
+      // Build tools display
+      let toolsHTML = "";
+      const hasTools = tools && tools.length > 0;
+      
+      if (hasTools) {
+        const toolItems = tools.map(tool => {
+          const toolName = tool.tool_name || tool.toolName || 'Unknown tool';
+          const parentAgent = tool.parent_agent || tool.parentAgent;
+          const query = tool.query;
+          
+          const displayName = parentAgent 
+            ? `${Utils.escapeHtml(toolName)} <span class="tool-parent">(via ${Utils.escapeHtml(parentAgent)})</span>`
+            : Utils.escapeHtml(toolName);
+          
+          const queryHtml = query 
+            ? `<div class="tool-history-query">${Utils.escapeHtml(query.length > 100 ? query.substring(0, 100) + '...' : query)}</div>`
+            : '';
+          
+          const isInnerTool = parentAgent ? ' inner-tool' : '';
+          
+          return `
+            <div class="tool-history-item completed${isInnerTool}">
+              <div class="tool-history-icon">
+                <i class="fas fa-check"></i>
+              </div>
+              <div class="tool-history-content">
+                <span class="tool-history-name">${displayName}</span>
+                ${queryHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        const labelText = tools.length === 1 ? "Used 1 tool" : `Used ${tools.length} tools`;
+        
+        toolsHTML = `
+          <div class="tools-history-container">
+            <div class="tools-history-header">
+              <span class="tools-history-label">${labelText}</span>
+              <span class="tools-history-toggle">></span>
+            </div>
+            <div class="tools-history-list">
+              <div class="tools-history-items">${toolItems}</div>
+            </div>
+          </div>
+        `;
+      }
+
       messageDiv.innerHTML = `
                 <div class="message-content">
                     ${sourcesHTML}
+                    ${toolsHTML}
                     <div class="message-text">${parsedContent}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
@@ -2644,6 +2694,16 @@ setupFloatingSubmenu(collapsible, subMenu) {
             }
           });
         });
+      }
+      
+      // Add click event listener for tools toggle if tools exist
+      if (tools && tools.length > 0) {
+        const toolsHeader = messageDiv.querySelector('.tools-history-header');
+        if (toolsHeader) {
+          toolsHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
       }
     } else if (type === "error") {
       messageDiv.innerHTML = `
@@ -3385,19 +3445,21 @@ setupFloatingSubmenu(collapsible, subMenu) {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images, charts, generated files, and sources properly - they should be fresh for each message
+          // Extract images, charts, generated files, sources, and tools properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
           const generatedFiles = msg.metadata?.generatedFiles || [];
           const sources = msg.metadata?.sources || [];
+          const tools = msg.metadata?.tools || [];
 
-          // Ensure images, charts, generated files, and sources are not accumulated from previous sessions
+          // Ensure data is not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
           const cleanGeneratedFiles = Array.isArray(generatedFiles)
             ? generatedFiles.slice()
             : [];
           const cleanSources = Array.isArray(sources) ? sources.slice() : [];
+          const cleanTools = Array.isArray(tools) ? tools.slice() : [];
 
           this.addMessageToChat(
             msg.role,
@@ -3405,7 +3467,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
             cleanImages,
             cleanCharts,
             cleanGeneratedFiles,
-            cleanSources
+            cleanSources,
+            cleanTools
           );
 
           // Update local chat history
@@ -3424,6 +3487,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 cleanCharts;
               this.chatHistory[this.chatHistory.length - 1].generatedFiles =
                 cleanGeneratedFiles;
+              this.chatHistory[this.chatHistory.length - 1].tools =
+                cleanTools;
             }
           }
         });
