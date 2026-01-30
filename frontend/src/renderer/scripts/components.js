@@ -708,6 +708,13 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (webSearchToggle) {
       webSearchToggle.addEventListener("click", (e) => {
         e.preventDefault();
+        
+        // Prevent clicking if Archive Researcher is enabled
+        if (this.agentMode === "graph") {
+          Utils.showSnackbar("Web search is not available while Archive Researcher is enabled", "warning", 3000);
+          return;
+        }
+        
         this.webSearchEnabled = !this.webSearchEnabled;
         Utils.setWebSearchEnabled(this.webSearchEnabled);
 
@@ -723,8 +730,13 @@ setupFloatingSubmenu(collapsible, subMenu) {
         // Example: window.airisAPI.setWebSearchEnabled?.(this.webSearchEnabled);
       });
 
-      // Set initial state
-      if (this.webSearchEnabled) {
+      // Set initial state - disable if Archive Researcher is enabled
+      if (this.agentMode === "graph") {
+        webSearchToggle.classList.add("disabled");
+        webSearchToggle.classList.remove("active");
+        this.webSearchEnabled = false;
+        Utils.setWebSearchEnabled(false);
+      } else if (this.webSearchEnabled) {
         webSearchToggle.classList.add("active");
       }
 
@@ -759,8 +771,20 @@ setupFloatingSubmenu(collapsible, subMenu) {
         this.agentMode = agentModeToggle.checked ? "graph" : "standard";
         Utils.setAgentMode(this.agentMode);
 
-        // Notifications removed as per user request
-        console.log("Agent mode:", this.agentMode);
+        // Handle web search button state based on Archive Researcher toggle
+        const webSearchBtn = document.getElementById("web-search-toggle");
+        if (webSearchBtn) {
+          if (this.agentMode === "graph") {
+            // Disable web search when Archive Researcher is enabled
+            webSearchBtn.classList.add("disabled");
+            webSearchBtn.classList.remove("active");
+            this.webSearchEnabled = false;
+            Utils.setWebSearchEnabled(false);
+          } else {
+            // Enable web search when Archive Researcher is disabled
+            webSearchBtn.classList.remove("disabled");
+          }
+        }
 
         console.log("Agent mode:", this.agentMode);
       });
@@ -2896,6 +2920,12 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (agentModeToggle) {
         agentModeToggle.checked = false;
         // Utils.showSnackbar("New chat started - Agent Mode reset to Standard", "info", 2000);
+    }
+
+    // Re-enable web search button when starting new chat (since Archive Researcher is reset)
+    const webSearchBtn = document.getElementById("web-search-toggle");
+    if (webSearchBtn) {
+        webSearchBtn.classList.remove("disabled");
     }
 
     // Create a new session - this will also reload the sessions list

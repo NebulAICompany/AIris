@@ -32,6 +32,7 @@ dependencies = [
     "langdetect>=1.0.9",
     "langgraph>=1.0.6",
     "langgraph-checkpoint-sqlite>=3.0.3",
+    "langgraph-cli[inmem]>=0.4.12",
     "litellm>=1.80.0",
     "loguru>=0.7.3",
     "msrest>=0.7.1",

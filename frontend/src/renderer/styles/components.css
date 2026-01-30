@@ -3007,10 +3007,27 @@ body.dark-theme .image-caption {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.web-search-button:not(.active):hover {
+.web-search-button:not(.active):not(.disabled):hover {
   background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Web Search Button Disabled State */
+.web-search-button.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.web-search-button.disabled:hover {
+  background: var(--bg-secondary) !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 @keyframes rotate {

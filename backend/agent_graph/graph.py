@@ -3,7 +3,7 @@ from langgraph.graph import START, StateGraph
 from langgraph.types import Send
 from backend.core.checkpointer import get_checkpointer
 
-from .nodes import (
+from backend.agent_graph.nodes import (
     clarify_intent_node,
     document_sub_agent_node,
     generate_plan_node,
@@ -12,7 +12,7 @@ from .nodes import (
     synthesis_node,
     summarize_conversation_node,
 )
-from .state import AgentState
+from backend.agent_graph.state import AgentState
 
 
 def route_from_start(
@@ -114,3 +114,5 @@ def get_compiled_graph():
     checkpointer = get_checkpointer()
 
     return workflow.compile(checkpointer=checkpointer)
+
+graph = get_compiled_graph()
