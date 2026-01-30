@@ -1648,7 +1648,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
       let streamingStarted = false;
       let hasError = false;
-      let pendingTools = []; // Track tools called before streaming starts
+      let typingPromise = Promise.resolve(); // Track async typing animation
 
       try {
         // Send streaming query to backend
@@ -1664,47 +1664,46 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 this.hideTypingIndicator();
                 this.createStreamingMessage();
                 streamingStarted = true;
-                
-                // Add any pending tools to the history
-                pendingTools.forEach(tool => {
-                  this.addToolToHistory(tool.toolName, tool.parentAgent);
-                  if (tool.completed) {
-                    this.markToolComplete(tool.toolName, tool.parentAgent);
+              }
+              
+              // If token is large (complete response from updates mode), simulate streaming
+              // by breaking it into words for a typing effect
+              if (token.length > 100) {
+                // Chain the typing animation to ensure proper sequencing
+                typingPromise = typingPromise.then(async () => {
+                  const words = token.split(/(\s+)/); // Split by whitespace, keeping the whitespace
+                  for (const word of words) {
+                    this.appendToStreamingMessage(word);
+                    // Small delay between words for typing effect
+                    await new Promise(resolve => setTimeout(resolve, 15));
                   }
                 });
-                pendingTools = [];
-              }
-              this.appendToStreamingMessage(token);
-            },
-            onToolStart: (toolName, parentAgent) => {
-              console.log(`[Chat] Tool started: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
-              // Update typing indicator or streaming tool status
-              if (!streamingStarted) {
-                const displayMessage = parentAgent 
-                  ? `Using ${toolName} (via ${parentAgent})...`
-                  : `Using ${toolName}...`;
-                this.updateTypingIndicatorMessage(displayMessage);
-                // Track the tool for later
-                pendingTools.push({ toolName, parentAgent, completed: false });
               } else {
-                // Show tool status in the streaming message
-                this.showStreamingToolStatus(toolName, parentAgent);
+                this.appendToStreamingMessage(token);
               }
+            },
+            onToolStart: (toolName, parentAgent, query) => {
+              console.log(`[Chat] Tool started: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}${query ? ` with query: ${query.substring(0, 50)}...` : ''}`);
+              
+              // If streaming hasn't started, create the message immediately to show tools in list format
+              if (!streamingStarted) {
+                this.hideTypingIndicator();
+                this.createStreamingMessage();
+                streamingStarted = true;
+              }
+              
+              // Always show tool in the streaming message list format
+              this.showStreamingToolStatus(toolName, parentAgent, query);
             },
             onToolEnd: (toolName, parentAgent) => {
               console.log(`[Chat] Tool completed: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
               // Mark the tool as completed in the history
-              if (streamingStarted) {
-                this.hideStreamingToolStatus(toolName, parentAgent);
-              } else {
-                // Mark in pending tools
-                const pendingTool = pendingTools.find(t => t.toolName === toolName && !t.completed);
-                if (pendingTool) {
-                  pendingTool.completed = true;
-                }
-              }
+              this.hideStreamingToolStatus(toolName, parentAgent);
             },
-            onDone: (data) => {
+            onDone: async (data) => {
+              // Wait for any pending typing animation to complete
+              await typingPromise;
+              
               // Finalize the streaming message with metadata
               if (streamingStarted) {
                 this.finalizeStreamingMessage(
@@ -1895,7 +1894,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   // Add a tool to the history list during streaming
-  addToolToHistory(toolName, parentAgent = null) {
+  addToolToHistory(toolName, parentAgent = null, query = null) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
 
@@ -1904,7 +1903,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Track the tool
     if (!this.toolsHistory) this.toolsHistory = [];
-    this.toolsHistory.push({ id: toolId, toolName, parentAgent, completed: false });
+    this.toolsHistory.push({ id: toolId, toolName, parentAgent, query, completed: false });
 
     // Get the tools history container and show it
     const toolsContainer = messageDiv.querySelector(".tools-history-container");
@@ -1920,8 +1919,18 @@ setupFloatingSubmenu(collapsible, subMenu) {
         ? `${toolName} <span class="tool-parent">(via ${parentAgent})</span>`
         : toolName;
 
+      // Build query display if available
+      let queryHtml = '';
+      if (query) {
+        // Truncate query for display
+        const truncatedQuery = query.length > 100 ? query.substring(0, 100) + '...' : query;
+        queryHtml = `<div class="tool-history-query">${Utils.escapeHtml(truncatedQuery)}</div>`;
+      }
+
       const toolItem = document.createElement("div");
-      toolItem.className = "tool-history-item active";
+      toolItem.className = parentAgent 
+        ? "tool-history-item active inner-tool" 
+        : "tool-history-item active";
       toolItem.id = toolId;
       toolItem.innerHTML = `
         <div class="tool-history-icon">
@@ -1929,7 +1938,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
             <span></span><span></span><span></span>
           </div>
         </div>
-        <span class="tool-history-name">${displayName}</span>
+        <div class="tool-history-content">
+          <span class="tool-history-name">${displayName}</span>
+          ${queryHtml}
+        </div>
       `;
 
       toolsItems.appendChild(toolItem);
@@ -1997,8 +2009,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   // Show tool status indicator during streaming (now uses history)
-  showStreamingToolStatus(toolName, parentAgent = null) {
-    this.addToolToHistory(toolName, parentAgent);
+  showStreamingToolStatus(toolName, parentAgent = null, query = null) {
+    this.addToolToHistory(toolName, parentAgent, query);
   }
 
   // Hide tool status indicator (now marks tool as complete)

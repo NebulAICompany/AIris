@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict
 from langchain_core.tools import tool
 from langchain_core.messages import ToolMessage
@@ -121,14 +122,13 @@ logger = get_logger("SUBAGENT_STREAMING")
 
 class InnerToolCallbackHandler(BaseCallbackHandler):
     """
-    Callback handler that emits real-time events for inner tool calls
-    within sub-agents. Uses the stream writer to propagate events to
-    the main agent's stream.
+    Callback handler that captures inner tool calls and queues them
+    for later emission to the parent stream.
     """
     
-    def __init__(self, writer, agent_name: str):
-        self.writer = writer
+    def __init__(self, agent_name: str, event_queue: list):
         self.agent_name = agent_name
+        self.event_queue = event_queue  # Shared list to queue events
         self.current_tool = None
     
     def on_tool_start(
@@ -140,22 +140,61 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
         """Called when a tool starts - emit inner_tool_start event."""
         tool_name = serialized.get("name", "unknown")
         self.current_tool = tool_name
-        logger.info(f"[{self.agent_name}] Callback: Inner tool started: {tool_name}")
-        self.writer({
+        
+        # Priority list of parameters to look for (most descriptive first)
+        param_priority = ["query", "content", "file_name", "symbol", "code", "prompt"]
+        
+        # Try to extract a descriptive parameter from various sources
+        query = None
+        try:
+            input_data = None
+            
+            # First check kwargs for inputs
+            inputs = kwargs.get("inputs", {})
+            if isinstance(inputs, dict):
+                input_data = inputs
+            # Then try parsing input_str
+            elif isinstance(input_str, str) and input_str:
+                if input_str.startswith("{"):
+                    input_data = json.loads(input_str)
+                elif not input_str.startswith("<") and len(input_str) < 300:
+                    # For simple string inputs (not XML/HTML), use directly
+                    query = input_str
+            elif isinstance(input_str, dict):
+                input_data = input_str
+            
+            # Extract from input_data based on priority
+            if input_data and isinstance(input_data, dict) and not query:
+                for param in param_priority:
+                    if param in input_data and input_data[param]:
+                        val = input_data[param]
+                        if isinstance(val, str) and len(val) > 0:
+                            query = val
+                            break
+                        
+        except (json.JSONDecodeError, Exception) as e:
+            logger.debug(f"Could not extract query: {e}")
+        
+        logger.info(f"[{self.agent_name}] Callback: Inner tool started: {tool_name}, query: {query[:50] if query else 'None'}...")
+        event_data = {
             "event": "inner_tool_start",
             "agent": self.agent_name,
             "tool_name": tool_name,
-        })
+        }
+        if query:
+            event_data["query"] = query[:200] if len(str(query)) > 200 else str(query)
+        # Queue the event for later emission
+        self.event_queue.append(event_data)
     
     def on_tool_end(
         self,
         output: str,
         **kwargs: Any,
     ) -> None:
-        """Called when a tool ends - emit inner_tool_end event."""
+        """Called when a tool ends - queue inner_tool_end event."""
         tool_name = self.current_tool or "unknown"
         logger.info(f"[{self.agent_name}] Callback: Inner tool ended: {tool_name}")
-        self.writer({
+        self.event_queue.append({
             "event": "inner_tool_end",
             "agent": self.agent_name,
             "tool_name": tool_name,
@@ -167,10 +206,10 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
         error: BaseException,
         **kwargs: Any,
     ) -> None:
-        """Called when a tool errors - emit inner_tool_end event with error."""
+        """Called when a tool errors - queue inner_tool_end event with error."""
         tool_name = self.current_tool or "unknown"
         logger.warning(f"[{self.agent_name}] Callback: Inner tool error: {tool_name} - {error}")
-        self.writer({
+        self.event_queue.append({
             "event": "inner_tool_end",
             "agent": self.agent_name,
             "tool_name": tool_name,
@@ -182,7 +221,7 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
 async def stream_subagent_with_events(agent, agent_name: str, query: str):
     """
     Stream a sub-agent's execution and emit custom events for inner tool calls.
-    Uses callbacks for real-time tool event propagation.
+    Uses callbacks to capture events and emits them via writer during stream iteration.
     Returns the final content from the agent.
     """
     try:
@@ -199,19 +238,28 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
     
     final_content = None
     
-    # Create callback handler for real-time inner tool events
-    callback_handler = InnerToolCallbackHandler(writer, agent_name)
+    # Shared event queue - callbacks will append events here
+    event_queue = []
+    
+    # Create callback handler that queues events
+    callback_handler = InnerToolCallbackHandler(agent_name, event_queue)
     
     # Emit subagent start event
     logger.debug(f"Emitting subagent_start for {agent_name}")
     writer({"event": "subagent_start", "agent": agent_name, "query": query[:100]})
     
-    # Stream the sub-agent's updates with callback for real-time tool events
+    # Stream the sub-agent's updates with callback for tool events
     async for sub_chunk in agent.astream(
         {"messages": [{"role": "user", "content": query}]},
         config={"callbacks": [callback_handler]},
         stream_mode="updates",
     ):
+        # Emit any queued events from callbacks
+        while event_queue:
+            event = event_queue.pop(0)
+            logger.debug(f"Emitting queued event: {event['event']} - {event.get('tool_name', 'N/A')}")
+            writer(event)
+        
         # Process chunks to capture final content
         if isinstance(sub_chunk, dict):
             for node_name, node_data in sub_chunk.items():
@@ -228,6 +276,12 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
                                         final_content = block.get("text", "")
                             elif isinstance(content, str):
                                 final_content = content
+    
+    # Emit any remaining queued events
+    while event_queue:
+        event = event_queue.pop(0)
+        logger.debug(f"Emitting final queued event: {event['event']} - {event.get('tool_name', 'N/A')}")
+        writer(event)
     
     # Emit subagent end event
     logger.debug(f"Emitting subagent_end for {agent_name}")
