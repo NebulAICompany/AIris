@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from langchain.tools import tool
 from dotenv import load_dotenv
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from backend.shared.constants import CHARTS_DIR, CHART_DATA_FILE
 from backend.core.tools.finance import (
     calculate_sma,
@@ -19,6 +19,9 @@ import json
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from backend.shared.logger import get_logger
+
+logger = get_logger("PLOTTING")
 
 load_dotenv()
 
@@ -137,7 +140,8 @@ def create_financial_stock_chart(
     symbols: List[str],
     period: str = "daily",
     chart_type: str = "candlestick",
-    time_range_days: int = 180,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     include_volume: bool = True,
     technical_indicators: Optional[List[str]] = None,
     layout_style: str = "professional",
@@ -152,13 +156,20 @@ def create_financial_stock_chart(
         symbols: List of stock symbols (for example, ["AAPL", "MSFT"]). Maximum 4 symbols.
         period: "daily" or "intraday" (default "daily").
         chart_type: "candlestick", "ohlc", "line", or "area" (default "candlestick").
-        time_range_days: Number of days of historical data to display (default 180, max 1000).
+        date_from: Start date in YYYY-MM-DD format for getting data from. If not provided, 90 days ago will be used.
+        date_to: End date in YYYY-MM-DD format for getting data to. If not provided, today's date will be used.
         include_volume: Whether to show a volume subplot (default True).
         technical_indicators: List of indicators such as "sma", "ema", "bollinger", "rsi", "macd".
         layout_style: "professional", "dark", or "minimal" (default "professional").
     """
 
     try:
+        if date_from is None:
+            date_from = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        if date_to is None:
+            date_to = datetime.now().strftime("%Y-%m-%d")
+        time_range_days = (datetime.strptime(date_to, "%Y-%m-%d") - datetime.strptime(date_from, "%Y-%m-%d")).days
+        logger.info(f"Creating financial stock chart for symbols: {symbols}, period: {period}, chart_type: {chart_type}, date_from: {date_from}, date_to: {date_to}, time_range_days: {time_range_days}, include_volume: {include_volume}, technical_indicators: {technical_indicators}, layout_style: {layout_style}")
         # Input validation and defaults
         if not symbols or len(symbols) == 0:
             return {"error": "At least one stock symbol is required"}
@@ -220,11 +231,16 @@ def create_financial_stock_chart(
                     response = get_intraday_data.func(
                         symbols=symbol,
                         interval="1hour",
+                        date_from=date_from,
+                        date_to=date_to,
                         limit=min(time_range_days * 12, 1000),
                     )
                 else:
                     response = get_eod_data.func(
-                        symbols=symbol, limit=min(max(time_range_days, 250), 1000)
+                        symbols=symbol,
+                        date_from=date_from,
+                        date_to=date_to,
+                        limit=min(max(time_range_days, 250), 1000)
                     )
 
                 if (
