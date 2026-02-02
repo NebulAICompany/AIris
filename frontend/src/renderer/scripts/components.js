@@ -1683,21 +1683,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
               }
             },
             onToolStart: (toolName, parentAgent, query) => {
-              console.log(`[Chat] Tool started: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}${query ? ` with query: ${query.substring(0, 50)}...` : ''}`);
-              
-              // If streaming hasn't started, create the message immediately to show tools in list format
               if (!streamingStarted) {
                 this.hideTypingIndicator();
                 this.createStreamingMessage();
                 streamingStarted = true;
               }
-              
-              // Always show tool in the streaming message list format
               this.showStreamingToolStatus(toolName, parentAgent, query);
             },
             onToolEnd: (toolName, parentAgent) => {
-              console.log(`[Chat] Tool completed: ${toolName}${parentAgent ? ` (via ${parentAgent})` : ''}`);
-              // Mark the tool as completed in the history
               this.hideStreamingToolStatus(toolName, parentAgent);
             },
             onDone: async (data) => {
@@ -2348,8 +2341,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
     const messageContent = messageDiv.querySelector(".message-content");
     if (!messageContent) return;
     if ((!images || images.length === 0) && (!generatedFiles || generatedFiles.length === 0)) return;
-
-    console.log(`Adding ${(images || []).length} images and ${(generatedFiles || []).length} generated files to streaming message`);
 
     const attachmentsContainer = document.createElement("div");
     attachmentsContainer.className = "message-images";
