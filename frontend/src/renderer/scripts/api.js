@@ -246,8 +246,6 @@ class APIService {
     const { onToken, onToolStart, onToolEnd, onDone, onError } = callbacks;
 
     try {
-      console.log(`[API] Starting streaming query`);
-
       const response = await fetch(`${this.baseURL}/api/query/stream`, {
         method: "POST",
         headers: {

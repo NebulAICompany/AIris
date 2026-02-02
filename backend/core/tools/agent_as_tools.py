@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from langchain_core.tools import tool
 from langchain_core.messages import ToolMessage
 from langchain_core.callbacks import BaseCallbackHandler
@@ -14,6 +14,7 @@ from backend.core.prompts import (
 )
 from langchain.agents.middleware import ToolCallLimitMiddleware
 from datetime import datetime
+from backend.core.runner import extract_query_from_args, extract_text_tokens
 from .office import *
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
 from .finance import (
@@ -128,8 +129,64 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
     
     def __init__(self, agent_name: str, event_queue: list):
         self.agent_name = agent_name
-        self.event_queue = event_queue  # Shared list to queue events
+        self.event_queue = event_queue
         self.current_tool = None
+    
+    def _parse_input_data(self, input_str: str, kwargs: Dict) -> tuple[Optional[Dict], Optional[str]]:
+        """Parse input data from various sources. Returns (input_data, simple_query)."""
+        inputs = kwargs.get("inputs", {})
+        if isinstance(inputs, dict) and inputs:
+            return inputs, None
+        
+        if isinstance(input_str, dict):
+            return input_str, None
+        
+        if isinstance(input_str, str) and input_str:
+            if input_str.startswith("{"):
+                try:
+                    return json.loads(input_str), None
+                except json.JSONDecodeError:
+                    pass
+            elif not input_str.startswith("<") and len(input_str) < 300:
+                return None, input_str
+        
+        return None, None
+    
+    def _extract_tool_specific_query(self, tool_name: str, input_data: Dict) -> Optional[str]:
+        """Extract query with special formatting for specific tools."""
+        if tool_name == "get_tcmb_data":
+            serie_codes = input_data.get("serie_codes")
+            if serie_codes:
+                codes_str = str(serie_codes) if isinstance(serie_codes, list) else serie_codes
+                start_date = input_data.get("start_date")
+                end_date = input_data.get("end_date")
+                date_range = f", {start_date} to {end_date}" if start_date and end_date else ""
+                return f"{codes_str}{date_range}"
+        
+        elif tool_name == "get_tcmb_subcategories":
+            category_id = input_data.get("category_id")
+            if category_id is not None:
+                return f"category_id: {category_id}"
+        
+        elif tool_name == "get_tcmb_series":
+            datagroup_code = input_data.get("datagroup_code")
+            if datagroup_code:
+                return f"datagroup: {datagroup_code}"
+        
+        elif tool_name == "create_financial_stock_chart":
+            symbols = input_data.get("symbols")
+            if symbols:
+                symbols_str = ", ".join(symbols) if isinstance(symbols, list) else symbols
+                chart_type = input_data.get("chart_type", "candlestick")
+                period = input_data.get("period", "daily")
+                return f"{symbols_str} ({chart_type}, {period})"
+        
+        elif tool_name in ("get_eod_data", "get_intraday_data", "get_splits_data", "get_dividends_data"):
+            symbols = input_data.get("symbols")
+            if symbols:
+                return f"symbols: {symbols}"
+        
+        return None
     
     def on_tool_start(
         self,
@@ -137,88 +194,25 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
         input_str: str,
         **kwargs: Any,
     ) -> None:
-        """Called when a tool starts - emit inner_tool_start event."""
+        """Called when a tool starts."""
         tool_name = serialized.get("name", "unknown")
         self.current_tool = tool_name
         
-        # Priority list of parameters to look for (most descriptive first)
-        param_priority = [
-            "query", "content", "file_name", "symbol", "code", "prompt",
-            # TCMB-specific parameters
-            "category_id", "datagroup_code", "serie_codes", "start_date", "end_date"
-        ]
-        
-        # Try to extract a descriptive parameter from various sources
         query = None
         try:
-            input_data = None
+            input_data, simple_query = self._parse_input_data(input_str, kwargs)
             
-            # First check kwargs for inputs
-            inputs = kwargs.get("inputs", {})
-            if isinstance(inputs, dict):
-                input_data = inputs
-            # Then try parsing input_str
-            elif isinstance(input_str, str) and input_str:
-                if input_str.startswith("{"):
-                    input_data = json.loads(input_str)
-                elif not input_str.startswith("<") and len(input_str) < 300:
-                    # For simple string inputs (not XML/HTML), use directly
-                    query = input_str
-            elif isinstance(input_str, dict):
-                input_data = input_str
-            
-            # Handle specific tools with multiple parameters
-            if input_data and isinstance(input_data, dict) and not query:
-                # Special handling for TCMB get_tcmb_data - show serie_codes with date range
-                if tool_name == "get_tcmb_data":
-                    serie_codes = input_data.get("serie_codes")
-                    start_date = input_data.get("start_date")
-                    end_date = input_data.get("end_date")
-                    if serie_codes:
-                        codes_str = str(serie_codes) if isinstance(serie_codes, list) else serie_codes
-                        date_range = f", {start_date} to {end_date}" if start_date and end_date else ""
-                        query = f"{codes_str}{date_range}"
-                # Special handling for TCMB get_tcmb_subcategories - show category_id
-                elif tool_name == "get_tcmb_subcategories":
-                    category_id = input_data.get("category_id")
-                    if category_id is not None:
-                        query = f"category_id: {category_id}"
-                # Special handling for TCMB get_tcmb_series - show datagroup_code
-                elif tool_name == "get_tcmb_series":
-                    datagroup_code = input_data.get("datagroup_code")
-                    if datagroup_code:
-                        query = f"datagroup: {datagroup_code}"
-                # Special handling for finance/plotting tools with symbols
-                elif tool_name == "create_financial_stock_chart":
-                    symbols = input_data.get("symbols")
-                    chart_type = input_data.get("chart_type", "candlestick")
-                    period = input_data.get("period", "daily")
-                    if symbols:
-                        symbols_str = ", ".join(symbols) if isinstance(symbols, list) else symbols
-                        query = f"{symbols_str} ({chart_type}, {period})"
-                elif tool_name in ("get_eod_data", "get_intraday_data", "get_splits_data", "get_dividends_data"):
-                    symbols = input_data.get("symbols")
-                    if symbols:
-                        query = f"symbols: {symbols}"
-                else:
-                    # Default: Extract from input_data based on priority
-                    for param in param_priority:
-                        if param in input_data and input_data[param]:
-                            val = input_data[param]
-                            if isinstance(val, str) and len(val) > 0:
-                                query = val
-                                break
-                            elif isinstance(val, (int, float)):
-                                query = str(val)
-                                break
-                            elif isinstance(val, list) and len(val) > 0:
-                                query = str(val)
-                                break
-                        
-        except (json.JSONDecodeError, Exception) as e:
-            logger.debug(f"Could not extract query: {e}")
+            if simple_query:
+                query = simple_query
+            elif input_data and isinstance(input_data, dict):
+                # Try tool-specific extraction first
+                query = self._extract_tool_specific_query(tool_name, input_data)
+                # Fall back to generic extraction
+                if not query:
+                    query = extract_query_from_args(input_data)
+        except Exception:
+            pass
         
-        logger.info(f"[{self.agent_name}] Callback: Inner tool started: {tool_name}, query: {query[:50] if query else 'None'}...")
         event_data = {
             "event": "inner_tool_start",
             "agent": self.agent_name,
@@ -226,7 +220,6 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
         }
         if query:
             event_data["query"] = query[:200] if len(str(query)) > 200 else str(query)
-        # Queue the event for later emission
         self.event_queue.append(event_data)
     
     def on_tool_end(
@@ -234,9 +227,8 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
         output: str,
         **kwargs: Any,
     ) -> None:
-        """Called when a tool ends - queue inner_tool_end event."""
+        """Called when a tool ends."""
         tool_name = self.current_tool or "unknown"
-        logger.info(f"[{self.agent_name}] Callback: Inner tool ended: {tool_name}")
         self.event_queue.append({
             "event": "inner_tool_end",
             "agent": self.agent_name,
@@ -269,10 +261,8 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
     """
     try:
         writer = get_stream_writer()
-        logger.debug(f"Got stream writer for {agent_name}")
     except Exception as e:
-        # If we're not in a streaming context, writer won't work
-        # Fall back to simple ainvoke
+        # Not in streaming context - fall back to simple invoke
         logger.warning(f"Could not get stream writer for {agent_name}: {e}")
         result = await agent.ainvoke(
             {"messages": [{"role": "user", "content": query}]}
@@ -284,11 +274,8 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
     # Shared event queue - callbacks will append events here
     event_queue = []
     
-    # Create callback handler that queues events
     callback_handler = InnerToolCallbackHandler(agent_name, event_queue)
     
-    # Emit subagent start event
-    logger.debug(f"Emitting subagent_start for {agent_name}")
     writer({"event": "subagent_start", "agent": agent_name, "query": query[:100]})
     
     # Stream the sub-agent's updates with callback for tool events
@@ -300,34 +287,22 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
         # Emit any queued events from callbacks
         while event_queue:
             event = event_queue.pop(0)
-            logger.debug(f"Emitting queued event: {event['event']} - {event.get('tool_name', 'N/A')}")
             writer(event)
         
         # Process chunks to capture final content
         if isinstance(sub_chunk, dict):
             for node_name, node_data in sub_chunk.items():
-                # Capture final content from agent/model node
                 if node_name in ("agent", "model") and isinstance(node_data, dict):
-                    messages = node_data.get("messages", [])
-                    for msg in messages:
+                    for msg in node_data.get("messages", []):
                         if hasattr(msg, "content") and msg.content:
-                            content = msg.content
-                            # Handle Anthropic's list content format
-                            if isinstance(content, list):
-                                for block in content:
-                                    if isinstance(block, dict) and block.get("type") == "text":
-                                        final_content = block.get("text", "")
-                            elif isinstance(content, str):
-                                final_content = content
+                            # Use shared function for content extraction
+                            for text in extract_text_tokens(msg.content):
+                                final_content = text
     
     # Emit any remaining queued events
     while event_queue:
-        event = event_queue.pop(0)
-        logger.debug(f"Emitting final queued event: {event['event']} - {event.get('tool_name', 'N/A')}")
-        writer(event)
+        writer(event_queue.pop(0))
     
-    # Emit subagent end event
-    logger.debug(f"Emitting subagent_end for {agent_name}")
     writer({"event": "subagent_end", "agent": agent_name})
     
     return final_content
