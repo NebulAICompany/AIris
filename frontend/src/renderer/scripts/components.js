@@ -2278,7 +2278,6 @@ class UIComponents {
       chartInfo.length > 0 ? chartInfo.join(" - ") : `Chart ${index + 1}`;
 
     modalHeader.appendChild(closeBtn);
-    modalHeader.appendChild(title);
 
     // Create fullscreen iframe
     const fullscreenFrame = document.createElement("iframe");
