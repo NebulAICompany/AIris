@@ -236,6 +236,7 @@ class APIService {
   }
 
   // Send streaming query to AI system using Server-Sent Events
+  // callbacks may include: onToken, onToolStart, onToolEnd, onDone, onError, and signal (AbortSignal for stop)
   async sendQueryStream(
     query,
     webSearchEnabled = false,
@@ -243,21 +244,26 @@ class APIService {
     selectedFiles = null,
     callbacks = {}
   ) {
-    const { onToken, onToolStart, onToolEnd, onDone, onError } = callbacks;
+    const { onToken, onToolStart, onToolEnd, onDone, onError, signal } = callbacks;
+
+    const fetchOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: query.trim(),
+        webSearchEnabled: webSearchEnabled,
+        sessionId: sessionId,
+        selectedFiles: selectedFiles,
+      }),
+    };
+    if (signal) {
+      fetchOptions.signal = signal;
+    }
 
     try {
-      const response = await fetch(`${this.baseURL}/api/query/stream`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: query.trim(),
-          webSearchEnabled: webSearchEnabled,
-          sessionId: sessionId,
-          selectedFiles: selectedFiles,
-        }),
-      });
+      const response = await fetch(`${this.baseURL}/api/query/stream`, fetchOptions);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -319,6 +325,11 @@ class APIService {
       return { success: true };
     } catch (error) {
       console.error("[API] Streaming query error:", error);
+
+      // User clicked Stop – don't show error, let caller finalize the message
+      if (error.name === "AbortError") {
+        return { success: false, aborted: true };
+      }
 
       let errorMessage = "Beklenmeyen bir hata oluştu";
 

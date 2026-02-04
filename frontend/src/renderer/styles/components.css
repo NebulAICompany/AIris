@@ -3258,6 +3258,23 @@ body.dark-theme .image-caption {
   transform: rotate(0deg);
 }
 
+/* Stop button state (during streaming) */
+.send-button.stop-active .stop-icon {
+  width: 18px;
+  height: 18px;
+}
+.send-button.stop-active:hover:not([disabled]) {
+  color: var(--error-color, #dc3545);
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.streaming-stopped {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  font-style: italic;
+  margin-left: 2px;
+}
+
 .uploaded-files-preview {
   display: flex;
   flex-wrap: wrap;

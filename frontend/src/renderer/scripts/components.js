@@ -19,6 +19,9 @@ class UIComponents {
     this.currentSessionId = null;
     this.chatSessions = [];
 
+    /** AbortController for the current streaming request (stop generation) */
+    this.streamAbortController = null;
+
     this.selectedFiles = [];
     this.allFiles = [];
     this.fileSelectionModal = null;
@@ -640,7 +643,13 @@ setupFloatingSubmenu(collapsible, subMenu) {
         this.toggleSendButton();
       });
 
-      sendButton.addEventListener("click", () => this.sendMessage());
+      sendButton.addEventListener("click", () => {
+        if (this.isProcessing) {
+          this.stopStreaming();
+        } else {
+          this.sendMessage();
+        }
+      });
     }
     // Suggestion chips
     this.setupSuggestionChips();
@@ -1541,7 +1550,36 @@ setupFloatingSubmenu(collapsible, subMenu) {
       const hasText = chatInput.value.trim().length > 0;
       const hasFiles =
         this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
-      sendButton.disabled = !(hasText || hasFiles) || this.isProcessing;
+      // When processing, button is Stop (enabled); otherwise Send is enabled only if there is input
+      sendButton.disabled = this.isProcessing ? false : !(hasText || hasFiles);
+      sendButton.setAttribute("aria-label", this.isProcessing ? "Stop generation" : "Send message");
+      sendButton.classList.toggle("stop-active", this.isProcessing);
+      this.updateSendButtonIcon();
+    }
+  }
+
+  updateSendButtonIcon() {
+    const sendButton = document.getElementById("send-button");
+    if (!sendButton) return;
+    if (this.isProcessing) {
+      sendButton.innerHTML = `
+        <svg viewBox="0 0 24 24" class="send-icon stop-icon" aria-hidden="true">
+          <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+        </svg>
+      `;
+    } else {
+      sendButton.innerHTML = `
+        <svg viewBox="0 0 24 24" class="send-icon">
+          <path d="M7.2 20.4L21 12 7.2 3.6 7.2 10.2 17.4 12 7.2 13.8z" fill="currentColor"/>
+        </svg>
+      `;
+    }
+  }
+
+  stopStreaming() {
+    if (this.streamAbortController) {
+      this.streamAbortController.abort();
+      this.streamAbortController = null;
     }
   }
 
@@ -1558,6 +1596,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
       return;
 
     this.isProcessing = true;
+    this.streamAbortController = new AbortController();
     chatInput.value = "";
 
     // Clear chat files preview immediately when send button is pressed
@@ -1651,13 +1690,14 @@ setupFloatingSubmenu(collapsible, subMenu) {
       let typingPromise = Promise.resolve(); // Track async typing animation
 
       try {
-        // Send streaming query to backend
-        await window.apiService.sendQueryStream(
+        // Send streaming query to backend (signal allows user to stop)
+        const streamResult = await window.apiService.sendQueryStream(
           message,
           this.webSearchEnabled,
           this.currentSessionId,
           this.selectedFiles.length > 0 ? this.selectedFiles : null,
           {
+            signal: this.streamAbortController?.signal,
             onToken: (token) => {
               // On first token, hide typing indicator and create streaming message
               if (!streamingStarted) {
@@ -1731,6 +1771,17 @@ setupFloatingSubmenu(collapsible, subMenu) {
             },
           }
         );
+
+        // User clicked Stop: finalize with whatever was streamed so far
+        if (streamResult && streamResult.aborted) {
+          await typingPromise;
+          const streamingMsg = document.getElementById("streaming-message");
+          if (streamingMsg) {
+            this.finalizeStreamingMessage([], [], [], [], true);
+          } else {
+            this.hideTypingIndicator();
+          }
+        }
       } catch (error) {
         console.error("Chat streaming error:", error);
         if (!hasError) {
@@ -1748,6 +1799,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
           );
         }
       } finally {
+        this.streamAbortController = null;
         this.hideTypingIndicator();
       }
     }
@@ -2044,13 +2096,24 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   // Finalize streaming message with sources, images, etc.
-  finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = []) {
+  // stopped (5th param): when true, appends a "(Stopped)" indicator (user clicked Stop)
+  finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = [], stopped = false) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
 
     // Remove streaming class and ID
     messageDiv.classList.remove("streaming-message");
     messageDiv.removeAttribute("id");
+
+    if (stopped) {
+      const textEl = messageDiv.querySelector(".message-text");
+      if (textEl) {
+        const stopSpan = document.createElement("span");
+        stopSpan.className = "streaming-stopped";
+        stopSpan.textContent = " (Stopped)";
+        textEl.appendChild(stopSpan);
+      }
+    }
 
     // Finalize tools history - collapse it and set up toggle
     const toolsContainer = messageDiv.querySelector(".tools-history-container");
