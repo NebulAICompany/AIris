@@ -47,7 +47,7 @@ tcmb_tools = [
 
 finance_tools = [
     get_eod_data,
-    get_intraday_data,
+    #get_intraday_data,
     get_exchanges,
     get_exchange_info,
     get_currencies,
