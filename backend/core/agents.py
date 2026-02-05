@@ -18,7 +18,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
-from backend.shared.constants import CURRENT_MODEL
+from backend.shared.constants import CURRENT_MODEL, get_selected_files
 
 
 class NewsCluster(BaseModel):
@@ -98,6 +98,13 @@ def create_main_agent(
         else ""
     )
 
+    # Get selected documents
+    selected_files = get_selected_files()
+    selected_documents_part = ""
+    if selected_files:
+        files_list = "\n".join([f"- {file}" for file in selected_files])
+        selected_documents_part = f"The following documents are available when you use search_local_documents:\n{files_list}\n"
+
     # Start with a fresh list to avoid mutating the module-level list
     tools = [*main_agent_tools, *main_agent_subagents]
     if web_search_enabled:
@@ -107,6 +114,7 @@ def create_main_agent(
         current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         web_context_part=web_context_part,
         instruction_part=instruction_part,
+        selected_documents_part=selected_documents_part,
     )
 
     agent = create_agent(
