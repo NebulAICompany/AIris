@@ -247,6 +247,8 @@ Do not change the plan unless you discover you are DEFINETELY missing a step or 
 
 **Web Search Status:** {web_context_part}
 
+{selected_documents_part}
+
 If you are going to call any tool, before each tool call, be sure about that call is necessary.
 After each tool call, observe the tools' output and use it immediatly to reach the final point.
 If failed twice, do not call the same tool again, change your approach. Or answer with the information you have.
