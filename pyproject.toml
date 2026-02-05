@@ -29,6 +29,7 @@ dependencies = [
     "langchain-experimental>=0.4.1",
     "langchain-huggingface>=1.2.0",
     "langchain-openai>=1.1.7",
+    "langchain-qwq>=0.3.4",
     "langdetect>=1.0.9",
     "langgraph>=1.0.6",
     "langgraph-checkpoint-sqlite>=3.0.3",
