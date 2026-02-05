@@ -18,7 +18,6 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
-
 from backend.shared.constants import CURRENT_MODEL
 
 
@@ -122,6 +121,10 @@ def create_main_agent(
         system_prompt=agent_instructions,
         checkpointer=_get_checkpointer(),
     )
+
+    evaluator = create_trajectory_match_evaluator(  
+        trajectory_match_mode="unordered",  
+    )  
     return agent
 
 
@@ -180,8 +183,7 @@ def create_news_chat_agent(
             conversation_context_part += f"{role}: {msg['content'][:200]}{'...' if len(msg['content']) > 200 else ''}\n"
         conversation_context_part += "\n"
 
-    tools = [time_now]
-    tools.append(web_search_tool)
+    tools = [web_search_tool]
 
     agent_instructions = news_chat_agent_instructions.format(
         current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
