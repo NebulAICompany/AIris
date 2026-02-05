@@ -158,6 +158,39 @@ class UploadsDatabase:
             logger.error(f"❌ Failed to count uploads by file type: {e}")
             return {}
 
+    def delete_upload_record(self, file_name: str) -> bool:
+        """
+        Delete an upload record from the database by file name.
+
+        Args:
+            file_name: Name of the file to delete (with or without extension)
+
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # Remove extension if present for matching
+                base_name = Path(file_name).stem
+                
+                cursor = conn.execute(
+                    "DELETE FROM uploaded_files WHERE file_name = ?",
+                    (base_name,),
+                )
+                deleted_count = cursor.rowcount
+                conn.commit()
+                
+                if deleted_count > 0:
+                    logger.info(f"✅ Upload record deleted: {base_name}")
+                    return True
+                else:
+                    logger.warning(f"⚠️ No upload record found to delete: {base_name}")
+                    return False
+
+        except Exception as e:
+            logger.error(f"❌ Failed to delete upload record for {file_name}: {e}")
+            return False
+
 
 # Create a singleton instance
 uploads_db = UploadsDatabase()
