@@ -7,6 +7,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
 from langchain.agents.middleware import SummarizationMiddleware
+from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from .checkpointer import get_checkpointer as _get_checkpointer
 from datetime import datetime
 from .tools.api import (
@@ -17,7 +18,8 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+
+from backend.shared.constants import CURRENT_MODEL
 
 
 class NewsCluster(BaseModel):
@@ -77,13 +79,13 @@ def create_main_agent(
     instruction: str = None,
 ):
     """
-    Create a Deep Agent for main assistant functionality with agentic RAG.
+    Create a LLM Agent for main assistant functionality with agentic RAG.
 
     Args:
         web_search_enabled: Whether to enable web search
         instruction: Optional custom instructions
 
-    Returns a Deep Agent configured with tools, subagents, and custom instructions.
+    Returns a LLM Agent configured with tools, subagents, and custom instructions.
     The agent can use search_local_documents tool to retrieve information on demand.
     """
     instruction_part = (
@@ -109,12 +111,13 @@ def create_main_agent(
     )
 
     agent = create_agent(
-        model=ANTHROPIC_MODEL,
+        model=CURRENT_MODEL,
         tools=tools,
         middleware=[
             SummarizationMiddleware(
                 model="gpt-4o-mini", trigger=("tokens", 8000), keep=("messages", 5)
-            )
+            ),
+            AnthropicPromptCachingMiddleware(ttl="5m"),
         ],
         system_prompt=agent_instructions,
         checkpointer=_get_checkpointer(),

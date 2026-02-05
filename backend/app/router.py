@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from backend.pipeline.query import run_orchestration, run_news_chat_orchestration
+from backend.pipeline.query import run_orchestration, run_news_chat_orchestration, run_orchestration_stream
 from backend.core.tools.balance import process_balance_of_payments
 from backend.core.chat import chat_history_manager
 from backend.monitoring.metrics import api_requests_total
@@ -222,6 +223,39 @@ async def handle_query(request: QueryRequest):
 
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
+        api_requests_total.labels(status="error").inc()
+        raise e
+
+
+@router.post("/query/stream")
+async def handle_query_stream(request: QueryRequest):
+    """
+    Streaming version of /query endpoint using Server-Sent Events (SSE).
+    Returns real-time token-by-token response from the LLM.
+    """
+    try:
+        query = request.query
+        web_search_enabled = request.webSearchEnabled
+        session_id = request.sessionId
+        selected_files = request.selectedFiles
+
+        return StreamingResponse(
+            run_orchestration_stream(
+                query,
+                web_search_enabled,
+                session_id,
+                selected_files,
+            ),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    except Exception as e:
+        logger.error(f"Error processing streaming query: {str(e)}")
         api_requests_total.labels(status="error").inc()
         raise e
 

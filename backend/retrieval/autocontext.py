@@ -1,6 +1,6 @@
 from typing import List, Tuple, Optional
 from backend.shared.logger import get_logger
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from backend.shared.constants import CURRENT_MODEL
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage
 from datetime import datetime
@@ -64,7 +64,7 @@ Requirements:
 Generated title:"""
 
             # Use standard API call instead of agent
-            response = await ANTHROPIC_MODEL.ainvoke([HumanMessage(content=title_prompt)])
+            response = await CURRENT_MODEL.ainvoke([HumanMessage(content=title_prompt)])
             title = response.content.strip()
 
             # Clean up the response
@@ -121,7 +121,7 @@ Respond in EXACTLY this format (no extra text):
 SUMMARY: <your summary here>
 DATE: <YYYY-MM-DD or date range or NO_DATE>"""
 
-            response = await ANTHROPIC_MODEL.ainvoke([HumanMessage(content=context_prompt)])
+            response = await CURRENT_MODEL.ainvoke([HumanMessage(content=context_prompt)])
             content = response.content.strip()
 
             # Parse response
