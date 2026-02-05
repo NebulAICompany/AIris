@@ -196,6 +196,16 @@ QWEN_MODEL = ChatQwen(
     callbacks=[ConsoleCallbackHandler()],
 )
 
+DEEPSEEK_MODEL = ChatOpenAI(
+    model="deepseek-chat",                 # or "deepseek-reasoner" if you want the reasoning model
+    api_key=os.getenv("DEEPSEEK_API_KEY"),
+    base_url="https://api.deepseek.com",   # OpenAI-compatible DeepSeek endpoint
+    temperature=0.0,
+    max_tokens=8000,                       # adjust as you like
+    max_retries=3,
+    callbacks=[ConsoleCallbackHandler()],
+)
+
 CURRENT_MODEL = ANTHROPIC_MODEL
 
 # Marketstack tickers
