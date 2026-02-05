@@ -2,12 +2,12 @@ import httpx
 import sys
 import json
 import time
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, Any, Optional
 from langchain_core.tools import tool
 import pandas as pd
-
+from backend.shared.logger import get_logger
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -18,7 +18,7 @@ from backend.shared.constants import (
     MARKETSTACK_BASE_URL,
 )
 
-
+logger = get_logger("FINANCE")
 def make_request(
     endpoint: str, params: Dict[str, Any], retries: int = 3, timeout: float = 10.0
 ) -> Dict[str, Any]:
@@ -66,17 +66,18 @@ def get_eod_data(
     Args:
         symbols: One or more comma-separated stock symbols
             (for example, "AAPL" or "AAPL,MSFT").
-        date_from: Start date in YYYY-MM-DD format for filtering results.
-        date_to: End date in YYYY-MM-DD format for filtering results.
+        date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
+        date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         exchange: Exchange MIC code to filter by (for example, "XNAS").
         sort: Sort order for results, "DESC" (default) or "ASC".
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
-    today = date.today().strftime("%Y-%m-%d")
-    date_from = date_from or today
-    date_to = date_to or today
-
+    today = date.today()
+    if date_from is None:
+        date_from = (today - timedelta(days=90)).strftime("%Y-%m-%d")
+    if date_to is None:
+        date_to = today.strftime("%Y-%m-%d")
     params = {
         "symbols": symbols,
         "date_from": date_from,
@@ -112,16 +113,18 @@ def get_intraday_data(
             (for example, "AAPL" or "AAPL,MSFT").
         interval: Data interval such as "1min", "5min", "15min", "30min",
             "1hour", "3hour", "6hour", "12hour", or "24hour".
-        date_from: Start date in YYYY-MM-DD format for filtering results.
-        date_to: End date in YYYY-MM-DD format for filtering results.
+        date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
+        date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         exchange: Exchange MIC code to filter by (for example, "XNAS").
         sort: Sort order for results, "DESC" (default) or "ASC".
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
-    today = date.today().strftime("%Y-%m-%d")
-    date_from = date_from or today
-    date_to = date_to or today
+    today = date.today()
+    if date_from is None:
+        date_from = (today - timedelta(days=90)).strftime("%Y-%m-%d")
+    if date_to is None:
+        date_to = today.strftime("%Y-%m-%d")
 
     params = {
         "symbols": symbols,
@@ -234,16 +237,21 @@ def get_splits_data(
     Args:
         symbols: One or more comma-separated stock symbols
             (for example, "AAPL" or "AAPL,MSFT").
-        date_from: Start date in YYYY-MM-DD format for filtering results.
-        date_to: End date in YYYY-MM-DD format for filtering results.
+        date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
+        date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         sort: Sort order for results, "DESC" (default) or "ASC".
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
+    today = date.today()
+    if date_from is None:
+        date_from = (today - timedelta(days=90)).strftime("%Y-%m-%d")
+    if date_to is None:
+        date_to = today.strftime("%Y-%m-%d")
     params = {
         "symbols": symbols,
-        **({"date_from": date_from} if date_from else {}),
-        **({"date_to": date_to} if date_to else {}),
+        "date_from": date_from,
+        "date_to": date_to,
         "sort": sort,
         "limit": limit,
         "offset": offset,
@@ -265,16 +273,21 @@ def get_dividends_data(
     Args:
         symbols: One or more comma-separated stock symbols
             (for example, "AAPL" or "AAPL,MSFT").
-        date_from: Start date in YYYY-MM-DD format for filtering results.
-        date_to: End date in YYYY-MM-DD format for filtering results.
+        date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
+        date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         sort: Sort order for results, "DESC" (default) or "ASC".
         limit: Maximum number of results to return per page (default 100, max 1000).
         offset: Number of results to skip from the beginning.
     """
+    today = date.today()
+    if date_from is None:
+        date_from = (today - timedelta(days=90)).strftime("%Y-%m-%d")
+    if date_to is None:
+        date_to = today.strftime("%Y-%m-%d")
     params = {
         "symbols": symbols,
-        **({"date_from": date_from} if date_from else {}),
-        **({"date_to": date_to} if date_to else {}),
+        "date_from": date_from,
+        "date_to": date_to,
         "sort": sort,
         "limit": limit,
         "offset": offset,

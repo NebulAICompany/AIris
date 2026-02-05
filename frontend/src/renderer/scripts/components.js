@@ -19,6 +19,9 @@ class UIComponents {
     this.currentSessionId = null;
     this.chatSessions = [];
 
+    /** AbortController for the current streaming request (stop generation) */
+    this.streamAbortController = null;
+
     this.selectedFiles = [];
     this.allFiles = [];
     this.fileSelectionModal = null;
@@ -62,249 +65,249 @@ class UIComponents {
       window.languageService.updatePageTexts();
     }
   }
-setupInputResize() {
+  setupInputResize() {
     const textarea = document.getElementById('chat-input');
     if (!textarea) return;
 
     const adjustHeight = () => {
-        // 1. Önce yüksekliği "tek satır" boyutuna (24px) sabitle.
-        // 'auto' kullanmak bazen titremeye veya yanlış hesaplamaya (48px'e atlamaya) neden olur.
-        textarea.style.height = '24px';
+      // 1. Önce yüksekliği "tek satır" boyutuna (24px) sabitle.
+      // 'auto' kullanmak bazen titremeye veya yanlış hesaplamaya (48px'e atlamaya) neden olur.
+      textarea.style.height = '24px';
 
-        // 2. Şimdi içeriğin gerçekte ne kadar yer kapladığını ölç
-        let newHeight = textarea.scrollHeight;
+      // 2. Şimdi içeriğin gerçekte ne kadar yer kapladığını ölç
+      let newHeight = textarea.scrollHeight;
 
-        // 3. Eğer scrollHeight 24px'ten büyükse (yani yazı 2. satıra taştıysa) büyüt
-        // (Kırılganlık payı için > 24 yerine > 25 diyebiliriz ama > 24 genelde yeterlidir)
-        if (newHeight > 24) {
-            
-            if (newHeight > 96) {
-                textarea.style.height = '96px';
-                textarea.style.overflowY = 'auto';
-            } else {
-                textarea.style.height = newHeight + 'px';
-                textarea.style.overflowY = 'hidden';
-            }
-            
+      // 3. Eğer scrollHeight 24px'ten büyükse (yani yazı 2. satıra taştıysa) büyüt
+      // (Kırılganlık payı için > 24 yerine > 25 diyebiliriz ama > 24 genelde yeterlidir)
+      if (newHeight > 24) {
+
+        if (newHeight > 96) {
+          textarea.style.height = '96px';
+          textarea.style.overflowY = 'auto';
         } else {
-            // Eğer yazı tek satıra sığıyorsa, 24px olarak kalsın
-            // (Yukarıda zaten 24px'e eşitlemiştik, burada overflow'u gizlemek yeterli)
-            textarea.style.overflowY = 'hidden';
+          textarea.style.height = newHeight + 'px';
+          textarea.style.overflowY = 'hidden';
         }
+
+      } else {
+        // Eğer yazı tek satıra sığıyorsa, 24px olarak kalsın
+        // (Yukarıda zaten 24px'e eşitlemiştik, burada overflow'u gizlemek yeterli)
+        textarea.style.overflowY = 'hidden';
+      }
     };
 
     textarea.addEventListener('input', adjustHeight);
 
     // Başlangıçta bir kez çalıştır
     adjustHeight();
-}
-
-
-initSidebar() {
-  const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
-  const collapsible = document.querySelector('.nav-item.collapsible');
-  const subMenu = document.querySelector('.sub-menu');
-  const subItems = document.querySelectorAll('.sub-item');
-  const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
-  const sidebar = document.querySelector('.sidebar');
-
-  // --- 1. Temizlik ve Başlangıç Ayarları ---
-  // İlk yüklemede tüm aktiflikleri temizle
-  navItems.forEach(item => item.classList.remove('active'));
-  subItems.forEach(item => item.classList.remove('active'));
-  if (collapsible) collapsible.classList.remove('active');
-  balanceSections.forEach(sec => sec.classList.remove('active'));
-
-  // Sayfa açıldığında chat nav varsayılan aktif olsun
-  const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
-  if (chatNav) {
-    chatNav.classList.add('active');
-    const chatTab = document.getElementById('chat-tab');
-    if (chatTab) chatTab.classList.add('active');
   }
 
-  // --- 2. Normal Nav Item Tıklama ---
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      // Temizlik
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      
-      // Collapsible'ın aktifliğini kaldır
-      if (collapsible) collapsible.classList.remove('active');
-      
-      balanceSections.forEach(sec => sec.classList.remove('active'));
 
-      item.classList.add('active');
+  initSidebar() {
+    const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
+    const collapsible = document.querySelector('.nav-item.collapsible');
+    const subMenu = document.querySelector('.sub-menu');
+    const subItems = document.querySelectorAll('.sub-item');
+    const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
+    const sidebar = document.querySelector('.sidebar');
 
-      // Sidebar açıkken subMenu kapat (başka menüye geçildi)
-      if (subMenu && !sidebar.classList.contains('collapsed')) {
-        subMenu.classList.remove('open');
-        subMenu.style.maxHeight = null;
-      }
+    // --- 1. Temizlik ve Başlangıç Ayarları ---
+    // İlk yüklemede tüm aktiflikleri temizle
+    navItems.forEach(item => item.classList.remove('active'));
+    subItems.forEach(item => item.classList.remove('active'));
+    if (collapsible) collapsible.classList.remove('active');
+    balanceSections.forEach(sec => sec.classList.remove('active'));
 
-      // Tab göster
-      const tabId = item.dataset.tab + '-tab';
-      const tab = document.getElementById(tabId);
-      if (tab) tab.classList.add('active');
-    });
-  });
+    // Sayfa açıldığında chat nav varsayılan aktif olsun
+    const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
+    if (chatNav) {
+      chatNav.classList.add('active');
+      const chatTab = document.getElementById('chat-tab');
+      if (chatTab) chatTab.classList.add('active');
+    }
 
-  // --- 3. Collapsible (Finansal Analiz) Mantığı ---
-  if (collapsible && subMenu) {
-    
-    // A) TIKLAMA (CLICK) İŞLEMİ
-    // A) TIKLAMA (CLICK) İŞLEMİ
-    collapsible.addEventListener('click', () => {
-      const isCollapsed = sidebar.classList.contains('collapsed');
+    // --- 2. Normal Nav Item Tıklama ---
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        // Temizlik
+        navItems.forEach(i => i.classList.remove('active'));
+        subItems.forEach(i => i.classList.remove('active'));
 
-      // Diğer her şeyi temizle
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      
-      // Ana başlığı aktif yap
-      collapsible.classList.add('active');
+        // Collapsible'ın aktifliğini kaldır
+        if (collapsible) collapsible.classList.remove('active');
 
-      if (!isCollapsed) {
-        // Sidebar AÇIK
-        subMenu.classList.toggle('open');
-        subMenu.style.maxHeight = subMenu.classList.contains('open')
-          ? subMenu.scrollHeight + 'px'
-          : null;
-      } else {
-        // Sidebar KAPALI
-        this.setupFloatingSubmenu(collapsible, subMenu);
-      }
-      
-      // Tabı göster
-      const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
-      const tab = document.getElementById(tabId);
-      if (tab) {
-         balanceSections.forEach(sec => sec.classList.remove('active'));
-         tab.classList.add('active');
-      }
+        balanceSections.forEach(sec => sec.classList.remove('active'));
+
+        item.classList.add('active');
+
+        // Sidebar açıkken subMenu kapat (başka menüye geçildi)
+        if (subMenu && !sidebar.classList.contains('collapsed')) {
+          subMenu.classList.remove('open');
+          subMenu.style.maxHeight = null;
+        }
+
+        // Tab göster
+        const tabId = item.dataset.tab + '-tab';
+        const tab = document.getElementById(tabId);
+        if (tab) tab.classList.add('active');
+      });
     });
 
-    // B) HOVER (MOUSEENTER) İŞLEMİ
-    collapsible.addEventListener('mouseenter', () => {
-      // Sadece sidebar KAPALIYKEN hover çalışsın
-      if (sidebar.classList.contains('collapsed')) {
-        this.setupFloatingSubmenu(collapsible, subMenu);
-      }
-    });
+    // --- 3. Collapsible (Finansal Analiz) Mantığı ---
+    if (collapsible && subMenu) {
 
-    // C) MOUSELEAVE İŞLEMİ
-    collapsible.addEventListener('mouseleave', () => {
-      if (sidebar.classList.contains('collapsed')) {
-        // Kullanıcı mouse'u ikondan menüye kaydırırken menü kapanmasın diye gecikme
-        setTimeout(() => {
+      // A) TIKLAMA (CLICK) İŞLEMİ
+      // A) TIKLAMA (CLICK) İŞLEMİ
+      collapsible.addEventListener('click', () => {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        // Diğer her şeyi temizle
+        navItems.forEach(i => i.classList.remove('active'));
+        subItems.forEach(i => i.classList.remove('active'));
+
+        // Ana başlığı aktif yap
+        collapsible.classList.add('active');
+
+        if (!isCollapsed) {
+          // Sidebar AÇIK
+          subMenu.classList.toggle('open');
+          subMenu.style.maxHeight = subMenu.classList.contains('open')
+            ? subMenu.scrollHeight + 'px'
+            : null;
+        } else {
+          // Sidebar KAPALI
+          this.setupFloatingSubmenu(collapsible, subMenu);
+        }
+
+        // Tabı göster
+        const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
+        const tab = document.getElementById(tabId);
+        if (tab) {
+          balanceSections.forEach(sec => sec.classList.remove('active'));
+          tab.classList.add('active');
+        }
+      });
+
+      // B) HOVER (MOUSEENTER) İŞLEMİ
+      collapsible.addEventListener('mouseenter', () => {
+        // Sadece sidebar KAPALIYKEN hover çalışsın
+        if (sidebar.classList.contains('collapsed')) {
+          this.setupFloatingSubmenu(collapsible, subMenu);
+        }
+      });
+
+      // C) MOUSELEAVE İŞLEMİ
+      collapsible.addEventListener('mouseleave', () => {
+        if (sidebar.classList.contains('collapsed')) {
+          // Kullanıcı mouse'u ikondan menüye kaydırırken menü kapanmasın diye gecikme
+          setTimeout(() => {
+            const floatingMenu = document.querySelector('.floating-sub-menu');
+            // Eğer mouse şu an floating menünün üzerinde değilse kapat
+            if (floatingMenu && !floatingMenu.matches(':hover')) {
+              floatingMenu.remove();
+            }
+          }, 100);
+        }
+      });
+    }
+
+    // --- 4. Sub-item (Alt Menü) Tıklama ---
+    subItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation(); // Üst menü tıklamasını engelle
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        // 1. Tüm aktiflikleri temizle
+        navItems.forEach(i => i.classList.remove('active'));
+        subItems.forEach(i => i.classList.remove('active'));
+        balanceSections.forEach(sec => sec.classList.remove('active'));
+
+        // 2. ÖNEMLİ DEĞİŞİKLİK: Üst menünün aktifliğini kaldır
+        if (collapsible) collapsible.classList.remove('active');
+
+        // 3. Sadece tıklanan alt öğeyi aktif yap
+        item.classList.add('active');
+
+        // 4. İlgili Tabı aç
+        const sectionId = item.dataset.page.replace('#', '') + '-tab';
+        const section = document.getElementById(sectionId);
+        if (section) section.classList.add('active');
+
+        // Sidebar kapalıysa floating menüyü kapat
+        if (isCollapsed) {
           const floatingMenu = document.querySelector('.floating-sub-menu');
-          // Eğer mouse şu an floating menünün üzerinde değilse kapat
-          if (floatingMenu && !floatingMenu.matches(':hover')) {
-            floatingMenu.remove();
-          }
-        }, 100);
-      }
+          if (floatingMenu) floatingMenu.remove();
+        }
+
+        location.hash = item.dataset.page;
+      });
     });
   }
 
- // --- 4. Sub-item (Alt Menü) Tıklama ---
-  subItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.stopPropagation(); // Üst menü tıklamasını engelle
-      const isCollapsed = sidebar.classList.contains('collapsed');
+  // --- Floating Submenu Helper (Sidebar Kapalıyken) ---
+  setupFloatingSubmenu(collapsible, subMenu) {
+    const sidebar = document.querySelector('.sidebar');
+    // Sadece sidebar kapalıysa çalışmalı
+    if (!sidebar.classList.contains('collapsed')) return;
 
-      // 1. Tüm aktiflikleri temizle
-      navItems.forEach(i => i.classList.remove('active'));
-      subItems.forEach(i => i.classList.remove('active'));
-      balanceSections.forEach(sec => sec.classList.remove('active'));
-      
-      // 2. ÖNEMLİ DEĞİŞİKLİK: Üst menünün aktifliğini kaldır
-      if (collapsible) collapsible.classList.remove('active');
+    // Önce varsa eski floating menüyü temizle
+    const existing = document.querySelector('.floating-sub-menu');
+    if (existing) existing.remove();
 
-      // 3. Sadece tıklanan alt öğeyi aktif yap
-      item.classList.add('active');
+    // Yeni floating submenu klonla
+    const clone = subMenu.cloneNode(true);
+    clone.classList.add('floating-sub-menu');
 
-      // 4. İlgili Tabı aç
-      const sectionId = item.dataset.page.replace('#', '') + '-tab';
-      const section = document.getElementById(sectionId);
-      if (section) section.classList.add('active');
+    // Stil Ayarları (JS ile zorunlu stiller)
+    clone.style.position = 'absolute';
+    clone.style.zIndex = '4000';
+    clone.style.display = 'flex';
+    clone.style.flexDirection = 'column';
+    clone.style.maxHeight = '500px';
+    clone.style.minWidth = '180px';
+    clone.style.padding = '0px';
+    clone.style.backgroundColor = 'var(--bg-secondary)'; // Temanızdaki değişken
+    clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Gölge
+    clone.style.borderRadius = '8px';
+    clone.style.border = '1px solid var(--border-color)';
 
-      // Sidebar kapalıysa floating menüyü kapat
-      if (isCollapsed) {
-         const floatingMenu = document.querySelector('.floating-sub-menu');
-         if(floatingMenu) floatingMenu.remove();
-      }
+    // KONUM HESAPLAMASI (getBoundingClientRect ile ekran koordinatları)
+    const rect = collapsible.getBoundingClientRect();
 
-      location.hash = item.dataset.page;
-    });
-  });
-}
+    // Sidebar'ın sağına hizala
+    clone.style.top = rect.top + 'px';
+    clone.style.left = (rect.right + 10) + 'px'; // +10px boşluk
 
-// --- Floating Submenu Helper (Sidebar Kapalıyken) ---
-setupFloatingSubmenu(collapsible, subMenu) {
-  const sidebar = document.querySelector('.sidebar');
-  // Sadece sidebar kapalıysa çalışmalı
-  if (!sidebar.classList.contains('collapsed')) return;
+    // Body'ye ekle (Sidebar overflow'undan kurtulmak için)
+    document.body.appendChild(clone);
 
-  // Önce varsa eski floating menüyü temizle
-  const existing = document.querySelector('.floating-sub-menu');
-  if (existing) existing.remove();
+    // --- Floating Menü Olayları ---
 
-  // Yeni floating submenu klonla
-  const clone = subMenu.cloneNode(true);
-  clone.classList.add('floating-sub-menu');
-  
-  // Stil Ayarları (JS ile zorunlu stiller)
-  clone.style.position = 'absolute';
-  clone.style.zIndex = '4000';
-  clone.style.display = 'flex';
-  clone.style.flexDirection = 'column';
-  clone.style.maxHeight = '500px';
-  clone.style.minWidth = '180px';
-  clone.style.padding = '0px';
-  clone.style.backgroundColor = 'var(--bg-secondary)'; // Temanızdaki değişken
-  clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Gölge
-  clone.style.borderRadius = '8px';
-  clone.style.border = '1px solid var(--border-color)';
-
-  // KONUM HESAPLAMASI (getBoundingClientRect ile ekran koordinatları)
-  const rect = collapsible.getBoundingClientRect();
-  
-  // Sidebar'ın sağına hizala
-  clone.style.top = rect.top + 'px';
-  clone.style.left = (rect.right + 10) + 'px'; // +10px boşluk
-
-  // Body'ye ekle (Sidebar overflow'undan kurtulmak için)
-  document.body.appendChild(clone);
-
-  // --- Floating Menü Olayları ---
-
-  // 1. Mouse menüden çıkınca kapat
-  clone.addEventListener('mouseleave', () => {
-    clone.remove();
-  });
-
-  // 2. Alt öğelere tıklanınca orijinal mantığı çalıştır
-  clone.querySelectorAll('.sub-item').forEach(item => {
-    item.addEventListener('click', () => {
-      // Orijinal öğeyi bul ve tıkla (Bütün mantık initSidebar'da tek yerde)
-      const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
-      if (originalItem) originalItem.click();
-      
+    // 1. Mouse menüden çıkınca kapat
+    clone.addEventListener('mouseleave', () => {
       clone.remove();
     });
-  });
-  
-  // 3. Dışarı tıklayınca kapat (Güvenlik önlemi)
-  const closeMenu = (e) => {
+
+    // 2. Alt öğelere tıklanınca orijinal mantığı çalıştır
+    clone.querySelectorAll('.sub-item').forEach(item => {
+      item.addEventListener('click', () => {
+        // Orijinal öğeyi bul ve tıkla (Bütün mantık initSidebar'da tek yerde)
+        const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
+        if (originalItem) originalItem.click();
+
+        clone.remove();
+      });
+    });
+
+    // 3. Dışarı tıklayınca kapat (Güvenlik önlemi)
+    const closeMenu = (e) => {
       if (!clone.contains(e.target) && !collapsible.contains(e.target)) {
-          clone.remove();
-          document.removeEventListener('click', closeMenu);
+        clone.remove();
+        document.removeEventListener('click', closeMenu);
       }
-  };
-  setTimeout(() => document.addEventListener('click', closeMenu), 0);
-}
+    };
+    setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  }
 
 
 
@@ -317,7 +320,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
 
 
- setupSidebarToggle() {
+  setupSidebarToggle() {
     const sidebar = document.querySelector('.sidebar');
     const toggleBtn = document.querySelector('.toggle-btn');
     // Sub-menu ve collapsible elemanlarını da seçelim
@@ -329,46 +332,46 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // LocalStorage kontrolü (Mevcut kodun)
     const savedState = localStorage.getItem('sidebarState');
     if (savedState === 'expanded') {
-        sidebar.classList.add('expanded');
-        sidebar.classList.remove('collapsed');
+      sidebar.classList.add('expanded');
+      sidebar.classList.remove('collapsed');
     } else {
-        sidebar.classList.add('collapsed');
-        sidebar.classList.remove('expanded');
+      sidebar.classList.add('collapsed');
+      sidebar.classList.remove('expanded');
     }
 
     toggleBtn.addEventListener('click', () => {
-        const isCollapsed = sidebar.classList.contains('collapsed');
+      const isCollapsed = sidebar.classList.contains('collapsed');
 
-        if (isCollapsed) {
-            // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
-            sidebar.classList.remove('collapsed');
-            sidebar.classList.add('expanded');
-            localStorage.setItem('sidebarState', 'expanded');
-            
-            // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
-            // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
-            
-        } else {
-            // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
-            sidebar.classList.remove('expanded');
-            sidebar.classList.add('collapsed');
-            localStorage.setItem('sidebarState', 'collapsed');
+      if (isCollapsed) {
+        // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
+        sidebar.classList.remove('collapsed');
+        sidebar.classList.add('expanded');
+        localStorage.setItem('sidebarState', 'expanded');
 
-            // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
-            // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
-            if (subMenu && subMenu.classList.contains('open')) {
-                subMenu.classList.remove('open');
-                subMenu.style.maxHeight = null; // Inline stili temizle
-            }
+        // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
+        // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
 
-            // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
-            // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
-            if (collapsible) {
-                collapsible.classList.remove('active');
-            }
+      } else {
+        // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
+        sidebar.classList.remove('expanded');
+        sidebar.classList.add('collapsed');
+        localStorage.setItem('sidebarState', 'collapsed');
+
+        // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
+        // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
+        if (subMenu && subMenu.classList.contains('open')) {
+          subMenu.classList.remove('open');
+          subMenu.style.maxHeight = null; // Inline stili temizle
         }
+
+        // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
+        // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
+        if (collapsible) {
+          collapsible.classList.remove('active');
+        }
+      }
     });
-}
+  }
 
   // ---------------- Profile Modal ----------------
   loadProfiles() {
@@ -619,6 +622,21 @@ setupFloatingSubmenu(collapsible, subMenu) {
   }
 
   setupEventListeners() {
+    // Listen for chart resize messages from plotting.py generated iframes
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.height) {
+        const iframes = document.querySelectorAll("iframe.message-chart, iframe.chart-fullscreen-frame");
+        iframes.forEach((iframe) => {
+          if (iframe.contentWindow === event.source) {
+            const { height, width } = event.data;
+            if (height) iframe.style.height = height + "px";
+            // Width is also received as requested: width
+          }
+        });
+      }
+    });
+
+
     // Navigation
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.addEventListener("click", (e) => this.handleNavigation(e));
@@ -640,7 +658,13 @@ setupFloatingSubmenu(collapsible, subMenu) {
         this.toggleSendButton();
       });
 
-      sendButton.addEventListener("click", () => this.sendMessage());
+      sendButton.addEventListener("click", () => {
+        if (this.isProcessing) {
+          this.stopStreaming();
+        } else {
+          this.sendMessage();
+        }
+      });
     }
     // Suggestion chips
     this.setupSuggestionChips();
@@ -1541,7 +1565,36 @@ setupFloatingSubmenu(collapsible, subMenu) {
       const hasText = chatInput.value.trim().length > 0;
       const hasFiles =
         this.chatUploadedFiles && this.chatUploadedFiles.length > 0;
-      sendButton.disabled = !(hasText || hasFiles) || this.isProcessing;
+      // When processing, button is Stop (enabled); otherwise Send is enabled only if there is input
+      sendButton.disabled = this.isProcessing ? false : !(hasText || hasFiles);
+      sendButton.setAttribute("aria-label", this.isProcessing ? "Stop generation" : "Send message");
+      sendButton.classList.toggle("stop-active", this.isProcessing);
+      this.updateSendButtonIcon();
+    }
+  }
+
+  updateSendButtonIcon() {
+    const sendButton = document.getElementById("send-button");
+    if (!sendButton) return;
+    if (this.isProcessing) {
+      sendButton.innerHTML = `
+        <svg viewBox="0 0 24 24" class="send-icon stop-icon" aria-hidden="true">
+          <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+        </svg>
+      `;
+    } else {
+      sendButton.innerHTML = `
+        <svg viewBox="0 0 24 24" class="send-icon">
+          <path d="M7.2 20.4L21 12 7.2 3.6 7.2 10.2 17.4 12 7.2 13.8z" fill="currentColor"/>
+        </svg>
+      `;
+    }
+  }
+
+  stopStreaming() {
+    if (this.streamAbortController) {
+      this.streamAbortController.abort();
+      this.streamAbortController = null;
     }
   }
 
@@ -1558,6 +1611,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
       return;
 
     this.isProcessing = true;
+    this.streamAbortController = new AbortController();
     chatInput.value = "";
 
     // Clear chat files preview immediately when send button is pressed
@@ -1585,7 +1639,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
     if (filesToUpload.length > 0) {
       // Capture the current photo-less mode state for these files
       const photoLessModeForThisUpload = this.photoLessMode;
-      
+
       // Show uploading status for each file
       for (const file of filesToUpload) {
         this.addFileStatusMessage(file.name, "uploading");
@@ -1612,7 +1666,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
             },
             progressCallback
           );
-          
+
           if (response && response.success) {
             uploadedFiles.push({
               name: file.name,
@@ -1631,7 +1685,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
           this.updateFileStatusMessage(file.name, "error", error?.message || "Upload failed");
         }
       }
-      
+
       // Reset photo-less mode after uploads complete
       if (this.photoLessMode) {
         this.photoLessMode = false;
@@ -1643,52 +1697,124 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Only send to AI if there's a text message
     if (message) {
-      // Show enhanced typing indicator
+      // Show enhanced typing indicator initially
       this.showEnhancedTypingIndicator(message);
 
+      let streamingStarted = false;
+      let hasError = false;
+      let typingPromise = Promise.resolve(); // Track async typing animation
+
       try {
-        // Send to backend
-        const response = await this.sendQueryWithRetry(
+        // Send streaming query to backend (signal allows user to stop)
+        const streamResult = await window.apiService.sendQueryStream(
           message,
           this.webSearchEnabled,
           this.currentSessionId,
-          2,
-          this.selectedFiles.length > 0 ? this.selectedFiles : null
+          this.selectedFiles.length > 0 ? this.selectedFiles : null,
+          {
+            signal: this.streamAbortController?.signal,
+            onToken: (token) => {
+              // On first token, hide typing indicator and create streaming message
+              if (!streamingStarted) {
+                this.hideTypingIndicator();
+                this.createStreamingMessage();
+                streamingStarted = true;
+              }
+              
+              // If token is large (complete response from updates mode), simulate streaming
+              // by breaking it into words for a typing effect
+              if (token.length > 100) {
+                // Chain the typing animation to ensure proper sequencing
+                typingPromise = typingPromise.then(async () => {
+                  const words = token.split(/(\s+)/); // Split by whitespace, keeping the whitespace
+                  for (const word of words) {
+                    this.appendToStreamingMessage(word);
+                    // Small delay between words for typing effect
+                    await new Promise(resolve => setTimeout(resolve, 15));
+                  }
+                });
+              } else {
+                this.appendToStreamingMessage(token);
+              }
+            },
+            onToolStart: (toolName, parentAgent, query) => {
+              if (!streamingStarted) {
+                this.hideTypingIndicator();
+                this.createStreamingMessage();
+                streamingStarted = true;
+              }
+              this.showStreamingToolStatus(toolName, parentAgent, query);
+            },
+            onToolEnd: (toolName, parentAgent) => {
+              this.hideStreamingToolStatus(toolName, parentAgent);
+            },
+            onDone: async (data) => {
+              // Wait for any pending typing animation to complete
+              await typingPromise;
+              
+              // Finalize the streaming message with metadata
+              if (streamingStarted) {
+                this.finalizeStreamingMessage(
+                  data.images || [],
+                  data.charts || [],
+                  data.generatedFiles || [],
+                  data.sources || []
+                );
+              } else {
+                // No tokens were streamed, show empty response
+                this.hideTypingIndicator();
+                this.addMessageToChat(
+                  "assistant",
+                  "Response received but content was empty. Please try again."
+                );
+              }
+            },
+            onError: (errorMessage) => {
+              hasError = true;
+              this.hideTypingIndicator();
+              
+              // Remove streaming message if it was created
+              const streamingMsg = document.getElementById("streaming-message");
+              if (streamingMsg) {
+                streamingMsg.remove();
+              }
+              
+              this.addMessageToChat(
+                "error",
+                errorMessage || "Sorry, there was an error processing your request. Please try again."
+              );
+            },
+          }
         );
 
-        if (response) {
-          // Extract response content properly from API response
-          const responseContent =
-            response.response || response.content || response.data?.response;
-          const responseImages = response.images || response.data?.images || [];
-          const responseCharts = response.charts || response.data?.charts || [];
-          const responseGeneratedFiles =
-            response.generatedFiles || response.data?.generatedFiles || [];
-          const responseSources = response.sources || response.data?.sources || [];
-          if (responseContent) {
-            this.addMessageToChat(
-              "assistant",
-              responseContent,
-              responseImages,
-              responseCharts,
-              responseGeneratedFiles,
-              responseSources
-            );
+        // User clicked Stop: finalize with whatever was streamed so far
+        if (streamResult && streamResult.aborted) {
+          await typingPromise;
+          const streamingMsg = document.getElementById("streaming-message");
+          if (streamingMsg) {
+            this.finalizeStreamingMessage([], [], [], [], true);
           } else {
-            console.warn("Empty response received:", response);
-            this.addMessageToChat(
-              "assistant",
-              "Response received but content was empty. Please try again."
-            );
+            this.hideTypingIndicator();
           }
         }
       } catch (error) {
-        console.error("Chat error:", error);
-        this.addMessageToChat(
-          "error",
-          "Sorry, there was an error processing your request. Please try again."
-        );
+        console.error("Chat streaming error:", error);
+        if (!hasError) {
+          this.hideTypingIndicator();
+          
+          // Remove streaming message if it was created
+          const streamingMsg = document.getElementById("streaming-message");
+          if (streamingMsg) {
+            streamingMsg.remove();
+          }
+          
+          this.addMessageToChat(
+            "error",
+            "Sorry, there was an error processing your request. Please try again."
+          );
+        }
       } finally {
+        this.streamAbortController = null;
         this.hideTypingIndicator();
       }
     }
@@ -1790,13 +1916,608 @@ setupFloatingSubmenu(collapsible, subMenu) {
     }
   }
 
+  // Create a streaming message element that will be updated with tokens
+  createStreamingMessage() {
+    const chatMessages = document.getElementById("chat-messages");
+    if (!chatMessages) return null;
+
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message assistant-message streaming-message";
+    messageDiv.id = "streaming-message";
+
+    const timestamp = new Date().toLocaleTimeString();
+
+    // Initialize tools history tracking
+    this.toolsHistory = [];
+
+    messageDiv.innerHTML = `
+      <div class="message-content">
+        <div class="sources-placeholder"></div>
+        <div class="tools-history-container" style="display: none;">
+          <div class="tools-history-header">
+            <span class="tools-history-label">Tools used</span>
+            <span class="tools-history-toggle">></span>
+          </div>
+          <div class="tools-history-list">
+            <div class="tools-history-items"></div>
+          </div>
+        </div>
+        <div class="message-text"></div>
+        <div class="message-time">${timestamp}</div>
+      </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    return messageDiv;
+  }
+
+  // Add a tool to the history list during streaming
+  addToolToHistory(toolName, parentAgent = null, query = null) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    // Generate unique ID for this tool entry
+    const toolId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Track the tool
+    if (!this.toolsHistory) this.toolsHistory = [];
+    this.toolsHistory.push({ id: toolId, toolName, parentAgent, query, completed: false });
+
+    // Get the tools history container and show it
+    const toolsContainer = messageDiv.querySelector(".tools-history-container");
+    const toolsItems = messageDiv.querySelector(".tools-history-items");
+    
+    if (toolsContainer && toolsItems) {
+      toolsContainer.style.display = "block";
+      // Expand by default during streaming
+      toolsContainer.classList.add("expanded");
+
+      // Create the tool item with loading animation
+      const displayName = parentAgent 
+        ? `${toolName} <span class="tool-parent">(via ${parentAgent})</span>`
+        : toolName;
+
+      // Build query display if available
+      let queryHtml = '';
+      if (query) {
+        // Truncate query for display
+        const truncatedQuery = query.length > 100 ? query.substring(0, 100) + '...' : query;
+        queryHtml = `<div class="tool-history-query">${Utils.escapeHtml(truncatedQuery)}</div>`;
+      }
+
+      const toolItem = document.createElement("div");
+      toolItem.className = parentAgent 
+        ? "tool-history-item active inner-tool" 
+        : "tool-history-item active";
+      toolItem.id = toolId;
+      toolItem.innerHTML = `
+        <div class="tool-history-icon">
+          <div class="tool-loading-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="tool-history-content">
+          <span class="tool-history-name">${displayName}</span>
+          ${queryHtml}
+        </div>
+      `;
+
+      toolsItems.appendChild(toolItem);
+
+      // Update the label
+      const label = toolsContainer.querySelector(".tools-history-label");
+      if (label) {
+        const count = this.toolsHistory.length;
+        label.textContent = count === 1 ? "Using 1 tool" : `Using ${count} tools`;
+      }
+
+      // Scroll to bottom
+      const chatMessages = document.getElementById("chat-messages");
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+
+    return toolId;
+  }
+
+  // Mark a tool as completed in the history
+  markToolComplete(toolName, parentAgent = null) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    if (!this.toolsHistory) return;
+
+    // Find the matching tool (most recent uncompleted one with matching name)
+    const toolEntry = [...this.toolsHistory].reverse().find(
+      t => t.toolName === toolName && !t.completed
+    );
+
+    if (toolEntry) {
+      toolEntry.completed = true;
+
+      // Update the UI
+      const toolItem = messageDiv.querySelector(`#${toolEntry.id}`);
+      if (toolItem) {
+        toolItem.classList.remove("active");
+        toolItem.classList.add("completed");
+
+        // Replace loading dots with checkmark
+        const iconDiv = toolItem.querySelector(".tool-history-icon");
+        if (iconDiv) {
+          iconDiv.innerHTML = `<i class="fas fa-check"></i>`;
+        }
+      }
+
+      // Update label
+      const toolsContainer = messageDiv.querySelector(".tools-history-container");
+      if (toolsContainer) {
+        const label = toolsContainer.querySelector(".tools-history-label");
+        if (label) {
+          const completedCount = this.toolsHistory.filter(t => t.completed).length;
+          const totalCount = this.toolsHistory.length;
+          if (completedCount === totalCount) {
+            label.textContent = totalCount === 1 ? "Used 1 tool" : `Used ${totalCount} tools`;
+          } else {
+            label.textContent = `Using ${totalCount} tools`;
+          }
+        }
+      }
+    }
+  }
+
+  // Show tool status indicator during streaming (now uses history)
+  showStreamingToolStatus(toolName, parentAgent = null, query = null) {
+    this.addToolToHistory(toolName, parentAgent, query);
+  }
+
+  // Hide tool status indicator (now marks tool as complete)
+  hideStreamingToolStatus(toolName = null, parentAgent = null) {
+    if (toolName) {
+      this.markToolComplete(toolName, parentAgent);
+    }
+  }
+
+  // Append token to streaming message
+  appendToStreamingMessage(token) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    const textElement = messageDiv.querySelector(".message-text");
+    if (textElement) {
+      // Append the raw token to a data attribute for accumulation
+      const currentRaw = textElement.dataset.rawContent || "";
+      const newRaw = currentRaw + token;
+      textElement.dataset.rawContent = newRaw;
+
+      // Process and render the accumulated content
+      let processedContent = newRaw;
+      processedContent = Utils.processMathExpressions(processedContent);
+
+      try {
+        textElement.innerHTML = marked.parse(processedContent);
+      } catch (error) {
+        textElement.innerHTML = Utils.escapeHtml(processedContent);
+      }
+
+      // Scroll to bottom
+      const chatMessages = document.getElementById("chat-messages");
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+  }
+
+  // Finalize streaming message with sources, images, etc.
+  // stopped (5th param): when true, appends a "(Stopped)" indicator (user clicked Stop)
+  finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = [], stopped = false) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    // Remove streaming class and ID
+    messageDiv.classList.remove("streaming-message");
+    messageDiv.removeAttribute("id");
+
+    if (stopped) {
+      const textEl = messageDiv.querySelector(".message-text");
+      if (textEl) {
+        const stopSpan = document.createElement("span");
+        stopSpan.className = "streaming-stopped";
+        stopSpan.textContent = " (Stopped)";
+        textEl.appendChild(stopSpan);
+      }
+    }
+
+    // Finalize tools history - collapse it and set up toggle
+    const toolsContainer = messageDiv.querySelector(".tools-history-container");
+    if (toolsContainer && this.toolsHistory && this.toolsHistory.length > 0) {
+      // Mark any remaining active tools as completed
+      const activeItems = messageDiv.querySelectorAll(".tool-history-item.active");
+      activeItems.forEach(item => {
+        item.classList.remove("active");
+        item.classList.add("completed");
+        const iconDiv = item.querySelector(".tool-history-icon");
+        if (iconDiv) {
+          iconDiv.innerHTML = `<i class="fas fa-check"></i>`;
+        }
+      });
+
+      // Update label to final count
+      const label = toolsContainer.querySelector(".tools-history-label");
+      if (label) {
+        const count = this.toolsHistory.length;
+        label.textContent = count === 1 ? "Used 1 tool" : `Used ${count} tools`;
+      }
+
+      // Collapse the tools history
+      toolsContainer.classList.remove("expanded");
+
+      // Add click handler for toggle
+      const toolsHeader = toolsContainer.querySelector(".tools-history-header");
+      if (toolsHeader) {
+        toolsHeader.addEventListener("click", function() {
+          toolsContainer.classList.toggle("expanded");
+        });
+      }
+    } else if (toolsContainer) {
+      // No tools were used, hide the container
+      toolsContainer.style.display = "none";
+    }
+
+    // Clear the tools history tracking
+    this.toolsHistory = [];
+
+    // Add sources if available
+    if (sources && sources.length > 0) {
+      const sourcesPlaceholder = messageDiv.querySelector(".sources-placeholder");
+      if (sourcesPlaceholder) {
+        sourcesPlaceholder.innerHTML = this.buildSourcesHTML(sources);
+        
+        // Add click event listener for sources toggle
+        const sourcesHeader = messageDiv.querySelector('.sources-header');
+        if (sourcesHeader) {
+          sourcesHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
+        
+        // Handle source item clicks
+        this.attachSourceClickHandlers(messageDiv);
+      }
+    }
+
+    // Add charts (displayed before text content)
+    if (charts && charts.length > 0) {
+      this.appendChartsToMessage(messageDiv, charts);
+    }
+
+    // Add images and generated files as attachments (displayed after text)
+    if ((images && images.length > 0) || (generatedFiles && generatedFiles.length > 0)) {
+      this.appendAttachmentsToMessage(messageDiv, images, generatedFiles);
+    }
+
+    // Scroll to bottom after adding all content
+    const chatMessages = document.getElementById("chat-messages");
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Apply syntax highlighting
+    messageDiv.querySelectorAll("pre code").forEach((block) => {
+      if (typeof hljs !== "undefined") {
+        hljs.highlightBlock(block);
+      }
+    });
+  }
+
+  // Build sources HTML (extracted from addMessageToChat for reuse)
+  buildSourcesHTML(sources) {
+    const itemsList = [];
+
+    sources.forEach(source => {
+      const linkMatch = source.match(/^(.+)\|(.+)$/);
+      if (linkMatch) {
+        const [, name, url] = linkMatch;
+
+        if (url.startsWith("api://")) {
+          const apiName = url.replace("api://", "");
+          itemsList.push(`
+            <div class="source-item source-item-api" title="${Utils.escapeHtml(name)}">
+              <div class="source-icon">
+                <i class="fas fa-database"></i>
+              </div>
+              <div class="source-content">
+                <div class="source-title">${Utils.escapeHtml(name)}</div>
+                <div class="source-domain">API Data Source</div>
+              </div>
+            </div>
+          `);
+        } else if (url.startsWith("doc://")) {
+          const fileName = url.replace("doc://", "");
+          itemsList.push(`
+            <div class="source-item source-item-file" data-filename="${Utils.escapeHtml(fileName)}" title="Click to open ${Utils.escapeHtml(name)}">
+              <div class="source-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="source-content">
+                <div class="source-title">${Utils.escapeHtml(name)}</div>
+              </div>
+            </div>
+          `);
+        } else {
+          let domain = "";
+          try {
+            const urlObj = new URL(url);
+            domain = urlObj.hostname.replace(/^www\./, "");
+          } catch (e) {
+            domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+          }
+
+          const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
+
+          itemsList.push(`
+            <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
+              <div class="source-icon">
+                <img src="https://www.google.com/s2/favicons?domain=${Utils.escapeHtml(domain)}&sz=32" alt="" class="source-favicon" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="source-favicon-fallback" style="display: none;">
+                  <i class="fas fa-globe"></i>
+                </div>
+              </div>
+              <div class="source-content">
+                <div class="source-title">${Utils.escapeHtml(displayTitle)}</div>
+                <div class="source-domain">${Utils.escapeHtml(domain)}</div>
+              </div>
+            </div>
+          `);
+        }
+      } else {
+        itemsList.push(`
+          <div class="source-item source-item-file" data-filename="${Utils.escapeHtml(source)}" title="Click to open ${Utils.escapeHtml(source)}">
+            <div class="source-icon">
+              <i class="fas fa-file-pdf"></i>
+            </div>
+            <div class="source-content">
+              <div class="source-title">${Utils.escapeHtml(source)}</div>
+            </div>
+          </div>
+        `);
+      }
+    });
+
+    const labelText = `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}`;
+
+    return `
+      <div class="sources-container">
+        <div class="sources-header">
+          <span class="sources-label">${labelText}</span>
+          <span class="sources-toggle">></span>
+        </div>
+        <div class="sources-list">
+          <div>${itemsList.join("")}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Attach click handlers to source items
+  attachSourceClickHandlers(messageDiv) {
+    const sourceWebItems = messageDiv.querySelectorAll('.source-item-web');
+    sourceWebItems.forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const url = this.dataset.url;
+        if (url) {
+          if (window.airisAPI && window.airisAPI.openExternalUrl) {
+            window.airisAPI
+              .openExternalUrl(url)
+              .then((result) => {
+                if (!result.success) {
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              })
+              .catch(() => {
+                window.open(url, "_blank", "noopener,noreferrer");
+              });
+          } else {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        }
+      });
+    });
+
+    const sourceFileItems = messageDiv.querySelectorAll('.source-item-file');
+    sourceFileItems.forEach(item => {
+      item.addEventListener('click', async function(e) {
+        e.stopPropagation();
+        const fileName = this.dataset.filename;
+        if (fileName && window.airisAPI && window.airisAPI.openFile) {
+          try {
+            await window.airisAPI.openFile(fileName);
+          } catch (error) {
+            console.error("Error opening file:", error);
+          }
+        }
+      });
+    });
+  }
+
+  // Helper method to append charts to streaming message (using iframe like addMessageToChat)
+  appendChartsToMessage(messageDiv, charts) {
+    const messageContent = messageDiv.querySelector(".message-content");
+    if (!messageContent || !charts || charts.length === 0) return;
+
+    const chartsContainer = document.createElement("div");
+    chartsContainer.className = "message-charts";
+
+    charts.forEach((chart, index) => {
+      const chartWrapper = document.createElement("div");
+      chartWrapper.className = "message-chart-wrapper";
+
+      // Create chart header with controls
+      const chartHeader = document.createElement("div");
+      chartHeader.className = "chart-header";
+
+      // Create iframe for chart content
+      const chartFrame = document.createElement("iframe");
+      chartFrame.className = "message-chart";
+      chartFrame.srcdoc = chart.data || chart.content || chart;
+      chartFrame.style.cssText = `
+        width: 100%;
+        height: 600px;
+        border: none;
+        border-radius: 8px;
+        background: white;
+      `;
+
+      chartFrame.setAttribute("sandbox", "allow-scripts allow-same-origin");
+      chartFrame.setAttribute("loading", "lazy");
+
+      chartFrame.addEventListener("load", () => {
+        chartFrame.style.opacity = "1";
+        chartWrapper.classList.add("loaded");
+      });
+
+      chartFrame.style.opacity = "0";
+      chartFrame.style.transition = "opacity 0.5s ease";
+
+      // Create fullscreen button
+      const fullscreenBtn = document.createElement("button");
+      fullscreenBtn.className = "chart-fullscreen-btn";
+      fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+      fullscreenBtn.title = "Tam Ekran Yap";
+      fullscreenBtn.addEventListener("click", () => {
+        this.showChartFullscreen(chart, index);
+      });
+
+      // Create caption
+      const caption = document.createElement("div");
+      caption.className = "chart-caption";
+      const chartInfo = [];
+      if (chart.symbols && chart.symbols.length > 0) {
+        chartInfo.push(`Symbols: ${chart.symbols.join(", ")}`);
+      }
+      if (chart.chart_type) {
+        chartInfo.push(`Type: ${chart.chart_type.charAt(0).toUpperCase() + chart.chart_type.slice(1)}`);
+      }
+      caption.innerHTML = chartInfo.length > 0 ? chartInfo.join(" • ") : `📊 Type: Custom_plot`;
+
+      chartHeader.appendChild(fullscreenBtn);
+      chartWrapper.appendChild(chartHeader);
+      chartWrapper.appendChild(chartFrame);
+      chartWrapper.appendChild(caption);
+      chartsContainer.appendChild(chartWrapper);
+    });
+
+    // Insert charts at the beginning of message content (before text)
+    messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+  }
+
+  // Helper method to append images and generated files as attachments
+  appendAttachmentsToMessage(messageDiv, images, generatedFiles) {
+    const messageContent = messageDiv.querySelector(".message-content");
+    if (!messageContent) return;
+    if ((!images || images.length === 0) && (!generatedFiles || generatedFiles.length === 0)) return;
+
+    const attachmentsContainer = document.createElement("div");
+    attachmentsContainer.className = "message-images";
+
+    // Add header for attachments section
+    const attachmentsHeader = document.createElement("div");
+    attachmentsHeader.className = "images-header";
+    attachmentsHeader.innerHTML = `
+      <i class="fas fa-paperclip" style="font-size: 0.9em; opacity: 0.7;"></i>
+      <span style="font-size: 1em; opacity: 0.9;">${(images || []).length + (generatedFiles || []).length} attachment</span>
+      <i class="fas fa-chevron-down toggle-icon" style="margin-left: auto; font-size: 0.8em; opacity: 0.6; cursor: pointer;"></i>
+    `;
+    attachmentsHeader.style.cssText = `
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      margin: 0 0 8px 0;
+      font-weight: 500;
+    `;
+
+    // Create toggleable content container
+    const attachmentsContent = document.createElement("div");
+    attachmentsContent.className = "attachments-content";
+    attachmentsContent.style.display = "none";
+
+    // Add toggle functionality
+    let isExpanded = false;
+    const toggleIcon = attachmentsHeader.querySelector(".toggle-icon");
+    attachmentsHeader.addEventListener("click", () => {
+      isExpanded = !isExpanded;
+      if (isExpanded) {
+        attachmentsContent.style.display = "grid";
+        toggleIcon.style.transform = "rotate(180deg)";
+        toggleIcon.className = "fas fa-chevron-up toggle-icon";
+      } else {
+        attachmentsContent.style.display = "none";
+        toggleIcon.style.transform = "rotate(0deg)";
+        toggleIcon.className = "fas fa-chevron-down toggle-icon";
+      }
+    });
+
+    attachmentsContainer.appendChild(attachmentsHeader);
+    attachmentsContainer.appendChild(attachmentsContent);
+
+    // Add images
+    if (images && images.length > 0) {
+      images.forEach((image, index) => {
+        const imageWrapper = document.createElement("div");
+        imageWrapper.className = "message-image-wrapper";
+
+        const img = document.createElement("img");
+        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
+        img.alt = `Attached Image: ${image.filename}`;
+        img.className = "message-image";
+        img.style.cssText = `
+          max-width: 100%;
+          max-height: 300px;
+          object-fit: contain;
+          cursor: pointer;
+        `;
+
+        img.addEventListener("load", () => {
+          img.style.opacity = "1";
+        });
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.3s ease";
+
+        img.addEventListener("click", () => {
+          this.showImageModal(image);
+        });
+
+        const caption = document.createElement("div");
+        caption.className = "image-caption";
+        caption.innerHTML = `${image.filename}`;
+
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(caption);
+        attachmentsContent.appendChild(imageWrapper);
+      });
+    }
+
+    // Add generated files
+    if (generatedFiles && generatedFiles.length > 0) {
+      generatedFiles.forEach((file, index) => {
+        const fileCard = this.createModernAttachmentCard(file);
+        attachmentsContent.appendChild(fileCard);
+      });
+    }
+
+    messageContent.appendChild(attachmentsContainer);
+  }
+
   addMessageToChat(
     type,
     content,
     images = [],
     charts = [],
     generatedFiles = [],
-    sources = []
+    sources = [],
+    tools = []
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -1837,10 +2558,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
       // Build sources display
       let sourcesHTML = "";
       const hasSources = sources && sources.length > 0;
-      
+
       if (hasSources) {
         const itemsList = [];
-        
+
         // Add sources with file icon, web link icon, or API icon
         if (hasSources) {
           sources.forEach(source => {
@@ -1848,7 +2569,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
             const linkMatch = source.match(/^(.+)\|(.+)$/);
             if (linkMatch) {
               const [, name, url] = linkMatch;
-              
+
               // Check if it's an API source
               if (url.startsWith("api://")) {
                 // API source - show with database/API icon
@@ -1874,10 +2595,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 } catch (e) {
                   domain = url.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
                 }
-                
+
                 // Shorten title (max 60 chars)
                 const displayTitle = name.length > 60 ? name.substring(0, 57) + "..." : name;
-                
+
                 itemsList.push(`
                   <div class="source-item source-item-web" data-url="${Utils.escapeHtml(url)}" title="${Utils.escapeHtml(name)} - ${Utils.escapeHtml(url)}">
                     <div class="source-icon">
@@ -1908,10 +2629,10 @@ setupFloatingSubmenu(collapsible, subMenu) {
             }
           });
         }
-        
+
         const totalCount = sources.length;
         const labelText = `Reviewed ${sources.length} source${sources.length > 1 ? 's' : ''}`;
-        
+
         sourcesHTML = `
           <div class="sources-container">
             <div class="sources-header">
@@ -1925,27 +2646,76 @@ setupFloatingSubmenu(collapsible, subMenu) {
         `;
       }
 
+      // Build tools display
+      let toolsHTML = "";
+      const hasTools = tools && tools.length > 0;
+      
+      if (hasTools) {
+        const toolItems = tools.map(tool => {
+          const toolName = tool.tool_name || tool.toolName || 'Unknown tool';
+          const parentAgent = tool.parent_agent || tool.parentAgent;
+          const query = tool.query;
+          
+          const displayName = parentAgent 
+            ? `${Utils.escapeHtml(toolName)} <span class="tool-parent">(via ${Utils.escapeHtml(parentAgent)})</span>`
+            : Utils.escapeHtml(toolName);
+          
+          const queryHtml = query 
+            ? `<div class="tool-history-query">${Utils.escapeHtml(query.length > 100 ? query.substring(0, 100) + '...' : query)}</div>`
+            : '';
+          
+          const isInnerTool = parentAgent ? ' inner-tool' : '';
+          
+          return `
+            <div class="tool-history-item completed${isInnerTool}">
+              <div class="tool-history-icon">
+                <i class="fas fa-check"></i>
+              </div>
+              <div class="tool-history-content">
+                <span class="tool-history-name">${displayName}</span>
+                ${queryHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        const labelText = tools.length === 1 ? "Used 1 tool" : `Used ${tools.length} tools`;
+        
+        toolsHTML = `
+          <div class="tools-history-container">
+            <div class="tools-history-header">
+              <span class="tools-history-label">${labelText}</span>
+              <span class="tools-history-toggle">></span>
+            </div>
+            <div class="tools-history-list">
+              <div class="tools-history-items">${toolItems}</div>
+            </div>
+          </div>
+        `;
+      }
+
       messageDiv.innerHTML = `
                 <div class="message-content">
                     ${sourcesHTML}
+                    ${toolsHTML}
                     <div class="message-text">${parsedContent}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
             `;
-      
+
       // Add click event listener for sources toggle if sources exist
       if (sources && sources.length > 0) {
         const sourcesHeader = messageDiv.querySelector('.sources-header');
         if (sourcesHeader) {
-          sourcesHeader.addEventListener('click', function() {
+          sourcesHeader.addEventListener('click', function () {
             this.parentElement.classList.toggle('expanded');
           });
         }
-        
+
         // Handle source item clicks
         const sourceWebItems = messageDiv.querySelectorAll('.source-item-web');
         sourceWebItems.forEach(item => {
-          item.addEventListener('click', function(e) {
+          item.addEventListener('click', function (e) {
             e.stopPropagation();
             const url = this.dataset.url;
             if (url) {
@@ -1972,11 +2742,11 @@ setupFloatingSubmenu(collapsible, subMenu) {
             }
           });
         });
-        
+
         // Handle file source items (clickable to open files)
         const sourceFileItems = messageDiv.querySelectorAll('.source-item-file');
         sourceFileItems.forEach(item => {
-          item.addEventListener('click', async function(e) {
+          item.addEventListener('click', async function (e) {
             e.stopPropagation();
             const fileName = this.dataset.filename;
             if (fileName) {
@@ -1993,6 +2763,16 @@ setupFloatingSubmenu(collapsible, subMenu) {
             }
           });
         });
+      }
+      
+      // Add click event listener for tools toggle if tools exist
+      if (tools && tools.length > 0) {
+        const toolsHeader = messageDiv.querySelector('.tools-history-header');
+        if (toolsHeader) {
+          toolsHeader.addEventListener('click', function() {
+            this.parentElement.classList.toggle('expanded');
+          });
+        }
       }
     } else if (type === "error") {
       messageDiv.innerHTML = `
@@ -2085,7 +2865,6 @@ setupFloatingSubmenu(collapsible, subMenu) {
         chartHeader.appendChild(fullscreenBtn);
         chartWrapper.appendChild(chartHeader);
         chartWrapper.appendChild(chartFrame);
-        chartWrapper.appendChild(caption);
         chartsContainer.appendChild(chartWrapper);
       });
 
@@ -2430,7 +3209,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
     // Get file extension and type info
     const fileExtension = file.filename.split(".").pop().toLowerCase();
     const fileName = file.filename;
-    
+
     // Determine file type and icon
     let iconClass = "fas fa-file";
     let fileTypeLabel = fileExtension.toUpperCase();
@@ -2734,19 +3513,21 @@ setupFloatingSubmenu(collapsible, subMenu) {
         // Load messages from session
         const session = response.session;
         session.messages.forEach((msg) => {
-          // Extract images, charts, generated files, and sources properly - they should be fresh for each message
+          // Extract images, charts, generated files, sources, and tools properly - they should be fresh for each message
           const images = msg.images || msg.metadata?.images || [];
           const charts = msg.charts || msg.metadata?.charts || [];
           const generatedFiles = msg.metadata?.generatedFiles || [];
           const sources = msg.metadata?.sources || [];
+          const tools = msg.metadata?.tools || [];
 
-          // Ensure images, charts, generated files, and sources are not accumulated from previous sessions
+          // Ensure data is not accumulated from previous sessions
           const cleanImages = Array.isArray(images) ? images.slice() : [];
           const cleanCharts = Array.isArray(charts) ? charts.slice() : [];
           const cleanGeneratedFiles = Array.isArray(generatedFiles)
             ? generatedFiles.slice()
             : [];
           const cleanSources = Array.isArray(sources) ? sources.slice() : [];
+          const cleanTools = Array.isArray(tools) ? tools.slice() : [];
 
           this.addMessageToChat(
             msg.role,
@@ -2754,7 +3535,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
             cleanImages,
             cleanCharts,
             cleanGeneratedFiles,
-            cleanSources
+            cleanSources,
+            cleanTools
           );
 
           // Update local chat history
@@ -2773,6 +3555,8 @@ setupFloatingSubmenu(collapsible, subMenu) {
                 cleanCharts;
               this.chatHistory[this.chatHistory.length - 1].generatedFiles =
                 cleanGeneratedFiles;
+              this.chatHistory[this.chatHistory.length - 1].tools =
+                cleanTools;
             }
           }
         });
@@ -3309,7 +4093,7 @@ setupFloatingSubmenu(collapsible, subMenu) {
 
     // Store reference for updates
     messageElement.dataset.fileName = fileName;
-    
+
     // Return the element for progress updates
     return messageElement;
   }
