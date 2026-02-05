@@ -4,6 +4,8 @@ Analyze the image strictly in relation to the user's query and extract the visua
 First, identify what the user is asking about in the image.
 Focus on visually relevant elements.
 Extract clear visual evidence that supports the answer.
+Be precise and factual. Observe details like charts, graphs, diagrams, symbols, and any text in the image that is relevant to the query. 
+Specifically control the numbers you extract from the image, do not fabricate any number. If you cannot find a number that is critical for the answer, say so clearly.
 
 Include contextual visual information only when they enhance understanding.
 Identify informational charts, graphs, diagrams and symbols

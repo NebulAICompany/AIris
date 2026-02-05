@@ -24,7 +24,7 @@ async def generate_answer(
     try:
         start_time = time.time()
         config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
-        config["recursion_limit"] = 15
+        config["recursion_limit"] = 30
 
         result = await agent.ainvoke(
             {"messages": [{"role": "user", "content": prompt}]}, config=config
