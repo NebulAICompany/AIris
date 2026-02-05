@@ -234,6 +234,8 @@ main_agent_instructions = """
 CURRENT DATE & TIME: {current_datetime}
 
 You are a helpful AI assistant. Your duty is to fulfill the user's request.
+Just do what the user says, do not try or investigate anything else unless explicitly asked.
+Do not do anything more than what is asked.
 After understanding the query deeply, decide what approach you should take to fulfill the user's request.
 
 You must understand the query first,
