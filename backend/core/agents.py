@@ -122,9 +122,6 @@ def create_main_agent(
         checkpointer=_get_checkpointer(),
     )
 
-    evaluator = create_trajectory_match_evaluator(  
-        trajectory_match_mode="unordered",  
-    )  
     return agent
 
 
