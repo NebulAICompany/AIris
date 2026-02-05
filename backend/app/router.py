@@ -24,6 +24,7 @@ from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
 from backend.utils.preview import PreviewGenerator
 from backend.utils.balance_payments_database import balance_payments_db
+from backend.utils.uploads_database import uploads_db
 
 logger = get_logger("ROUTER")
 router = APIRouter()
@@ -570,6 +571,12 @@ def delete_file(filename: str):
             # Delete corresponding images
             image_deletion_result = delete_document_images(filename)
 
+            # Remove from uploads database
+            try:
+                uploads_db.delete_upload_record(filename)
+            except Exception as e:
+                logger.warning(f"Failed to delete upload record from database: {e}")
+
             return {
                 "message": f"File '{filename}' deleted successfully (no vector store found)",
                 "images_deleted": image_deletion_result["images_deleted"],
@@ -639,6 +646,12 @@ def delete_file(filename: str):
 
         # Delete corresponding images
         image_deletion_result = delete_document_images(filename)
+
+        # Remove from uploads database
+        try:
+            uploads_db.delete_upload_record(filename)
+        except Exception as e:
+            logger.warning(f"Failed to delete upload record from database: {e}")
 
         result = {
             "message": f"File '{filename}' deleted successfully",
