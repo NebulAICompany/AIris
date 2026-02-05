@@ -31,7 +31,7 @@ from .finance import (
     get_tickers_list,
     get_ticker_info_detailed,
 )
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+from backend.shared.constants import CURRENT_MODEL
 from backend.core.tools.plotting import (
     create_custom_chart_from_code,
     create_financial_stock_chart,
@@ -69,13 +69,13 @@ finance_tools = [
 
 # Create subagents using create_agent
 finance_agent = create_agent(
-    model=ANTHROPIC_MODEL,
+    model=CURRENT_MODEL,
     tools=finance_tools,
     system_prompt=finance_agent_prompt,
 )
 
 office_agent = create_agent(
-    model=ANTHROPIC_MODEL,
+    model=CURRENT_MODEL,
     tools=office_tools,
     system_prompt=office_agent_prompt,
     middleware=[
@@ -89,7 +89,7 @@ office_agent = create_agent(
 
 
 plotting_agent = create_agent(
-    model=ANTHROPIC_MODEL,
+    model=CURRENT_MODEL,
     tools=[
         create_custom_chart_from_code,
         create_financial_stock_chart,
@@ -110,7 +110,7 @@ plotting_agent = create_agent(
 )
 
 tcmb_data_agent = create_agent(
-    model=ANTHROPIC_MODEL,
+    model=CURRENT_MODEL,
     tools=tcmb_tools,
     system_prompt=tcmb_data_agent_prompt.format(
         current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S")

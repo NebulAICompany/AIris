@@ -18,7 +18,8 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
-from backend.shared.constants import OPENAI_MODEL, ANTHROPIC_MODEL
+
+from backend.shared.constants import CURRENT_MODEL
 
 
 class NewsCluster(BaseModel):
@@ -110,7 +111,7 @@ def create_main_agent(
     )
 
     agent = create_agent(
-        model=ANTHROPIC_MODEL,
+        model=CURRENT_MODEL,
         tools=tools,
         middleware=[
             SummarizationMiddleware(
