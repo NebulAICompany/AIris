@@ -13,6 +13,7 @@ from concurrent_openai import ConcurrentOpenAI
 from langchain_core.tracers.stdout import ConsoleCallbackHandler
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
+from langchain_qwq import ChatQwen
 
 load_dotenv()
 
@@ -186,6 +187,16 @@ OPENAI_MODEL = ChatOpenAI(
     callbacks=[ConsoleCallbackHandler()],
 )
 
+QWEN_MODEL = ChatQwen(
+    model_name="qwen3-max",                  # from your Qwen key
+    api_key=os.getenv("QWEN_API_KEY"),
+    temperature=0.0,
+    max_tokens=8000,                        # adjust for your use case
+    timeout=120,
+    callbacks=[ConsoleCallbackHandler()],
+)
+
+CURRENT_MODEL = ANTHROPIC_MODEL
 
 # Marketstack tickers
 MARKETSTACK_TICKERS = [
