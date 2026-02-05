@@ -16,7 +16,6 @@ logger = get_logger("RAG_TOOL")
 def search_local_documents(
     query: str,
     keywords: Optional[List[str]] = None,
-    max_results: int = 5,
 ) -> str:
     """Search uploaded local documents in the knowledge base.
 
@@ -28,9 +27,6 @@ def search_local_documents(
         max_results: Maximum number of document chunks to return (default 5, max 10).
     """
     try:
-        # Limit max_results to reasonable bounds
-        max_results = min(max(1, max_results), 10)
-
         # Get the global vectorstore client
         client = get_vectorstore()
 
@@ -73,7 +69,7 @@ def search_local_documents(
             {"content": doc["content"], "metadata": doc["metadata"]}
             for doc in retrieved_docs
         ]
-        reranked_docs = rerank(query, doc_contents, with_score=False, top_n=max_results)
+        reranked_docs = rerank(query, doc_contents, with_score=False, top_n=5)
 
         if not reranked_docs:
             return "No relevant documents found after reranking.", []
