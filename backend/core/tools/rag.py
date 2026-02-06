@@ -24,7 +24,6 @@ def search_local_documents(
     Args:
         query: Search query to find relevant information in local documents.
         keywords: Optional list of keywords for hybrid vector + keyword search.
-        max_results: Maximum number of document chunks to return (default 5, max 10).
     """
     try:
         # Get the global vectorstore client
