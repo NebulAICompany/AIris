@@ -26,6 +26,30 @@ logger = get_logger("PLOTTING")
 load_dotenv()
 
 
+
+def get_missing_dates(df):
+    """Identify missing business days in a DataFrame with a DateTimeIndex."""
+    # Ensure index is datetime
+    if not isinstance(df.index, pd.DatetimeIndex):
+        df.index = pd.to_datetime(df.index)
+        
+    start_date = df.index.min().normalize()
+    end_date = df.index.max().normalize()
+    
+    # Generate expected business days
+    expected = pd.bdate_range(start=start_date, end=end_date)
+    
+    # Get present dates (normalized to midnight)
+    present = df.index.normalize().unique()
+    
+    # Find missing days
+    missing_business_days = expected.difference(present)
+    
+    # Format as strings for Plotly
+    skip_dates = [d.strftime("%Y-%m-%d") for d in missing_business_days]
+    return skip_dates
+
+
 def set_chart_data(data):
     """Set chart data to JSON file storage - overwrites file each time"""
     try:
@@ -737,6 +761,13 @@ def create_financial_stock_chart(
 
         # Update layout with modern styling
 
+        # Optimized height calculation for single-page view
+        # Base height + (per-symbol height) + (per-indicator height)
+        # But capped at a reasonable max height to ensure it fits on screen
+        calculated_height = 400 + (250 * subplot_count) + (150 * extra_rows)
+        # Cap the height at 850px to ensure it fits on most screens
+        final_height = min(calculated_height, 850)
+
         fig.update_layout(
             title=dict(
                 text=f"{', '.join(successful_symbols)} Analysis",
@@ -760,7 +791,7 @@ def create_financial_stock_chart(
                 family='Inter, Segoe UI, Roboto, Arial, sans-serif',
                 size=14,
             ),
-            height=340 + (420 * len(successful_symbols)) + (200 * extra_rows),
+            height=final_height,
             margin=dict(l=32, r=32, t=80, b=48, pad=8),
             hovermode="x unified",
             hoverlabel=dict(
@@ -823,6 +854,24 @@ def create_financial_stock_chart(
                 gridwidth=1,
             ),
         )
+
+        # Calculate missing dates for rangebreaks (skip weekends and holidays)
+        # Use data from the first successful symbol as reference
+        if successful_symbols:
+            ref_symbol = successful_symbols[0]
+            ref_df = stock_data[ref_symbol]
+            skip_dates = get_missing_dates(ref_df)
+            
+            fig.update_xaxes(
+                rangebreaks=[
+                    dict(bounds=["sat", "mon"]),  # hide weekends
+                    dict(values=skip_dates),      # hide missing business days
+                ]
+            )
+
+        # Manually adjust annotation positions to sit in the gaps
+        # This fixes the issue where titles overlap with chart lines despite spacing
+        fig.for_each_annotation(lambda a: a.update(yshift=6))  # Shift up by 15 pixels
 
         # Style all subplots
         fig.update_xaxes(
