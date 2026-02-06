@@ -16,6 +16,7 @@ logger = get_logger("RAG_TOOL")
 def search_local_documents(
     query: str,
     keywords: Optional[List[str]] = None,
+    max_results: int = 5,
 ) -> str:
     """Search uploaded local documents in the knowledge base.
 
@@ -52,12 +53,18 @@ def search_local_documents(
             f"🔍 RAG Tool - Searching with selected files filter: {selected_files}"
         )
 
+        # Ensure reasonable bounds for max_results
+        max_results = min(max(1, max_results), 10)
+        
         # Retrieve documents using hybrid search (vector + keyword)
+        # Fetch more candidates for reranking (3x desired results, min 15)
+        retrieval_k = max(15, max_results * 3)
+        
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
             query=query,
             query_terms=query_terms,
-            k=15,
+            k=retrieval_k,
             selected_files=selected_files,
         )
 
@@ -69,7 +76,7 @@ def search_local_documents(
             {"content": doc["content"], "metadata": doc["metadata"]}
             for doc in retrieved_docs
         ]
-        reranked_docs = rerank(query, doc_contents, with_score=False, top_n=5)
+        reranked_docs = rerank(query, doc_contents, with_score=False, top_n=max_results)
 
         if not reranked_docs:
             return "No relevant documents found after reranking.", []
