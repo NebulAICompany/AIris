@@ -1953,6 +1953,71 @@ class UIComponents {
     return messageDiv;
   }
 
+  // Map technical tool names to user-friendly display names
+  getFriendlyToolName(toolName) {
+    const toolNameMap = {
+      // Main agent tools
+      'microsoft_office_operations': 'Microsoft Office Operations',
+      'finance_agent': 'Finance Data',
+      'plotting_agent': 'Chart Creation',
+      'tcmb_economic_data': 'Turkish Economic Data',
+      
+      // Office tools
+      'create_excel_file': 'Create Excel File',
+      'create_word_document': 'Create Word Document',
+      'modify_word_content': 'Modify Word Document',
+      'modify_excel_cells': 'Modify Excel Cells',
+      'create_excel_charts': 'Create Excel Charts',
+      'create_powerpoint_from_code': 'Create PowerPoint',
+      
+      // Finance tools
+      'get_eod_data': 'Get Stock Data',
+      'get_intraday_data': 'Get Intraday Data',
+      'get_exchanges': 'Get Exchanges',
+      'get_exchange_info': 'Get Exchange Info',
+      'get_currencies': 'Get Currencies',
+      'get_timezones': 'Get Timezones',
+      'get_splits_data': 'Get Stock Splits',
+      'get_dividends_data': 'Get Dividends',
+      'get_index_list': 'Get Index List',
+      'get_index_info': 'Get Index Info',
+      'get_tickers_list': 'Get Tickers',
+      'get_ticker_info_detailed': 'Get Ticker Details',
+      
+      // Plotting tools
+      'create_custom_chart_from_code': 'Create Custom Chart',
+      'create_financial_stock_chart': 'Create Stock Chart',
+      
+      // TCMB tools
+      'get_tcmb_subcategories': 'Get TCMB Categories',
+      'get_tcmb_series': 'Get TCMB Series',
+      'get_tcmb_data': 'Get TCMB Data',
+    };
+    
+    // Return mapped name if exists, otherwise format the tool name nicely
+    if (toolNameMap[toolName]) {
+      return toolNameMap[toolName];
+    }
+    
+    // Fallback: convert snake_case to Title Case
+    return toolName
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  // Get friendly name for parent agent
+  getFriendlyAgentName(agentName) {
+    const agentNameMap = {
+      'microsoft_office_operations': 'Microsoft Office',
+      'finance_agent': 'Finance',
+      'plotting_agent': 'Charting',
+      'tcmb_economic_data': 'Turkish Economic Data',
+    };
+    
+    return agentNameMap[agentName] || this.getFriendlyToolName(agentName);
+  }
+
   // Add a tool to the history list during streaming
   addToolToHistory(toolName, parentAgent = null, query = null) {
     const messageDiv = document.getElementById("streaming-message");
@@ -1961,7 +2026,7 @@ class UIComponents {
     // Generate unique ID for this tool entry
     const toolId = `tool-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Track the tool
+    // Track the tool (store original names for matching)
     if (!this.toolsHistory) this.toolsHistory = [];
     this.toolsHistory.push({ id: toolId, toolName, parentAgent, query, completed: false });
 
@@ -1975,9 +2040,11 @@ class UIComponents {
       toolsContainer.classList.add("expanded");
 
       // Create the tool item with loading animation
-      const displayName = parentAgent 
-        ? `${toolName} <span class="tool-parent">(via ${parentAgent})</span>`
-        : toolName;
+      const friendlyToolName = this.getFriendlyToolName(toolName);
+      const friendlyAgentName = parentAgent ? this.getFriendlyAgentName(parentAgent) : null;
+      const displayName = friendlyAgentName 
+        ? `${Utils.escapeHtml(friendlyToolName)} <span class="tool-parent">(via ${Utils.escapeHtml(friendlyAgentName)})</span>`
+        : Utils.escapeHtml(friendlyToolName);
 
       // Build query display if available
       let queryHtml = '';
@@ -2673,9 +2740,11 @@ class UIComponents {
           const parentAgent = tool.parent_agent || tool.parentAgent;
           const query = tool.query;
           
-          const displayName = parentAgent 
-            ? `${Utils.escapeHtml(toolName)} <span class="tool-parent">(via ${Utils.escapeHtml(parentAgent)})</span>`
-            : Utils.escapeHtml(toolName);
+          const friendlyToolName = this.getFriendlyToolName(toolName);
+          const friendlyAgentName = parentAgent ? this.getFriendlyAgentName(parentAgent) : null;
+          const displayName = friendlyAgentName 
+            ? `${Utils.escapeHtml(friendlyToolName)} <span class="tool-parent">(via ${Utils.escapeHtml(friendlyAgentName)})</span>`
+            : Utils.escapeHtml(friendlyToolName);
           
           const queryHtml = query 
             ? `<div class="tool-history-query">${Utils.escapeHtml(query.length > 100 ? query.substring(0, 100) + '...' : query)}</div>`
