@@ -1943,7 +1943,7 @@ class UIComponents {
           </div>
         </div>
         <div class="message-text"></div>
-        <div class="message-time">${timestamp}</div>
+        <div class="message-time" style="display: none;">${timestamp}</div>
       </div>
     `;
 
@@ -2210,6 +2210,12 @@ class UIComponents {
         hljs.highlightBlock(block);
       }
     });
+
+    // Show the timestamp now that streaming is complete
+    const timeEl = messageDiv.querySelector(".message-time");
+    if (timeEl) {
+      timeEl.style.display = "";
+    }
   }
 
   // Build sources HTML (extracted from addMessageToChat for reuse)
@@ -2517,7 +2523,8 @@ class UIComponents {
     charts = [],
     generatedFiles = [],
     sources = [],
-    tools = []
+    tools = [],
+    timestamp = null
   ) {
     const chatMessages = document.getElementById("chat-messages");
     if (!chatMessages) return;
@@ -2525,13 +2532,23 @@ class UIComponents {
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${type}-message`;
 
-    const timestamp = new Date().toLocaleTimeString();
+    // Format timestamp: use provided timestamp or generate new one
+    let formattedTimestamp;
+    if (timestamp) {
+      // Handle ISO format from backend or Date object
+      const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+      formattedTimestamp = date instanceof Date && !isNaN(date) 
+        ? date.toLocaleTimeString() 
+        : new Date().toLocaleTimeString();
+    } else {
+      formattedTimestamp = new Date().toLocaleTimeString();
+    }
 
     if (type === "user") {
       messageDiv.innerHTML = `
                 <div class="message-content">
                     <div class="message-text">${Utils.escapeHtml(content)}</div>
-                    <div class="message-time">${timestamp}</div>
+                    <div class="message-time">${formattedTimestamp}</div>
                 </div>
             `;
     } else if (type === "assistant") {
@@ -2699,7 +2716,7 @@ class UIComponents {
                     ${sourcesHTML}
                     ${toolsHTML}
                     <div class="message-text">${parsedContent}</div>
-                    <div class="message-time">${timestamp}</div>
+                    <div class="message-time">${formattedTimestamp}</div>
                 </div>
             `;
 
@@ -2780,7 +2797,7 @@ class UIComponents {
                     <div class="message-text error">${Utils.escapeHtml(
         content
       )}</div>
-                    <div class="message-time">${timestamp}</div>
+                    <div class="message-time">${formattedTimestamp}</div>
                 </div>
             `;
     }
@@ -3535,7 +3552,8 @@ class UIComponents {
             cleanCharts,
             cleanGeneratedFiles,
             cleanSources,
-            cleanTools
+            cleanTools,
+            msg.timestamp
           );
 
           // Update local chat history
