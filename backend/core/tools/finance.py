@@ -46,11 +46,6 @@ def make_request(
             return {"error": f"Beklenmeyen hata: {str(e)}"}
 
 
-# ============================================================================
-# END-OF-DAY DATA METHODS
-# ============================================================================
-
-
 @tool(parse_docstring=True)
 def get_eod_data(
     symbols: str,
@@ -64,8 +59,7 @@ def get_eod_data(
     """Fetch end-of-day stock data from Marketstack.
 
     Args:
-        symbols: One or more comma-separated stock symbols
-            (for example, "AAPL" or "AAPL,MSFT").
+        symbols: One or more comma-separated stock symbols (for example, "AAPL" or "AAPL,MSFT").
         date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
         date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         exchange: Exchange MIC code to filter by (for example, "XNAS").
@@ -90,11 +84,7 @@ def get_eod_data(
     return make_request("eod", params)
 
 
-# ============================================================================
-# INTRADAY DATA METHODS
-# ============================================================================
-
-
+#NOT USABLE DUE TO MARKETSTACK API LIMITATIONS
 @tool(parse_docstring=True)
 def get_intraday_data(
     symbols: str,
@@ -109,7 +99,7 @@ def get_intraday_data(
     """Fetch intraday stock data from Marketstack.
 
     Args:
-        symbols: One or more comma-separated stock symbols
+        symbols: One or more comma-separated stock symbols (for example, "AAPL" or "AAPL,MSFT").
             (for example, "AAPL" or "AAPL,MSFT").
         interval: Data interval such as "1min", "5min", "15min", "30min",
             "1hour", "3hour", "6hour", "12hour", or "24hour".
@@ -171,11 +161,6 @@ def get_exchange_info(exchange: str) -> dict:
     return make_request(f"exchanges/{exchange}", {})
 
 
-# ============================================================================
-# CURRENCIES AND TIMEZONES METHODS
-# ============================================================================
-
-
 @tool(parse_docstring=True)
 def get_currencies(
     search: Optional[str] = None,
@@ -218,11 +203,6 @@ def get_timezones(
     return make_request("timezones", params)
 
 
-# ============================================================================
-# SPLITS AND DIVIDENDS METHODS
-# ============================================================================
-
-
 @tool(parse_docstring=True)
 def get_splits_data(
     symbols: str,
@@ -235,8 +215,7 @@ def get_splits_data(
     """Fetch stock split data for one or more tickers.
 
     Args:
-        symbols: One or more comma-separated stock symbols
-            (for example, "AAPL" or "AAPL,MSFT").
+        symbols: One or more comma-separated stock symbols (for example, "AAPL" or "AAPL,MSFT").
         date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
         date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         sort: Sort order for results, "DESC" (default) or "ASC".
@@ -271,8 +250,7 @@ def get_dividends_data(
     """Fetch dividend data for one or more stock tickers.
 
     Args:
-        symbols: One or more comma-separated stock symbols
-            (for example, "AAPL" or "AAPL,MSFT").
+        symbols: One or more comma-separated stock symbols (for example, "AAPL" or "AAPL,MSFT").
         date_from: Start date in YYYY-MM-DD format for filtering results. If not provided, 90 days ago will be used.
         date_to: End date in YYYY-MM-DD format for filtering results. If not provided, today's date will be used.
         sort: Sort order for results, "DESC" (default) or "ASC".
@@ -293,11 +271,6 @@ def get_dividends_data(
         "offset": offset,
     }
     return make_request("dividends", params)
-
-
-# ============================================================================
-# STOCK MARKET INDEXES METHODS (Updated)
-# ============================================================================
 
 
 @tool(parse_docstring=True)
@@ -329,11 +302,6 @@ def get_index_info(index: str) -> dict:
         "index": index,
     }
     return make_request("indexinfo", params)
-
-
-# ============================================================================
-# TICKERS METHODS (Updated to match documentation)
-# ============================================================================
 
 
 @tool(parse_docstring=True)
@@ -371,11 +339,6 @@ def get_ticker_info_detailed(ticker: str) -> dict:
         "ticker": ticker,
     }
     return make_request("tickerinfo", params)
-
-
-# ============================================================================
-# CHART MANAGEMENT FUNCTIONS
-# ============================================================================
 
 
 def get_chart_datas():
@@ -418,11 +381,6 @@ def clear_chart_datas():
             pass
     except Exception as e:
         pass
-
-
-# ============================================================================
-# TECHNICAL INDICATORS HELPERS
-# ============================================================================
 
 
 def calculate_sma(data: pd.Series, window: int) -> pd.Series:

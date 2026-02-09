@@ -46,8 +46,6 @@ def create_excel_file(
 
         # Ensure file_path is absolute and in the uploads directory
         file_path = FILES_PATH / file_name
-
-        # Create directory if it doesn't exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         # Unmask PII data before creating Excel file
@@ -111,17 +109,11 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
         # Add .docx extension if not present
         if not file_name.endswith(".docx"):
             file_name = f"{file_name}.docx"
-
-        # Ensure file_path is absolute and in the uploads directory
         file_path = FILES_PATH / file_name
-
-        # Create directory if it doesn't exist
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         # Unmask PII data before creating Word document
         unmasked_content = unmask_text(content)
-
-        # Create a new document
         doc = Document()
 
         # Split unmasked content into paragraphs and add them
@@ -138,10 +130,7 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
                         if line.strip():
                             doc.add_paragraph(line.strip())
 
-        # Save the document
         doc.save(str(file_path))
-
-        # Add to generated files list
         file_info = {
             "filename": file_name,
             "file_path": str(file_path),
@@ -232,11 +221,7 @@ def modify_excel_cells(
     try:
         # Parse JSON string
         updates_data = json.loads(updates) if isinstance(updates, str) else updates
-
-        # Load workbook
         wb = load_workbook(file_path)
-
-        # Select sheet
         if sheet_name:
             # Check if the specified sheet exists in the workbook
             if sheet_name in wb.sheetnames:
@@ -296,14 +281,8 @@ def create_excel_charts(
         sheet_name: Name of the sheet to add the chart to (None for the active sheet).
     """
     try:
-        # Parse JSON string
-        chart_config = (
-            json.loads(chart_data) if isinstance(chart_data, str) else chart_data
-        )
-
-        # Load workbook
+        chart_config = (json.loads(chart_data) if isinstance(chart_data, str) else chart_data)
         wb = load_workbook(file_path)
-
         # Select sheet
         if sheet_name:
             ws = wb[sheet_name]
@@ -346,11 +325,7 @@ def create_excel_charts(
             ws, min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row
         )
         chart.add_data(data, titles_from_data=True)
-
-        # Add chart to worksheet
         ws.add_chart(chart)
-
-        # Save workbook
         wb.save(file_path)
 
         return {
