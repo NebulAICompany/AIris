@@ -172,6 +172,39 @@ body {
   font-weight: 400;
 }
 
+/* AIRIS yazısı */
+.airis-title {
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  font-size: 2.1rem;
+  letter-spacing: 0.1em;
+
+  /* Gradient text */
+  background: linear-gradient(
+    135deg,
+    #4facfe,
+    #00f2fe,
+    #6a11cb
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Soft glow */
+  text-shadow:
+    0 0 12px rgba(79, 172, 254, 0.25),
+    0 0 24px rgba(106, 17, 203, 0.15);
+
+  transition: all 0.3s ease;
+}
+
+/* Hover efekti (çok şık duruyor) */
+.logo:hover .airis-title {
+  text-shadow:
+    0 0 18px rgba(79, 172, 254, 0.4),
+    0 0 36px rgba(106, 17, 203, 0.3);
+}
+
 .header-center {
   flex: 0 0 auto;
   display: flex;
