@@ -312,12 +312,13 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
 @tool(
     "finance_agent",
     description=(
-        "Use this tool for retrieving and analyzing financial market data. "
-        "It can fetch intraday and end-of-day prices (OHLCV), dividends, splits, "
-        "indexes, ticker and exchange info, currencies, and timezones, and perform "
-        "multi-symbol and multi-timeframe analysis over this data. "
+        "Use this tool ONLY when specific financial market data is required. "
+        "This tool retrieves and analyzes structured financial market data, including "
+        "end-of-day prices (OHLCV), dividends, splits, indexes, ticker and exchange metadata, "
+        "currencies, timezones, and historical time-series. "
+        "It supports multi-symbol and multi-timeframe analysis over this data. "
         "Input must be a natural language request describing the desired financial data "
-        "or analysis (for example, 'get daily OHLCV for AAPL for the last 30 days')."
+        "(e.g., 'get daily OHLCV for AAPL for the last 30 days')."
     ),
     response_format="content_and_artifact",
 )
@@ -340,10 +341,9 @@ async def call_finance_agent(query: str) -> str:
     description=(
         "Use this tool for Microsoft Office document operations, including creating "
         "and updating Excel workbooks, Word documents, and PowerPoint presentations. "
-        "It can generate new files, modify existing ones, and perform basic document "
-        "processing or format conversions using Word, Excel, or PowerPoint. "
+        "It can generate new files, modify existing ones using Word, Excel, or PowerPoint. "
         "Input must be a natural language request describing the desired Office action "
-        "(for example, 'create an Excel file with this table and add a chart')."
+        "(for example, 'create an Excel file with this table')."
     ),
 )
 async def call_office_agent(query: str) -> str:
