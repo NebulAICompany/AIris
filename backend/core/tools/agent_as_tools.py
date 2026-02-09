@@ -312,12 +312,13 @@ async def stream_subagent_with_events(agent, agent_name: str, query: str):
 @tool(
     "finance_agent",
     description=(
-        "Use this tool for retrieving and analyzing financial market data. "
-        "It can fetch intraday and end-of-day prices (OHLCV), dividends, splits, "
-        "indexes, ticker and exchange info, currencies, and timezones, and perform "
-        "multi-symbol and multi-timeframe analysis over this data. "
+        "Use this tool ONLY when specific financial market data is required. "
+        "This tool retrieves and analyzes structured financial market data, including "
+        "end-of-day prices (OHLCV), dividends, splits, indexes, ticker and exchange metadata, "
+        "currencies, timezones, and historical time-series. "
+        "It supports multi-symbol and multi-timeframe analysis over this data. "
         "Input must be a natural language request describing the desired financial data "
-        "or analysis (for example, 'get daily OHLCV for AAPL for the last 30 days')."
+        "(e.g., 'get daily OHLCV for AAPL for the last 30 days')."
     ),
     response_format="content_and_artifact",
 )
@@ -340,10 +341,9 @@ async def call_finance_agent(query: str) -> str:
     description=(
         "Use this tool for Microsoft Office document operations, including creating "
         "and updating Excel workbooks, Word documents, and PowerPoint presentations. "
-        "It can generate new files, modify existing ones, and perform basic document "
-        "processing or format conversions using Word, Excel, or PowerPoint. "
+        "It can generate new files, modify existing ones using Word, Excel, or PowerPoint. "
         "Input must be a natural language request describing the desired Office action "
-        "(for example, 'create an Excel file with this table and add a chart')."
+        "(for example, 'create an Excel file with this table')."
     ),
 )
 async def call_office_agent(query: str) -> str:
@@ -359,14 +359,12 @@ async def call_office_agent(query: str) -> str:
 @tool(
     "plotting_agent",
     description=(
-        "Use this tool for all chart creation and data visualization. "
-        "It can create financial stock charts (candlestick, OHLC, line, area, "
-        "with technical indicators and volume) using market data, and it can "
-        "generate custom, non-financial visualizations (statistical, scientific, "
-        "or exploratory charts) from Python code. "
+        "Use this tool ONLY when a visual chart or plot is explicitly required to answer the user’s request. "
+        "This tool creates data visualizations, including financial market charts "
+        "(candlestick, OHLC, line, area with technical indicators, volume) and custom non-financial charts "
+        "(statistical, scientific, or exploratory) from Python code."
         "Input must be a natural language request describing the chart needed "
-        "and whether the data is financial market data or custom/tabular data."
-    ),
+        "and whether the data is financial market data or custom/tabular data."),
 )
 async def call_plotting_agent(query: str) -> str:
     """Route chart and visualization requests to the plotting agent.
@@ -381,14 +379,15 @@ async def call_plotting_agent(query: str) -> str:
 @tool(
     "tcmb_economic_data",
     description=(
-        "Use this tool to retrieve and analyze Turkish Central Bank (TCMB) economic data "
-        "from the EVDS system. It can fetch time series for economic indicators such as "
+        "Use this tool ONLY to retrieve structured Turkish Central Bank (TCMB) "
+        "economic data from the EVDS system."
+        "It provides time-series for economic indicators such as "
         "exchange rates, interest rates, inflation, balance of payments, reserves, "
         "money and credit statistics, price indices, and survey data. "
-        "Input must be a natural language query about Turkish macroeconomic or monetary "
-        "policy data, specifying the indicators and time period of interest "
-        "(for example, 'monthly CPI inflation and policy rate for the last five years')."
-        "Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends."
+        "Input must be a natural language query specifying the indicator(s) and "
+        "time period of interest "
+        "(e.g., 'monthly CPI inflation and policy rate for the last five years'). "
+        "Best used for queries requiring official Turkish macroeconomic or monetary data."
     ),
     response_format="content_and_artifact",
 )

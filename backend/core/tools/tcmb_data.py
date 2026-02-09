@@ -54,11 +54,8 @@ def get_tcmb_subcategories(category_id: int) -> Dict[str, Any]:
     """
     try:
         logger.info(f"Fetching subcategories for category_id: {category_id}")
-
         # Get EVDS client
         evds = _get_evds_client()
-
-        # Get subcategories
         subcategories_df = evds.get_sub_categories(category_id)
 
         # Convert DataFrame to list of dictionaries
@@ -72,9 +69,7 @@ def get_tcmb_subcategories(category_id: int) -> Dict[str, Any]:
                     }
                 )
 
-            logger.info(
-                f"Successfully fetched {len(subcategories_list)} subcategories for category_id: {category_id}"
-            )
+            logger.info(f"Successfully fetched {len(subcategories_list)} subcategories for category_id: {category_id}")
             return {
                 "success": True,
                 "subcategories": subcategories_list,
@@ -105,11 +100,8 @@ def get_tcmb_series(datagroup_code: str) -> Dict[str, Any]:
     """
     try:
         logger.info(f"Fetching series for datagroup_code: {datagroup_code}")
-
         # Get EVDS client
         evds = _get_evds_client()
-
-        # Get series
         series_df = evds.get_series(datagroup_code)
 
         # Convert DataFrame to list of dictionaries
@@ -124,9 +116,7 @@ def get_tcmb_series(datagroup_code: str) -> Dict[str, Any]:
                     }
                 )
 
-            logger.info(
-                f"Successfully fetched {len(series_list)} series for datagroup_code: {datagroup_code}"
-            )
+            logger.info(f"Successfully fetched {len(series_list)} series for datagroup_code: {datagroup_code}")
             return {
                 "success": True,
                 "series": series_list,
@@ -160,14 +150,9 @@ def get_tcmb_data(
         end_date: End date in format 'DD-MM-YYYY' (for example, '01-01-2020')
     """
     try:
-        logger.info(
-            f"Fetching data for serie_codes: {serie_codes}, date range: {start_date} to {end_date}"
-        )
-
+        logger.info(f"Fetching data for serie_codes: {serie_codes}, date range: {start_date} to {end_date}")
         # Get EVDS client
         evds = _get_evds_client()
-
-        # Get data
         data_df = evds.get_data(serie_codes, startdate=start_date, enddate=end_date)
 
         # Convert DataFrame to dictionary format
@@ -175,9 +160,7 @@ def get_tcmb_data(
             # Convert DataFrame to dict with 'records' orientation for better readability
             data_dict = data_df.to_dict(orient="records")
 
-            logger.info(
-                f"Successfully fetched {len(data_dict)} rows of data for serie_codes: {serie_codes}"
-            )
+            logger.info(f"Successfully fetched {len(data_dict)} rows of data for serie_codes: {serie_codes}")
             return {
                 "success": True,
                 "data": data_dict,
