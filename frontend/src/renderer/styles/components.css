@@ -174,21 +174,240 @@
 }
 
 .attachments-content {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(300px, 1fr));
-  gap: 12px;
-  padding: 8px 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
 }
+
+/* Allow inline display:none to override - inline styles with important take precedence */
+
+/* Override parent grid when attachments-content is present */
+.message-images .attachments-content {
+  display: flex;
+}
+
+/* Consolidated with main .message-images rule below */
 
 .modern-attachment-card {
   width: 100%;
   min-width: 0;
 }
 
-/* Responsive: single column on smaller screens */
-@media (max-width: 600px) {
+.modern-image-card {
+  width: 120px !important;
+  flex: 0 0 120px !important;
+  max-width: 120px !important;
+  min-width: 120px !important;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  animation: attachmentSlideIn 0.3s ease-out;
+  animation-fill-mode: both;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.modern-image-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-primary, #3b82f6);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+  z-index: 2;
+}
+
+.modern-image-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  border-color: var(--accent-primary, #3b82f6);
+}
+
+.modern-image-card:hover::before {
+  transform: scaleY(1);
+}
+
+.image-card-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 120px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.modern-image-card:hover .image-card-img {
+  transform: scale(1.05);
+}
+
+.image-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.modern-image-card:hover .image-card-overlay {
+  opacity: 1;
+}
+
+.image-card-view-btn {
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--accent-primary, #3b82f6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.image-card-view-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.image-card-view-btn i {
+  font-size: 16px;
+}
+
+.image-card-content {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.image-card-name {
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.image-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.image-card-type {
+  font-size: 0.7em;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent-primary, #3b82f6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Responsive: adjust card size based on screen size */
+@media (min-width: 1200px) {
+  .modern-image-card {
+    width: 110px !important;
+    flex: 0 0 110px !important;
+    max-width: 110px !important;
+    min-width: 110px !important;
+  }
+  
   .attachments-content {
-    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .image-card-preview {
+    max-height: 110px;
+  }
+}
+
+@media (max-width: 768px) {
+  .modern-image-card {
+    width: 120px !important;
+    flex: 0 0 120px !important;
+    max-width: 120px !important;
+    min-width: 120px !important;
+  }
+  
+  .attachments-content {
+    gap: 8px;
+  }
+  
+  .image-card-preview {
+    aspect-ratio: 3 / 2;
+    max-height: 120px;
+  }
+}
+
+@media (max-width: 600px) {
+  .modern-image-card {
+    width: 100px !important;
+    flex: 0 0 100px !important;
+    max-width: 100px !important;
+    min-width: 100px !important;
+  }
+  
+  .attachments-content {
+    gap: 6px;
+  }
+  
+  .image-card-preview {
+    max-height: 100px;
+  }
+  
+  .image-card-content {
+    padding: 6px 8px;
+  }
+  
+  .image-card-name {
+    font-size: 0.75em;
+  }
+  
+  .image-card-type {
+    font-size: 0.65em;
+    padding: 2px 4px;
   }
 }
 
@@ -404,6 +623,39 @@ body.dark-theme .attachment-action-btn:hover {
   color: var(--accent-primary, #60a5fa);
 }
 
+/* Dark theme support for modern image cards */
+body.dark-theme .modern-image-card {
+  background: var(--bg-secondary, rgba(30, 30, 30, 0.95));
+  border-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+body.dark-theme .modern-image-card:hover {
+  border-color: var(--accent-primary, #60a5fa);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+}
+
+body.dark-theme .image-card-preview {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
+}
+
+body.dark-theme .image-card-name {
+  color: var(--text-primary, #f3f4f6);
+}
+
+body.dark-theme .image-card-type {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--accent-primary, #60a5fa);
+}
+
+body.dark-theme .image-card-view-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--accent-primary, #60a5fa);
+}
+
+body.dark-theme .image-card-view-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* Nebula theme support for attachment cards */
 body.nebula-theme .modern-attachment-card {
   background: rgba(30, 30, 50, 0.4);
@@ -449,6 +701,42 @@ body.nebula-theme .attachment-card-icon.default {
 body.nebula-theme .attachment-action-btn:hover {
   background: rgba(138, 43, 226, 0.2);
   color: #a78bfa;
+}
+
+/* Nebula theme support for modern image cards */
+body.nebula-theme .modern-image-card {
+  background: rgba(30, 30, 50, 0.4);
+  border-color: rgba(138, 43, 226, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+body.nebula-theme .modern-image-card:hover {
+  background: rgba(138, 43, 226, 0.15);
+  border-color: rgba(138, 43, 226, 0.4);
+  box-shadow: 0 8px 24px rgba(138, 43, 226, 0.25);
+}
+
+body.nebula-theme .modern-image-card::before {
+  background: rgba(138, 43, 226, 0.8);
+}
+
+body.nebula-theme .image-card-preview {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(59, 130, 246, 0.1));
+}
+
+body.nebula-theme .image-card-type {
+  background: rgba(138, 43, 226, 0.2);
+  color: #a78bfa;
+}
+
+body.nebula-theme .image-card-view-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #a78bfa;
+}
+
+body.nebula-theme .image-card-view-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #c4b5fd;
 }
 
 /* Chart Display Styles */
@@ -1868,10 +2156,9 @@ body.dark-theme .chart-fullscreen-title {
 /* Image Display Styles */
 .message-images {
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: block;
   gap: 16px;
-  padding: 16px;
+  padding: 8px;
   background: linear-gradient(135deg,
       rgba(59, 130, 246, 0.08),
       rgba(139, 92, 246, 0.08));
@@ -1881,6 +2168,14 @@ body.dark-theme .chart-fullscreen-title {
   position: relative;
   overflow: hidden;
   animation: slideUpFadeIn 0.5s ease-out;
+}
+
+/* Grid layout only when using old image-wrapper (backward compatibility) */
+.message-images > .message-image-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  padding: 16px;
 }
 
 .message-images::before {

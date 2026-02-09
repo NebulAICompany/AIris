@@ -2532,14 +2532,15 @@ class UIComponents {
     // Add toggle functionality
     let isExpanded = false;
     const toggleIcon = attachmentsHeader.querySelector(".toggle-icon");
-    attachmentsHeader.addEventListener("click", () => {
+    attachmentsHeader.addEventListener("click", (e) => {
+      e.stopPropagation();
       isExpanded = !isExpanded;
       if (isExpanded) {
-        attachmentsContent.style.display = "grid";
+        attachmentsContent.style.setProperty("display", "flex", "important");
         toggleIcon.style.transform = "rotate(180deg)";
         toggleIcon.className = "fas fa-chevron-up toggle-icon";
       } else {
-        attachmentsContent.style.display = "none";
+        attachmentsContent.style.setProperty("display", "none", "important");
         toggleIcon.style.transform = "rotate(0deg)";
         toggleIcon.className = "fas fa-chevron-down toggle-icon";
       }
@@ -2551,37 +2552,8 @@ class UIComponents {
     // Add images
     if (images && images.length > 0) {
       images.forEach((image, index) => {
-        const imageWrapper = document.createElement("div");
-        imageWrapper.className = "message-image-wrapper";
-
-        const img = document.createElement("img");
-        img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
-        img.alt = `Attached Image: ${image.filename}`;
-        img.className = "message-image";
-        img.style.cssText = `
-          max-width: 100%;
-          max-height: 300px;
-          object-fit: contain;
-          cursor: pointer;
-        `;
-
-        img.addEventListener("load", () => {
-          img.style.opacity = "1";
-        });
-        img.style.opacity = "0";
-        img.style.transition = "opacity 0.3s ease";
-
-        img.addEventListener("click", () => {
-          this.showImageModal(image);
-        });
-
-        const caption = document.createElement("div");
-        caption.className = "image-caption";
-        caption.innerHTML = `${image.filename}`;
-
-        imageWrapper.appendChild(img);
-        imageWrapper.appendChild(caption);
-        attachmentsContent.appendChild(imageWrapper);
+        const imageCard = this.createModernImageCard(image);
+        attachmentsContent.appendChild(imageCard);
       });
     }
 
@@ -3030,15 +3002,16 @@ class UIComponents {
       let isExpanded = false;
       const toggleIcon = attachmentsHeader.querySelector(".toggle-icon");
 
-      attachmentsHeader.addEventListener("click", () => {
+      attachmentsHeader.addEventListener("click", (e) => {
+        e.stopPropagation();
         isExpanded = !isExpanded;
 
         if (isExpanded) {
-          attachmentsContent.style.display = "grid";
+          attachmentsContent.style.setProperty("display", "flex", "important");
           toggleIcon.style.transform = "rotate(180deg)";
           toggleIcon.className = "fas fa-chevron-up toggle-icon";
         } else {
-          attachmentsContent.style.display = "none";
+          attachmentsContent.style.setProperty("display", "none", "important");
           toggleIcon.style.transform = "rotate(0deg)";
           toggleIcon.className = "fas fa-chevron-down toggle-icon";
         }
@@ -3050,40 +3023,8 @@ class UIComponents {
       // Add images first
       if (images && images.length > 0) {
         images.forEach((image, index) => {
-          const imageWrapper = document.createElement("div");
-          imageWrapper.className = "message-image-wrapper";
-
-          const img = document.createElement("img");
-          img.src = `data:${image.type || "image/jpeg"};base64,${image.data}`;
-          img.alt = `Attached Image: ${image.filename}`;
-          img.className = "message-image";
-          img.style.cssText = `
-            max-width: 100%;
-            max-height: 300px;
-            object-fit: contain;
-            cursor: pointer;
-          `;
-
-          // Add loading placeholder effect
-          img.addEventListener("load", () => {
-            img.style.opacity = "1";
-          });
-
-          img.style.opacity = "0";
-          img.style.transition = "opacity 0.3s ease";
-
-          // Click to expand functionality
-          img.addEventListener("click", () => {
-            this.showImageModal(image);
-          });
-
-          const caption = document.createElement("div");
-          caption.className = "image-caption";
-          caption.innerHTML = `${image.filename}`;
-
-          imageWrapper.appendChild(img);
-          imageWrapper.appendChild(caption);
-          attachmentsContent.appendChild(imageWrapper);
+          const imageCard = this.createModernImageCard(image);
+          attachmentsContent.appendChild(imageCard);
         });
       }
 
@@ -3313,6 +3254,71 @@ class UIComponents {
     });
 
     return filePreview;
+  }
+
+  createModernImageCard(image) {
+    const card = document.createElement("div");
+    card.className = "modern-image-card";
+
+    const fileName = image.filename || "image.png";
+    const fileExtension = fileName.split(".").pop().toLowerCase();
+    
+    // Determine image type label
+    let imageTypeLabel = "Image";
+    if (fileExtension === "png") {
+      imageTypeLabel = "PNG";
+    } else if (fileExtension === "jpg" || fileExtension === "jpeg") {
+      imageTypeLabel = "JPEG";
+    } else if (fileExtension === "gif") {
+      imageTypeLabel = "GIF";
+    } else if (fileExtension === "webp") {
+      imageTypeLabel = "WebP";
+    }
+
+    // Create card structure
+    card.innerHTML = `
+      <div class="image-card-preview">
+        <img src="data:${image.type || "image/jpeg"};base64,${image.data}" 
+             alt="${fileName}" 
+             class="image-card-img"
+             loading="lazy" />
+        <div class="image-card-overlay">
+          <button class="image-card-view-btn" title="View Full Size" aria-label="View Full Size">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
+      </div>
+      <div class="image-card-content">
+        <div class="image-card-name" title="${fileName}">${fileName}</div>
+        <div class="image-card-meta">
+          <span class="image-card-type">${imageTypeLabel}</span>
+        </div>
+      </div>
+    `;
+
+    // Add image loading effect
+    const img = card.querySelector(".image-card-img");
+    img.addEventListener("load", () => {
+      img.style.opacity = "1";
+    });
+    img.style.opacity = "0";
+    img.style.transition = "opacity 0.3s ease";
+
+    // Add click handlers
+    const viewBtn = card.querySelector(".image-card-view-btn");
+    viewBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.showImageModal(image);
+    });
+
+    // Make entire card clickable
+    card.addEventListener("click", (e) => {
+      if (!e.target.closest(".image-card-view-btn")) {
+        this.showImageModal(image);
+      }
+    });
+
+    return card;
   }
 
   createModernAttachmentCard(file) {
