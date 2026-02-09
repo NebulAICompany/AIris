@@ -12,7 +12,6 @@ from backend.core.tools.finance import (
     calculate_bollinger_bands,
     calculate_rsi,
     calculate_macd,
-    get_intraday_data,
     get_eod_data,
 )
 import json
@@ -210,7 +209,7 @@ def create_financial_stock_chart(
 
     Args:
         symbols: List of stock symbols (for example, ["AAPL", "MSFT"]). Maximum 4 symbols.
-        period: "daily" or "intraday" (default "daily").
+        period: "daily"
         chart_type: "candlestick", "ohlc", "line", or "area" (default "candlestick").
         date_from: Start date in YYYY-MM-DD format for getting data from. If not provided, 90 days ago will be used.
         date_to: End date in YYYY-MM-DD format for getting data to. If not provided, today's date will be used.
@@ -285,22 +284,23 @@ def create_financial_stock_chart(
 
         for symbol in symbols:
             try:
+                # CURRENT SUBSCRIPTION DOES NOT SUPPORT INTRDAY. KEPT THIS PART FOR FUTURE WORK
                 # Fetch market data with increased limits
-                if period.lower() == "intraday":
-                    response = get_intraday_data.func(
-                        symbols=symbol,
-                        interval="1hour",
-                        date_from=date_from,
-                        date_to=date_to,
-                        limit=min(time_range_days * 12, 1000),
-                    )
-                else:
-                    response = get_eod_data.func(
-                        symbols=symbol,
-                        date_from=date_from,
-                        date_to=date_to,
-                        limit=min(max(time_range_days, 250), 1000)
-                    )
+                # if period.lower() == "intraday":
+                #     response = get_intraday_data.func(
+                #         symbols=symbol,
+                #         interval="1hour",
+                #         date_from=date_from,
+                #         date_to=date_to,
+                #         limit=min(time_range_days * 12, 1000),
+                #     )
+                # else:
+                response = get_eod_data.func(
+                    symbols=symbol,
+                    date_from=date_from,
+                    date_to=date_to,
+                    limit=min(max(time_range_days, 250), 1000)
+                )
 
                 if (
                     "error" in response
@@ -349,16 +349,14 @@ def create_financial_stock_chart(
 
                 if "bollinger" in technical_indicators:
                     df["BB_Upper"], df["BB_Middle"], df["BB_Lower"] = (
-                        calculate_bollinger_bands(df["close"])
-                    )
+                        calculate_bollinger_bands(df["close"]))
 
                 if "rsi" in technical_indicators:
                     df["RSI"] = calculate_rsi(df["close"])
 
                 if "macd" in technical_indicators:
                     df["MACD"], df["MACD_Signal"], df["MACD_Histogram"] = (
-                        calculate_macd(df["close"])
-                    )
+                        calculate_macd(df["close"]))
 
                 stock_data[symbol] = df
 
@@ -367,9 +365,7 @@ def create_financial_stock_chart(
                 continue
 
         if not stock_data:
-            return {
-                "error": f"Could not retrieve data for any symbols. Failed: {', '.join(failed_symbols)}"
-            }
+            return {"error": f"Could not retrieve data for any symbols. Failed: {', '.join(failed_symbols)}"}
 
         successful_symbols = list(stock_data.keys())
 
@@ -378,8 +374,7 @@ def create_financial_stock_chart(
         has_rsi = "rsi" in technical_indicators
         has_macd = "macd" in technical_indicators
         has_volume = include_volume and any(
-            "volume" in df.columns for df in stock_data.values()
-        )
+            "volume" in df.columns for df in stock_data.values())
 
         # Calculate subplot rows
         extra_rows = 0
@@ -466,11 +461,9 @@ def create_financial_stock_chart(
                         close=df["close"],
                         name=f"{symbol}",
                         increasing=dict(
-                            line=dict(color=color_scheme["candlestick_up"], width=2)
-                        ),
+                            line=dict(color=color_scheme["candlestick_up"], width=2)),
                         decreasing=dict(
-                            line=dict(color=color_scheme["candlestick_down"], width=2)
-                        ),
+                            line=dict(color=color_scheme["candlestick_down"], width=2)),
                         showlegend=True,
                     ),
                     row=row,
@@ -486,11 +479,9 @@ def create_financial_stock_chart(
                         close=df["close"],
                         name=f"{symbol}",
                         increasing=dict(
-                            line=dict(color=color_scheme["candlestick_up"], width=2)
-                        ),
+                            line=dict(color=color_scheme["candlestick_up"], width=2)),
                         decreasing=dict(
-                            line=dict(color=color_scheme["candlestick_down"], width=2)
-                        ),
+                            line=dict(color=color_scheme["candlestick_down"], width=2)),
                         showlegend=True,
                     ),
                     row=row,
