@@ -31,10 +31,7 @@ def search_local_documents(
 
         # Check if client is available
         if client is None:
-            return (
-                "Vectorstore is not available. Please ensure documents are uploaded.",
-                [],
-            )
+            return ("Vectorstore is not available. Please ensure documents are uploaded.", [],)
 
         # Check if collection exists
         if not client.collection_exists(collection_name="documents"):
@@ -46,12 +43,8 @@ def search_local_documents(
 
         # Use global selected_files from shared state
         selected_files = get_selected_files()
+        logger.info(f"🔍 RAG Tool - Searching with selected files filter: {selected_files}")
 
-        logger.info(
-            f"🔍 RAG Tool - Searching with selected files filter: {selected_files}"
-        )
-
-        
         # Retrieve documents using hybrid search (vector + keyword)
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
@@ -102,9 +95,7 @@ def search_local_documents(
             source_name = file_name
             if page:
                 source_name = f"{file_name} - Page {page}"
-            sources.append(
-                {"name": source_name, "file": file_name, "page": page if page else None}
-            )
+            sources.append({"name": source_name, "file": file_name, "page": page if page else None})
 
         formatted_results = "\n---\n".join(results)
         image_visualizer(image_ids)
