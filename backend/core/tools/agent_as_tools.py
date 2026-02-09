@@ -359,14 +359,12 @@ async def call_office_agent(query: str) -> str:
 @tool(
     "plotting_agent",
     description=(
-        "Use this tool for all chart creation and data visualization. "
-        "It can create financial stock charts (candlestick, OHLC, line, area, "
-        "with technical indicators and volume) using market data, and it can "
-        "generate custom, non-financial visualizations (statistical, scientific, "
-        "or exploratory charts) from Python code. "
+        "Use this tool ONLY when a visual chart or plot is explicitly required to answer the user’s request. "
+        "This tool creates data visualizations, including financial market charts "
+        "(candlestick, OHLC, line, area with technical indicators, volume) and custom non-financial charts "
+        "(statistical, scientific, or exploratory) from Python code."
         "Input must be a natural language request describing the chart needed "
-        "and whether the data is financial market data or custom/tabular data."
-    ),
+        "and whether the data is financial market data or custom/tabular data."),
 )
 async def call_plotting_agent(query: str) -> str:
     """Route chart and visualization requests to the plotting agent.
