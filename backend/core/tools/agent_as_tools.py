@@ -379,14 +379,15 @@ async def call_plotting_agent(query: str) -> str:
 @tool(
     "tcmb_economic_data",
     description=(
-        "Use this tool to retrieve and analyze Turkish Central Bank (TCMB) economic data "
-        "from the EVDS system. It can fetch time series for economic indicators such as "
+        "Use this tool ONLY to retrieve structured Turkish Central Bank (TCMB) "
+        "economic data from the EVDS system."
+        "It provides time-series for economic indicators such as "
         "exchange rates, interest rates, inflation, balance of payments, reserves, "
         "money and credit statistics, price indices, and survey data. "
-        "Input must be a natural language query about Turkish macroeconomic or monetary "
-        "policy data, specifying the indicators and time period of interest "
-        "(for example, 'monthly CPI inflation and policy rate for the last five years')."
-        "Best for queries about Turkish economic indicators, monetary policy data, financial statistics, and macroeconomic trends."
+        "Input must be a natural language query specifying the indicator(s) and "
+        "time period of interest "
+        "(e.g., 'monthly CPI inflation and policy rate for the last five years'). "
+        "Best used for queries requiring official Turkish macroeconomic or monetary data."
     ),
     response_format="content_and_artifact",
 )
