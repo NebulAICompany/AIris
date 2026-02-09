@@ -4,7 +4,7 @@ from langchain_core.documents import Document
 from backend.retrieval.autocontext import apply_autocontext
 from backend.retrieval.keyword_search import get_keyword_search
 from backend.retrieval.retriever import load_vectorstore
-from backend.shared.constants import VECTORSTORE_PATH_STR, co
+from backend.shared.constants import VECTORSTORE_PATH_STR, co, IMAGES_PATH_STR
 from backend.utils.parser import embed_image_with_caption
 from backend.shared.logger import get_logger
 from backend.security.pii import mask_text
@@ -13,7 +13,7 @@ from enum import Enum
 import asyncio
 import tiktoken
 import hashlib
-
+import os
 logger = get_logger("VECTOR_PIPELINE")
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -72,6 +72,10 @@ class VectorStorePipeline:
                     for idx, (doc, embedding) in enumerate(
                         zip(batch_docs, batch_embeddings)
                     ):
+                        if "[Table ID:table_" in doc.page_content:
+                            doc.metadata["contains_image"] = True
+                            doc.metadata["figure_id"] = doc.page_content.split("[Table ID:")[1].split("]")[0]
+                            doc.metadata["image_path"] = os.path.join(IMAGES_PATH_STR, doc.metadata["figure_id"] + ".png")
                         point = models.PointStruct(
                             id=i + idx,
                             vector=embedding,
