@@ -2255,7 +2255,7 @@ class UIComponents {
       }
     }
 
-    // Add charts (displayed before text content)
+    // Add charts (displayed after sources/tools but before text content)
     if (charts && charts.length > 0) {
       this.appendChartsToMessage(messageDiv, charts);
     }
@@ -2483,8 +2483,21 @@ class UIComponents {
       chartsContainer.appendChild(chartWrapper);
     });
 
-    // Insert charts at the beginning of message content (before text)
-    messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+    // Insert charts after sources/tools but before message text (sources and tools should be on top)
+    const sourcesContainer = messageContent.querySelector(".sources-container");
+    const toolsContainer = messageContent.querySelector(".tools-history-container");
+    const messageText = messageContent.querySelector(".message-text");
+    
+    if (toolsContainer) {
+      toolsContainer.insertAdjacentElement("afterend", chartsContainer);
+    } else if (sourcesContainer) {
+      sourcesContainer.insertAdjacentElement("afterend", chartsContainer);
+    } else if (messageText) {
+      messageText.insertAdjacentElement("beforebegin", chartsContainer);
+    } else {
+      // Fallback: insert at beginning if nothing found
+      messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+    }
   }
 
   // Helper method to append images and generated files as attachments
@@ -2954,10 +2967,25 @@ class UIComponents {
         chartsContainer.appendChild(chartWrapper);
       });
 
-      // Charts container'ı message content'in en başına ekle (response metninden önce)
+      // Charts container'ı sources ve tools'tan sonra ekle (sources ve tools en üstte olmalı)
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
-        messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+        // Find the first element after sources/tools (usually message-text)
+        const sourcesContainer = messageContent.querySelector(".sources-container");
+        const toolsContainer = messageContent.querySelector(".tools-history-container");
+        const messageText = messageContent.querySelector(".message-text");
+        
+        // Insert charts after sources/tools but before message text
+        if (toolsContainer) {
+          toolsContainer.insertAdjacentElement("afterend", chartsContainer);
+        } else if (sourcesContainer) {
+          sourcesContainer.insertAdjacentElement("afterend", chartsContainer);
+        } else if (messageText) {
+          messageText.insertAdjacentElement("beforebegin", chartsContainer);
+        } else {
+          // Fallback: insert at beginning if nothing found
+          messageContent.insertBefore(chartsContainer, messageContent.firstChild);
+        }
       }
     }
 
