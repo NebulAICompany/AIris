@@ -9,7 +9,7 @@ def wolfram_alpha_query(query: str):
     """Perform mathematical calculations, scientific computations using Wolfram Alpha.
 
     Args:
-        query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'population of Tokyo', 'derivative of sin(x)')
+        query: The query to send to Wolfram Alpha (e.g., 'solve x^2 + 2x + 1 = 0', 'derivative of sin(x)')
     """
     url = "http://api.wolframalpha.com/v2/query"
     params = {"input": query, "appid": WOLFRAM_APP_ID, "output": "XML"}
@@ -155,9 +155,7 @@ def list_uploaded_files(limit: int = 10) -> str:
         result = f"Recently uploaded files (showing {len(uploads)} most recent):\n\n"
 
         for upload in uploads:
-            result += f"📄 {upload['file_name']}\n"
-            result += f"   Type: {upload['file_type']}\n"
-            result += f"   Uploaded: {upload['upload_date']}\n\n"
+            result += f"📄 {upload['file_name']} Type: {upload['file_type']}  Uploaded: {upload['upload_date']}\n\n"
 
         return result
     except Exception as e:
