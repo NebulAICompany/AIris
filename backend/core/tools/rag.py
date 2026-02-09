@@ -51,6 +51,7 @@ def search_local_documents(
             f"🔍 RAG Tool - Searching with selected files filter: {selected_files}"
         )
 
+        
         # Retrieve documents using hybrid search (vector + keyword)
         retrieved_docs = retrieve_with_keyword_helping(
             client=client,
