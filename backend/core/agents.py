@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
 from langchain.agents.middleware import SummarizationMiddleware
 from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
+from langchain_anthropic import ChatAnthropic
 from .checkpointer import get_checkpointer as _get_checkpointer
 from datetime import datetime
 from .tools.api import (
@@ -117,15 +118,19 @@ def create_main_agent(
         selected_documents_part=selected_documents_part,
     )
 
+    middleware = [
+        SummarizationMiddleware(
+            model="gpt-4o-mini", trigger=("tokens", 8000), keep=("messages", 5)
+        ),
+    ]
+    
+    if isinstance(CURRENT_MODEL, ChatAnthropic):
+        middleware.append(AnthropicPromptCachingMiddleware(ttl="5m"))
+
     agent = create_agent(
         model=CURRENT_MODEL,
         tools=tools,
-        middleware=[
-            SummarizationMiddleware(
-                model="gpt-4o-mini", trigger=("tokens", 8000), keep=("messages", 5)
-            ),
-            AnthropicPromptCachingMiddleware(ttl="5m"),
-        ],
+        middleware=middleware,
         system_prompt=agent_instructions,
         checkpointer=_get_checkpointer(),
     )
