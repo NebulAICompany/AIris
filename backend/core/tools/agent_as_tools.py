@@ -359,7 +359,7 @@ async def call_office_agent(query: str) -> str:
 @tool(
     "plotting_agent",
     description=(
-        "Use this tool ONLY when a visual chart or plot is explicitly required to answer the user’s request. "
+        "Use this tool when a visual chart or plot is explicitly required to answer the user’s request. "
         "This tool creates data visualizations, including financial market charts "
         "(candlestick, OHLC, line, area with technical indicators, volume) and custom non-financial charts "
         "(statistical, scientific, or exploratory) from Python code."
