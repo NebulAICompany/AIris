@@ -236,7 +236,7 @@ class APIService {
   }
 
   // Send streaming query to AI system using Server-Sent Events
-  // callbacks may include: onToken, onToolStart, onToolEnd, onDone, onError, and signal (AbortSignal for stop)
+  // callbacks may include: onToken, onToolStart, onToolEnd, onDone, onError
   async sendQueryStream(
     query,
     webSearchEnabled = false,
@@ -244,7 +244,7 @@ class APIService {
     selectedFiles = null,
     callbacks = {}
   ) {
-    const { onToken, onToolStart, onToolEnd, onDone, onError, signal } = callbacks;
+    const { onToken, onToolStart, onToolEnd, onDone, onError } = callbacks;
 
     const fetchOptions = {
       method: "POST",
@@ -258,9 +258,6 @@ class APIService {
         selectedFiles: selectedFiles,
       }),
     };
-    if (signal) {
-      fetchOptions.signal = signal;
-    }
 
     try {
       const response = await fetch(`${this.baseURL}/api/query/stream`, fetchOptions);
@@ -325,11 +322,6 @@ class APIService {
       return { success: true };
     } catch (error) {
       console.error("[API] Streaming query error:", error);
-
-      // User clicked Stop – don't show error, let caller finalize the message
-      if (error.name === "AbortError") {
-        return { success: false, aborted: true };
-      }
 
       let errorMessage = "Beklenmeyen bir hata oluştu";
 
