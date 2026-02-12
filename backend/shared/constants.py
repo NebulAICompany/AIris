@@ -17,7 +17,6 @@ from langchain_qwq import ChatQwen
 
 load_dotenv()
 
-# Constants for API keys and endpoints
 AZURE_LANGUAGE_KEY = os.environ.get("AZURE_LANGUAGE_KEY")
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
@@ -177,13 +176,12 @@ ANTHROPIC_MODEL = ChatAnthropic(
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-4o",
+    model="gpt-5.2",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
     frequency_penalty=0.7,
     presence_penalty=0.4,
-    max_tokens=4000,  # Increased for complete responses
-    max_retries=3,  # Increased for better reliability
+    max_retries=3,
     callbacks=[ConsoleCallbackHandler()],
 )
 
@@ -206,7 +204,7 @@ DEEPSEEK_MODEL = ChatOpenAI(
     callbacks=[ConsoleCallbackHandler()],
 )
 
-CURRENT_MODEL = ANTHROPIC_MODEL
+CURRENT_MODEL = OPENAI_MODEL
 
 # Marketstack tickers
 MARKETSTACK_TICKERS = [
