@@ -1,262 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AIris Desktop - AI-Powered Financial Document Processing</title>
-    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="styles/main.css" />
-    <link rel="stylesheet" href="styles/components.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
-    />
-    <!-- KaTeX for mathematical expressions -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
-      integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn"
-      crossorigin="anonymous"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-  </head>
-  <body>
-    <div id="app" class="app-container" style="display: none">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-content">
-         <button id="sidebarToggle" class="toggle-btn">
-           <i class="fas fa-bars"></i>
-          </button>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIris Desktop - AI-Powered Financial Document Processing</title>
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/components.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <!-- KaTeX for mathematical expressions -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+    integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+
+<body>
+  <div id="app" class="app-container" style="display: none">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <button id="sidebarToggle" class="toggle-btn">
+          <i class="fas fa-bars"></i>
+        </button>
         <div class="header-left">
           <div class="logo">
             <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
-            <span class="airis-title">AIRIS</span>
+            <span class="airis-title">AIris</span>
           </div>
         </div>
 
-          <div class="header-center">
-            <div class="currency-ticker" id="currency-ticker">
-              <div class="currency-item">
-                <span class="currency-label" data-i18n="usdTry">USD/TRY</span>
-                <span class="currency-value" id="usd-try">--</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-label" data-i18n="eurTry">EUR/TRY</span>
-                <span class="currency-value" id="eur-try">--</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-label" data-i18n="usdEur">USD/EUR</span>
-                <span class="currency-value" id="usd-eur">--</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-label" data-i18n="goldUsdPerOz"
-                  >Gold (USD/oz)</span
-                >
-                <span class="currency-value" id="gold-usd">--</span>
-              </div>
-              <div class="currency-item">
-                <span class="currency-label" data-i18n="goldTryPerGram"
-                  >Gold (₺/g)</span
-                >
-                <span class="currency-value" id="gold-try">--</span>
-              </div>
-              <div class="currency-status" id="currency-status">
-                <i class="fas fa-circle"></i>
-                <span class="status-text">YÜKLENİYOR...</span>
-              </div>
+        <div class="header-center">
+          <div class="currency-ticker" id="currency-ticker">
+            <div class="currency-item">
+              <span class="currency-label" data-i18n="usdTry">USD/TRY</span>
+              <span class="currency-value" id="usd-try">--</span>
+            </div>
+            <div class="currency-item">
+              <span class="currency-label" data-i18n="eurTry">EUR/TRY</span>
+              <span class="currency-value" id="eur-try">--</span>
+            </div>
+            <div class="currency-item">
+              <span class="currency-label" data-i18n="usdEur">USD/EUR</span>
+              <span class="currency-value" id="usd-eur">--</span>
+            </div>
+            <div class="currency-item">
+              <span class="currency-label" data-i18n="goldUsdPerOz">Gold (USD/oz)</span>
+              <span class="currency-value" id="gold-usd">--</span>
+            </div>
+            <div class="currency-item">
+              <span class="currency-label" data-i18n="goldTryPerGram">Gold (₺/g)</span>
+              <span class="currency-value" id="gold-try">--</span>
+            </div>
+            <div class="currency-status" id="currency-status">
+              <i class="fas fa-circle"></i>
+              <span class="status-text">YÜKLENİYOR...</span>
             </div>
           </div>
-          <div class="header-right">
-            <div class="header-actions">
-              <button
-                id="theme-toggle"
-                class="theme-toggle"
-                title="Toggle theme"
-              >
-                <i class="fas fa-moon"></i>
-              </button>
-            </div>
+        </div>
+        <div class="header-right">
+          <div class="header-actions">
+            <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
+              <i class="fas fa-moon"></i>
+            </button>
           </div>
+        </div>
 
-          <!-- Currency Ticker -->
-          <!-- <div id="currency-ticker" class="currency-ticker">
+        <!-- Currency Ticker -->
+        <!-- <div id="currency-ticker" class="currency-ticker">
             <span class="currency-status">Loading...</span>
           </div> -->
-        </div>
-      </header>
+      </div>
+    </header>
 
-      <!-- Main Content -->
-      <main class="main-content">
+    <!-- Main Content -->
+    <main class="main-content">
 
-        <aside class="sidebar">
-          <nav class="sidebar-nav">
-            <button class="nav-item active" data-tab="chat" data-tooltip="Chat">
-              <i class="fas fa-comments"></i>
-              <span data-i18n="chat">Chat</span>
-            </button>
-            <button class="nav-item" data-tab="files" data-tooltip="My Files">
-              <i class="fas fa-file-alt"></i>
-              <span data-i18n="myFiles">My Files</span>
-            </button>
-            <button
-              class="nav-item"
-              data-tab="created-documents"
-              data-tooltip="Created Documents"
-            >
-              <i class="fas fa-file-invoice"></i>
-              <span data-i18n="createdDocuments">Created Documents</span>
-            </button>
-            <button
-              class="nav-item"
-              data-tab="calculator"
-              data-tooltip="Calculations"
-            >
-              <i class="fas fa-calculator"></i>
-              <span data-i18n="interestCalculator">Calculations</span>
-            </button>
-            <button
-              class="nav-item"
-              data-tab="news"
-              data-tooltip="Finance News"
-            >
-              <i class="fas fa-newspaper"></i>
-              <span data-i18n="financeNews">Finance News</span>
-            </button>
+      <aside class="sidebar">
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-tab="chat" data-tooltip="Chat">
+            <i class="fas fa-comments"></i>
+            <span data-i18n="chat">Chat</span>
+          </button>
+          <button class="nav-item" data-tab="files" data-tooltip="My Files">
+            <i class="fas fa-file-alt"></i>
+            <span data-i18n="myFiles">My Files</span>
+          </button>
+          <button class="nav-item" data-tab="created-documents" data-tooltip="Created Documents">
+            <i class="fas fa-file-invoice"></i>
+            <span data-i18n="createdDocuments">Created Documents</span>
+          </button>
+          <button class="nav-item" data-tab="calculator" data-tooltip="Calculations">
+            <i class="fas fa-calculator"></i>
+            <span data-i18n="interestCalculator">Calculations</span>
+          </button>
+          <button class="nav-item" data-tab="news" data-tooltip="Finance News">
+            <i class="fas fa-newspaper"></i>
+            <span data-i18n="financeNews">Finance News</span>
+          </button>
 
-            <div class="nav-item collapsible" data-page="#balance">
-              <i class="fas fa-wallet"></i>
-              <span data-i18n="financialAnalysis">Finansal Analiz</span>
-              <i class="fas fa-chevron-right submenu-icon"></i>
+          <div class="nav-item collapsible" data-page="#balance">
+            <i class="fas fa-wallet"></i>
+            <span data-i18n="financialAnalysis">Finansal Analiz</span>
+            <i class="fas fa-chevron-right submenu-icon"></i>
+          </div>
+          <div class="sub-menu">
+            <button class="sub-item" data-page="#currentStatus">
+              <i class="fas fa-balance-scale"></i>
+              <span data-i18n="currentStatus">Bilanço</span>
+            </button>
+            <button class="sub-item" data-page="#purchase">
+              <i class="fas fa-file-invoice-dollar"></i>
+              <span data-i18n="purchase">Gelir Tablosu</span>
+            </button>
+            <button class="sub-item" data-page="#cash">
+              <i class="fas fa-money-bill-wave"></i>
+              <span data-i18n="cash">Nakit Akışı</span>
+            </button>
+          </div>
+          <button class="nav-item" data-tab="settings" data-tooltip="Settings">
+            <i class="fas fa-cog"></i>
+            <span data-i18n="settings">Settings</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Chat Tab -->
+        <div id="chat-tab" class="tab-content active">
+          <div class="chat-container">
+            <div class="chat-header">
+              <div class="chat-header-main">
+                <h2 data-i18n="aiFinancialAssistant">
+                  AI Financial Assistant
+                </h2>
+                <p data-i18n="askQuestions">
+                  Ask questions about your financial documents and get
+                  AI-powered insights
+                </p>
+              </div>
+              <div class="chat-session-title-centered" id="chat-session-title">New Chat</div>
+              <div class="chat-session-controls">
+                <button id="toggle-chat-history" class="btn btn-secondary" title="View chat history">
+                  <i class="fas fa-history"></i>
+                  <span data-i18n="history">History</span>
+                </button>
+                <button id="new-chat-btn" class="btn btn-secondary" title="Start new chat">
+                  <i class="fas fa-plus"></i>
+                  <span data-i18n="newChat">New Chat</span>
+                </button>
+              </div>
             </div>
-            <div class="sub-menu">
-              <button class="sub-item" data-page="#currentStatus">
-                <i class="fas fa-balance-scale"></i>
-                <span data-i18n="currentStatus">Bilanço</span>
-              </button>
-              <button class="sub-item" data-page="#purchase">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span data-i18n="purchase">Gelir Tablosu</span>
-              </button>
-              <button class="sub-item" data-page="#cash">
-                <i class="fas fa-money-bill-wave"></i>
-                <span data-i18n="cash">Nakit Akışı</span>
-              </button>
-            </div>
-            <button
-              class="nav-item"
-              data-tab="settings"
-              data-tooltip="Settings"
-            >
-              <i class="fas fa-cog"></i>
-              <span data-i18n="settings">Settings</span>
-            </button>
-          </nav>
-        </aside>
 
-        <!-- Content Area -->
-        <div class="content-area">
-          <!-- Chat Tab -->
-          <div id="chat-tab" class="tab-content active">
-            <div class="chat-container">
-              <div class="chat-header">
-                <div class="chat-header-main">
-                  <h2 data-i18n="aiFinancialAssistant">
-                    AI Financial Assistant
-                  </h2>
-                  <p data-i18n="askQuestions">
-                    Ask questions about your financial documents and get
-                    AI-powered insights
-                  </p>
+            <!-- Chat History Dropdown -->
+            <div class="chat-history-dropdown" id="chat-history-dropdown">
+              <div class="chat-history-header">
+                <h3 data-i18n="chatHistory">Chat History</h3>
+                <button id="close-chat-history" class="btn-icon" title="Close">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="chat-sessions-list" id="chat-sessions-list">
+                <div class="loading-sessions">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span data-i18n="loadingChatHistory">Loading chat history...</span>
                 </div>
-                <div class="chat-session-controls">
-                  <button
-                    id="toggle-chat-history"
-                    class="btn btn-secondary"
-                    title="View chat history"
-                  >
-                    <i class="fas fa-history"></i>
-                    <span data-i18n="history">History</span>
+              </div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+              <div class="welcome-message">
+                <div class="welcome-icon">
+                  <i class="fas fa-robot"></i>
+                </div>
+                <h3 data-i18n="welcomeToAiris">Welcome to AIris!</h3>
+                <p data-i18n="welcomeMessage">
+                  I'm your AI financial assistant. Upload some documents and
+                  start asking questions about your financial data.
+                </p>
+                <div class="suggestion-chips">
+                  <button class="suggestion-chip" data-i18n="suggestedQuestions.latestReport">
+                    What's in my latest report?
                   </button>
-                  <button
-                    id="new-chat-btn"
-                    class="btn btn-secondary"
-                    title="Start new chat"
-                  >
-                    <i class="fas fa-plus"></i>
-                    <span data-i18n="newChat">New Chat</span>
+                  <button class="suggestion-chip" data-i18n="suggestedQuestions.analyzeTrends">
+                    Analyze financial trends
+                  </button>
+                  <button class="suggestion-chip" data-i18n="suggestedQuestions.expenseSummary">
+                    Summary of expenses
                   </button>
                 </div>
               </div>
-
-              <!-- Chat History Dropdown -->
-              <div class="chat-history-dropdown" id="chat-history-dropdown">
-                <div class="chat-history-header">
-                  <h3 data-i18n="chatHistory">Chat History</h3>
-                  <button
-                    id="close-chat-history"
-                    class="btn-icon"
-                    title="Close"
-                  >
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-                <div class="chat-sessions-list" id="chat-sessions-list">
-                  <div class="loading-sessions">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span data-i18n="loadingChatHistory"
-                      >Loading chat history...</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <div class="chat-messages" id="chat-messages">
-                <div class="welcome-message">
-                  <div class="welcome-icon">
-                    <i class="fas fa-robot"></i>
-                  </div>
-                  <h3 data-i18n="welcomeToAiris">Welcome to AIris!</h3>
-                  <p data-i18n="welcomeMessage">
-                    I'm your AI financial assistant. Upload some documents and
-                    start asking questions about your financial data.
-                  </p>
-                  <div class="suggestion-chips">
-                    <button
-                      class="suggestion-chip"
-                      data-i18n="suggestedQuestions.latestReport"
-                    >
-                      What's in my latest report?
-                    </button>
-                    <button
-                      class="suggestion-chip"
-                      data-i18n="suggestedQuestions.analyzeTrends"
-                    >
-                      Analyze financial trends
-                    </button>
-                    <button
-                      class="suggestion-chip"
-                      data-i18n="suggestedQuestions.expenseSummary"
-                    >
-                      Summary of expenses
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-           <div class="chat-input-container">
-            <div class="chat-file-upload-area" id="chat-file-upload" style="display: none"> 
-              <div class="uploaded-files-preview" id="chat-uploaded-files"></div> 
             </div>
-              <textarea id="chat-input" class="chat-input" 
-                        placeholder="Bir şeyler sorun veya dosya yükleyin..." ></textarea>
+
+            <div class="chat-input-container">
+              <div class="chat-file-upload-area" id="chat-file-upload" style="display: none">
+                <div class="uploaded-files-preview" id="chat-uploaded-files"></div>
+              </div>
+              <textarea id="chat-input" class="chat-input"
+                placeholder="Bir şeyler sorun veya dosya yükleyin..."></textarea>
               <div class="chat-controls-row">
                 <div class="left-controls">
                   <button id="web-search-toggle" class="web-search-button" title="Web'de Ara">
@@ -268,1699 +211,1234 @@
                       <i class="fas fa-plus-circle"></i>
                     </button>
                     <div id="file-dropdown" class="dropdown-menu">
-                     <button id="normal-file" class="dropdown-item">
-                        Normal Dosya <i class="fas fa-file" style="margin-right: 4px;"></i> 
+                      <button id="normal-file" class="dropdown-item">
+                        Normal Dosya <i class="fas fa-file" style="margin-right: 4px;"></i>
                       </button>
 
                       <button id="photoless-mode" class="dropdown-item">
-                        Fotoğrafsız Mod  <i class="fas fa-eye-slash"></i>
+                        Fotoğrafsız Mod <i class="fas fa-eye-slash"></i>
                       </button>
                     </div>
                   </div>
                   <button id="file-selection-btn" class="file-selection-button" title="Dosya Seç">
                     <i class="fas fa-folder-open"></i>
                   </button>
-                  
+
                   <input type="file" id="chat-file-input" multiple style="display: none" />
                 </div>
 
                 <div class="right-controls">
                   <button id="send-button" class="send-button" disabled>
                     <svg viewBox="0 0 24 24" class="send-icon">
-                      <path d="M7.2 20.4L21 12 7.2 3.6 7.2 10.2 17.4 12 7.2 13.8z" fill="currentColor"/>
+                      <path d="M7.2 20.4L21 12 7.2 3.6 7.2 10.2 17.4 12 7.2 13.8z" fill="currentColor" />
                     </svg>
                   </button>
 
                 </div>
-                <input type="file" id="chat-file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" style="display: none" />
+                <input type="file" id="chat-file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg"
+                  style="display: none" />
               </div>
             </div>
 
 
-              <!-- File Selection Modal -->
-              <div id="file-selection-modal" class="file-selection-modal">
-                <div class="file-selection-content">
-                  <div class="file-selection-header">
-                    <h3 data-i18n="selectFiles">Select Files</h3>
-              
-                    <button id="close-file-selection" class="btn-icon">
+            <!-- File Selection Modal -->
+            <div id="file-selection-modal" class="file-selection-modal">
+              <div class="file-selection-content">
+                <div class="file-selection-header">
+                  <h3 data-i18n="selectFiles">Select Files</h3>
+
+                  <button id="close-file-selection" class="btn-icon">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+
+                <div class="file-selection-body">
+                  <div class="file-selection-controls">
+                    <!-- Search input for filtering files in the modal -->
+                    <div class="file-selection-search-wrapper theme-search">
+                      <div class="search-input-inner">
+                        <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                        <input type="text" id="file-selection-search" class="file-selection-search"
+                          placeholder="Ara dosyalarda..." aria-label="Search files" autocomplete="off"
+                          data-i18n-placeholder="searchFiles" />
+                        <button type="button" id="file-selection-search-clear" class="search-clear-btn"
+                          title="Clear search" aria-label="Clear search">
+                          <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <select id="file-profile-select" class="file-profile-select">
+                      <option value="" data-i18n="selectProfile">Select Profile</option>
+                      <!-- Profiller JS ile eklenecek -->
+                    </select>
+                    <button id="select-all-files" class="file-control-btn">
+                      <i class="fas fa-check-double"></i>
+                      <span data-i18n="selectAll">Select All</span>
+                    </button>
+                    <button id="deselect-all-files" class="file-control-btn">
                       <i class="fas fa-times"></i>
+                      <span data-i18n="deselectAll">Deselect All</span>
                     </button>
                   </div>
-              
-                  <div class="file-selection-body">
-                    <div class="file-selection-controls">
-                      <!-- Search input for filtering files in the modal -->
-                      <div class="file-selection-search-wrapper theme-search">
-                        <div class="search-input-inner">
-                          <i class="fas fa-search search-icon" aria-hidden="true"></i>
-                          <input type="text" id="file-selection-search" class="file-selection-search" placeholder="Ara dosyalarda..."
-                            aria-label="Search files" autocomplete="off" data-i18n-placeholder="searchFiles" />
-                          <button type="button" id="file-selection-search-clear" class="search-clear-btn" title="Clear search"
-                            aria-label="Clear search">
-                            <i class="fas fa-times" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                      </div>
-                      <select id="file-profile-select" class="file-profile-select">
-                        <option value="" data-i18n="selectProfile">Select Profile</option>
-                        <!-- Profiller JS ile eklenecek -->
-                      </select>
-                      <button id="select-all-files" class="file-control-btn">
-                        <i class="fas fa-check-double"></i>
-                        <span data-i18n="selectAll">Select All</span>
-                      </button>
-                      <button id="deselect-all-files" class="file-control-btn">
-                        <i class="fas fa-times"></i>
-                        <span data-i18n="deselectAll">Deselect All</span>
-                      </button>
-                    </div>
-              
-                    <div class="files-list" id="files-selection-list">
-                      <div class="loading-files">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span data-i18n="loadingFiles">Loading files...</span>
-                      </div>
-                    </div>
-                  </div>
-              
-                  <div class="file-selection-footer">
-                    <div class="prompt-buttons">
-                      <button id="prompt-report" class="prompt-btn btn-primary">
-                        <i class="fas fa-file-alt"></i>
-                        <span data-i18n="writeReport">Write Report</span>
-                      </button>
-                      <button id="prompt-analyze" class="prompt-btn btn-primary">
-                        <i class="fas fa-chart-line"></i>
-                        <span data-i18n="analyzeData">Analyze Data</span>
-                      </button>
-                      <button id="prompt-summarize" class="prompt-btn btn-primary">
-                        <i class="fas fa-list"></i>
-                        <span data-i18n="summarize">Summarize</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              </div>
-              </div>
 
-          <!-- Create Profile Modal -->
-          <div id="create-profile-selection" class="create-profile-modal">
-            <div class="file-selection-content">
-              <div class="file-selection-header">
-                <h3 data-i18n="selectFiles">Select Files</h3>
-                <button id="close-profile-selection" class="btn-icon">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-              <div class="file-selection-body">
-                <div class="file-selection-controls">
-                  <!-- Search input for filtering files in the modal -->
-                  <div class="file-selection-search-wrapper theme-search">
-                    <div class="search-input-inner">
-                      <i class="fas fa-search search-icon" aria-hidden="true"></i>
-                      <input type="text" id="file-profile-selection-search" class="file-selection-search"
-                        placeholder="Ara dosyalarda..." aria-label="Search files" autocomplete="off"
-                        data-i18n-placeholder="searchFiles" />
-                      <button type="button" id="file-profile-selection-search-clear" class="search-clear-btn" title="Clear search"
-                        aria-label="Clear search">
-                        <i class="fas fa-times" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <button id="select-all-profile-files" class="file-control-btn">
-                    <i class="fas fa-check-double"></i>
-                    <span data-i18n="selectAll">Select All</span>
-                  </button>
-                  <button id="deselect-all-profile-files" class="file-control-btn">
-                    <i class="fas fa-times"></i>
-                    <span data-i18n="deselectAll">Deselect All</span>
-                  </button>
-                </div>
-          
-                <div class="files-list" id="files-profile-list">
-                  <div class="loading-files">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span data-i18n="loadingFiles">Loading files...</span>
-                  </div>
-                </div>
-                 <div class="profile-name-input">
-                    <label for="profile-name" data-i18n="profileName">Profile Name:</label>
-                    <input type="text" id="profile-name" class="file-selection-search"
-                    data-i18n-placeholder="enterProfileName" />
-                  </div>
-              </div>
-          
-              <div class="file-selection-footer">
-                <div class="prompt-buttons">
-                  <button id="cancel-profile-popup" class="prompt-btn btn-secondary btn-danger">
-                    <i class="fas fa-times"></i>
-                    <span data-i18n="cancel">Cancel</span>
-                  </button>
-                  <button id="save-profile-popup" class="prompt-btn btn-primary">
-                    <i class="fas fa-save"></i>
-                    <span data-i18n="save">Save</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          
-          <!-- Files Tab -->
-          <div id="files-tab" class="tab-content">
-            <div class="files-container">
-              <div class="files-header">
-                <div class="file-header-text">
-                  <h2 data-i18n="documentLibrary">Document Library</h2>
-                  <p data-i18n="manageDocuments">
-                    Manage your uploaded financial documents
-                  </p>
-                </div>
-                <div class="create-profile-container" style="margin-left: 10px;">
-                  <button id="open-profile-popup" class="btn btn-primary" style="height: -webkit-fill-available;">
-                    <i class="fas fa-user-plus"></i>
-                    <span data-i18n="createNewProfile">Create New Profile</span>
-                  </button>
-                </div>
-              </div>
-              <div class="file-selection-search-wrapper theme-search files-tab-search">
-                <div class="search-input-inner">
-                  <i class="fas fa-search search-icon" aria-hidden="true"></i>
-                  <input type="text" id="file-tab-search" class="file-selection-search" placeholder="Ara dosyalarda..."
-                    aria-label="Search files" autocomplete="off" data-i18n-placeholder="searchFiles" />
-                  <button type="button" id="file-tab-search-clear" class="search-clear-btn" title="Clear search"
-                    aria-label="Clear search">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="files-grid" id="files-grid">
-                <div class="empty-state">
-                  <i class="fas fa-folder-open"></i>
-                  <h3 data-i18n="noDocuments">No documents yet</h3>
-                  <p data-i18n="uploadToGetStarted">
-                    Upload some documents to get started using the chat area
-                  </p>
-                  <button class="cta-button" data-tab="chat" data-i18n="goToChat">
-                    Go to Chat
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Created Documents Tab -->
-          <div id="created-documents-tab" class="tab-content">
-            <div class="files-container">
-              <div class="files-header">
-                <div class="file-header-text">
-                  <h2 data-i18n="createdDocumentsLibrary">
-                    Created Documents Library
-                  </h2>
-                  <p data-i18n="manageCreatedDocuments">
-                    View and manage AI-generated financial documents
-                  </p>
-                </div>
-              </div>
-
-              <div class="files-grid" id="created-documents-grid">
-                <div class="empty-state">
-                  <i class="fas fa-file-invoice"></i>
-                  <h3 data-i18n="noCreatedDocuments">
-                    No created documents yet
-                  </h3>
-                  <p data-i18n="askAiToCreateDocuments">
-                    Ask the AI to create financial reports and documents
-                  </p>
-                  <button
-                    class="cta-button"
-                    data-tab="chat"
-                    data-i18n="startChatBtn"
-                  >
-                    Start Chat
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Interest Calculator Tab -->
-          <div id="calculator-tab" class="tab-content">
-            <div class="calculator-container">
-              <div class="calculator-header">
-                <h2 data-i18n="interestCalculator">Calculations</h2>
-                <p data-i18n="calculateLoanPayments">
-                  Calculate your loan payments and total costs
-                </p>
-              </div>
-
-              <div class="calculator-grid">
-                <!-- Row 1: Loan Calculator | Deposit Calculator -->
-                <div class="calculator-grid-item">
-                  <div class="calculator-subheader">
-                    <div>
-                      <div>
-                        <h3 data-i18n="loanCalculatorTitle">Kredi Hesaplayıcı</h3>
-                        <p data-i18n="loanCalculatorDescription">
-                          Kredi ödemelerinizi ve toplam maliyetinizi hesaplayın.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="calculator-form">
-                    <div class="calculator-row">
-                      <div class="calculator-column">
-                        <div class="input-group">
-                          <label for="loan-amount" data-i18n="loanAmount"
-                            >Kredi Tutarı</label
-                          >
-                          <input
-                            type="number"
-                            id="loan-amount"
-                            class="form-input"
-                            placeholder="1000000"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                      <div class="calculator-column">
-                        <div class="input-group">
-                          <label for="loan-term" data-i18n="loanTerm"
-                            >Kredi Vadesi (Ay)</label
-                          >
-                          <input
-                            type="number"
-                            id="loan-term"
-                            class="form-input"
-                            placeholder="120"
-                            min="1"
-                            max="360"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="calculator-row">
-                      <div class="calculator-column">
-                        <div class="input-group">
-                          <label for="interest-rate" data-i18n="interestRate"
-                            >Faiz Oranı (%) - Aylık Faiz</label
-                          >
-                          <input
-                            type="number"
-                            id="interest-rate"
-                            class="form-input"
-                            placeholder="2.7"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                      <div class="calculator-column">
-                        <div class="button-group">
-                          <button
-                            id="calculate-btn"
-                            class="btn btn-primary"
-                            data-i18n="calculate"
-                          >
-                            Hesapla
-                          </button>
-                          <button
-                            id="reset-calc-btn"
-                            class="btn btn-secondary"
-                            data-i18n="reset"
-                          >
-                            Sıfırla
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    class="calculator-results"
-                    id="calculator-results"
-                    style="display: none"
-                  >
-                    <div class="result-header">
-                      <h3 data-i18n="calculationResults">Hesaplama Sonuçları</h3>
-                    </div>
-
-                    <div class="result-grid">
-                      <div class="result-item">
-                        <div class="result-label" data-i18n="monthlyPayment">
-                          Aylık Ödeme
-                        </div>
-                        <div class="result-value" id="monthly-payment">
-                          281.509,04 TL
-                        </div>
-                      </div>
-                      <div class="result-item">
-                        <div class="result-label" data-i18n="totalPayment">
-                          Toplam Ödeme
-                        </div>
-                        <div class="result-value" id="total-payment">
-                          33.781.084,80 TL
-                        </div>
-                      </div>
-                      <div class="result-item">
-                        <div class="result-label" data-i18n="totalInterest">
-                          Toplam Faiz
-                        </div>
-                        <div class="result-value" id="total-interest">
-                          23.781.084,80 TL
-                        </div>
-                      </div>
+                  <div class="files-list" id="files-selection-list">
+                    <div class="loading-files">
+                      <i class="fas fa-spinner fa-spin"></i>
+                      <span data-i18n="loadingFiles">Loading files...</span>
                     </div>
                   </div>
                 </div>
 
-                <div class="calculator-grid-item">
-                  <div class="calculator-subheader">
-                    <div>
-                      <div>
-                        <h3 data-i18n="depositCalculatorTitle">Mevduat Getirisi</h3>
-                        <p data-i18n="depositCalculatorDescription">
-                          Mevduat getirisini hesaplayın.
-                        </p>
-                      </div>
-                      <div class="calculator-toggle-group">
-                        <button
-                          id="deposit-type-toggle-simple"
-                          class="calculator-toggle-btn active"
-                          data-mode="simple"
-                        >
-                          <span data-i18n="simpleDeposit">Basit Faiz</span>
-                        </button>
-                        <button
-                          id="deposit-type-toggle-compound"
-                          class="calculator-toggle-btn"
-                          data-mode="compound"
-                        >
-                          <span data-i18n="compoundDeposit">Bileşik Faiz</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-              <!-- Simple Deposit Form -->
-              <div class="calculator-form" id="deposit-simple-form">
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="deposit-principal" data-i18n="depositPrincipal"
-                        >Anapara Tutarı</label
-                      >
-                      <input
-                        type="number"
-                        id="deposit-principal"
-                        class="form-input"
-                        placeholder="500000"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="deposit-days" data-i18n="depositDays"
-                        >Vade (Gün)</label
-                      >
-                      <input
-                        type="number"
-                        id="deposit-days"
-                        class="form-input"
-                        placeholder="90"
-                        min="1"
-                        max="3650"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="deposit-annual-rate"
-                        data-i18n="depositAnnualRate"
-                        >Yıllık Faiz Oranı (%)</label
-                      >
-                      <input
-                        type="number"
-                        id="deposit-annual-rate"
-                        class="form-input"
-                        placeholder="45"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="button-group">
-                      <button
-                        id="deposit-calculate-btn"
-                        class="btn btn-primary"
-                        data-i18n="calculate"
-                      >
-                        Hesapla
-                      </button>
-                      <button
-                        id="deposit-reset-btn"
-                        class="btn btn-secondary"
-                        data-i18n="reset"
-                      >
-                        Sıfırla
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Compound Deposit Form -->
-              <div class="calculator-form" id="deposit-compound-form" style="display: none;">
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="compound-deposit-principal" data-i18n="compoundDepositPrincipal"
-                        >Anapara Tutarı</label
-                      >
-                      <input
-                        type="number"
-                        id="compound-deposit-principal"
-                        class="form-input"
-                        placeholder="500000"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="compound-deposit-annual-rate" data-i18n="compoundDepositAnnualRate"
-                        >Yıllık Faiz Oranı (%)</label
-                      >
-                      <input
-                        type="number"
-                        id="compound-deposit-annual-rate"
-                        class="form-input"
-                        placeholder="45"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="compound-deposit-term" data-i18n="compoundDepositTerm"
-                        >Vade (Dönem Sayısı)</label
-                      >
-                      <input
-                        type="number"
-                        id="compound-deposit-term"
-                        class="form-input"
-                        placeholder="180"
-                        min="1"
-                        max="10000"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="compound-deposit-frequency" data-i18n="compoundDepositFrequency"
-                        >Bileşik Frekansı</label
-                      >
-                      <select
-                        id="compound-deposit-frequency"
-                        class="form-input"
-                      >
-                        <option value="daily" data-i18n="compoundDepositFrequencyDaily">
-                          Daily
-                        </option>
-                        <option value="monthly" data-i18n="compoundDepositFrequencyMonthly">
-                          Monthly
-                        </option>
-                        <option value="yearly" data-i18n="compoundDepositFrequencyYearly">
-                          Yearly
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="button-group">
-                      <button
-                        id="compound-deposit-calculate-btn"
-                        class="btn btn-primary"
-                        data-i18n="calculate"
-                      >
-                        Hesapla
-                      </button>
-                      <button
-                        id="compound-deposit-reset-btn"
-                        class="btn btn-secondary"
-                        data-i18n="reset"
-                      >
-                        Sıfırla
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Unified Deposit Results -->
-              <div
-                class="calculator-results"
-                id="deposit-results"
-                style="display: none"
-              >
-                <div class="result-header">
-                  <h3 data-i18n="depositResults">Mevduat Sonuçları</h3>
-                </div>
-
-                <div class="result-grid">
-                  <div class="result-item">
-                    <div class="result-label" data-i18n="depositInterest">
-                      Kazanç
-                    </div>
-                    <div class="result-value" id="deposit-interest">
-                      0,00 TL
-                    </div>
-                  </div>
-                  <div class="result-item">
-                    <div class="result-label" data-i18n="depositFinalAmount">
-                      Vade Sonu Tutarı
-                    </div>
-                    <div class="result-value" id="deposit-final-amount">
-                      0,00 TL
-                    </div>
-                  </div>
-                </div>
-              </div>
-                </div>
-
-                <!-- Row 2: PV/FV Calculator | Annuity Calculator -->
-                <div class="calculator-grid-item">
-                  <div class="calculator-subheader">
-                    <div>
-                      <div>
-                        <h3 data-i18n="presentValueCalculatorTitle">Nakit Akış Değeri</h3>
-                        <p data-i18n="presentValueCalculatorDescription">
-                          Bugünkü veya gelecekteki değeri hesaplayın.
-                        </p>
-                      </div>
-                      <div class="calculator-toggle-group">
-                        <button
-                          id="pv-fv-type-toggle-present"
-                          class="calculator-toggle-btn active"
-                          data-mode="present"
-                        >
-                          <span data-i18n="presentValue">Bugünkü Değer</span>
-                        </button>
-                        <button
-                          id="pv-fv-type-toggle-future"
-                          class="calculator-toggle-btn"
-                          data-mode="future"
-                        >
-                          <span data-i18n="futureValue">Gelecek Değer</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-              <!-- Present Value Form -->
-              <div class="calculator-form" id="pv-fv-present-form">
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-future-amount"
-                        data-i18n="presentValueFutureAmount"
-                        >Gelecekteki Tutar</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-future-amount"
-                        class="form-input"
-                        placeholder="150000"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-annual-rate"
-                        data-i18n="presentValueAnnualRate"
-                        >Yıllık Faiz Oranı (%)</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-annual-rate"
-                        class="form-input"
-                        placeholder="12"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="present-value-years" data-i18n="presentValueYears"
-                        >Yıl</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-years"
-                        class="form-input"
-                        placeholder="5"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-months"
-                        data-i18n="presentValueMonths"
-                        >Ay</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-months"
-                        class="form-input"
-                        placeholder="6"
-                        min="0"
-                        max="1200"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="present-value-days" data-i18n="presentValueDays"
-                        >Gün</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-days"
-                        class="form-input"
-                        placeholder="45"
-                        min="0"
-                        max="3650"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="button-group">
-                      <button
-                        id="present-value-calculate-btn"
-                        class="btn btn-primary"
-                        data-i18n="calculate"
-                      >
-                        Hesapla
-                      </button>
-                      <button
-                        id="present-value-reset-btn"
-                        class="btn btn-secondary"
-                        data-i18n="reset"
-                      >
-                        Sıfırla
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Future Value Form -->
-              <div class="calculator-form" id="pv-fv-future-form" style="display: none;">
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-present-amount"
-                        data-i18n="futureValuePresentAmount"
-                        >Bugünkü Tutar</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-present-amount"
-                        class="form-input"
-                        placeholder="125000"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-annual-rate"
-                        data-i18n="futureValueAnnualRate"
-                        >Yıllık Faiz Oranı (%)</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-annual-rate"
-                        class="form-input"
-                        placeholder="10"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="future-value-years" data-i18n="futureValueYears"
-                        >Yıl</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-years"
-                        class="form-input"
-                        placeholder="4"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-months"
-                        data-i18n="futureValueMonths"
-                        >Ay</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-months"
-                        class="form-input"
-                        placeholder="3"
-                        min="0"
-                        max="1200"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label for="future-value-days" data-i18n="futureValueDays"
-                        >Gün</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-days"
-                        class="form-input"
-                        placeholder="10"
-                        min="0"
-                        max="3650"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="button-group">
-                      <button
-                        id="future-value-calculate-btn"
-                        class="btn btn-primary"
-                        data-i18n="calculate"
-                      >
-                        Hesapla
-                      </button>
-                      <button
-                        id="future-value-reset-btn"
-                        class="btn btn-secondary"
-                        data-i18n="reset"
-                      >
-                        Sıfırla
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Unified PV/FV Results -->
-              <div
-                class="calculator-results"
-                id="pv-fv-results"
-                style="display: none"
-              >
-                <div class="result-header">
-                  <h3 id="pv-fv-results-title" data-i18n="presentValueResults">Sonuçlar</h3>
-                </div>
-
-                <div class="result-grid">
-                  <div class="result-item">
-                    <div class="result-label" id="pv-fv-result-label" data-i18n="presentValueValue">
-                      Değer
-                    </div>
-                    <div class="result-value" id="pv-fv-amount">
-                      0,00 TL
-                    </div>
-                  </div>
-                </div>
-              </div>
-                </div>
-
-                <div class="calculator-grid-item">
-                  <div class="calculator-subheader">
-                    <div>
-                      <div>
-                        <h3 data-i18n="futureValueAnnuityCalculatorTitle">Eşit Ödemelerin Değeri</h3>
-                        <p data-i18n="futureValueAnnuityCalculatorDescription">
-                          Eşit ödemelerin bugünkü veya gelecekteki değerini hesaplayın.
-                        </p>
-                      </div>
-                      <div class="calculator-toggle-group">
-                        <button
-                          id="annuity-type-toggle-present"
-                          class="calculator-toggle-btn active"
-                          data-mode="present"
-                        >
-                          <span data-i18n="presentValueAnnuity">Bugünkü Değer</span>
-                        </button>
-                        <button
-                          id="annuity-type-toggle-future"
-                          class="calculator-toggle-btn"
-                          data-mode="future"
-                        >
-                          <span data-i18n="futureValueAnnuity">Gelecek Değer</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-              <!-- Present Value Annuity Form -->
-              <div class="calculator-form" id="annuity-present-form">
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-annuity-payment"
-                        data-i18n="presentValueAnnuityPayment"
-                        >Periyodik Ödeme</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-annuity-payment"
-                        class="form-input"
-                        placeholder="5000"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-annuity-annual-rate"
-                        data-i18n="presentValueAnnuityAnnualRate"
-                        >Yıllık Faiz Oranı (%)</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-annuity-annual-rate"
-                        class="form-input"
-                        placeholder="12"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-annuity-years"
-                        data-i18n="presentValueAnnuityYears"
-                        >Yıl</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-annuity-years"
-                        class="form-input"
-                        placeholder="5"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-annuity-months"
-                        data-i18n="presentValueAnnuityMonths"
-                        >Ay</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-annuity-months"
-                        class="form-input"
-                        placeholder="0"
-                        min="0"
-                        max="1200"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="present-value-annuity-days"
-                        data-i18n="presentValueAnnuityDays"
-                        >Gün</label
-                      >
-                      <input
-                        type="number"
-                        id="present-value-annuity-days"
-                        class="form-input"
-                        placeholder="0"
-                        min="0"
-                        max="3650"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="button-group">
-                      <button
-                        id="present-value-annuity-calculate-btn"
-                        class="btn btn-primary"
-                        data-i18n="calculate"
-                      >
-                        Hesapla
-                      </button>
-                      <button
-                        id="present-value-annuity-reset-btn"
-                        class="btn btn-secondary"
-                        data-i18n="reset"
-                      >
-                        Sıfırla
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Future Value Annuity Form -->
-              <div class="calculator-form" id="annuity-future-form" style="display: none;">
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-annuity-payment"
-                        data-i18n="futureValueAnnuityPayment"
-                        >Periyodik Ödeme</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-annuity-payment"
-                        class="form-input"
-                        placeholder="2000"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-annuity-annual-rate"
-                        data-i18n="futureValueAnnuityAnnualRate"
-                        >Yıllık Faiz Oranı (%)</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-annuity-annual-rate"
-                        class="form-input"
-                        placeholder="15"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-annuity-years"
-                        data-i18n="futureValueAnnuityYears"
-                        >Yıl</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-annuity-years"
-                        class="form-input"
-                        placeholder="5"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-annuity-months"
-                        data-i18n="futureValueAnnuityMonths"
-                        >Ay</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-annuity-months"
-                        class="form-input"
-                        placeholder="60"
-                        min="0"
-                        max="1200"
-                      />
-                    </div>
-                  </div>
-                  <div class="calculator-column">
-                    <div class="input-group">
-                      <label
-                        for="future-value-annuity-days"
-                        data-i18n="futureValueAnnuityDays"
-                        >Gün</label
-                      >
-                      <input
-                        type="number"
-                        id="future-value-annuity-days"
-                        class="form-input"
-                        placeholder="0"
-                        min="0"
-                        max="3650"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="calculator-row">
-                  <div class="calculator-column">
-                    <div class="button-group">
-                      <button
-                        id="future-value-annuity-calculate-btn"
-                        class="btn btn-primary"
-                        data-i18n="calculate"
-                      >
-                        Hesapla
-                      </button>
-                      <button
-                        id="future-value-annuity-reset-btn"
-                        class="btn btn-secondary"
-                        data-i18n="reset"
-                      >
-                        Sıfırla
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Unified Annuity Results -->
-              <div
-                class="calculator-results"
-                id="annuity-results"
-                style="display: none"
-              >
-                <div class="result-header">
-                  <h3 id="annuity-results-title" data-i18n="presentValueAnnuityResults">
-                    Sonuçlar
-                  </h3>
-                </div>
-
-                <div class="result-grid">
-                  <div class="result-item">
-                    <div
-                      class="result-label"
-                      id="annuity-result-label"
-                      data-i18n="presentValueAnnuityValue"
-                    >
-                      Değer
-                    </div>
-                    <div
-                      class="result-value"
-                      id="annuity-amount"
-                    >
-                      0,00 TL
-                    </div>
-                  </div>
-                </div>
-              </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Finance News Tab -->
-          <div id="news-tab" class="tab-content">
-            <div class="news-container">
-              <div class="news-header">
-                <h2 data-i18n="financeNewsTitle">Finance News</h2>
-                <div class="news-controls">
-                  <div class="news-refresh-group">
-                    <button id="refresh-news" class="btn btn-primary">
-                      <i class="fas fa-sync-alt"></i>
-                      <span data-i18n="getLatestNews">Get Latest News</span>
+                <div class="file-selection-footer">
+                  <div class="prompt-buttons">
+                    <button id="prompt-report" class="prompt-btn btn-primary">
+                      <i class="fas fa-file-alt"></i>
+                      <span data-i18n="writeReport">Write Report</span>
                     </button>
-                  </div>
-                  <div class="news-status">
-                    <span id="news-last-updated" data-i18n="loading"
-                      >Loading...</span
-                    >
-                  </div>
-                </div>
-              </div>
-
-              <!-- Two-column layout: News on left, Market charts on right -->
-              <div class="news-layout">
-                <!-- Left column: News articles -->
-                <div class="news-column">
-                  <div class="news-grid" id="news-grid">
-                    <div class="loading-state">
-                      <div class="loading-spinner"></div>
-                      <p data-i18n="loadingNews">
-                        Loading latest finance news...
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Right column: Market charts -->
-                <div class="market-column">
-                  <div class="market-outlook">
-                    <div class="market-outlook-header">
-                      <h3 data-i18n="marketOutlook">Market Outlook</h3>
-                      <button
-                        id="refresh-market-data"
-                        class="market-refresh-btn"
-                        title="Refresh market data"
-                      >
-                        <i class="fas fa-sync-alt"></i>
-                      </button>
-                    </div>
-                    <div id="market-eod" class="market-charts-container"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Stock Detail View -->
-              <div class="stock-detail" id="stock-detail" style="display: none">
-                <div class="stock-detail-header">
-                  <button
-                    class="btn btn-secondary stock-detail-back"
-                    id="stock-detail-back"
-                  >
-                    <i class="fas fa-arrow-left"></i>
-                    <span data-i18n="backToNews">Back to News</span>
-                  </button>
-                  <div class="stock-search-container">
-                    <div class="stock-search-bar">
-                      <i class="fas fa-search"></i>
-                      <input type="text" id="stock-search-input" data-i18n-placeholder="searchStocks" />
-                      <div class="stock-search-dropdown" id="stock-search-dropdown">
-                        <!-- Search results will be populated here -->
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="stock-detail-content">
-                  <div class="stock-main-content">
-                    <div class="stock-header">
-                      <div class="stock-company-info">
-                        <h1 class="stock-company-name" id="stock-company-name"></h1>
-                        <div class="stock-symbol" id="stock-symbol"></div>
-                      </div>
-                      <div class="stock-price-info">
-                        <div class="stock-current-price" id="stock-current-price"></div>
-                        <div class="stock-price-change" id="stock-price-change"></div>
-                        <div class="stock-price-time" id="stock-price-time"></div>
-                      </div>
-                    </div>
-
-                    <div class="stock-chart-container">
-                      <div class="stock-chart-intervals">
-                        <button class="interval-btn active" data-interval="1M">1M</button>
-                        <button class="interval-btn" data-interval="6M">6M</button>
-                        <button class="interval-btn" data-interval="YTD">YTD</button>
-                        <button class="interval-btn" data-interval="1Y">1Y</button>
-                        <button class="interval-btn" data-interval="MAX">MAX</button>
-                      </div>
-                      <div class="stock-chart" id="stock-chart">
-                        <div class="chart-loading">
-                          <div class="loading-spinner"></div>
-                          <p>Loading chart...</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="stock-financial-profile">
-                      <h3>Financial Profile</h3>
-                      <div class="financial-metrics" id="financial-metrics">
-                        <!-- Financial metrics will be populated here -->
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="stock-sidebar">
-                    <div class="stock-company-details">
-                      <h3>Company Information</h3>
-                      <div class="company-details" id="company-details">
-                        <!-- Company details will be populated here -->
-                      </div>
-                    </div>
-
-                    <div class="stock-market-movers">
-                      <div class="market-movers-tabs">
-                        <button class="mover-tab active" data-tab="gainers">Gainers</button>
-                        <button class="mover-tab" data-tab="losers">Losers</button>
-                        <button class="mover-tab" data-tab="active">Active</button>
-                      </div>
-                      <div class="market-movers-content" id="market-movers-content">
-                        <!-- Market movers will be populated here -->
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- News Detail View -->
-              <div class="news-detail" id="news-detail" style="display: none">
-                <div class="news-detail-header">
-                  <button
-                    class="btn btn-secondary news-detail-back"
-                    id="news-detail-back"
-                  >
-                    <i class="fas fa-arrow-left"></i>
-                    <span data-i18n="backToNews">Back to News</span>
-                  </button>
-                  <div class="news-detail-meta">
-                    <span
-                      class="news-detail-sources"
-                      id="news-detail-sources"
-                    ></span>
-                    <span class="news-detail-time" id="news-detail-time"></span>
-                  </div>
-                </div>
-
-                <article class="news-detail-article">
-                  <h1 class="news-detail-title" id="news-detail-title"></h1>
-
-                  <div class="news-detail-content" id="news-detail-content">
-                    <!-- AI-generated comprehensive content with images will be inserted here -->
-                  </div>
-
-                  <div class="news-detail-sources-section">
-                    <h3 data-i18n="sourcesTitle">Sources</h3>
-                    <div class="news-sources-list" id="news-sources-list">
-                      <!-- Source links will be inserted here -->
-                    </div>
-                  </div>
-                </article>
-
-                <!-- News Chat Section -->
-                <div class="news-chat-section" id="news-chat-section">
-                  <div class="news-chat-header">
-                    <h3 data-i18n="askAboutNews">Ask about this news</h3>
-                    <p data-i18n="chatDescription">
-                      Ask questions about this news article and get AI-powered
-                      insights
-                    </p>
-                  </div>
-
-                  <!-- Chat Input (Initially visible) -->
-                  <div
-                    class="news-chat-input-container"
-                    id="news-chat-input-container"
-                  >
-                    <div class="news-chat-input-wrapper">
-                      <input
-                        type="text"
-                        id="news-chat-input"
-                        class="news-chat-input"
-                        placeholder="Ask a question about this news..."
-                        data-i18n-placeholder="askQuestionPlaceholder"
-                      />
-                      <button
-                        id="news-chat-send"
-                        class="news-chat-send-btn"
-                        disabled
-                      >
-                        <i class="fas fa-paper-plane"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Chat Messages (Initially hidden) -->
-                  <div
-                    class="news-chat-messages"
-                    id="news-chat-messages"
-                    style="display: none"
-                  >
-                    <div
-                      class="news-chat-messages-container"
-                      id="news-chat-messages-container"
-                    >
-                      <!-- Chat messages will be inserted here -->
-                    </div>
-
-                    <div class="news-chat-input-wrapper">
-                      <input
-                        type="text"
-                        id="news-chat-input-messages"
-                        class="news-chat-input"
-                        placeholder="Ask a follow-up question..."
-                        data-i18n-placeholder="followUpQuestionPlaceholder"
-                      />
-                      <button
-                        id="news-chat-send-messages"
-                        class="news-chat-send-btn"
-                        disabled
-                      >
-                        <i class="fas fa-paper-plane"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          <div id="balance-tab" class="tab-content">
-            <div class="balance-app">
-              <header class="balance-header">
-                <div class="header-text">
-                  <h1 data-i18n="balanceCalendar.title">Financial Analysis</h1>
-                  <p
-                    class="subtitle"
-                    data-i18n="balanceCalendar.subtitle"
-                  >
-                    Track daily cash positions derived from processed Excel workbooks.
-                  </p>
-                </div>
-                <div class="header-actions">
-                  <label class="timeframe-select">
-                    <span data-i18n="balanceCalendar.timeframeLabel">Timeframe</span>
-                    <select id="balance-timeframe">
-                      <option
-                        value="1"
-                        data-i18n="balanceCalendar.timeframes.last1Month"
-                      >
-                        Last 1 month
-                      </option>
-                      <option
-                        value="3"
-                        selected
-                        data-i18n="balanceCalendar.timeframes.last3Months"
-                      >
-                        Last 3 months
-                      </option>
-                      <option
-                        value="6"
-                        data-i18n="balanceCalendar.timeframes.last6Months"
-                      >
-                        Last 6 months
-                      </option>
-                      <option
-                        value="9"
-                        data-i18n="balanceCalendar.timeframes.last9Months"
-                      >
-                        Last 9 months
-                      </option>
-                      <option
-                        value="12"
-                        data-i18n="balanceCalendar.timeframes.last12Months"
-                      >
-                        Last 12 months
-                      </option>
-                    </select>
-                  </label>
-                  <button id="balance-refresh" class="btn btn-secondary">
-                    <i class="fas fa-rotate"></i>
-                    <span data-i18n="balanceCalendar.refresh">Refresh</span>
-                  </button>
-                </div>
-              </header>
-
-              <section class="balance-process-panel">
-                <div class="panel-header">
-                  <h2>
-                    <i class="fas fa-file-excel"></i>
-                    <span data-i18n="balanceCalendar.processTitle">
-                      Process Financial Analysis Document
-                    </span>
-                  </h2>
-                  <p data-i18n="balanceCalendar.processDescription">
-                    Upload or select a financial analysis document (balance of payments, Excel, PDF, image, etc.).
-                    The parser extracts the ledger and the agent will normalize transactions automatically.
-                  </p>
-                </div>
-                <div class="process-controls">
-                  <div class="process-upload">
-                    <input
-                      type="file"
-                      id="balance-file-input"
-                      accept=".xlsx,.xls,.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif"
-                      style="display: none"
-                    />
-                    <button
-                      id="balance-upload-btn"
-                      class="btn btn-secondary"
-                      type="button"
-                    >
-                      <i class="fas fa-upload"></i>
-                      <span data-i18n="balanceCalendar.uploadButton">
-                        Upload &amp; Process
-                      </span>
+                    <button id="prompt-analyze" class="prompt-btn btn-primary">
+                      <i class="fas fa-chart-line"></i>
+                      <span data-i18n="analyzeData">Analyze Data</span>
                     </button>
-                  </div>
-                  <button id="balance-process-btn" class="btn btn-primary" type="button">
-                    <i class="fas fa-play"></i>
-                    <span data-i18n="balanceCalendar.runAgent">Run Agent</span>
-                  </button>
-                </div>
-                <div id="balance-process-feedback" class="process-feedback"></div>
-              </section>
-
-              <section class="balance-calendar-section">
-                <div class="calendar-header">
-                  <div id="balance-summary" class="balance-summary"></div>
-                  <div class="calendar-legend" id="balance-legend"></div>
-                </div>
-                <div id="balance-heatmap" class="balance-heatmap"></div>
-              </section>
-
-              <!-- Category Distribution Pie Chart Section -->
-              <section class="category-chart-section">
-                <div class="panel-header">
-                  <h3>
-                    <i class="fas fa-chart-pie"></i>
-                    İşlem Kategorileri Dağılımı
-                  </h3>
-                  <p>
-                    İşlemlerinizin kategorilere göre toplam tutarlarının ve net değerlerinin dağılımını gösterir.
-                  </p>
-                </div>
-                <div class="category-charts-wrapper">
-                  <!-- Pie Chart -->
-                  <div class="chart-box">
-                    <h4 class="chart-title">Toplam İşlem Hacmi</h4>
-                    <div class="pie-chart-container">
-                      <canvas id="category-pie-chart" width="350" height="350"></canvas>
-                    </div>
-                    <div id="category-chart-legend" class="category-chart-legend"></div>
-                  </div>
-                  
-                  <!-- Column Chart -->
-                  <div class="chart-box">
-                    <h4 class="chart-title">Net Değerler (Gelir - Gider)</h4>
-                    <div class="column-chart-container">
-                      <canvas id="category-column-chart" width="450" height="400"></canvas>
-                    </div>
-                  </div>
-                </div>
-                <div id="category-chart-loading" class="chart-loading-indicator" style="display: none;">
-                  <i class="fas fa-spinner fa-spin"></i>
-                  <span>Yükleniyor...</span>
-                </div>
-                <div id="category-chart-empty" class="chart-empty-message" style="display: none;">
-                  <i class="fas fa-info-circle"></i>
-                  <span>Henüz kategorize edilmiş işlem bulunmuyor.</span>
-                </div>
-              </section>
-            </div>
-          </div>
-
-         <!-- Bilanço Tab -->
-          <div id="currentStatus-tab" class="tab-content">
-            <h2>Bilanço</h2>
-            <p>Bilanço bilgileri burada.</p>
-          </div>
-
-          <!-- Gelir Tablosu Tab -->
-          <div id="purchase-tab" class="tab-content">
-            <h2>Gelir Tablosu</h2>
-            <p>Gelir tablosu verileri burada.</p>
-          </div>
-
-          <!-- Nakit Akışı Tab -->
-          <div id="cash-tab" class="tab-content">
-            <h2>Nakit Akışı</h2>
-            <p>Nakit akışı verileri burada.</p>
-          </div>
-
-
-          <!-- Settings Tab -->
-          <div id="settings-tab" class="tab-content">
-            <div class="settings-container">
-              <div class="settings-header">
-                <h2 data-i18n="settingsTitle">Settings</h2>
-                <p data-i18n="configureApp">
-                  Configure your AIris desktop application
-                </p>
-              </div>
-
-              <div class="settings-sections">
-                <div class="settings-section">
-                  <h3 data-i18n="backendConfiguration">
-                    Backend Configuration
-                  </h3>
-                  <div class="setting-item">
-                    <label for="api-url" data-i18n="apiBaseUrl"
-                      >API Base URL</label
-                    >
-                    <input
-                      type="text"
-                      id="api-url"
-                      value="http://localhost:8001"
-                    />
-                  </div>
-                  <div class="setting-item">
-                    <label for="timeout" data-i18n="requestTimeout"
-                      >Request Timeout (ms)</label
-                    >
-                    <input type="number" id="timeout" value="600000" />
-                  </div>
-                </div>
-
-                <div class="settings-section">
-                  <h3 data-i18n="interfacePreferences">
-                    Interface Preferences
-                  </h3>
-                  <div class="setting-item">
-                    <label for="theme-setting" data-i18n="theme">Theme</label>
-                    <select id="theme-setting">
-                      <option value="auto" data-i18n="auto">Auto</option>
-                      <option value="light" data-i18n="light">Light</option>
-                      <option value="dark" data-i18n="dark">Dark</option>
-                    </select>
-                  </div>
-                  <div class="setting-item">
-                    <label for="language-setting" data-i18n="language"
-                      >Language</label
-                    >
-                    <select id="language-setting">
-                      <option value="en" data-i18n="english">English</option>
-                      <option value="tr" data-i18n="turkish">Türkçe</option>
-                    </select>
-                  </div>
-                  <div class="setting-item">
-                    <label for="auto-scroll" data-i18n="autoScrollChat"
-                      >Auto-scroll chat</label
-                    >
-                    <input type="checkbox" id="auto-scroll" checked />
-                  </div>
-                </div>
-
-                <div class="settings-section">
-                  <h3 data-i18n="about">About</h3>
-                  <div class="about-info" id="about-info">
-                    <p>
-                      <strong data-i18n="version">Version:</strong>
-                      <span id="app-version" data-i18n="loading"
-                        >Loading...</span
-                      >
-                    </p>
-                    <p>
-                      <strong data-i18n="platform">Platform:</strong>
-                      <span id="app-platform" data-i18n="loading"
-                        >Loading...</span
-                      >
-                    </p>
+                    <button id="prompt-summarize" class="prompt-btn btn-primary">
+                      <i class="fas fa-list"></i>
+                      <span data-i18n="summarize">Summarize</span>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
 
-    <!-- Loading Overlay - Kept hidden to skip initial loading screen -->
-    <div
-      id="loading-overlay"
-      class="loading-overlay hidden"
-      style="display: none"
-    >
-      <div class="loading-content">
-        <div class="loading-spinner"></div>
-        <div class="loading-text" data-i18n="loading">Processing...</div>
+        <!-- Create Profile Modal -->
+        <div id="create-profile-selection" class="create-profile-modal">
+          <div class="file-selection-content">
+            <div class="file-selection-header">
+              <h3 data-i18n="selectFiles">Select Files</h3>
+              <button id="close-profile-selection" class="btn-icon">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="file-selection-body">
+              <div class="file-selection-controls">
+                <!-- Search input for filtering files in the modal -->
+                <div class="file-selection-search-wrapper theme-search">
+                  <div class="search-input-inner">
+                    <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                    <input type="text" id="file-profile-selection-search" class="file-selection-search"
+                      placeholder="Ara dosyalarda..." aria-label="Search files" autocomplete="off"
+                      data-i18n-placeholder="searchFiles" />
+                    <button type="button" id="file-profile-selection-search-clear" class="search-clear-btn"
+                      title="Clear search" aria-label="Clear search">
+                      <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <button id="select-all-profile-files" class="file-control-btn">
+                  <i class="fas fa-check-double"></i>
+                  <span data-i18n="selectAll">Select All</span>
+                </button>
+                <button id="deselect-all-profile-files" class="file-control-btn">
+                  <i class="fas fa-times"></i>
+                  <span data-i18n="deselectAll">Deselect All</span>
+                </button>
+              </div>
+
+              <div class="files-list" id="files-profile-list">
+                <div class="loading-files">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  <span data-i18n="loadingFiles">Loading files...</span>
+                </div>
+              </div>
+              <div class="profile-name-input">
+                <label for="profile-name" data-i18n="profileName">Profile Name:</label>
+                <input type="text" id="profile-name" class="file-selection-search"
+                  data-i18n-placeholder="enterProfileName" />
+              </div>
+            </div>
+
+            <div class="file-selection-footer">
+              <div class="prompt-buttons">
+                <button id="cancel-profile-popup" class="prompt-btn btn-secondary btn-danger">
+                  <i class="fas fa-times"></i>
+                  <span data-i18n="cancel">Cancel</span>
+                </button>
+                <button id="save-profile-popup" class="prompt-btn btn-primary">
+                  <i class="fas fa-save"></i>
+                  <span data-i18n="save">Save</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- Files Tab -->
+        <div id="files-tab" class="tab-content">
+          <div class="files-container">
+            <div class="files-header">
+              <div class="file-header-text">
+                <h2 data-i18n="documentLibrary">Document Library</h2>
+                <p data-i18n="manageDocuments">
+                  Manage your uploaded financial documents
+                </p>
+              </div>
+              <div class="create-profile-container" style="margin-left: 10px;">
+                <button id="open-profile-popup" class="btn btn-primary" style="height: -webkit-fill-available;">
+                  <i class="fas fa-user-plus"></i>
+                  <span data-i18n="createNewProfile">Create New Profile</span>
+                </button>
+              </div>
+            </div>
+            <div class="file-selection-search-wrapper theme-search files-tab-search">
+              <div class="search-input-inner">
+                <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                <input type="text" id="file-tab-search" class="file-selection-search" placeholder="Ara dosyalarda..."
+                  aria-label="Search files" autocomplete="off" data-i18n-placeholder="searchFiles" />
+                <button type="button" id="file-tab-search-clear" class="search-clear-btn" title="Clear search"
+                  aria-label="Clear search">
+                  <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div class="files-grid" id="files-grid">
+              <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <h3 data-i18n="noDocuments">No documents yet</h3>
+                <p data-i18n="uploadToGetStarted">
+                  Upload some documents to get started using the chat area
+                </p>
+                <button class="cta-button" data-tab="chat" data-i18n="goToChat">
+                  Go to Chat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Created Documents Tab -->
+        <div id="created-documents-tab" class="tab-content">
+          <div class="files-container">
+            <div class="files-header">
+              <div class="file-header-text">
+                <h2 data-i18n="createdDocumentsLibrary">
+                  Created Documents Library
+                </h2>
+                <p data-i18n="manageCreatedDocuments">
+                  View and manage AI-generated financial documents
+                </p>
+              </div>
+            </div>
+
+            <div class="files-grid" id="created-documents-grid">
+              <div class="empty-state">
+                <i class="fas fa-file-invoice"></i>
+                <h3 data-i18n="noCreatedDocuments">
+                  No created documents yet
+                </h3>
+                <p data-i18n="askAiToCreateDocuments">
+                  Ask the AI to create financial reports and documents
+                </p>
+                <button class="cta-button" data-tab="chat" data-i18n="startChatBtn">
+                  Start Chat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interest Calculator Tab -->
+        <div id="calculator-tab" class="tab-content">
+          <div class="calculator-container">
+            <div class="calculator-header">
+              <h2 data-i18n="interestCalculator">Calculations</h2>
+              <p data-i18n="calculateLoanPayments">
+                Calculate your loan payments and total costs
+              </p>
+            </div>
+
+            <div class="calculator-grid">
+              <!-- Row 1: Loan Calculator | Deposit Calculator -->
+              <div class="calculator-grid-item">
+                <div class="calculator-subheader">
+                  <div>
+                    <div>
+                      <h3 data-i18n="loanCalculatorTitle">Kredi Hesaplayıcı</h3>
+                      <p data-i18n="loanCalculatorDescription">
+                        Kredi ödemelerinizi ve toplam maliyetinizi hesaplayın.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-form">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="loan-amount" data-i18n="loanAmount">Kredi Tutarı</label>
+                        <input type="number" id="loan-amount" class="form-input" placeholder="1000000" min="0"
+                          step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="loan-term" data-i18n="loanTerm">Kredi Vadesi (Ay)</label>
+                        <input type="number" id="loan-term" class="form-input" placeholder="120" min="1" max="360" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="interest-rate" data-i18n="interestRate">Faiz Oranı (%) - Aylık Faiz</label>
+                        <input type="number" id="interest-rate" class="form-input" placeholder="2.7" min="0" max="100"
+                          step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="reset-calc-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="calculator-results" id="calculator-results" style="display: none">
+                  <div class="result-header">
+                    <h3 data-i18n="calculationResults">Hesaplama Sonuçları</h3>
+                  </div>
+
+                  <div class="result-grid">
+                    <div class="result-item">
+                      <div class="result-label" data-i18n="monthlyPayment">
+                        Aylık Ödeme
+                      </div>
+                      <div class="result-value" id="monthly-payment">
+                        281.509,04 TL
+                      </div>
+                    </div>
+                    <div class="result-item">
+                      <div class="result-label" data-i18n="totalPayment">
+                        Toplam Ödeme
+                      </div>
+                      <div class="result-value" id="total-payment">
+                        33.781.084,80 TL
+                      </div>
+                    </div>
+                    <div class="result-item">
+                      <div class="result-label" data-i18n="totalInterest">
+                        Toplam Faiz
+                      </div>
+                      <div class="result-value" id="total-interest">
+                        23.781.084,80 TL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-grid-item">
+                <div class="calculator-subheader">
+                  <div>
+                    <div>
+                      <h3 data-i18n="depositCalculatorTitle">Mevduat Getirisi</h3>
+                      <p data-i18n="depositCalculatorDescription">
+                        Mevduat getirisini hesaplayın.
+                      </p>
+                    </div>
+                    <div class="calculator-toggle-group">
+                      <button id="deposit-type-toggle-simple" class="calculator-toggle-btn active" data-mode="simple">
+                        <span data-i18n="simpleDeposit">Basit Faiz</span>
+                      </button>
+                      <button id="deposit-type-toggle-compound" class="calculator-toggle-btn" data-mode="compound">
+                        <span data-i18n="compoundDeposit">Bileşik Faiz</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Simple Deposit Form -->
+                <div class="calculator-form" id="deposit-simple-form">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="deposit-principal" data-i18n="depositPrincipal">Anapara Tutarı</label>
+                        <input type="number" id="deposit-principal" class="form-input" placeholder="500000" min="0"
+                          step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="deposit-days" data-i18n="depositDays">Vade (Gün)</label>
+                        <input type="number" id="deposit-days" class="form-input" placeholder="90" min="1" max="3650" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="deposit-annual-rate" data-i18n="depositAnnualRate">Yıllık Faiz Oranı (%)</label>
+                        <input type="number" id="deposit-annual-rate" class="form-input" placeholder="45" min="0"
+                          max="100" step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="deposit-calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="deposit-reset-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Compound Deposit Form -->
+                <div class="calculator-form" id="deposit-compound-form" style="display: none;">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="compound-deposit-principal" data-i18n="compoundDepositPrincipal">Anapara
+                          Tutarı</label>
+                        <input type="number" id="compound-deposit-principal" class="form-input" placeholder="500000"
+                          min="0" step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="compound-deposit-annual-rate" data-i18n="compoundDepositAnnualRate">Yıllık Faiz
+                          Oranı (%)</label>
+                        <input type="number" id="compound-deposit-annual-rate" class="form-input" placeholder="45"
+                          min="0" max="100" step="0.01" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="compound-deposit-term" data-i18n="compoundDepositTerm">Vade (Dönem Sayısı)</label>
+                        <input type="number" id="compound-deposit-term" class="form-input" placeholder="180" min="1"
+                          max="10000" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="compound-deposit-frequency" data-i18n="compoundDepositFrequency">Bileşik
+                          Frekansı</label>
+                        <select id="compound-deposit-frequency" class="form-input">
+                          <option value="daily" data-i18n="compoundDepositFrequencyDaily">
+                            Daily
+                          </option>
+                          <option value="monthly" data-i18n="compoundDepositFrequencyMonthly">
+                            Monthly
+                          </option>
+                          <option value="yearly" data-i18n="compoundDepositFrequencyYearly">
+                            Yearly
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="compound-deposit-calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="compound-deposit-reset-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Unified Deposit Results -->
+                <div class="calculator-results" id="deposit-results" style="display: none">
+                  <div class="result-header">
+                    <h3 data-i18n="depositResults">Mevduat Sonuçları</h3>
+                  </div>
+
+                  <div class="result-grid">
+                    <div class="result-item">
+                      <div class="result-label" data-i18n="depositInterest">
+                        Kazanç
+                      </div>
+                      <div class="result-value" id="deposit-interest">
+                        0,00 TL
+                      </div>
+                    </div>
+                    <div class="result-item">
+                      <div class="result-label" data-i18n="depositFinalAmount">
+                        Vade Sonu Tutarı
+                      </div>
+                      <div class="result-value" id="deposit-final-amount">
+                        0,00 TL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Row 2: PV/FV Calculator | Annuity Calculator -->
+              <div class="calculator-grid-item">
+                <div class="calculator-subheader">
+                  <div>
+                    <div>
+                      <h3 data-i18n="presentValueCalculatorTitle">Nakit Akış Değeri</h3>
+                      <p data-i18n="presentValueCalculatorDescription">
+                        Bugünkü veya gelecekteki değeri hesaplayın.
+                      </p>
+                    </div>
+                    <div class="calculator-toggle-group">
+                      <button id="pv-fv-type-toggle-present" class="calculator-toggle-btn active" data-mode="present">
+                        <span data-i18n="presentValue">Bugünkü Değer</span>
+                      </button>
+                      <button id="pv-fv-type-toggle-future" class="calculator-toggle-btn" data-mode="future">
+                        <span data-i18n="futureValue">Gelecek Değer</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Present Value Form -->
+                <div class="calculator-form" id="pv-fv-present-form">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-future-amount" data-i18n="presentValueFutureAmount">Gelecekteki
+                          Tutar</label>
+                        <input type="number" id="present-value-future-amount" class="form-input" placeholder="150000"
+                          min="0" step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-annual-rate" data-i18n="presentValueAnnualRate">Yıllık Faiz Oranı
+                          (%)</label>
+                        <input type="number" id="present-value-annual-rate" class="form-input" placeholder="12" min="0"
+                          max="100" step="0.01" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-years" data-i18n="presentValueYears">Yıl</label>
+                        <input type="number" id="present-value-years" class="form-input" placeholder="5" min="0"
+                          max="100" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-months" data-i18n="presentValueMonths">Ay</label>
+                        <input type="number" id="present-value-months" class="form-input" placeholder="6" min="0"
+                          max="1200" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-days" data-i18n="presentValueDays">Gün</label>
+                        <input type="number" id="present-value-days" class="form-input" placeholder="45" min="0"
+                          max="3650" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="present-value-calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="present-value-reset-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Future Value Form -->
+                <div class="calculator-form" id="pv-fv-future-form" style="display: none;">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-present-amount" data-i18n="futureValuePresentAmount">Bugünkü
+                          Tutar</label>
+                        <input type="number" id="future-value-present-amount" class="form-input" placeholder="125000"
+                          min="0" step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-annual-rate" data-i18n="futureValueAnnualRate">Yıllık Faiz Oranı
+                          (%)</label>
+                        <input type="number" id="future-value-annual-rate" class="form-input" placeholder="10" min="0"
+                          max="100" step="0.01" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-years" data-i18n="futureValueYears">Yıl</label>
+                        <input type="number" id="future-value-years" class="form-input" placeholder="4" min="0"
+                          max="100" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-months" data-i18n="futureValueMonths">Ay</label>
+                        <input type="number" id="future-value-months" class="form-input" placeholder="3" min="0"
+                          max="1200" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-days" data-i18n="futureValueDays">Gün</label>
+                        <input type="number" id="future-value-days" class="form-input" placeholder="10" min="0"
+                          max="3650" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="future-value-calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="future-value-reset-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Unified PV/FV Results -->
+                <div class="calculator-results" id="pv-fv-results" style="display: none">
+                  <div class="result-header">
+                    <h3 id="pv-fv-results-title" data-i18n="presentValueResults">Sonuçlar</h3>
+                  </div>
+
+                  <div class="result-grid">
+                    <div class="result-item">
+                      <div class="result-label" id="pv-fv-result-label" data-i18n="presentValueValue">
+                        Değer
+                      </div>
+                      <div class="result-value" id="pv-fv-amount">
+                        0,00 TL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="calculator-grid-item">
+                <div class="calculator-subheader">
+                  <div>
+                    <div>
+                      <h3 data-i18n="futureValueAnnuityCalculatorTitle">Eşit Ödemelerin Değeri</h3>
+                      <p data-i18n="futureValueAnnuityCalculatorDescription">
+                        Eşit ödemelerin bugünkü veya gelecekteki değerini hesaplayın.
+                      </p>
+                    </div>
+                    <div class="calculator-toggle-group">
+                      <button id="annuity-type-toggle-present" class="calculator-toggle-btn active" data-mode="present">
+                        <span data-i18n="presentValueAnnuity">Bugünkü Değer</span>
+                      </button>
+                      <button id="annuity-type-toggle-future" class="calculator-toggle-btn" data-mode="future">
+                        <span data-i18n="futureValueAnnuity">Gelecek Değer</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Present Value Annuity Form -->
+                <div class="calculator-form" id="annuity-present-form">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-annuity-payment" data-i18n="presentValueAnnuityPayment">Periyodik
+                          Ödeme</label>
+                        <input type="number" id="present-value-annuity-payment" class="form-input" placeholder="5000"
+                          min="0" step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-annuity-annual-rate" data-i18n="presentValueAnnuityAnnualRate">Yıllık
+                          Faiz Oranı (%)</label>
+                        <input type="number" id="present-value-annuity-annual-rate" class="form-input" placeholder="12"
+                          min="0" max="100" step="0.01" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-annuity-years" data-i18n="presentValueAnnuityYears">Yıl</label>
+                        <input type="number" id="present-value-annuity-years" class="form-input" placeholder="5" min="0"
+                          max="100" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-annuity-months" data-i18n="presentValueAnnuityMonths">Ay</label>
+                        <input type="number" id="present-value-annuity-months" class="form-input" placeholder="0"
+                          min="0" max="1200" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="present-value-annuity-days" data-i18n="presentValueAnnuityDays">Gün</label>
+                        <input type="number" id="present-value-annuity-days" class="form-input" placeholder="0" min="0"
+                          max="3650" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="present-value-annuity-calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="present-value-annuity-reset-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Future Value Annuity Form -->
+                <div class="calculator-form" id="annuity-future-form" style="display: none;">
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-annuity-payment" data-i18n="futureValueAnnuityPayment">Periyodik
+                          Ödeme</label>
+                        <input type="number" id="future-value-annuity-payment" class="form-input" placeholder="2000"
+                          min="0" step="0.01" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-annuity-annual-rate" data-i18n="futureValueAnnuityAnnualRate">Yıllık
+                          Faiz Oranı (%)</label>
+                        <input type="number" id="future-value-annuity-annual-rate" class="form-input" placeholder="15"
+                          min="0" max="100" step="0.01" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-annuity-years" data-i18n="futureValueAnnuityYears">Yıl</label>
+                        <input type="number" id="future-value-annuity-years" class="form-input" placeholder="5" min="0"
+                          max="100" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-annuity-months" data-i18n="futureValueAnnuityMonths">Ay</label>
+                        <input type="number" id="future-value-annuity-months" class="form-input" placeholder="60"
+                          min="0" max="1200" />
+                      </div>
+                    </div>
+                    <div class="calculator-column">
+                      <div class="input-group">
+                        <label for="future-value-annuity-days" data-i18n="futureValueAnnuityDays">Gün</label>
+                        <input type="number" id="future-value-annuity-days" class="form-input" placeholder="0" min="0"
+                          max="3650" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="calculator-row">
+                    <div class="calculator-column">
+                      <div class="button-group">
+                        <button id="future-value-annuity-calculate-btn" class="btn btn-primary" data-i18n="calculate">
+                          Hesapla
+                        </button>
+                        <button id="future-value-annuity-reset-btn" class="btn btn-secondary" data-i18n="reset">
+                          Sıfırla
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Unified Annuity Results -->
+                <div class="calculator-results" id="annuity-results" style="display: none">
+                  <div class="result-header">
+                    <h3 id="annuity-results-title" data-i18n="presentValueAnnuityResults">
+                      Sonuçlar
+                    </h3>
+                  </div>
+
+                  <div class="result-grid">
+                    <div class="result-item">
+                      <div class="result-label" id="annuity-result-label" data-i18n="presentValueAnnuityValue">
+                        Değer
+                      </div>
+                      <div class="result-value" id="annuity-amount">
+                        0,00 TL
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Finance News Tab -->
+        <div id="news-tab" class="tab-content">
+          <div class="news-container">
+            <div class="news-header">
+              <h2 data-i18n="financeNewsTitle">Finance News</h2>
+              <div class="news-controls">
+                <div class="news-refresh-group">
+                  <button id="refresh-news" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i>
+                    <span data-i18n="getLatestNews">Get Latest News</span>
+                  </button>
+                </div>
+                <div class="news-status">
+                  <span id="news-last-updated" data-i18n="loading">Loading...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Two-column layout: News on left, Market charts on right -->
+            <div class="news-layout">
+              <!-- Left column: News articles -->
+              <div class="news-column">
+                <div class="news-grid" id="news-grid">
+                  <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p data-i18n="loadingNews">
+                      Loading latest finance news...
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right column: Market charts -->
+              <div class="market-column">
+                <div class="market-outlook">
+                  <div class="market-outlook-header">
+                    <h3 data-i18n="marketOutlook">Market Outlook</h3>
+                    <button id="refresh-market-data" class="market-refresh-btn" title="Refresh market data">
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                  <div id="market-eod" class="market-charts-container"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stock Detail View -->
+            <div class="stock-detail" id="stock-detail" style="display: none">
+              <div class="stock-detail-header">
+                <button class="btn btn-secondary stock-detail-back" id="stock-detail-back">
+                  <i class="fas fa-arrow-left"></i>
+                  <span data-i18n="backToNews">Back to News</span>
+                </button>
+                <div class="stock-search-container">
+                  <div class="stock-search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="stock-search-input" data-i18n-placeholder="searchStocks" />
+                    <div class="stock-search-dropdown" id="stock-search-dropdown">
+                      <!-- Search results will be populated here -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stock-detail-content">
+                <div class="stock-main-content">
+                  <div class="stock-header">
+                    <div class="stock-company-info">
+                      <h1 class="stock-company-name" id="stock-company-name"></h1>
+                      <div class="stock-symbol" id="stock-symbol"></div>
+                    </div>
+                    <div class="stock-price-info">
+                      <div class="stock-current-price" id="stock-current-price"></div>
+                      <div class="stock-price-change" id="stock-price-change"></div>
+                      <div class="stock-price-time" id="stock-price-time"></div>
+                    </div>
+                  </div>
+
+                  <div class="stock-chart-container">
+                    <div class="stock-chart-intervals">
+                      <button class="interval-btn active" data-interval="1M">1M</button>
+                      <button class="interval-btn" data-interval="6M">6M</button>
+                      <button class="interval-btn" data-interval="YTD">YTD</button>
+                      <button class="interval-btn" data-interval="1Y">1Y</button>
+                      <button class="interval-btn" data-interval="MAX">MAX</button>
+                    </div>
+                    <div class="stock-chart" id="stock-chart">
+                      <div class="chart-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading chart...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="stock-financial-profile">
+                    <h3>Financial Profile</h3>
+                    <div class="financial-metrics" id="financial-metrics">
+                      <!-- Financial metrics will be populated here -->
+                    </div>
+                  </div>
+                </div>
+
+                <div class="stock-sidebar">
+                  <div class="stock-company-details">
+                    <h3>Company Information</h3>
+                    <div class="company-details" id="company-details">
+                      <!-- Company details will be populated here -->
+                    </div>
+                  </div>
+
+                  <div class="stock-market-movers">
+                    <div class="market-movers-tabs">
+                      <button class="mover-tab active" data-tab="gainers">Gainers</button>
+                      <button class="mover-tab" data-tab="losers">Losers</button>
+                      <button class="mover-tab" data-tab="active">Active</button>
+                    </div>
+                    <div class="market-movers-content" id="market-movers-content">
+                      <!-- Market movers will be populated here -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- News Detail View -->
+            <div class="news-detail" id="news-detail" style="display: none">
+              <div class="news-detail-header">
+                <button class="btn btn-secondary news-detail-back" id="news-detail-back">
+                  <i class="fas fa-arrow-left"></i>
+                  <span data-i18n="backToNews">Back to News</span>
+                </button>
+                <div class="news-detail-meta">
+                  <span class="news-detail-sources" id="news-detail-sources"></span>
+                  <span class="news-detail-time" id="news-detail-time"></span>
+                </div>
+              </div>
+
+              <article class="news-detail-article">
+                <h1 class="news-detail-title" id="news-detail-title"></h1>
+
+                <div class="news-detail-content" id="news-detail-content">
+                  <!-- AI-generated comprehensive content with images will be inserted here -->
+                </div>
+
+                <div class="news-detail-sources-section">
+                  <h3 data-i18n="sourcesTitle">Sources</h3>
+                  <div class="news-sources-list" id="news-sources-list">
+                    <!-- Source links will be inserted here -->
+                  </div>
+                </div>
+              </article>
+
+              <!-- News Chat Section -->
+              <div class="news-chat-section" id="news-chat-section">
+                <div class="news-chat-header">
+                  <h3 data-i18n="askAboutNews">Ask about this news</h3>
+                  <p data-i18n="chatDescription">
+                    Ask questions about this news article and get AI-powered
+                    insights
+                  </p>
+                </div>
+
+                <!-- Chat Input (Initially visible) -->
+                <div class="news-chat-input-container" id="news-chat-input-container">
+                  <div class="news-chat-input-wrapper">
+                    <input type="text" id="news-chat-input" class="news-chat-input"
+                      placeholder="Ask a question about this news..." data-i18n-placeholder="askQuestionPlaceholder" />
+                    <button id="news-chat-send" class="news-chat-send-btn" disabled>
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Chat Messages (Initially hidden) -->
+                <div class="news-chat-messages" id="news-chat-messages" style="display: none">
+                  <div class="news-chat-messages-container" id="news-chat-messages-container">
+                    <!-- Chat messages will be inserted here -->
+                  </div>
+
+                  <div class="news-chat-input-wrapper">
+                    <input type="text" id="news-chat-input-messages" class="news-chat-input"
+                      placeholder="Ask a follow-up question..." data-i18n-placeholder="followUpQuestionPlaceholder" />
+                    <button id="news-chat-send-messages" class="news-chat-send-btn" disabled>
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="balance-tab" class="tab-content">
+          <div class="balance-app">
+            <header class="balance-header">
+              <div class="header-text">
+                <h1 data-i18n="balanceCalendar.title">Financial Analysis</h1>
+                <p class="subtitle" data-i18n="balanceCalendar.subtitle">
+                  Track daily cash positions derived from processed Excel workbooks.
+                </p>
+              </div>
+              <div class="header-actions">
+                <label class="timeframe-select">
+                  <span data-i18n="balanceCalendar.timeframeLabel">Timeframe</span>
+                  <select id="balance-timeframe">
+                    <option value="1" data-i18n="balanceCalendar.timeframes.last1Month">
+                      Last 1 month
+                    </option>
+                    <option value="3" selected data-i18n="balanceCalendar.timeframes.last3Months">
+                      Last 3 months
+                    </option>
+                    <option value="6" data-i18n="balanceCalendar.timeframes.last6Months">
+                      Last 6 months
+                    </option>
+                    <option value="9" data-i18n="balanceCalendar.timeframes.last9Months">
+                      Last 9 months
+                    </option>
+                    <option value="12" data-i18n="balanceCalendar.timeframes.last12Months">
+                      Last 12 months
+                    </option>
+                  </select>
+                </label>
+                <button id="balance-refresh" class="btn btn-secondary" style="margin-top: 21px;">
+                  <i class="fas fa-rotate"></i>
+                  <span data-i18n="balanceCalendar.refresh">Refresh</span>
+                </button>
+              </div>
+            </header>
+
+            <section class="balance-process-panel">
+              <div class="panel-header">
+                <h2>
+                  <i class="fas fa-file-excel"></i>
+                  <span data-i18n="balanceCalendar.processTitle">
+                    Process Financial Analysis Document
+                  </span>
+                </h2>
+                <p data-i18n="balanceCalendar.processDescription">
+                  Upload or select a financial analysis document (balance of payments, Excel, PDF, image, etc.).
+                  The parser extracts the ledger and the agent will normalize transactions automatically.
+                </p>
+              </div>
+              <div class="process-controls">
+                <div class="process-upload">
+                  <input type="file" id="balance-file-input"
+                    accept=".xlsx,.xls,.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif"
+                    style="display: none" />
+                  <button id="balance-upload-btn" class="btn btn-secondary" type="button">
+                    <i class="fas fa-upload"></i>
+                    <span data-i18n="balanceCalendar.uploadButton">
+                      Upload &amp; Process
+                    </span>
+                  </button>
+                </div>
+                <button id="balance-process-btn" class="btn btn-primary" type="button">
+                  <i class="fas fa-play"></i>
+                  <span data-i18n="balanceCalendar.runAgent">Run Agent</span>
+                </button>
+              </div>
+              <div id="balance-process-feedback" class="process-feedback"></div>
+            </section>
+
+            <section class="balance-calendar-section">
+              <div class="calendar-header">
+                <div id="balance-summary" class="balance-summary"></div>
+                <div class="calendar-legend" id="balance-legend"></div>
+              </div>
+              <div id="balance-heatmap" class="balance-heatmap"></div>
+            </section>
+
+            <!-- Category Distribution Pie Chart Section -->
+            <section class="category-chart-section">
+              <div class="panel-header">
+                <h3>
+                  <i class="fas fa-chart-pie"></i>
+                  İşlem Kategorileri Dağılımı
+                </h3>
+                <p>
+                  İşlemlerinizin kategorilere göre toplam tutarlarının ve net değerlerinin dağılımını gösterir.
+                </p>
+              </div>
+              <div class="category-charts-wrapper">
+                <!-- Pie Chart -->
+                <div class="chart-box">
+                  <h4 class="chart-title">Toplam İşlem Hacmi</h4>
+                  <div class="pie-chart-container">
+                    <canvas id="category-pie-chart" width="350" height="350"></canvas>
+                  </div>
+                  <div id="category-chart-legend" class="category-chart-legend"></div>
+                </div>
+
+                <!-- Column Chart -->
+                <div class="chart-box">
+                  <h4 class="chart-title">Net Değerler (Gelir - Gider)</h4>
+                  <div class="column-chart-container">
+                    <canvas id="category-column-chart" width="450" height="400"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div id="category-chart-loading" class="chart-loading-indicator" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Yükleniyor...</span>
+              </div>
+              <div id="category-chart-empty" class="chart-empty-message" style="display: none;">
+                <i class="fas fa-info-circle"></i>
+                <span>Henüz kategorize edilmiş işlem bulunmuyor.</span>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- Bilanço Tab -->
+        <div id="currentStatus-tab" class="tab-content">
+          <h2>Bilanço</h2>
+          <p>Bilanço bilgileri burada.</p>
+        </div>
+
+        <!-- Gelir Tablosu Tab -->
+        <div id="purchase-tab" class="tab-content">
+          <h2>Gelir Tablosu</h2>
+          <p>Gelir tablosu verileri burada.</p>
+        </div>
+
+        <!-- Nakit Akışı Tab -->
+        <div id="cash-tab" class="tab-content">
+          <h2>Nakit Akışı</h2>
+          <p>Nakit akışı verileri burada.</p>
+        </div>
+
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+          <div class="settings-container">
+            <div class="settings-header">
+              <h2 data-i18n="settingsTitle">Settings</h2>
+              <p data-i18n="configureApp">
+                Configure your AIris desktop application
+              </p>
+            </div>
+
+            <div class="settings-sections">
+              <div class="settings-section">
+                <h3 data-i18n="backendConfiguration">
+                  Backend Configuration
+                </h3>
+                <div class="setting-item">
+                  <label for="api-url" data-i18n="apiBaseUrl">API Base URL</label>
+                  <input type="text" id="api-url" value="http://localhost:8001" />
+                </div>
+                <div class="setting-item">
+                  <label for="timeout" data-i18n="requestTimeout">Request Timeout (ms)</label>
+                  <input type="number" id="timeout" value="600000" />
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 data-i18n="interfacePreferences">
+                  Interface Preferences
+                </h3>
+                <div class="setting-item">
+                  <label for="theme-setting" data-i18n="theme">Theme</label>
+                  <select id="theme-setting">
+                    <option value="auto" data-i18n="auto">Auto</option>
+                    <option value="light" data-i18n="light">Light</option>
+                    <option value="dark" data-i18n="dark">Dark</option>
+                  </select>
+                </div>
+                <div class="setting-item">
+                  <label for="language-setting" data-i18n="language">Language</label>
+                  <select id="language-setting">
+                    <option value="en" data-i18n="english">English</option>
+                    <option value="tr" data-i18n="turkish">Türkçe</option>
+                  </select>
+                </div>
+                <div class="setting-item">
+                  <label for="auto-scroll" data-i18n="autoScrollChat">Auto-scroll chat</label>
+                  <input type="checkbox" id="auto-scroll" checked />
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 data-i18n="about">About</h3>
+                <div class="about-info" id="about-info">
+                  <p>
+                    <strong data-i18n="version">Version:</strong>
+                    <span id="app-version" data-i18n="loading">Loading...</span>
+                  </p>
+                  <p>
+                    <strong data-i18n="platform">Platform:</strong>
+                    <span id="app-platform" data-i18n="loading">Loading...</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </main>
+  </div>
+
+  <!-- Loading Overlay - Kept hidden to skip initial loading screen -->
+  <div id="loading-overlay" class="loading-overlay hidden" style="display: none">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text" data-i18n="loading">Processing...</div>
     </div>
+  </div>
 
-    <!-- Notification Container -->
-    <div id="notification-container" class="notification-container"></div>
-    <!-- Scripts -->
-    <!-- External Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- KaTeX for mathematical expressions -->
-    <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"
-      integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx"
-      crossorigin="anonymous"
-    ></script>
-    <div id="snackbar-container"></div>
+  <!-- Notification Container -->
+  <div id="notification-container" class="notification-container"></div>
+  <!-- Scripts -->
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- KaTeX for mathematical expressions -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"
+    integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx"
+    crossorigin="anonymous"></script>
+  <div id="snackbar-container"></div>
 
-    <!-- Application Scripts -->
-    <script src="scripts/renderer-logger.js"></script>
-    <script src="scripts/language.js"></script>
-    <script src="scripts/currency-service.js"></script>
-    <script src="scripts/utils.js"></script>
-    <script src="scripts/api.js"></script>
-    <script src="scripts/balance.js"></script>
-    <script src="scripts/components.js"></script>
-    <script src="scripts/app.js"></script>
-  </body>
+  <!-- Application Scripts -->
+  <script src="scripts/renderer-logger.js"></script>
+  <script src="scripts/language.js"></script>
+  <script src="scripts/currency-service.js"></script>
+  <script src="scripts/utils.js"></script>
+  <script src="scripts/api.js"></script>
+  <script src="scripts/balance.js"></script>
+  <script src="scripts/components.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+
 </html>
