@@ -26,6 +26,12 @@ class APIService {
       delete: async (url, config = {}) => {
         return this.makeRequest(url, "DELETE", null, config);
       },
+      put: async (url, data, config = {}) => {
+        return this.makeRequest(url, "PUT", data, config);
+      },
+      patch: async (url, data, config = {}) => {
+        return this.makeRequest(url, "PATCH", data, config);
+      },
       defaults: {
         baseURL: this.baseURL,
         timeout: this.timeout,
@@ -165,8 +171,7 @@ class APIService {
       // RAG Fusion disabled - no timeout adjustment needed
 
       console.log(
-        `[API] AI Query timeout set to: ${
-          timeout / 1000
+        `[API] AI Query timeout set to: ${timeout / 1000
         }s (Web: ${webSearchEnabled}, RAG Fusion: disabled)`
       );
 
@@ -407,6 +412,23 @@ class APIService {
     }
   }
 
+  async updateChatSession(sessionId, title) {
+    try {
+      const response = await this.api.put(`/api/chat/sessions/${sessionId}`, {
+        title: title,
+      });
+      return {
+        success: true,
+        session: response.data.session,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   // Upload file to backend with progress tracking
   async uploadFile(file, options = {}, progressCallback) {
     return new Promise((resolve, reject) => {
@@ -471,10 +493,10 @@ class APIService {
 
         // Start upload
         xhr.open("POST", `${baseURL}/api/upload`);
-        
+
         // Set timeout
         xhr.timeout = 180000; // 3 minutes
-        
+
         xhr.addEventListener("timeout", () => {
           reject(new Error("Upload timeout"));
         });

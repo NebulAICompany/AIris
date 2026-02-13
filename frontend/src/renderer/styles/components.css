@@ -2649,7 +2649,6 @@ body.dark-theme .image-caption {
 }
 
 .chat-session-actions {
-  opacity: 0;
   display: flex;
   gap: 4px;
   margin-left: 8px;
@@ -2858,20 +2857,6 @@ body.dark-theme .image-caption {
 
 .message.assistant-message .message-time {
   text-align: left;
-}
-
-
-:root {
-  --bg-primary: #f0f4f9;
-  /* Gemini benzeri açık gri */
-  --bg-secondary: #e9eef6;
-  /* Hover durumları için */
-  --text-primary: #1f1f1f;
-  --text-secondary: #444746;
-  --border-radius-lg: 28px;
-  /* Daha yuvarlak köşeler */
-  --accent-color: #0b57d0;
-  /* Gönder butonu rengi */
 }
 
 /* Sources display styles */
@@ -3423,6 +3408,7 @@ body.dark-theme .image-caption {
   color: var(--text-secondary);
   position: relative;
   overflow: visible;
+  border: 2px solid var(--text-secondary);
 }
 
 .file-attachment-button:hover,
@@ -5619,7 +5605,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 
 /* Finance News Styles - Best Practice Layout */
 .news-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 12px 120px 12px;
   /* Add bottom padding to prevent content from hiding behind fixed input */
@@ -5711,7 +5697,6 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   border-radius: 12px;
   padding: 16px;
   box-shadow: var(--shadow);
-  max-width: 320px;
   transition: var(--transition);
 }
 
@@ -7368,32 +7353,13 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
 
 /* File Selection Components */
 
-/* File Selection Button */
-.file-selection-button {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  background-color: var(--bg-primary);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
 .file-selection-button:hover {
-  background-color: var(--bg-secondary);
   color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
 
 .file-selection-button.has-selection {
-  background-color: var(--accent-primary);
-  color: white;
-  border-color: var(--accent-primary);
+  color: var(--text-secondary);
 }
 
 .file-selection-button.has-selection::after {
@@ -7413,13 +7379,6 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   font-weight: 600;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Special styling for when all files are selected */
-.file-selection-button.all-selected {
-  background-color: var(--success);
-  border-color: var(--success);
-  position: relative;
 }
 
 .file-selection-button.all-selected::before {
@@ -8152,7 +8111,6 @@ body.nebula-theme .message-chart-wrapper:hover {
   border-color: rgba(139, 92, 246, 0.6) !important;
   box-shadow: 0 12px 50px rgba(139, 92, 246, 0.5),
     0 0 30px rgba(236, 72, 153, 0.3) !important;
-  transform: translateY(-2px) !important;
 }
 
 body.nebula-theme .chart-caption {
@@ -8636,7 +8594,7 @@ body.nebula-theme .web-search-button:hover {
 
 /* Interest Calculator Styles */
 .calculator-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 20px 24px;
   height: 100%;

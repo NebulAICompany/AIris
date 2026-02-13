@@ -393,6 +393,25 @@ class ChatHistoryManager:
             logger.error(f"Error deleting session {session_id}: {e}")
             return False
 
+    def update_session(self, session_id: str, title: str = None) -> Optional[ChatSession]:
+        """Update a chat session's metadata (e.g. title)"""
+        # Get existing session
+        session = self.get_session(session_id)
+        if not session:
+            return None
+
+        # Update fields
+        if title is not None:
+            session.title = title
+            
+        # Update timestamp
+        session.updated_at = datetime.now()
+
+        # Save to database
+        self.save_session_to_db(session)
+        
+        return session
+
     def clear_old_sessions(self, days_old: int = 30):
         """Clear sessions older than specified days"""
         cutoff_date = datetime.now() - timedelta(days=days_old)

@@ -2,8 +2,8 @@
 
 :root {
   /* Colors - Light Theme */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
+  --bg-primary: #f7f9fc;
+  --bg-secondary: #eef2f7;
   --bg-tertiary: #f1f5f9;
   --text-primary: #1e293b;
   --text-primary-rgb: 30, 41, 59;
@@ -74,7 +74,8 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
+  /* Prevent horizontal scroll */
 }
 
 /* Scrollbar Styles - Best Practices */
@@ -100,6 +101,12 @@ body {
 
 ::-webkit-scrollbar-corner {
   background: var(--bg-secondary);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* Remove global scrollbar gutter to prevent white space */
@@ -181,12 +188,10 @@ body {
   letter-spacing: 0.1em;
 
   /* Gradient text */
-  background: linear-gradient(
-    135deg,
-    #4facfe,
-    #00f2fe,
-    #6a11cb
-  );
+  background: linear-gradient(135deg,
+      #4facfe,
+      #00f2fe,
+      #6a11cb);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 
@@ -366,12 +371,12 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(18px);
 }
 
@@ -410,10 +415,12 @@ input:checked + .slider:before {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -547,7 +554,8 @@ input:checked + .slider:before {
   font-size: 18px;
   margin-top: 6px;
   margin-left: -13px;
-  align-self: flex-start; /* solda sabit */
+  align-self: flex-start;
+  /* solda sabit */
 }
 
 #sidebarToggle:hover {
@@ -580,8 +588,10 @@ input:checked + .slider:before {
   margin-right: 3px;
   font-size: 12px;
   transition: transform 0.3s, opacity 0.3s;
-  opacity: 1; /* sidebar açık/kapalı farkında opacity değiştirilecek */
-  transform: rotate(0deg); /* default sağ */
+  opacity: 1;
+  /* sidebar açık/kapalı farkında opacity değiştirilecek */
+  transform: rotate(0deg);
+  /* default sağ */
 }
 
 .sidebar.collapsed .nav-item.collapsible .submenu-icon {
@@ -590,7 +600,8 @@ input:checked + .slider:before {
 
 /* Hoverdayken ikon aşağıya dönsün */
 .nav-item.collapsible:hover .submenu-icon {
-  transform: rotate(90deg); /* sağdan aşağıya döndür */
+  transform: rotate(90deg);
+  /* sağdan aşağıya döndür */
 }
 
 /* Sub-menu container */
@@ -604,7 +615,7 @@ input:checked + .slider:before {
 }
 
 /* Keep submenu visible if hovering over parent or submenu (only when sidebar is expanded) */
-.sidebar:not(.collapsed) .nav-item.collapsible:hover + .sub-menu,
+.sidebar:not(.collapsed) .nav-item.collapsible:hover+.sub-menu,
 .sidebar:not(.collapsed) .sub-menu:hover {
   max-height: 500px;
 }
@@ -642,11 +653,15 @@ input:checked + .slider:before {
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
 }
+
 .sub-menu.open {
-  display: block; /* veya slide efekti istersen transition ile */
+  display: block;
+  /* veya slide efekti istersen transition ile */
 }
+
 .sidebar.collapsed .sub-menu {
-    display: none !important; /* Hide original submenu when collapsed - floating menu handles it */
+  display: none !important;
+  /* Hide original submenu when collapsed - floating menu handles it */
 }
 
 @keyframes tooltipFadeIn {
@@ -654,6 +669,7 @@ input:checked + .slider:before {
     opacity: 0;
     transform: translateY(-50%) translateX(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
@@ -683,7 +699,8 @@ input:checked + .slider:before {
   height: 100%;
   padding: 24px;
   overflow-y: auto;
-  overflow-x: hidden; /* Prevent horizontal overflow */
+  overflow-x: hidden;
+  /* Prevent horizontal overflow */
   display: none;
   margin: 0;
   width: 100%;
@@ -715,12 +732,15 @@ input:checked + .slider:before {
 
 /* Special layout for news tab - full page scrolling */
 #news-tab {
-  padding: 24px 0 120px 0; /* Add bottom padding for fixed input bar */
+  padding: 24px 0 120px 0;
+  /* Add bottom padding for fixed input bar */
   overflow-y: auto;
   overflow-x: hidden;
   margin: 0;
-  position: static !important; /* Don't create positioning context */
-  transform: none !important; /* Remove any transform */
+  position: static !important;
+  /* Don't create positioning context */
+  transform: none !important;
+  /* Remove any transform */
 }
 
 /* Utility Classes */
@@ -785,6 +805,7 @@ input:checked + .slider:before {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -863,16 +884,19 @@ input:checked + .slider:before {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
@@ -1125,12 +1149,14 @@ input:checked + .slider:before {
 }
 
 @keyframes typing {
+
   0%,
   60%,
   100% {
     transform: translateY(0);
     opacity: 0.4;
   }
+
   30% {
     transform: translateY(-10px);
     opacity: 1;
@@ -1164,10 +1190,12 @@ input:checked + .slider:before {
 }
 
 @keyframes pulseText {
+
   0%,
   100% {
     opacity: 0.6;
   }
+
   50% {
     opacity: 1;
   }
@@ -1179,6 +1207,7 @@ input:checked + .slider:before {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -1190,6 +1219,7 @@ input:checked + .slider:before {
     transform: translateY(-100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -1200,6 +1230,7 @@ input:checked + .slider:before {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1209,6 +1240,7 @@ input:checked + .slider:before {
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -1250,130 +1282,95 @@ body.nebula-theme {
     0 10px 20px rgba(236, 72, 153, 0.2);
 
   /* Ultra-complex nebula background inspired by reference image */
-  background: 
-    /* Bright nebula core regions - intense luminosity */ radial-gradient(
-      ellipse 800px 500px at 35% 25%,
+  background:
+    /* Bright nebula core regions - intense luminosity */
+    radial-gradient(ellipse 800px 500px at 35% 25%,
       rgba(255, 100, 255, 0.8) 0%,
       rgba(139, 92, 246, 0.6) 15%,
       rgba(139, 92, 246, 0.3) 35%,
-      transparent 65%
-    ),
-    radial-gradient(
-      ellipse 600px 900px at 70% 60%,
+      transparent 65%),
+    radial-gradient(ellipse 600px 900px at 70% 60%,
       rgba(100, 255, 255, 0.7) 0%,
       rgba(59, 130, 246, 0.5) 20%,
       rgba(99, 102, 241, 0.25) 40%,
-      transparent 70%
-    ),
-    radial-gradient(
-      ellipse 700px 400px at 15% 75%,
+      transparent 70%),
+    radial-gradient(ellipse 700px 400px at 15% 75%,
       rgba(255, 150, 100, 0.6) 0%,
       rgba(236, 72, 153, 0.45) 25%,
       rgba(219, 39, 119, 0.2) 45%,
-      transparent 75%
-    ),
+      transparent 75%),
     /* Dense cloud formations with high contrast */
-      radial-gradient(
-        ellipse 1000px 600px at 80% 20%,
-        rgba(139, 92, 246, 0.5) 0%,
-        rgba(139, 92, 246, 0.25) 20%,
-        rgba(139, 92, 246, 0.1) 40%,
-        transparent 70%
-      ),
-    radial-gradient(
-      ellipse 900px 700px at 20% 40%,
+    radial-gradient(ellipse 1000px 600px at 80% 20%,
+      rgba(139, 92, 246, 0.5) 0%,
+      rgba(139, 92, 246, 0.25) 20%,
+      rgba(139, 92, 246, 0.1) 40%,
+      transparent 70%),
+    radial-gradient(ellipse 900px 700px at 20% 40%,
       rgba(236, 72, 153, 0.45) 0%,
       rgba(236, 72, 153, 0.2) 25%,
       rgba(236, 72, 153, 0.08) 50%,
-      transparent 80%
-    ),
-    radial-gradient(
-      ellipse 600px 800px at 60% 80%,
+      transparent 80%),
+    radial-gradient(ellipse 600px 800px at 60% 80%,
       rgba(99, 102, 241, 0.4) 0%,
       rgba(99, 102, 241, 0.15) 30%,
       rgba(99, 102, 241, 0.05) 60%,
-      transparent 90%
-    ),
+      transparent 90%),
     /* Medium intensity cloud clusters */
-      radial-gradient(
-        ellipse 500px 300px at 45% 15%,
-        rgba(168, 85, 247, 0.35) 0%,
-        rgba(168, 85, 247, 0.15) 35%,
-        rgba(168, 85, 247, 0.05) 65%,
-        transparent 85%
-      ),
-    radial-gradient(
-      ellipse 400px 600px at 85% 70%,
+    radial-gradient(ellipse 500px 300px at 45% 15%,
+      rgba(168, 85, 247, 0.35) 0%,
+      rgba(168, 85, 247, 0.15) 35%,
+      rgba(168, 85, 247, 0.05) 65%,
+      transparent 85%),
+    radial-gradient(ellipse 400px 600px at 85% 70%,
       rgba(219, 39, 119, 0.3) 0%,
       rgba(219, 39, 119, 0.12) 40%,
       rgba(219, 39, 119, 0.04) 70%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 350px 450px at 10% 60%,
+      transparent 90%),
+    radial-gradient(ellipse 350px 450px at 10% 60%,
       rgba(124, 58, 237, 0.25) 0%,
       rgba(124, 58, 237, 0.1) 45%,
       rgba(124, 58, 237, 0.03) 75%,
-      transparent 95%
-    ),
+      transparent 95%),
     /* Detailed cloud wisps and textures */
-      radial-gradient(
-        circle 250px at 25% 35%,
-        rgba(139, 92, 246, 0.2) 0%,
-        rgba(139, 92, 246, 0.08) 40%,
-        transparent 70%
-      ),
-    radial-gradient(
-      circle 200px at 75% 65%,
+    radial-gradient(circle 250px at 25% 35%,
+      rgba(139, 92, 246, 0.2) 0%,
+      rgba(139, 92, 246, 0.08) 40%,
+      transparent 70%),
+    radial-gradient(circle 200px at 75% 65%,
       rgba(236, 72, 153, 0.18) 0%,
       rgba(236, 72, 153, 0.06) 45%,
-      transparent 75%
-    ),
-    radial-gradient(
-      circle 180px at 60% 25%,
+      transparent 75%),
+    radial-gradient(circle 180px at 60% 25%,
       rgba(99, 102, 241, 0.15) 0%,
       rgba(99, 102, 241, 0.05) 50%,
-      transparent 80%
-    ),
-    radial-gradient(
-      circle 150px at 40% 75%,
+      transparent 80%),
+    radial-gradient(circle 150px at 40% 75%,
       rgba(168, 85, 247, 0.12) 0%,
       rgba(168, 85, 247, 0.04) 55%,
-      transparent 85%
-    ),
+      transparent 85%),
     /* Fine nebula dust and particles */
-      radial-gradient(
-        ellipse 300px 150px at 80% 45%,
-        rgba(139, 92, 246, 0.15) 0%,
-        rgba(139, 92, 246, 0.05) 50%,
-        transparent 90%
-      ),
-    radial-gradient(
-      ellipse 250px 200px at 20% 70%,
+    radial-gradient(ellipse 300px 150px at 80% 45%,
+      rgba(139, 92, 246, 0.15) 0%,
+      rgba(139, 92, 246, 0.05) 50%,
+      transparent 90%),
+    radial-gradient(ellipse 250px 200px at 20% 70%,
       rgba(236, 72, 153, 0.12) 0%,
       rgba(236, 72, 153, 0.04) 60%,
-      transparent 95%
-    ),
-    radial-gradient(
-      ellipse 200px 180px at 50% 30%,
+      transparent 95%),
+    radial-gradient(ellipse 200px 180px at 50% 30%,
       rgba(99, 102, 241, 0.1) 0%,
       rgba(99, 102, 241, 0.03) 65%,
-      transparent 90%
-    ),
+      transparent 90%),
     /* Deep space foundation with color variations */
-      linear-gradient(
-        135deg,
-        #0b0118 0%,
-        #1a0b2e 25%,
-        #2d1b4e 50%,
-        #1a0b2e 75%,
-        #0b0118 100%
-      ),
-    radial-gradient(
-      ellipse at center,
+    linear-gradient(135deg,
+      #0b0118 0%,
+      #1a0b2e 25%,
+      #2d1b4e 50%,
+      #1a0b2e 75%,
+      #0b0118 100%),
+    radial-gradient(ellipse at center,
       rgba(139, 92, 246, 0.02) 0%,
-      transparent 50%
-    );
+      transparent 50%);
   background-attachment: fixed;
 
   /* Enhanced cosmic atmosphere with particle effects */
@@ -1388,69 +1385,52 @@ body.nebula-theme::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    /* Bright animated nebula formations */ radial-gradient(
-      ellipse 900px 600px at 25% 30%,
+  background:
+    /* Bright animated nebula formations */
+    radial-gradient(ellipse 900px 600px at 25% 30%,
       rgba(255, 80, 255, 0.4) 0%,
       rgba(139, 92, 246, 0.25) 20%,
       rgba(139, 92, 246, 0.1) 45%,
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 800px 700px at 75% 65%,
+      transparent 75%),
+    radial-gradient(ellipse 800px 700px at 75% 65%,
       rgba(80, 255, 255, 0.35) 0%,
       rgba(59, 130, 246, 0.2) 25%,
       rgba(99, 102, 241, 0.08) 50%,
-      transparent 80%
-    ),
-    radial-gradient(
-      ellipse 600px 800px at 15% 75%,
+      transparent 80%),
+    radial-gradient(ellipse 600px 800px at 15% 75%,
       rgba(255, 120, 80, 0.3) 0%,
       rgba(236, 72, 153, 0.18) 30%,
       rgba(219, 39, 119, 0.06) 55%,
-      transparent 85%
-    ),
+      transparent 85%),
     /* Dynamic floating cloud wisps with glow */
-      radial-gradient(
-        circle 350px at 55% 35%,
-        rgba(168, 85, 247, 0.25) 0%,
-        rgba(168, 85, 247, 0.12) 35%,
-        rgba(168, 85, 247, 0.04) 65%,
-        transparent 90%
-      ),
-    radial-gradient(
-      circle 300px at 25% 65%,
+    radial-gradient(circle 350px at 55% 35%,
+      rgba(168, 85, 247, 0.25) 0%,
+      rgba(168, 85, 247, 0.12) 35%,
+      rgba(168, 85, 247, 0.04) 65%,
+      transparent 90%),
+    radial-gradient(circle 300px at 25% 65%,
       rgba(219, 39, 119, 0.2) 0%,
       rgba(219, 39, 119, 0.08) 40%,
       rgba(219, 39, 119, 0.02) 70%,
-      transparent 95%
-    ),
-    radial-gradient(
-      circle 250px at 85% 25%,
+      transparent 95%),
+    radial-gradient(circle 250px at 85% 25%,
       rgba(124, 58, 237, 0.18) 0%,
       rgba(124, 58, 237, 0.06) 45%,
       rgba(124, 58, 237, 0.02) 75%,
-      transparent 90%
-    ),
+      transparent 90%),
     /* Luminous particle clusters */
-      radial-gradient(
-        circle 120px at 40% 15%,
-        rgba(232, 213, 255, 0.15) 0%,
-        rgba(232, 213, 255, 0.05) 50%,
-        transparent 80%
-      ),
-    radial-gradient(
-      circle 100px at 70% 85%,
+    radial-gradient(circle 120px at 40% 15%,
+      rgba(232, 213, 255, 0.15) 0%,
+      rgba(232, 213, 255, 0.05) 50%,
+      transparent 80%),
+    radial-gradient(circle 100px at 70% 85%,
       rgba(255, 200, 255, 0.12) 0%,
       rgba(255, 200, 255, 0.04) 60%,
-      transparent 85%
-    ),
-    radial-gradient(
-      circle 80px at 15% 45%,
+      transparent 85%),
+    radial-gradient(circle 80px at 15% 45%,
       rgba(200, 255, 255, 0.1) 0%,
       rgba(200, 255, 255, 0.03) 70%,
-      transparent 90%
-    );
+      transparent 90%);
   animation: nebulaFloat 20s ease-in-out infinite;
   pointer-events: none;
   z-index: -1;
@@ -1465,124 +1445,85 @@ body.nebula-theme::after {
   right: 0;
   bottom: 0;
   background:
-    /* FAR STARS (tiny, dense) */ radial-gradient(
-      1px 1px at 20px 30px,
+    /* FAR STARS (tiny, dense) */
+    radial-gradient(1px 1px at 20px 30px,
       rgba(255, 255, 255, 0.7) 50%,
-      transparent 51%
-    ),
-    radial-gradient(
-      1px 1px at 80px 120px,
+      transparent 51%),
+    radial-gradient(1px 1px at 80px 120px,
       rgba(255, 255, 255, 0.65) 50%,
-      transparent 51%
-    ),
-    radial-gradient(
-      1px 1px at 130px 90px,
+      transparent 51%),
+    radial-gradient(1px 1px at 130px 90px,
       rgba(255, 255, 255, 0.7) 50%,
-      transparent 51%
-    ),
-    radial-gradient(
-      1px 1px at 160px 170px,
+      transparent 51%),
+    radial-gradient(1px 1px at 160px 170px,
       rgba(255, 255, 255, 0.65) 50%,
-      transparent 51%
-    ),
+      transparent 51%),
     /* MID STARS (slightly larger) */
-      radial-gradient(
-        1.5px 1.5px at 60px 40px,
-        rgba(255, 255, 255, 0.8) 50%,
-        transparent 51%
-      ),
-    radial-gradient(
-      1.5px 1.5px at 10px 140px,
-      rgba(255, 255, 255, 0.75) 50%,
-      transparent 51%
-    ),
-    radial-gradient(
-      1.5px 1.5px at 180px 70px,
+    radial-gradient(1.5px 1.5px at 60px 40px,
       rgba(255, 255, 255, 0.8) 50%,
-      transparent 51%
-    ),
+      transparent 51%),
+    radial-gradient(1.5px 1.5px at 10px 140px,
+      rgba(255, 255, 255, 0.75) 50%,
+      transparent 51%),
+    radial-gradient(1.5px 1.5px at 180px 70px,
+      rgba(255, 255, 255, 0.8) 50%,
+      transparent 51%),
     /* NEAR STARS (bright with soft glow) */
-      radial-gradient(
-        3px 3px at 90px 20px,
-        rgba(255, 255, 255, 0.95) 35%,
-        rgba(255, 255, 255, 0.3) 65%,
-        transparent 66%
-      ),
-    radial-gradient(
-      2.5px 2.5px at 140px 150px,
+    radial-gradient(3px 3px at 90px 20px,
+      rgba(255, 255, 255, 0.95) 35%,
+      rgba(255, 255, 255, 0.3) 65%,
+      transparent 66%),
+    radial-gradient(2.5px 2.5px at 140px 150px,
       rgba(255, 255, 255, 0.97) 35%,
       rgba(255, 255, 255, 0.3) 65%,
-      transparent 66%
-    ),
-    radial-gradient(
-      2px 2px at 30px 100px,
+      transparent 66%),
+    radial-gradient(2px 2px at 30px 100px,
       rgba(255, 255, 255, 0.93) 40%,
       rgba(255, 255, 255, 0.28) 70%,
-      transparent 71%
-    ),
+      transparent 71%),
     /* TINTED STARS (subtle palette hints) */
-      radial-gradient(
-        1.5px 1.5px at 50px 160px,
-        rgba(236, 72, 153, 0.7) 45%,
-        transparent 46%
-      ),
-    radial-gradient(
-      1.5px 1.5px at 120px 30px,
+    radial-gradient(1.5px 1.5px at 50px 160px,
+      rgba(236, 72, 153, 0.7) 45%,
+      transparent 46%),
+    radial-gradient(1.5px 1.5px at 120px 30px,
       rgba(139, 92, 246, 0.68) 45%,
-      transparent 46%
-    ),
-    radial-gradient(
-      1.5px 1.5px at 170px 110px,
+      transparent 46%),
+    radial-gradient(1.5px 1.5px at 170px 110px,
       rgba(6, 214, 160, 0.65) 45%,
-      transparent 46%
-    ),
+      transparent 46%),
     /* Enhanced swirling patterns (toned to not overpower stars) */
-      radial-gradient(
-        ellipse 480px 230px at 50% 20%,
-        rgba(139, 92, 246, 0.14) 0%,
-        rgba(139, 92, 246, 0.06) 35%,
-        rgba(139, 92, 246, 0.02) 60%,
-        transparent 85%
-      ),
-    radial-gradient(
-      ellipse 420px 330px at 80% 80%,
+    radial-gradient(ellipse 480px 230px at 50% 20%,
+      rgba(139, 92, 246, 0.14) 0%,
+      rgba(139, 92, 246, 0.06) 35%,
+      rgba(139, 92, 246, 0.02) 60%,
+      transparent 85%),
+    radial-gradient(ellipse 420px 330px at 80% 80%,
       rgba(236, 72, 153, 0.12) 0%,
       rgba(236, 72, 153, 0.05) 35%,
       rgba(236, 72, 153, 0.02) 65%,
-      transparent 90%
-    ),
-    radial-gradient(
-      ellipse 320px 380px at 20% 50%,
+      transparent 90%),
+    radial-gradient(ellipse 320px 380px at 20% 50%,
       rgba(99, 102, 241, 0.11) 0%,
       rgba(99, 102, 241, 0.04) 40%,
       rgba(99, 102, 241, 0.01) 70%,
-      transparent 95%
-    ),
+      transparent 95%),
     /* Distant luminous regions for depth */
-      radial-gradient(
-        circle 120px at 65% 25%,
-        rgba(232, 213, 255, 0.06) 0%,
-        rgba(232, 213, 255, 0.02) 50%,
-        transparent 80%
-      ),
-    radial-gradient(
-      circle 100px at 15% 40%,
+    radial-gradient(circle 120px at 65% 25%,
+      rgba(232, 213, 255, 0.06) 0%,
+      rgba(232, 213, 255, 0.02) 50%,
+      transparent 80%),
+    radial-gradient(circle 100px at 15% 40%,
       rgba(255, 200, 255, 0.05) 0%,
       rgba(255, 200, 255, 0.015) 55%,
-      transparent 85%
-    ),
-    radial-gradient(
-      circle 80px at 85% 65%,
+      transparent 85%),
+    radial-gradient(circle 80px at 85% 65%,
       rgba(200, 255, 255, 0.04) 0%,
       rgba(200, 255, 255, 0.01) 60%,
-      transparent 90%
-    ),
-    radial-gradient(
-      circle 60px at 35% 85%,
+      transparent 90%),
+    radial-gradient(circle 60px at 35% 85%,
       rgba(255, 255, 200, 0.035) 0%,
       rgba(255, 255, 200, 0.008) 65%,
-      transparent 95%
-    );
+      transparent 95%);
 
   /* Star tiles for procedural distribution */
   background-size: 200px 200px, 200px 200px, 200px 200px, 200px 200px,
@@ -1600,19 +1541,23 @@ body.nebula-theme::after {
 }
 
 @keyframes nebulaFloat {
+
   0%,
   100% {
     transform: translateX(0px) translateY(0px) rotate(0deg);
     opacity: 0.8;
   }
+
   25% {
     transform: translateX(-8px) translateY(-12px) rotate(0.8deg);
     opacity: 0.95;
   }
+
   50% {
     transform: translateX(5px) translateY(-5px) rotate(-0.3deg);
     opacity: 0.75;
   }
+
   75% {
     transform: translateX(-3px) translateY(8px) rotate(0.5deg);
     opacity: 0.9;
@@ -1620,19 +1565,23 @@ body.nebula-theme::after {
 }
 
 @keyframes nebulaDepth {
+
   0%,
   100% {
     transform: translateX(0px) translateY(0px) rotate(0deg) scale(1);
     opacity: 0.6;
   }
+
   30% {
     transform: translateX(6px) translateY(-8px) rotate(-0.4deg) scale(1.02);
     opacity: 0.8;
   }
+
   60% {
     transform: translateX(-4px) translateY(6px) rotate(0.6deg) scale(0.98);
     opacity: 0.65;
   }
+
   90% {
     transform: translateX(2px) translateY(-3px) rotate(-0.2deg) scale(1.01);
     opacity: 0.75;
@@ -1640,19 +1589,23 @@ body.nebula-theme::after {
 }
 
 @keyframes starTwinkle {
+
   0%,
   100% {
     opacity: 1;
     filter: brightness(1) saturate(1);
   }
+
   25% {
     opacity: 0.85;
     filter: brightness(1.15) saturate(1.1);
   }
+
   50% {
     opacity: 0.95;
     filter: brightness(0.9) saturate(0.95);
   }
+
   75% {
     opacity: 0.8;
     filter: brightness(1.2) saturate(1.15);
@@ -1703,7 +1656,8 @@ body.nebula-theme::after {
   }
 
   .currency-status {
-    display: none; /* Hide status on mobile */
+    display: none;
+    /* Hide status on mobile */
   }
 
   .header-right {
@@ -1736,7 +1690,7 @@ body.nebula-theme::after {
     bottom: 2px;
   }
 
-  .toggle-switch input:checked + .slider:before {
+  .toggle-switch input:checked+.slider:before {
     transform: translateX(16px);
   }
 }
@@ -1805,7 +1759,7 @@ body.nebula-theme::after {
     bottom: 2px;
   }
 
-  .toggle-switch input:checked + .slider:before {
+  .toggle-switch input:checked+.slider:before {
     transform: translateX(14px);
   }
 
@@ -1853,23 +1807,42 @@ body.nebula-theme::after {
   border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: var(--accent-primary);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(18px);
 }
 
 /* Chat Session Controls */
 .chat-header {
+  position: relative;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 12px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
 }
+
+.chat-session-title-centered {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--text-primary);
+  max-width: 40%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  letter-spacing: 0rem;
+  pointer-events: none;
+}
+
 
 .chat-header-main h2 {
   font-size: 18px;
@@ -2124,16 +2097,11 @@ input:checked + .slider:before {
   color: white;
 }
 
-.chat-session-actions {
-  opacity: 0;
-  display: flex;
-  gap: 4px;
-  margin-left: 8px;
-  transition: var(--transition);
-}
-
-.chat-session-item:hover .chat-session-actions {
-  opacity: 1;
+.no-sessions {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
 .chat-session-delete {
@@ -2152,11 +2120,20 @@ input:checked + .slider:before {
   color: white;
 }
 
-.no-sessions {
-  text-align: center;
-  padding: 32px 16px;
+.chat-session-rename {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 10px;
+  transition: var(--transition);
+}
+
+.chat-session-rename:hover {
+  background-color: var(--accent-primary);
+  color: white;
 }
 
 .no-sessions i {
@@ -2183,25 +2160,25 @@ input:checked + .slider:before {
 body.nebula-theme .app-container {
   position: relative;
 }
+
 body.nebula-theme .main-content {
   position: relative;
   z-index: 1;
 }
 
 body.nebula-theme .sidebar.collapsed {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    background: var(--bg-secondary) !important; /* Tema ile uyumlu */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--bg-secondary) !important;
+  /* Tema ile uyumlu */
 }
 
 /* Glassy header and sidebar with neon edge */
 body.nebula-theme .header,
 body.nebula-theme .sidebar {
-  background: linear-gradient(
-    135deg,
-    rgba(13, 2, 33, 0.65),
-    rgba(26, 11, 46, 0.55)
-  ) !important;
+  background: linear-gradient(135deg,
+      rgba(13, 2, 33, 0.65),
+      rgba(26, 11, 46, 0.55)) !important;
   border-color: rgba(139, 92, 246, 0.25) !important;
   box-shadow: 0 10px 30px rgba(139, 92, 246, 0.18),
     inset 0 0 0 1px rgba(236, 72, 153, 0.08) !important;
@@ -2211,15 +2188,14 @@ body.nebula-theme .sidebar {
 
 /* Theme toggle – holographic button */
 body.nebula-theme .theme-toggle {
-  background: radial-gradient(
-    120% 120% at 30% 20%,
-    rgba(139, 92, 246, 0.25),
-    rgba(236, 72, 153, 0.15)
-  ) !important;
+  background: radial-gradient(120% 120% at 30% 20%,
+      rgba(139, 92, 246, 0.25),
+      rgba(236, 72, 153, 0.15)) !important;
   border: 1px solid rgba(139, 92, 246, 0.35) !important;
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15),
     0 10px 30px rgba(139, 92, 246, 0.25) !important;
 }
+
 body.nebula-theme .theme-toggle:hover {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25),
     0 12px 36px rgba(236, 72, 153, 0.35) !important;
@@ -2231,10 +2207,8 @@ body.nebula-theme .main-content::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(
-      rgba(139, 92, 246, 0.05) 1px,
-      transparent 1px
-    ),
+  background-image: linear-gradient(rgba(139, 92, 246, 0.05) 1px,
+      transparent 1px),
     linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
   background-size: 60px 60px, 60px 60px;
   background-position: 0 0, 0 0;
@@ -2249,16 +2223,14 @@ body.nebula-theme .app-container::before {
   content: "";
   position: absolute;
   inset: -10% -5% -10% -5%;
-  background: conic-gradient(
-    from 180deg at 50% 50%,
-    rgba(139, 92, 246, 0),
-    rgba(139, 92, 246, 0.08) 10%,
-    rgba(236, 72, 153, 0.08) 20%,
-    rgba(6, 214, 160, 0.05) 27%,
-    rgba(59, 130, 246, 0.06) 35%,
-    rgba(200, 255, 255, 0.05) 45%,
-    rgba(139, 92, 246, 0) 55%
-  );
+  background: conic-gradient(from 180deg at 50% 50%,
+      rgba(139, 92, 246, 0),
+      rgba(139, 92, 246, 0.08) 10%,
+      rgba(236, 72, 153, 0.08) 20%,
+      rgba(6, 214, 160, 0.05) 27%,
+      rgba(59, 130, 246, 0.06) 35%,
+      rgba(200, 255, 255, 0.05) 45%,
+      rgba(139, 92, 246, 0) 55%);
   filter: blur(28px) saturate(120%);
   animation: auroraDrift 40s ease-in-out infinite;
   pointer-events: none;
@@ -2273,20 +2245,16 @@ body.nebula-theme .main-content::after {
   pointer-events: none;
   z-index: 0;
   /* Seamless looping shooting stars with matched pattern size */
-  background-image: repeating-linear-gradient(
-      -45deg,
+  background-image: repeating-linear-gradient(-45deg,
       rgba(255, 255, 255, 0) 0 1200px,
       rgba(255, 255, 255, 0.75) 1200px 1202px,
       rgba(139, 92, 246, 0.28) 1202px 1204px,
-      rgba(255, 255, 255, 0) 1204px 1600px
-    ),
-    repeating-linear-gradient(
-      -45deg,
+      rgba(255, 255, 255, 0) 1204px 1600px),
+    repeating-linear-gradient(-45deg,
       rgba(255, 255, 255, 0) 0 1500px,
       rgba(255, 255, 255, 0.7) 1500px 1502px,
       rgba(139, 92, 246, 0.22) 1502px 1504px,
-      rgba(255, 255, 255, 0) 1504px 1900px
-    );
+      rgba(255, 255, 255, 0) 1504px 1900px);
   opacity: 0.15;
   animation: shootingStars 30s linear infinite;
 }
@@ -2298,11 +2266,9 @@ body.nebula-theme .app-container::after {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(
-    100% 120% at 50% 50%,
-    rgba(0, 0, 0, 0) 55%,
-    rgba(0, 0, 0, 0.25) 100%
-  );
+  background: radial-gradient(100% 120% at 50% 50%,
+      rgba(0, 0, 0, 0) 55%,
+      rgba(0, 0, 0, 0.25) 100%);
 }
 
 /* Neon focus rings for accessibility and style */
@@ -2321,6 +2287,7 @@ body.nebula-theme .btn.btn-primary {
   box-shadow: 0 10px 30px rgba(139, 92, 246, 0.35),
     0 0 0 1px rgba(236, 72, 153, 0.25) inset !important;
 }
+
 body.nebula-theme .btn.btn-primary:hover {
   filter: brightness(1.05) saturate(1.1);
   box-shadow: 0 12px 36px rgba(236, 72, 153, 0.45),
@@ -2333,21 +2300,26 @@ body.nebula-theme .btn.btn-primary:hover {
     background-position: 600px 600px, 600px 600px;
   }
 }
+
 @keyframes auroraDrift {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
     opacity: 0.5;
   }
+
   50% {
     transform: translate3d(-2%, -1%, 0) rotate(1deg) scale(1.03);
     opacity: 0.8;
   }
 }
+
 @keyframes shootingStars {
   0% {
     background-position: 0 0, 0 0;
   }
+
   100% {
     /* Move exactly one pattern cycle for seamless loop */
     background-position: -2262px 2262px, -2687px 2687px;
@@ -2359,7 +2331,8 @@ body.nebula-theme .chat-container {
   background: var(--bg-primary) !important;
   position: relative;
   z-index: 2;
-  isolation: isolate; /* prevent blending from outer overlays */
+  isolation: isolate;
+  /* prevent blending from outer overlays */
 }
 
 body.nebula-theme .chat-header,
