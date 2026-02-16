@@ -1729,13 +1729,14 @@ class UIComponents {
               // Wait for any pending typing animation to complete
               await typingPromise;
 
-              // Finalize the streaming message with metadata
+              // Finalize the streaming message with metadata; replace text with unmasked content when provided
               if (streamingStarted) {
                 this.finalizeStreamingMessage(
                   data.images || [],
                   data.charts || [],
                   data.generatedFiles || [],
-                  data.sources || []
+                  data.sources || [],
+                  data.content
                 );
               } else {
                 // No tokens were streamed, show empty response
@@ -2143,9 +2144,32 @@ class UIComponents {
   }
 
   // Finalize streaming message with sources, images, etc.
-  finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = []) {
+  // finalContent: optional unmasked text from backend; when provided, replaces streamed text (fixes PII placeholders)
+  finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = [], finalContent = null) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
+
+    // Replace streamed text with final unmasked content when provided (e.g. PII unmasking after stream ends).
+    // Use server-provided content as single source of truth (best practice for streaming + PII).
+    if (finalContent != null) {
+      const textElement = messageDiv.querySelector(".message-text");
+      if (textElement) {
+        const processed =
+          typeof finalContent === "string"
+            ? Utils.processMathExpressions(finalContent)
+            : String(finalContent);
+        try {
+          textElement.innerHTML =
+            processed && processed.length
+              ? marked.parse(processed)
+              : Utils.escapeHtml(processed || "");
+        } catch (e) {
+          console.warn("Markdown parsing failed for final content:", e);
+          textElement.innerHTML = Utils.escapeHtml(processed || "");
+        }
+        textElement.dataset.rawContent = typeof finalContent === "string" ? finalContent : "";
+      }
+    }
 
     // Remove streaming class and ID
     messageDiv.classList.remove("streaming-message");
