@@ -205,7 +205,7 @@ async def run_orchestration_stream(
 ) -> AsyncGenerator[str, None]:
     """
     Streaming version of run_orchestration using Server-Sent Events format.
-    
+
     Yields SSE-formatted strings with events:
         - token: text chunk from the LLM
         - tool_start: tool is being called
@@ -269,23 +269,23 @@ async def run_orchestration_stream(
 
         elif chunk["type"] == "tool_start":
             tool_info = {
-                'tool_name': chunk['tool_name'],
-                'parent_agent': chunk.get('parent_agent'),
-                'query': chunk.get('query'),
+                "tool_name": chunk["tool_name"],
+                "parent_agent": chunk.get("parent_agent"),
+                "query": chunk.get("query"),
             }
             all_tools.append(tool_info)
-            
+
             event_data = {
-                'type': 'tool_start',
+                "type": "tool_start",
                 **tool_info,
             }
             yield f"data: {json.dumps(event_data)}\n\n"
 
         elif chunk["type"] == "tool_end":
             event_data = {
-                'type': 'tool_end',
-                'tool_name': chunk['tool_name'],
-                'parent_agent': chunk.get('parent_agent'),
+                "type": "tool_end",
+                "tool_name": chunk["tool_name"],
+                "parent_agent": chunk.get("parent_agent"),
             }
             yield f"data: {json.dumps(event_data)}\n\n"
 
@@ -315,7 +315,9 @@ async def run_orchestration_stream(
                 name = api_source.get("name", "")
                 description = api_source.get("description", "")
                 if name:
-                    display_text = f"{name}" + (f" - {description}" if description else "")
+                    display_text = f"{name}" + (
+                        f" - {description}" if description else ""
+                    )
                     all_sources.append(f"{display_text}|api://{name}")
 
             # Get images, charts, and generated files
@@ -344,5 +346,4 @@ async def run_orchestration_stream(
                 session_id, MessageRole.ASSISTANT, final_answer, metadata
             )
 
-            # Send final done event with all metadata
-            yield f"data: {json.dumps({'type': 'done', 'images': images, 'charts': charts, 'generatedFiles': generated_files, 'sources': all_sources, 'tools': all_tools})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'content': final_answer, 'images': images, 'charts': charts, 'generatedFiles': generated_files, 'sources': all_sources, 'tools': all_tools})}\n\n"

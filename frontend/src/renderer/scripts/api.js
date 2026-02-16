@@ -306,6 +306,7 @@ class APIService {
                 case "done":
                   if (onDone) {
                     onDone({
+                      content: data.content ?? null,
                       images: data.images || [],
                       charts: data.charts || [],
                       generatedFiles: data.generatedFiles || [],
