@@ -108,6 +108,10 @@ class NewsChatRequest(BaseModel):
     selectedFiles: Optional[List[str]] = None
 
 
+class UpdateChatSessionRequest(BaseModel):
+    title: Optional[str] = None
+
+
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "none"  # "none", "cch"
@@ -468,6 +472,37 @@ def delete_chat_session(session_id: str):
         logger.error(f"Error deleting chat session {session_id}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"Error deleting chat session: {error_message}"
+        )
+
+
+@router.put("/chat/sessions/{session_id}")
+def update_chat_session(session_id: str, request: UpdateChatSessionRequest):
+    """
+    Updates a chat session.
+    """
+    try:
+        session = chat_history_manager.update_session(session_id, title=request.title)
+        if not session:
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
+        
+        return {
+            "session": {
+                "session_id": session.session_id,
+                "title": session.title,
+                "created_at": session.created_at.isoformat(),
+                "updated_at": session.updated_at.isoformat(),
+                "messages": [msg.to_dict() for msg in session.messages],
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_message = str(e)
+        logger.error(f"Error updating chat session {session_id}: {error_message}")
+        raise HTTPException(
+            status_code=500, detail=f"Error updating chat session: {error_message}"
         )
 
 

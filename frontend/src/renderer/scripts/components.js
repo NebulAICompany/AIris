@@ -1697,7 +1697,7 @@ class UIComponents {
                 this.createStreamingMessage();
                 streamingStarted = true;
               }
-              
+
               // If token is large (complete response from updates mode), simulate streaming
               // by breaking it into words for a typing effect
               if (token.length > 100) {
@@ -1728,7 +1728,7 @@ class UIComponents {
             onDone: async (data) => {
               // Wait for any pending typing animation to complete
               await typingPromise;
-              
+
               // Finalize the streaming message with metadata
               if (streamingStarted) {
                 this.finalizeStreamingMessage(
@@ -1749,13 +1749,13 @@ class UIComponents {
             onError: (errorMessage) => {
               hasError = true;
               this.hideTypingIndicator();
-              
+
               // Remove streaming message if it was created
               const streamingMsg = document.getElementById("streaming-message");
               if (streamingMsg) {
                 streamingMsg.remove();
               }
-              
+
               this.addMessageToChat(
                 "error",
                 errorMessage || "Sorry, there was an error processing your request. Please try again."
@@ -1767,13 +1767,13 @@ class UIComponents {
         console.error("Chat streaming error:", error);
         if (!hasError) {
           this.hideTypingIndicator();
-          
+
           // Remove streaming message if it was created
           const streamingMsg = document.getElementById("streaming-message");
           if (streamingMsg) {
             streamingMsg.remove();
           }
-          
+
           this.addMessageToChat(
             "error",
             "Sorry, there was an error processing your request. Please try again."
@@ -1926,7 +1926,7 @@ class UIComponents {
       'finance_agent': 'Finance Data',
       'plotting_agent': 'Chart Creation',
       'tcmb_economic_data': 'Turkish Economic Data',
-      
+
       // Office tools
       'create_excel_file': 'Create Excel File',
       'create_word_document': 'Create Word Document',
@@ -1934,7 +1934,7 @@ class UIComponents {
       'modify_excel_cells': 'Modify Excel Cells',
       'create_excel_charts': 'Create Excel Charts',
       'create_powerpoint_from_code': 'Create PowerPoint',
-      
+
       // Finance tools
       'get_eod_data': 'Get Stock Data',
       'get_intraday_data': 'Get Intraday Data',
@@ -1948,22 +1948,22 @@ class UIComponents {
       'get_index_info': 'Get Index Info',
       'get_tickers_list': 'Get Tickers',
       'get_ticker_info_detailed': 'Get Ticker Details',
-      
+
       // Plotting tools
       'create_custom_chart_from_code': 'Create Custom Chart',
       'create_financial_stock_chart': 'Create Stock Chart',
-      
+
       // TCMB tools
       'get_tcmb_subcategories': 'Get TCMB Categories',
       'get_tcmb_series': 'Get TCMB Series',
       'get_tcmb_data': 'Get TCMB Data',
     };
-    
+
     // Return mapped name if exists, otherwise format the tool name nicely
     if (toolNameMap[toolName]) {
       return toolNameMap[toolName];
     }
-    
+
     // Fallback: convert snake_case to Title Case
     return toolName
       .split('_')
@@ -1979,7 +1979,7 @@ class UIComponents {
       'plotting_agent': 'Charting',
       'tcmb_economic_data': 'Turkish Economic Data',
     };
-    
+
     return agentNameMap[agentName] || this.getFriendlyToolName(agentName);
   }
 
@@ -1998,7 +1998,7 @@ class UIComponents {
     // Get the tools history container and show it
     const toolsContainer = messageDiv.querySelector(".tools-history-container");
     const toolsItems = messageDiv.querySelector(".tools-history-items");
-    
+
     if (toolsContainer && toolsItems) {
       toolsContainer.style.display = "block";
       // Expand by default during streaming
@@ -2007,7 +2007,7 @@ class UIComponents {
       // Create the tool item with loading animation
       const friendlyToolName = this.getFriendlyToolName(toolName);
       const friendlyAgentName = parentAgent ? this.getFriendlyAgentName(parentAgent) : null;
-      const displayName = friendlyAgentName 
+      const displayName = friendlyAgentName
         ? `${Utils.escapeHtml(friendlyToolName)} <span class="tool-parent">(via ${Utils.escapeHtml(friendlyAgentName)})</span>`
         : Utils.escapeHtml(friendlyToolName);
 
@@ -2020,8 +2020,8 @@ class UIComponents {
       }
 
       const toolItem = document.createElement("div");
-      toolItem.className = parentAgent 
-        ? "tool-history-item active inner-tool" 
+      toolItem.className = parentAgent
+        ? "tool-history-item active inner-tool"
         : "tool-history-item active";
       toolItem.id = toolId;
       toolItem.innerHTML = `
@@ -2178,7 +2178,7 @@ class UIComponents {
       // Add click handler for toggle
       const toolsHeader = toolsContainer.querySelector(".tools-history-header");
       if (toolsHeader) {
-        toolsHeader.addEventListener("click", function() {
+        toolsHeader.addEventListener("click", function () {
           toolsContainer.classList.toggle("expanded");
         });
       }
@@ -2195,15 +2195,15 @@ class UIComponents {
       const sourcesPlaceholder = messageDiv.querySelector(".sources-placeholder");
       if (sourcesPlaceholder) {
         sourcesPlaceholder.innerHTML = this.buildSourcesHTML(sources);
-        
+
         // Add click event listener for sources toggle
         const sourcesHeader = messageDiv.querySelector('.sources-header');
         if (sourcesHeader) {
-          sourcesHeader.addEventListener('click', function() {
+          sourcesHeader.addEventListener('click', function () {
             this.parentElement.classList.toggle('expanded');
           });
         }
-        
+
         // Handle source item clicks
         this.attachSourceClickHandlers(messageDiv);
       }
@@ -2332,7 +2332,7 @@ class UIComponents {
   attachSourceClickHandlers(messageDiv) {
     const sourceWebItems = messageDiv.querySelectorAll('.source-item-web');
     sourceWebItems.forEach(item => {
-      item.addEventListener('click', function(e) {
+      item.addEventListener('click', function (e) {
         e.stopPropagation();
         const url = this.dataset.url;
         if (url) {
@@ -2356,7 +2356,7 @@ class UIComponents {
 
     const sourceFileItems = messageDiv.querySelectorAll('.source-item-file');
     sourceFileItems.forEach(item => {
-      item.addEventListener('click', async function(e) {
+      item.addEventListener('click', async function (e) {
         e.stopPropagation();
         const fileName = this.dataset.filename;
         if (fileName && window.airisAPI && window.airisAPI.openFile) {
@@ -2441,7 +2441,7 @@ class UIComponents {
     const sourcesContainer = messageContent.querySelector(".sources-container");
     const toolsContainer = messageContent.querySelector(".tools-history-container");
     const messageText = messageContent.querySelector(".message-text");
-    
+
     if (toolsContainer) {
       toolsContainer.insertAdjacentElement("afterend", chartsContainer);
     } else if (sourcesContainer) {
@@ -2543,8 +2543,8 @@ class UIComponents {
     if (timestamp) {
       // Handle ISO format from backend or Date object
       const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
-      formattedTimestamp = date instanceof Date && !isNaN(date) 
-        ? date.toLocaleTimeString() 
+      formattedTimestamp = date instanceof Date && !isNaN(date)
+        ? date.toLocaleTimeString()
         : new Date().toLocaleTimeString();
     } else {
       formattedTimestamp = new Date().toLocaleTimeString();
@@ -2672,25 +2672,25 @@ class UIComponents {
       // Build tools display
       let toolsHTML = "";
       const hasTools = tools && tools.length > 0;
-      
+
       if (hasTools) {
         const toolItems = tools.map(tool => {
           const toolName = tool.tool_name || tool.toolName || 'Unknown tool';
           const parentAgent = tool.parent_agent || tool.parentAgent;
           const query = tool.query;
-          
+
           const friendlyToolName = this.getFriendlyToolName(toolName);
           const friendlyAgentName = parentAgent ? this.getFriendlyAgentName(parentAgent) : null;
-          const displayName = friendlyAgentName 
+          const displayName = friendlyAgentName
             ? `${Utils.escapeHtml(friendlyToolName)} <span class="tool-parent">(via ${Utils.escapeHtml(friendlyAgentName)})</span>`
             : Utils.escapeHtml(friendlyToolName);
-          
-          const queryHtml = query 
+
+          const queryHtml = query
             ? `<div class="tool-history-query">${Utils.escapeHtml(query.length > 100 ? query.substring(0, 100) + '...' : query)}</div>`
             : '';
-          
+
           const isInnerTool = parentAgent ? ' inner-tool' : '';
-          
+
           return `
             <div class="tool-history-item completed${isInnerTool}">
               <div class="tool-history-icon">
@@ -2703,9 +2703,9 @@ class UIComponents {
             </div>
           `;
         }).join('');
-        
+
         const labelText = tools.length === 1 ? "Used 1 tool" : `Used ${tools.length} tools`;
-        
+
         toolsHTML = `
           <div class="tools-history-container">
             <div class="tools-history-header">
@@ -2789,12 +2789,12 @@ class UIComponents {
           });
         });
       }
-      
+
       // Add click event listener for tools toggle if tools exist
       if (tools && tools.length > 0) {
         const toolsHeader = messageDiv.querySelector('.tools-history-header');
         if (toolsHeader) {
-          toolsHeader.addEventListener('click', function() {
+          toolsHeader.addEventListener('click', function () {
             this.parentElement.classList.toggle('expanded');
           });
         }
@@ -2900,7 +2900,7 @@ class UIComponents {
         const sourcesContainer = messageContent.querySelector(".sources-container");
         const toolsContainer = messageContent.querySelector(".tools-history-container");
         const messageText = messageContent.querySelector(".message-text");
-        
+
         // Insert charts after sources/tools but before message text
         if (toolsContainer) {
           toolsContainer.insertAdjacentElement("afterend", chartsContainer);
@@ -3216,7 +3216,7 @@ class UIComponents {
 
     const fileName = image.filename || "image.png";
     const fileExtension = fileName.split(".").pop().toLowerCase();
-    
+
     // Determine image type label
     let imageTypeLabel = "Image";
     if (fileExtension === "png") {
@@ -3531,11 +3531,23 @@ class UIComponents {
     }
   }
 
+  updateChatSessionTitle(title) {
+    const titleEl = document.getElementById("chat-session-title");
+    if (titleEl) {
+      const displayTitle = title || "New Chat";
+      titleEl.textContent = displayTitle;
+      titleEl.title = displayTitle;
+    }
+  }
+
   clearChat() {
     const chatMessages = document.getElementById("chat-messages");
     if (chatMessages) {
       chatMessages.innerHTML = "";
       this.chatHistory = [];
+
+      // Update header title
+      this.updateChatSessionTitle("New Chat");
 
       // Start a new session
       this.currentSessionId = null;
@@ -3638,6 +3650,9 @@ class UIComponents {
         // Update UI to show active session
         this.updateChatSessionsUI();
 
+        // Update header title
+        this.updateChatSessionTitle(session.title || "Untitled Chat");
+
         console.log("Loaded chat session:", sessionId);
         // Chat loaded successfully - no notification needed
         return true;
@@ -3698,6 +3713,37 @@ class UIComponents {
     } catch (error) {
       console.error("Error deleting chat session:", error);
       this.showNotification("Error deleting chat", "error");
+      return false;
+    }
+  }
+
+  async renameChatSession(sessionId, newTitle) {
+    if (!newTitle || !newTitle.trim()) return false;
+
+    try {
+      const response = await window.apiService.updateChatSession(sessionId, newTitle.trim());
+      if (response.success) {
+        // Update local session list if exists
+        const session = this.chatSessions.find((s) => s.session_id === sessionId);
+        if (session) {
+          session.title = newTitle.trim();
+        }
+
+        // Update header title if it's the current session
+        if (this.currentSessionId === sessionId) {
+          this.updateChatSessionTitle(newTitle.trim());
+        }
+
+        // Update UI
+        this.updateChatSessionsUI();
+        return true;
+      } else {
+        this.showNotification("Failed to rename chat", "error");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error renaming chat session:", error);
+      this.showNotification("Error renaming chat", "error");
       return false;
     }
   }
@@ -3817,13 +3863,17 @@ class UIComponents {
     const formattedDate = this.formatChatDate(date);
 
     sessionItem.innerHTML = `
-      <div class="chat-session-title">${Utils.escapeHtml(
+      <div class="chat-session-title" title="Double click to rename">${Utils.escapeHtml(
       session.title || "Untitled Chat"
     )}</div>
       <div class="chat-session-meta">
         <span class="chat-session-date">${formattedDate}</span>
         <span class="chat-session-count">${session.message_count}</span>
         <div class="chat-session-actions">
+          <button class="chat-session-rename" data-session-id="${session.session_id
+      }" title="Rename session">
+            <i class="fas fa-pen"></i>
+          </button>
           <button class="chat-session-delete" data-session-id="${session.session_id
       }" title="Delete session">
             <i class="fas fa-trash"></i>
@@ -3832,14 +3882,94 @@ class UIComponents {
       </div>
     `;
 
+    // Rename logic
+    const startRenaming = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const titleEl = sessionItem.querySelector(".chat-session-title");
+      const currentTitle = session.title || "Untitled Chat";
+
+      // Prevent multiple inputs
+      if (titleEl.querySelector("input")) return;
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = currentTitle;
+      input.className = "chat-session-rename-input";
+
+      // Style the input (inline styles to ensure it fits)
+      input.style.width = "100%";
+      input.style.background = "var(--bg-secondary)";
+      input.style.border = "1px solid var(--accent-primary)";
+      input.style.borderRadius = "4px";
+      input.style.padding = "2px 4px";
+      input.style.color = "var(--text-primary)";
+      input.style.fontFamily = "inherit";
+      input.style.fontSize = "inherit";
+
+      // Save/Cancel handlers
+      const save = async () => {
+        const newTitle = input.value.trim();
+        if (newTitle && newTitle !== currentTitle) {
+          await this.renameChatSession(session.session_id, newTitle);
+        } else {
+          // Revert if empty or unchanged
+          titleEl.textContent = currentTitle;
+        }
+      };
+
+      const cancel = () => {
+        titleEl.textContent = currentTitle;
+      };
+
+      input.addEventListener("keydown", async (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          input.blur(); // Triggers blur which calls save
+        } else if (ev.key === "Escape") {
+          ev.preventDefault();
+          // Remove blur listener to prevent saving
+          input.removeEventListener("blur", handleBlur);
+          cancel();
+        }
+      });
+
+      // Handle click events on the input to prevent bubbling up to session load
+      input.addEventListener("click", (ev) => ev.stopPropagation());
+      input.addEventListener("dblclick", (ev) => ev.stopPropagation());
+
+      const handleBlur = () => save();
+      input.addEventListener("blur", handleBlur);
+
+      titleEl.textContent = "";
+      titleEl.appendChild(input);
+      input.focus();
+      // Select all text
+      input.select();
+    };
+
     // Add click handler to load session
     sessionItem.addEventListener("click", (e) => {
-      // Don't load session if clicking delete button
-      if (!e.target.closest(".chat-session-delete")) {
-        this.loadChatSession(session.session_id);
-        this.closeChatHistoryDropdown();
+      // Don't load session if clicking interactive elements
+      if (
+        e.target.closest(".chat-session-delete") ||
+        e.target.closest(".chat-session-rename") ||
+        e.target.closest("input")
+      ) {
+        return;
       }
+      this.loadChatSession(session.session_id);
+      this.closeChatHistoryDropdown();
     });
+
+    // Double click to rename
+    const titleElement = sessionItem.querySelector(".chat-session-title");
+    titleElement.addEventListener("dblclick", startRenaming);
+
+    // Rename button handler
+    const renameBtn = sessionItem.querySelector(".chat-session-rename");
+    renameBtn.addEventListener("click", startRenaming);
 
     // Add delete handler
     const deleteBtn = sessionItem.querySelector(".chat-session-delete");
