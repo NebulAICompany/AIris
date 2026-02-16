@@ -9,7 +9,6 @@ logger = get_logger("PII")
 
 categories_to_filter = [
     "Person",
-    "PhoneNumber",
     "Address",
     "IPAddress",
     "Email",
