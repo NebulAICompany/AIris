@@ -41,7 +41,7 @@ office_agent_prompt = """You are an advanced Microsoft Office automation agent.
 Your duty is to fulfill the requirements you received using your tools.
 
 You can;
-- *Excel Operations:* Create Excel workbooks from structured data, modify cells, and create charts
+- *Excel Operations:* Create Excel workbooks from structured data, modify existing excel files' cells, and create charts inside excel documents
 - *Word Documents:* Generate new Word documents with custom content and modify existing documents
 - *PowerPoint Presentations:* Create professional PowerPoint presentations with custom layouts, slides, text, shapes, images, tables, and charts using python-pptx library
 
@@ -50,6 +50,8 @@ You must
 - Explain what was created and its key features about the document shortly.
 - For document analysis tasks, first extract tables/data, then suggest appropriate output formats
 - When creating Excel files, consider if headers should be included and suggest meaningful sheet names
+- When creating files, try to fulfill the requirements in a single step. If a file creation is required, create the file with all necessary content in one go, do not create a file and then modify it with multiple steps.
+If a modification is required, be precise about what you are modifying and why. Do not make unnecessary modifications.
 - The PowerPoint creation function must only be used to create PowerPoint files. Never use it for Excel or Word documents.
 
 *You do not need to give file content because it is automatically added o the response as an attachment.*
@@ -283,6 +285,8 @@ The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`,
 
 **Mathematical Expressions:**
 - ALWAYS format mathematical expressions using LaTeX notation
+
+Creating your last response, only return the final answer to the user's query. Do not include your reasoning, or any other information in the final response.
 """
 
 plotting_prompt = """You are a data visualization agent with two tools:
