@@ -1,5 +1,14 @@
 /* Main CSS - Core Layout and Variables */
 
+/* Custom Fonts */
+@font-face {
+  font-family: 'Lobster Two';
+  src: url('../assets/fonts/LobsterTwo-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Colors - Light Theme */
   --bg-primary: #f7f9fc;
@@ -181,11 +190,12 @@ input::-webkit-inner-spin-button {
 
 /* AIRIS yazısı */
 .airis-title {
-  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+  font-family: 'Lobster Two', 'Montserrat', 'Segoe UI', Arial, sans-serif;
   font-style: italic;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 2.1rem;
   letter-spacing: 0.1em;
+  -webkit-text-stroke: 0.5px rgba(79, 172, 254, 0.3);
 
   /* Gradient text */
   background: linear-gradient(135deg,
