@@ -405,6 +405,58 @@ def create_powerpoint_from_code(code: str) -> str:
                 logger.warning(f"Failed to kill sandbox: {str(e)}")
 
 
+@tool(parse_docstring=True)
+def list_created_files() -> Dict[str, Any]:
+    """List all created files in the documents directory.
+    
+    Returns a list of all files that have been created, including their names and full paths.
+    This helps track which files are available and where they are located.
+    """
+    try:
+        created_files = []
+        
+        # Scan the created_documents directory
+        if FILES_PATH.exists() and FILES_PATH.is_dir():
+            for file_path in FILES_PATH.iterdir():
+                if file_path.is_file():
+                    # Get file extension to determine type
+                    extension = file_path.suffix.lower()
+                    file_type = "unknown"
+                    
+                    if extension in ['.xlsx', '.xls']:
+                        file_type = "excel"
+                    elif extension in ['.docx', '.doc']:
+                        file_type = "word"
+                    elif extension in ['.pdf']:
+                        file_type = "pdf"
+                    elif extension in ['.txt']:
+                        file_type = "text"
+                    elif extension in ['.csv']:
+                        file_type = "csv"
+                    
+                    created_files.append({
+                        "filename": file_path.name,
+                        "file_path": str(file_path),
+                        "file_type": file_type,
+                        "extension": extension,
+                    })
+        
+        return {
+            "success": True,
+            "count": len(created_files),
+            "files": created_files,
+            "message": f"Found {len(created_files)} created file(s) in the documents directory.",
+        }
+    
+    except Exception as e:
+        logger.error(f"Error listing created files: {str(e)}")
+        return {
+            "success": False,
+            "error": f"Failed to list created files: {str(e)}",
+            "files": [],
+        }
+
+
 def get_generated_files() -> Dict[str, Any]:
     global GENERATED_FILES
     return GENERATED_FILES

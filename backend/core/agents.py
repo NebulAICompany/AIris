@@ -19,6 +19,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
+from .tools.office import list_created_files
 from backend.shared.constants import CURRENT_MODEL, get_selected_files
 
 
@@ -71,6 +72,7 @@ main_agent_tools = [
     wolfram_alpha_query,
     get_uploaded_files_count,
     list_uploaded_files,
+    list_created_files,
 ]
 
 
