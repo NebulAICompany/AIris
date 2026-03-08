@@ -204,7 +204,7 @@ DEEPSEEK_MODEL = ChatOpenAI(
     callbacks=[ConsoleCallbackHandler()],
 )
 
-CURRENT_MODEL = OPENAI_MODEL
+CURRENT_MODEL = ANTHROPIC_MODEL
 
 # Marketstack tickers
 MARKETSTACK_TICKERS = [
