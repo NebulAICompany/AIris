@@ -2825,6 +2825,7 @@ body.dark-theme .image-caption {
   word-wrap: break-word;
   display: inline-block;
   max-width: 100%;
+  text-align: -webkit-left;
 }
 
 /* Hide empty message-text (during tool execution before response arrives) */
