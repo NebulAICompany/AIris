@@ -5480,27 +5480,39 @@ body [data-theme="dark"] .message-text pre,
   color: var(--text-muted);
 }
 
-.markdown-content table {
+table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 12px;
+  /* Taşmayı önlemek için kritik: */
+  table-layout: auto; 
+  display: block; /* Küçük ekranlarda kaydırma yapabilmek için */
+  overflow-x: auto; 
 }
 
-.markdown-content th,
-.markdown-content td {
+th,
+td {
   border: 1px solid var(--border-color);
-  padding: 8px 12px;
+  padding: 10px 14px; /* Biraz daha ferah bir görünüm */
   text-align: left;
+  /* Verinin hücreden taşmasını engeller: */
+  word-wrap: break-word;
+  max-width: 250px; 
+  /* Kaçış karakterlerinden sızan tabları/boşlukları normalize eder: */
+  white-space: normal; 
 }
 
-.markdown-content th {
+th {
   background-color: var(--bg-secondary);
   font-weight: 600;
   color: var(--text-primary);
+  /* table-header-group hatasını almamak için gap kullanacaksan burayı flex yapmalısın, 
+     ancak standart tabloda border kullanmak daha güvenlidir. */
 }
 
-.markdown-content td {
-  color: var(--text-secondary);
+/* Satır üzerine gelince vurgu (daha temiz bir HTML hissi için) */
+tr:hover {
+  background-color: var(--bg-hover-subtle);
 }
 
 /* Toggle Switch for Web Search */
