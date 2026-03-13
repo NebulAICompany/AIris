@@ -2817,6 +2817,47 @@ body.dark-theme .image-caption {
   text-align: left;
 }
 
+.message-text h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 0.5rem;
+}
+
+.message-text h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Paragraflar ve Listeler */
+.message-text p {
+  margin-bottom: 1rem;
+}
+
+.message-text ul {
+  list-style-type: disc; /* Liste noktalarını geri getirir */
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.message-text ol {
+  list-style-type: decimal; /* Numaralı listeleri geri getirir */
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.message-text li {
+  margin-bottom: 0.25rem;
+}
+
+/* Vurgular */
+.message-text strong {
+  font-weight: 600;
+}
+
 .message-text {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -5484,9 +5525,8 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 12px;
-  /* Taşmayı önlemek için kritik: */
   table-layout: auto; 
-  display: block; /* Küçük ekranlarda kaydırma yapabilmek için */
+  display: block;
   overflow-x: auto; 
 }
 

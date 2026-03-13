@@ -162,11 +162,12 @@ class Utils {
 
   // Parse markdown-like text for basic formatting
   static parseBasicMarkdown(text) {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/`(.*?)`/g, "<code>$1</code>")
-      .replace(/\n/g, "<br>");
+    if (typeof marked === 'undefined') {
+      console.warn('Marked.js yüklenmedi, düz metin dönülüyor.');
+      return text;
+    }
+    // marked.js tüm Markdown formatını (tablolar dahil) mükemmel HTML'e çevirir
+    return marked.parse(text); 
   }
 
   // Process mathematical expressions using KaTeX
