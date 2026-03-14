@@ -4,6 +4,7 @@ import os
 import json
 import uuid
 import base64
+import re
 from datetime import datetime
 from docx import Document
 from pptx import Presentation
@@ -29,11 +30,39 @@ FILE_AGENT_SANDBOX_TEMPLATE = "file-agent-template"
 logger = get_logger("FILE_TOOLS")
 
 
+def _permission_error_msg(path: str) -> str:
+    return (
+        f"Permission denied: cannot write to '{Path(path).name}'. "
+        "The file is likely open in another program (e.g. Word, Excel). "
+        "Please close the file and try again."
+    )
+
+
 def _resolve_file_path(file_name: str) -> Path:
     """Resolve a filename to an absolute path within CREATED_DOCUMENTS_PATH.
     Strips any directory components to prevent path traversal."""
     safe_name = Path(file_name).name
     return FILES_PATH / safe_name
+
+
+def _stage_referenced_files_in_sandbox(code: str, sandbox: Sandbox) -> List[str]:
+    """Upload locally created files referenced in code into the sandbox."""
+    uploaded_files = []
+    pattern = r"""['"]([^'"]+\.(?:pptx|docx|xlsx|xls|png|jpg|jpeg|gif|bmp|pdf|csv|txt))['"]"""
+    referenced_paths = re.findall(pattern, code, flags=re.IGNORECASE)
+
+    for referenced_path in referenced_paths:
+        local_path = _resolve_file_path(Path(referenced_path).name)
+        if not local_path.exists() or not local_path.is_file():
+            continue
+
+        sandbox_name = local_path.name
+        file_bytes = local_path.read_bytes()
+        sandbox.files.write(f"/home/user/{sandbox_name}", file_bytes)
+        sandbox.files.write(f"/mnt/data/{sandbox_name}", file_bytes)
+        uploaded_files.append(sandbox_name)
+
+    return sorted(set(uploaded_files))
 
 
 # ---------------------------------------------------------------------------
@@ -78,7 +107,10 @@ def create_excel_file(
             for col_idx, cell_value in enumerate(row_data, 1):
                 worksheet.cell(row=row_idx, column=col_idx, value=cell_value)
 
-        workbook.save(str(file_path))
+        try:
+            workbook.save(str(file_path))
+        except PermissionError:
+            return {"success": False, "error": _permission_error_msg(str(file_path))}
 
         file_info = {
             "filename": file_name,
@@ -132,7 +164,11 @@ def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
                         if line.strip():
                             doc.add_paragraph(line.strip())
 
-        doc.save(str(file_path))
+        try:
+            doc.save(str(file_path))
+        except PermissionError:
+            return {"success": False, "error": _permission_error_msg(str(file_path))}
+
         file_info = {
             "filename": file_name,
             "file_path": str(file_path),
@@ -170,6 +206,16 @@ def create_powerpoint_from_code(code: str) -> str:
     """
     sandbox = None
     try:
+        # Check syntax locally before spending time on a sandbox
+        try:
+            compile(code, "<pptx_code>", "exec")
+        except SyntaxError as e:
+            return (
+                f"SyntaxError before execution: {e.msg} at line {e.lineno}\n"
+                f"  {e.text or ''}"
+                f"Fix the syntax and retry."
+            )
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = uuid.uuid4().hex[:8]
         output_filename = f"presentation_{timestamp}_{unique_id}.pptx"
@@ -177,9 +223,16 @@ def create_powerpoint_from_code(code: str) -> str:
 
         sandbox = Sandbox.create(template=FILE_AGENT_SANDBOX_TEMPLATE, timeout=60)
         execution = sandbox.run_code(code)
+        logger.info(f"Execution result: {execution}")
 
         if execution.error:
-            return f"Code execution error: {execution.error.value}"
+            traceback = execution.error.traceback or ""
+            logger.error(f"Code execution error: {execution.error.name}: {execution.error.value}\nTraceback:\n{traceback}\nFix the code and retry.")
+            return (
+                f"Code execution error: {execution.error.name}: {execution.error.value}\n"
+                f"Traceback:\n{traceback}\n"
+                f"Fix the code and retry."
+            )
 
         try:
             pptx_content = sandbox.files.read("/home/user/output.pptx", format="bytes")
@@ -251,7 +304,10 @@ def modify_word_content(
                         )
                         replacements_made += 1
 
-        doc.save(file_path)
+        try:
+            doc.save(file_path)
+        except PermissionError:
+            return {"success": False, "error": _permission_error_msg(file_path)}
 
         return {
             "success": True,
@@ -260,6 +316,8 @@ def modify_word_content(
             "message": f"Document updated successfully. Made {replacements_made} replacements.",
         }
 
+    except PermissionError:
+        return {"success": False, "error": _permission_error_msg(file_path)}
     except Exception as e:
         logger.error(f"Error modifying Word document: {str(e)}")
         return {"success": False, "error": f"Failed to modify Word document: {str(e)}"}
@@ -300,7 +358,10 @@ def modify_excel_cells(
             else:
                 ws[cell_address] = cell_value
 
-        wb.save(file_path)
+        try:
+            wb.save(file_path)
+        except PermissionError:
+            return {"success": False, "error": _permission_error_msg(file_path)}
 
         return {
             "success": True,
@@ -310,6 +371,8 @@ def modify_excel_cells(
             "message": f"Successfully updated {len(updates_data)} cells in sheet '{ws.title}'",
         }
 
+    except PermissionError:
+        return {"success": False, "error": _permission_error_msg(file_path)}
     except Exception as e:
         logger.error(f"Error modifying Excel cells: {str(e)}")
         return {"success": False, "error": f"Failed to modify Excel cells: {str(e)}"}
@@ -366,7 +429,11 @@ def create_excel_charts(
         )
         chart.add_data(data, titles_from_data=True)
         ws.add_chart(chart)
-        wb.save(file_path)
+
+        try:
+            wb.save(file_path)
+        except PermissionError:
+            return {"success": False, "error": _permission_error_msg(file_path)}
 
         return {
             "success": True,
@@ -377,6 +444,8 @@ def create_excel_charts(
             "message": f"Successfully created {chart_type} chart '{title}' in sheet '{ws.title}'",
         }
 
+    except PermissionError:
+        return {"success": False, "error": _permission_error_msg(file_path)}
     except Exception as e:
         logger.error(f"Error creating Excel chart: {str(e)}")
         return {"success": False, "error": f"Failed to create Excel chart: {str(e)}"}
@@ -638,7 +707,9 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
 
     The sandbox has python-pptx, openpyxl, python-docx, and Pillow pre-installed.
     Use this for complex file operations that go beyond what the dedicated tools offer.
-    Each output file must be saved under /home/user/ in the sandbox.
+    Existing files from the created documents folder that are referenced in the code
+    are automatically uploaded into the sandbox at /home/user/<filename> and
+    /mnt/data/<filename>. Each output file must be saved under /home/user/ in the sandbox.
 
     Args:
         code: Complete Python code to execute. Must save output files under /home/user/.
@@ -646,13 +717,37 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
     """
     sandbox = None
     try:
-        sandbox = Sandbox.create(template=FILE_AGENT_SANDBOX_TEMPLATE, timeout=60)
-        execution = sandbox.run_code(code)
-
-        if execution.error:
+        
+        # Check syntax locally before spending time on a sandbox
+        try:
+            compile(code, "<file_code>", "exec")
+        except SyntaxError as e:
             return {
                 "success": False,
-                "error": f"Code execution error: {execution.error.value}",
+                "error": (
+                    f"SyntaxError before execution: {e.msg} at line {e.lineno}\n"
+                    f"  {e.text or ''}"
+                    f"Fix the syntax and retry."
+                ),
+            }
+
+        logger.info(f"Creating sandbox for code execution: {code}") 
+        sandbox = Sandbox.create(template=FILE_AGENT_SANDBOX_TEMPLATE, timeout=60)
+        staged_inputs = _stage_referenced_files_in_sandbox(code, sandbox)
+        execution = sandbox.run_code(code)
+
+        logger.info(f"Execution result: {execution}")
+
+        if execution.error:
+            traceback = execution.error.traceback or ""
+            logger.error(f"Code execution error: {execution.error.name}: {execution.error.value}\nTraceback:\n{traceback}\nFix the code and retry.")
+            return {
+                "success": False,
+                "error": (
+                    f"Code execution error: {execution.error.name}: {execution.error.value}\n"
+                    f"Traceback:\n{traceback}\n"
+                    f"Fix the code and retry."
+                ),
             }
 
         saved_files = []
@@ -661,12 +756,18 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
         for fname in output_filenames:
             safe_name = Path(fname).name
             sandbox_path = f"/home/user/{safe_name}"
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            unique_id = uuid.uuid4().hex[:8]
-            stem = Path(safe_name).stem
             suffix = Path(safe_name).suffix
-            local_name = f"{stem}_{timestamp}_{unique_id}{suffix}"
-            local_path = FILES_PATH / local_name
+            is_edit_of_existing_file = safe_name in staged_inputs
+
+            if is_edit_of_existing_file:
+                local_name = safe_name
+                local_path = FILES_PATH / local_name
+            else:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                unique_id = uuid.uuid4().hex[:8]
+                stem = Path(safe_name).stem
+                local_name = f"{stem}_{timestamp}_{unique_id}{suffix}"
+                local_path = FILES_PATH / local_name
 
             try:
                 content = sandbox.files.read(sandbox_path, format="bytes")
@@ -688,7 +789,11 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
                     "file_path": str(local_path),
                     "file_type": file_type,
                     "created_at": datetime.now().isoformat(),
-                    "message": f"File created via sandbox: {local_name}",
+                    "message": (
+                        f"File updated via sandbox: {local_name}"
+                        if is_edit_of_existing_file
+                        else f"File created via sandbox: {local_name}"
+                    ),
                 }
                 set_generated_files([file_info])
                 saved_files.append(file_info)
@@ -705,15 +810,19 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
             "files_created": saved_files,
             "stdout": stdout,
         }
+        if staged_inputs:
+            result["staged_input_files"] = staged_inputs
         if errors:
             result["errors"] = errors
         return result
 
     except Exception as e:
+        logger.error(f"Error executing code: {str(e)}")
         return {"success": False, "error": f"Sandbox error: {str(e)}"}
     finally:
         if sandbox:
             try:
+                logger.info(f"Killing sandbox: {sandbox}")
                 sandbox.kill()
             except Exception as e:
                 logger.warning(f"Failed to kill sandbox: {str(e)}")
