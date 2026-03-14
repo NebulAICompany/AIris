@@ -103,7 +103,7 @@ file_agent = create_agent(
     middleware=[
         ToolCallLimitMiddleware(
             tool_name="create_powerpoint_from_code",
-            run_limit=1,
+            run_limit=2,
             exit_behavior="continue",
         ),
         ToolCallLimitMiddleware(
