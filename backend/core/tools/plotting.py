@@ -1,3 +1,4 @@
+import base64
 from typing import Optional, List
 from e2b_code_interpreter import Sandbox
 from pydantic import BaseModel, Field
@@ -5,7 +6,7 @@ from langchain.tools import tool
 from dotenv import load_dotenv
 import uuid
 from datetime import datetime, timedelta
-from backend.shared.constants import CHARTS_DIR, CHART_DATA_FILE
+from backend.shared.constants import CHARTS_DIR, CHART_DATA_FILE, CREATED_DOCUMENTS_PATH
 from backend.core.tools.finance import (
     calculate_sma,
     calculate_ema,
@@ -93,6 +94,11 @@ def create_custom_chart_from_code(code: str) -> dict:
 
             # Get base64 PNG data (already base64 encoded from sandbox)
             png_base64 = first_result.png
+            png_file = CREATED_DOCUMENTS_PATH / f"{chart_id}.png"
+            with open(png_file, "wb") as f:
+                f.write(base64.b64decode(png_base64))
+            
+            img_src = f"data:image/png;base64,{png_base64}"
 
             # Create HTML wrapper with embedded PNG
             chart_html = f"""
@@ -174,6 +180,7 @@ def create_custom_chart_from_code(code: str) -> dict:
                 "chart_type": "custom_plot",
                 "created_at": datetime.now().isoformat(),
                 "file_path": str(chart_file),
+                "png_filename": f"{chart_id}.png",
             }
 
             # Save chart data
