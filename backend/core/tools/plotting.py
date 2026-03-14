@@ -1,3 +1,5 @@
+import base64
+from pathlib import Path
 from typing import Optional, List
 from e2b_code_interpreter import Sandbox
 from pydantic import BaseModel, Field
@@ -5,7 +7,7 @@ from langchain.tools import tool
 from dotenv import load_dotenv
 import uuid
 from datetime import datetime, timedelta
-from backend.shared.constants import CHARTS_DIR, CHART_DATA_FILE
+from backend.shared.constants import BASE_DIR, CHARTS_DIR, CHART_DATA_FILE, CREATED_DOCUMENTS_PATH, REPORTS_CHARTS_FILE
 from backend.core.tools.finance import (
     calculate_sma,
     calculate_ema,
@@ -23,7 +25,6 @@ from backend.shared.logger import get_logger
 logger = get_logger("PLOTTING")
 
 load_dotenv()
-
 
 
 def get_missing_dates(df):
@@ -62,8 +63,40 @@ def set_chart_data(data):
         pass
 
 
+def append_chart_record(png_file_path: Path, html_file_path: Path, description: str) -> None:
+    """Append a single chart record to chart_reports.json."""
+    CHARTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Mevcut içeriği oku
+    if REPORTS_CHARTS_FILE.exists():
+        try:
+            with open(REPORTS_CHARTS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, list):
+                data = []
+        except Exception:
+            data = []
+    else:
+        data = []
+    
+    # BASE_DIR'e göre relative path'e çevir
+    rel_png = png_file_path.relative_to(BASE_DIR)
+    rel_html = html_file_path.relative_to(BASE_DIR)
+
+    record = {
+        "png_file_path": rel_png.as_posix(),
+        "html_file_path": rel_html.as_posix(),
+        "description": description,
+        "creation_time": datetime.now().isoformat(),
+    }
+    data.append(record)
+
+    with open(REPORTS_CHARTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
 @tool(parse_docstring=True)
-def create_custom_chart_from_code(code: str) -> dict:
+def create_custom_chart_from_code(code: str, chart_description: str) -> dict:
     """Create custom charts by executing Python code in a sandboxed environment.
 
     Use this tool for non-financial visualizations such as statistical plots,
@@ -74,6 +107,7 @@ def create_custom_chart_from_code(code: str) -> dict:
         code: Complete Python code that generates and saves one or more charts.
             The code must include all required imports and a save call
             (for example, plt.savefig()).
+        chart_description: A short description of the chart being created, used for metadata and record-keeping.
     """
     sandbox = None
     try:
@@ -93,7 +127,10 @@ def create_custom_chart_from_code(code: str) -> dict:
 
             # Get base64 PNG data (already base64 encoded from sandbox)
             png_base64 = first_result.png
-
+            png_file = CREATED_DOCUMENTS_PATH / f"{chart_id}.png"
+            with open(png_file, "wb") as f:
+                f.write(base64.b64decode(png_base64))
+            
             # Create HTML wrapper with embedded PNG
             chart_html = f"""
 <!DOCTYPE html>
@@ -174,10 +211,17 @@ def create_custom_chart_from_code(code: str) -> dict:
                 "chart_type": "custom_plot",
                 "created_at": datetime.now().isoformat(),
                 "file_path": str(chart_file),
+                "png_filename": f"{chart_id}.png",
             }
 
             # Save chart data
             set_chart_data(chart_data)
+
+            append_chart_record(
+                png_file_path=png_file,
+                html_file_path=chart_file,
+                description=chart_description,
+            )
 
             return "chart created successfully"
     except Exception as e:
@@ -904,6 +948,14 @@ def create_financial_stock_chart(
         chart_id = str(uuid.uuid4())
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+        png_path = CREATED_DOCUMENTS_PATH / f"stock_chart_{chart_id}.png"
+        try:
+            fig.write_image(str(png_path), format="png", engine="kaleido", width=1200, height=800, scale=2)
+        except Exception as e:
+            logger.warning(f"Failed to write chart image: {str(e)}")
+            png_path = None
+            pass  # Silent fail for image writing issues
+
         # Convert to HTML with modern configuration
         chart_html = fig.to_html(
             include_plotlyjs="cdn",
@@ -950,16 +1002,24 @@ def create_financial_stock_chart(
             "file_path": str(chart_file),
             "data_points": sum(len(df) for df in stock_data.values()),
             "failed_symbols": failed_symbols,
+            "png_path": png_path if png_path else None,
         }
 
         # Save chart data and file
         set_chart_data(chart_data)
-
+        short_desc = (f"{', '.join(successful_symbols)} {chart_type} chart "
+            f"from {date_from} to {date_to} with {', '.join(technical_indicators)}"
+        )
+        append_chart_record(
+            png_file_path=png_path if png_path else "",
+            html_file_path=chart_file,
+            description=short_desc,
+        )
         try:
             with open(chart_file, "w", encoding="utf-8") as f:
                 f.write(chart_html)
         except Exception as e:
-            pass  # Silent fail for file writing issues
+            logger.warning(f"Failed to write chart file: {str(e)}")
 
         success_message = (
             f"Chart created: {', '.join(successful_symbols)} | {chart_type.title()}"
