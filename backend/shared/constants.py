@@ -75,6 +75,7 @@ MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
 
 # Charts directory - Use absolute path to prevent backend/backend issue
 CHARTS_DIR = PROJECT_ROOT / "backend" / "database" / "charts"
+REPORTS_CHARTS_FILE = CHARTS_DIR / "chart_reports.json"
 CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 
 # Market data database path
