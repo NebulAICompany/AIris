@@ -161,6 +161,7 @@ class APIService {
   async sendQuery(
     query,
     webSearchEnabled = false,
+    useSpdrag = false,
     sessionId = null,
     selectedFiles = null
   ) {
@@ -180,6 +181,7 @@ class APIService {
         {
           query: query.trim(),
           webSearchEnabled: webSearchEnabled,
+          useSpdrag: useSpdrag,
           sessionId: sessionId,
           selectedFiles: selectedFiles,
         },
@@ -245,6 +247,7 @@ class APIService {
   async sendQueryStream(
     query,
     webSearchEnabled = false,
+    useSpdrag = false,
     sessionId = null,
     selectedFiles = null,
     callbacks = {}
@@ -259,6 +262,7 @@ class APIService {
       body: JSON.stringify({
         query: query.trim(),
         webSearchEnabled: webSearchEnabled,
+        useSpdrag: useSpdrag,
         sessionId: sessionId,
         selectedFiles: selectedFiles,
       }),
