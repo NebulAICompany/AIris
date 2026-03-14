@@ -3437,7 +3437,8 @@ body.dark-theme .image-caption {
 
 .file-attachment-button,
 .file-selection-button,
-.web-search-button {
+.web-search-button,
+.spdrag-toggle-button {
   background: transparent;
   border-radius: 50%;
   width: 44px;
@@ -3455,7 +3456,8 @@ body.dark-theme .image-caption {
 
 .file-attachment-button:hover,
 .file-selection-button:hover,
-.web-search-button:hover {
+.web-search-button:hover,
+.spdrag-toggle-button:hover {
   background: var(--accent-primary) !important;
   transform: translateY(-2px);
   color: white;
@@ -3466,6 +3468,16 @@ body.dark-theme .image-caption {
   border: 2px solid transparent;
   color: white;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  transform: scale(1.002);
+  position: relative;
+  z-index: 2;
+}
+
+.spdrag-toggle-button.active {
+  background: transparent;
+  border: 2px solid transparent;
+  color: white;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
   transform: scale(1.002);
   position: relative;
   z-index: 2;
@@ -3485,6 +3497,20 @@ body.dark-theme .image-caption {
   opacity: 1;
 }
 
+.spdrag-toggle-button.active::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  background: conic-gradient(from 0deg, #06b6d4, #3b82f6, #6366f1, #06b6d4);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 2s linear infinite;
+  opacity: 1;
+}
+
 .web-search-button.active::after {
   content: "";
   position: absolute;
@@ -3497,6 +3523,18 @@ body.dark-theme .image-caption {
   z-index: 0;
 }
 
+.spdrag-toggle-button.active::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 50%;
+  z-index: 0;
+}
+
 .web-search-button.active i {
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
   font-size: 1.1em;
@@ -3504,12 +3542,21 @@ body.dark-theme .image-caption {
   z-index: 2;
 }
 
+.spdrag-toggle-button.active i {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+  font-size: 1.1em;
+  position: relative;
+  z-index: 2;
+}
+
 /* Web Search Button Normal State Enhancement */
-.web-search-button {
+.web-search-button,
+.spdrag-toggle-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.web-search-button:not(.active):hover {
+.web-search-button:not(.active):hover,
+.spdrag-toggle-button:not(.active):hover {
   background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -8038,7 +8085,8 @@ body.dark-theme .chat-file-item:hover {
 
 body.dark-theme .file-attachment-button,
 body.dark-theme .file-selection-button,
-body.dark-theme .web-search-button {
+body.dark-theme .web-search-button,
+body.dark-theme .spdrag-toggle-button {
   background: var(--bg-secondary);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
@@ -8052,8 +8100,21 @@ body.dark-theme .web-search-button.active {
     0 6px 25px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
+body.dark-theme .spdrag-toggle-button.active {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border: 2px solid #1d4ed8;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35),
+    0 6px 25px rgba(59, 130, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
 body.dark-theme .web-search-button.active::after {
   background: conic-gradient(from 0deg, #10b981, #3b82f6, #8b5cf6, #10b981);
+  opacity: 0.9;
+}
+
+body.dark-theme .spdrag-toggle-button.active::after {
+  background: conic-gradient(from 0deg, #3b82f6, #06b6d4, #6366f1, #3b82f6);
   opacity: 0.9;
 }
 
@@ -8375,7 +8436,8 @@ body.nebula-theme .chat-file-item:hover {
 
 body.nebula-theme .file-attachment-button,
 body.nebula-theme .file-selection-button,
-body.nebula-theme .web-search-button {
+body.nebula-theme .web-search-button,
+body.nebula-theme .spdrag-toggle-button {
   background: linear-gradient(135deg,
       rgba(139, 92, 246, 0.2),
       rgba(236, 72, 153, 0.1)) !important;
@@ -8392,12 +8454,29 @@ body.nebula-theme .web-search-button.active {
     0 8px 30px rgba(6, 214, 160, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
+body.nebula-theme .spdrag-toggle-button.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: 2px solid #2563eb !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35),
+    0 8px 30px rgba(59, 130, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
 body.nebula-theme .web-search-button.active::after {
   background: conic-gradient(from 0deg,
       #06d6a0,
       #8b5cf6,
       #ec4899,
       #06d6a0) !important;
+  opacity: 0.9 !important;
+}
+
+body.nebula-theme .spdrag-toggle-button.active::after {
+  background: conic-gradient(from 0deg,
+      #3b82f6,
+      #06b6d4,
+      #6366f1,
+      #3b82f6) !important;
   opacity: 0.9 !important;
 }
 

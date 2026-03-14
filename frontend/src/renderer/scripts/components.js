@@ -12,6 +12,7 @@ class UIComponents {
     this.isProcessing = false;
     this.isDarkMode = false;
     this.webSearchEnabled = Utils.isWebSearchEnabled();
+    this.useSpdrag = Utils.isSpdragEnabled();
 
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
@@ -55,6 +56,8 @@ class UIComponents {
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
+    const spdragToggle = document.getElementById("spdrag-toggle");
+    if (spdragToggle && this.useSpdrag) spdragToggle.classList.add("active");
 
     if (window.languageService) {
       const languageSetting = document.getElementById("language-setting");
@@ -740,6 +743,27 @@ class UIComponents {
       }
 
       console.log("webSearchEnabled: ", this.webSearchEnabled);
+    }
+
+    const spdragToggle = document.getElementById("spdrag-toggle");
+    if (spdragToggle) {
+      spdragToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.useSpdrag = !this.useSpdrag;
+        Utils.setSpdragEnabled(this.useSpdrag);
+
+        if (this.useSpdrag) {
+          spdragToggle.classList.add("active");
+        } else {
+          spdragToggle.classList.remove("active");
+        }
+
+        console.log("SPD-RAG enabled:", this.useSpdrag);
+      });
+
+      if (this.useSpdrag) {
+        spdragToggle.classList.add("active");
+      }
     }
 
     // Finance News refresh button
@@ -1687,8 +1711,9 @@ class UIComponents {
         const streamResult = await window.apiService.sendQueryStream(
           message,
           this.webSearchEnabled,
+          this.useSpdrag,
           this.currentSessionId,
-          this.selectedFiles.length > 0 ? this.selectedFiles : null,
+          selectedFilesForApi,
           {
             onToken: (token) => {
               // On first token, hide typing indicator and create streaming message
@@ -1794,6 +1819,7 @@ class UIComponents {
   async sendQueryWithRetry(
     message,
     webSearchEnabled,
+    useSpdrag,
     sessionId,
     maxRetries = 2,
     selectedFiles = null
@@ -1807,6 +1833,7 @@ class UIComponents {
         const response = await window.apiService.sendQuery(
           message,
           webSearchEnabled,
+          useSpdrag,
           sessionId,
           selectedFiles
         );
@@ -1852,7 +1879,9 @@ class UIComponents {
 
     // Determine what features are enabled for status message
     let statusMessage = "AI düşünüyor...";
-    if (this.webSearchEnabled) {
+    if (this.useSpdrag) {
+      statusMessage = "SPD-RAG pipeline calisiyor...";
+    } else if (this.webSearchEnabled) {
       statusMessage = "Web araması yapılıyor...";
     }
 
