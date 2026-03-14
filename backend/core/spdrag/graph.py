@@ -1,18 +1,19 @@
 from typing import List, Literal, Union
+
 from langgraph.graph import START, StateGraph
 from langgraph.types import Send
-from backend.core.checkpointer import get_checkpointer
 
-from backend.agent_graph.nodes import (
+from backend.core.checkpointer import get_checkpointer
+from backend.core.spdrag.nodes import (
     clarify_intent_node,
     document_sub_agent_node,
     generate_plan_node,
     human_approval_node,
     orchestrator_node,
-    synthesis_node,
     summarize_conversation_node,
+    synthesis_node,
 )
-from backend.agent_graph.state import AgentState
+from backend.core.spdrag.state import AgentState
 
 
 def route_from_start(
@@ -27,11 +28,11 @@ def route_from_start(
     """
     approval_status = state.get("human_approval_status", "not_started")
 
-    # If awaiting feedback, go to approval node to process user's response
+    # If awaiting feedback, go to approval node to process user's response.
     if approval_status == "awaiting_feedback":
         return "human_approval_node"
 
-    # Otherwise, start fresh from intent clarification
+    # Otherwise, start fresh from intent clarification.
     return "clarify_intent_node"
 
 
@@ -56,14 +57,17 @@ def route_orchestrator(
     context = state.get("global_context", [])
     sub_agent_todos = state.get("sub_agent_todos", [])
 
-    # Fan-out: Process documents in parallel if we have docs but no context yet
+    # Fan-out: Process documents in parallel if we have docs but no context yet.
     if selected_docs and not context:
         return [
-            Send("document_sub_agent_node", {"document_name": doc_name, "todos": sub_agent_todos})
+            Send(
+                "document_sub_agent_node",
+                {"document_name": doc_name, "todos": sub_agent_todos},
+            )
             for doc_name in selected_docs
         ]
 
-    # Reduce: All docs processed or no docs to process
+    # Reduce: All docs processed or no docs to process.
     return "synthesis_node"
 
 
@@ -76,7 +80,7 @@ def build_graph() -> StateGraph:
     """
     workflow = StateGraph(AgentState)
 
-    # Add all nodes
+    # Add all nodes.
     workflow.add_node("clarify_intent_node", clarify_intent_node)
     workflow.add_node("generate_plan_node", generate_plan_node)
     workflow.add_node("human_approval_node", human_approval_node)
@@ -85,7 +89,7 @@ def build_graph() -> StateGraph:
     workflow.add_node("synthesis_node", synthesis_node)
     workflow.add_node("summarize_conversation_node", summarize_conversation_node)
 
-    # Start with summarization, then route based on state
+    # Start with summarization, then route based on state.
     workflow.add_edge(START, "summarize_conversation_node")
 
     workflow.add_conditional_edges(
@@ -115,5 +119,6 @@ def get_compiled_graph():
     checkpointer = get_checkpointer()
 
     return workflow.compile(checkpointer=checkpointer)
+
 
 graph = get_compiled_graph()

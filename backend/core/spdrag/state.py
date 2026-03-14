@@ -1,4 +1,5 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Literal, Optional
+
 from langgraph.graph import MessagesState
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -70,8 +71,24 @@ class Summary(BaseModel):
 
     document_name: str = Field(description="The source document name")
     findings: str = Field(description="Extracted relevant information and analysis")
-    relevance_score: float = Field(
-        description="Relevance confidence score (0.0 - 1.0)", ge=0.0, le=1.0
+
+
+class AgentAction(BaseModel):
+    """Structured action emitted by the sub-agent in each iteration."""
+
+    action: Literal["search", "finalize"] = Field(
+        description="'search' to run another retrieval query, 'finalize' when findings are complete"
+    )
+    query: Optional[str] = Field(
+        None,
+        description="Search query to run when action='search'",
+    )
+    reasoning: str = Field(
+        description="Short explanation for why this action is selected"
+    )
+    findings: Optional[str] = Field(
+        None,
+        description="Final extracted findings when action='finalize'",
     )
 
 
@@ -103,13 +120,14 @@ class AgentState(MessagesState):
     """
 
     plan: Optional[Plan]
-    todo_queue: Annotated[List[TodoItem], override_reducer]
-    selected_documents: List[str]
-    global_context: Annotated[List[Summary], merge_summaries]
+    todo_queue: Annotated[List[TodoItem], override_reducer] = []
+    selected_documents: List[str] = []
+    global_context: Annotated[List[Summary], merge_summaries] = []
     human_approval_status: str  # "pending", "approved", "rejected"
     is_ambiguous: bool
     summary: str
-    sub_agent_todos: List[TodoItem]
+    sub_agent_todos: List[TodoItem] = []
+    synthesis_directive: str = ""
 
 
 class SubAgentInput(TypedDict):

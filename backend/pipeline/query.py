@@ -219,7 +219,7 @@ async def run_graph_orchestration(
     Returns:
         Dict with response, images, charts, generated files, and sources
     """
-    from backend.agent_graph.graph import get_compiled_graph
+    from backend.core.spdrag.graph import get_compiled_graph
     from langchain_core.messages import HumanMessage, AIMessage
     
     graph = get_compiled_graph()
