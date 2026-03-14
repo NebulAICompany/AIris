@@ -7,7 +7,7 @@ from langchain.tools import tool
 from dotenv import load_dotenv
 import uuid
 from datetime import datetime, timedelta
-from backend.shared.constants import BASE_DIR, CHARTS_DIR, CHART_DATA_FILE, CREATED_DOCUMENTS_PATH
+from backend.shared.constants import BASE_DIR, CHARTS_DIR, CHART_DATA_FILE, CREATED_DOCUMENTS_PATH, REPORTS_CHARTS_FILE
 from backend.core.tools.finance import (
     calculate_sma,
     calculate_ema,
@@ -25,8 +25,6 @@ from backend.shared.logger import get_logger
 logger = get_logger("PLOTTING")
 
 load_dotenv()
-REPORTS_CHARTS_FILE = CHARTS_DIR / "chart_reports.json"
-
 
 
 def get_missing_dates(df):
@@ -63,8 +61,6 @@ def set_chart_data(data):
 
     except Exception as e:
         pass
-
-REPORTS_CHARTS_FILE = CHARTS_DIR / "chart_reports.json"
 
 
 def append_chart_record(png_file_path: Path, html_file_path: Path, description: str) -> None:
