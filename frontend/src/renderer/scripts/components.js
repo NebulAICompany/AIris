@@ -1705,6 +1705,12 @@ class UIComponents {
       let streamingStarted = false;
       let hasError = false;
       let typingPromise = Promise.resolve(); // Track async typing animation
+      const selectedFilesForApi = Array.from(
+        new Set([
+          ...this.selectedFiles,
+          ...uploadedFiles.map((file) => file.id || file.name),
+        ])
+      );
 
       try {
         // Send streaming query to backend
