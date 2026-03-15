@@ -14,6 +14,7 @@ import asyncio
 import tiktoken
 import hashlib
 import os
+import re
 logger = get_logger("VECTOR_PIPELINE")
 enc = tiktoken.get_encoding("cl100k_base")
 
@@ -182,6 +183,7 @@ class VectorStorePipeline:
                                     "file_name": document_name,
                                     "image_path": image_data.get("image_path", ""),
                                     "contains_image": True,
+                                    "page_number": image_data.get("page_number"),
                                 }
 
                                 hash_obj = hashlib.sha256(figure_id.encode("utf-8"))
@@ -319,10 +321,24 @@ class VectorStorePipeline:
             logger.info(
                 f"   ✅ Document '{document_name}' split into {len(docs)} chunks"
             )
+            _PAGE_MARKER = re.compile(r"<!-- PAGE_BREAK:(\d+) -->")
+            current_page = 1
 
             for doc in docs:
                 if not hasattr(doc, "metadata") or doc.metadata is None:
                     doc.metadata = {}
+                first_marker = _PAGE_MARKER.search(doc.page_content)
+                if first_marker is None:
+                    doc.metadata["page_number"] = current_page
+                else:
+                    pre_marker = doc.page_content[: first_marker.start()].strip()
+                    doc.metadata["page_number"] = (
+                        current_page if pre_marker else int(first_marker.group(1))
+                    )
+                    all_markers = _PAGE_MARKER.findall(doc.page_content)
+                    current_page = int(all_markers[-1])
+
+                doc.page_content = _PAGE_MARKER.sub("", doc.page_content).strip()
                 doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
                 doc.metadata["file_name"] = f"{document_name}"
                 chunk_idx += 1
