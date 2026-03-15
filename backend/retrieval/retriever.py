@@ -96,6 +96,7 @@ async def retrieve_top_k(
         )
         query_embedding = await asyncio.to_thread(embed_query, query)
 
+        selected_files = [s.split(".")[0] for s in selected_files]
         if selected_files:
             logger.info(f"🔍 Searching through {selected_files} document chunks")
             docs_with_scores = (
