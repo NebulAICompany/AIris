@@ -200,7 +200,7 @@ class BM25KeywordSearch:
             if selected_files:
                 doc_metadata = self.documents[doc_id]["metadata"]
                 file_name = doc_metadata.get("file_name", "")
-                if file_name not in [selected_file.split(".")[0] if "." in selected_file else selected_file for selected_file in selected_files]:
+                if file_name not in selected_files:
                     continue
 
             score, matched_terms = self.calculate_bm25_score(query_terms, doc_id)

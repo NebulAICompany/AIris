@@ -1,7 +1,10 @@
 from typing import List, Optional, Dict, Any, AsyncGenerator
 import json
+from uuid import uuid4
+from langchain_core.messages import AIMessage, HumanMessage
 from backend.core.runner import generate_answer, generate_answer_stream
 from backend.core.agents import create_main_agent, create_news_chat_agent
+from backend.core.spdrag import get_compiled_graph
 from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.core.chat import chat_history_manager, MessageRole
@@ -15,9 +18,115 @@ from backend.shared.constants import set_selected_files, set_original_user_query
 logger = get_logger("QUERY_PIPELINE")
 
 
+def _extract_last_ai_message_content(messages: List[Any]) -> str:
+    """Extract the last AI message content from a LangGraph state message list."""
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage):
+            content = getattr(msg, "content", "")
+            if isinstance(content, list):
+                content = "".join(str(part) for part in content)
+            if content:
+                return str(content)
+    return ""
+
+
+def _build_spdrag_messages(
+    masked_query: str,
+    session_id: Optional[str],
+    max_messages: int = 20,
+) -> List[Any]:
+    """Build SPD-RAG message history in LangChain message format."""
+    if not session_id:
+        return [HumanMessage(content=masked_query)]
+
+    session = chat_history_manager.get_session(session_id)
+    if not session or not session.messages:
+        return [HumanMessage(content=masked_query)]
+
+    lc_messages: List[Any] = []
+    recent_messages = session.messages[-max_messages:]
+    last_index = len(recent_messages) - 1
+
+    for idx, chat_msg in enumerate(recent_messages):
+        role = chat_msg.role
+        content = chat_msg.content
+
+        if role == MessageRole.USER:
+            # Always send the current turn in masked form.
+            if idx == last_index:
+                content = masked_query
+            lc_messages.append(HumanMessage(content=content))
+        elif role == MessageRole.ASSISTANT:
+            lc_messages.append(AIMessage(content=content))
+
+    if not lc_messages or not isinstance(lc_messages[-1], HumanMessage):
+        lc_messages.append(HumanMessage(content=masked_query))
+
+    return lc_messages
+
+
+async def _run_spdrag_orchestration(
+    masked_query: str,
+    session_id: Optional[str],
+    selected_files: Optional[List[str]],
+) -> Dict[str, Any]:
+    """Run SPD-RAG graph and normalize output to the existing response contract."""
+    graph = get_compiled_graph()
+    # SPD-RAG runs are request-scoped to avoid stale checkpoint state bleed-over.
+    base_thread_id = session_id or "spdrag-default-session"
+    thread_id = f"{base_thread_id}-spdrag-{uuid4().hex}"
+    graph_config = {"configurable": {"thread_id": thread_id}}
+    messages = _build_spdrag_messages(masked_query=masked_query, session_id=session_id)
+    initial_state: Dict[str, Any] = {
+        "messages": messages,
+        "selected_documents": selected_files or [],
+    }
+
+    state = await graph.ainvoke(initial_state, config=graph_config)
+    final_answer = _extract_last_ai_message_content(state.get("messages", []))
+    final_answer = unmask_text(final_answer) if final_answer else ""
+    if not final_answer:
+        final_answer = (
+            "SPD-RAG pipeline completed but returned no content. "
+            "Please try rephrasing your request."
+        )
+
+    images = get_image_datas()
+    charts = get_chart_datas()
+    generated_files = get_generated_files()
+    sources: List[str] = []
+
+    metadata: Dict[str, Any] = {}
+    if images:
+        metadata["images"] = images
+    if charts:
+        metadata["charts"] = charts
+    if generated_files:
+        metadata["generatedFiles"] = generated_files
+    if sources:
+        metadata["sources"] = sources
+
+    chat_history_manager.add_message(
+        session_id,
+        MessageRole.ASSISTANT,
+        final_answer,
+        metadata if metadata else None,
+    )
+
+    return {
+        "response": final_answer,
+        "images": images,
+        "charts": charts,
+        "generatedFiles": generated_files,
+        "sources": sources,
+        "session_id": session_id,
+    }
+
+
 async def run_orchestration(
     query: str,
     web_search_enabled: bool,
+    use_spdrag: bool = False,
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
@@ -60,6 +169,14 @@ async def run_orchestration(
     # 2. Mask sensitive information
     masked_query_list = await mask_text([query], "query")
     masked_query = masked_query_list[0]
+
+    if use_spdrag:
+        logger.info("🚀 SPD-RAG mode enabled for synchronous query orchestration")
+        return await _run_spdrag_orchestration(
+            masked_query=masked_query,
+            session_id=session_id,
+            selected_files=selected_files,
+        )
 
     # 4. Agentic RAG: Let the agent decide when to search documents
     # The agent has access to search_local_documents tool and will use it when needed
@@ -200,6 +317,7 @@ async def run_news_chat_orchestration(
 async def run_orchestration_stream(
     query: str,
     web_search_enabled: bool,
+    use_spdrag: bool = False,
     session_id: Optional[str] = None,
     selected_files: Optional[List[str]] = None,
 ) -> AsyncGenerator[str, None]:
@@ -245,6 +363,43 @@ async def run_orchestration_stream(
     # 2. Mask sensitive information
     masked_query_list = await mask_text([query], "query")
     masked_query = masked_query_list[0]
+
+    if use_spdrag:
+        logger.info(
+            "SPD-RAG mode enabled for streaming query orchestration (selected_files count=%s)",
+            len(selected_files) if selected_files else 0,
+        )
+        if selected_files:
+            logger.info("SPD-RAG selected documents: %s", selected_files)
+        else:
+            logger.warning(
+                "SPD-RAG selected_files is empty or None; fan-out will skip and synthesis will use no documents."
+            )
+        spdrag_result = await _run_spdrag_orchestration(
+            masked_query=masked_query,
+            session_id=session_id,
+            selected_files=selected_files,
+        )
+
+        if spdrag_result["response"]:
+            yield f"data: {json.dumps({'type': 'token', 'content': spdrag_result['response']})}\n\n"
+
+        yield (
+            "data: "
+            + json.dumps(
+                {
+                    "type": "done",
+                    "content": spdrag_result["response"],
+                    "images": spdrag_result["images"],
+                    "charts": spdrag_result["charts"],
+                    "generatedFiles": spdrag_result["generatedFiles"],
+                    "sources": spdrag_result["sources"],
+                    "tools": [],
+                }
+            )
+            + "\n\n"
+        )
+        return
 
     logger.info(
         f"🤖 Agentic RAG (Streaming): Agent will decide when to search documents for query '{query}'"
