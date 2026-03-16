@@ -373,6 +373,25 @@ class Utils {
     return this.storage.get("webSearchEnabled", false);
   }
 
+  // SPD-RAG toggle flag helpers (session-scoped)
+  static setSpdragEnabled(enabled) {
+    try {
+      sessionStorage.setItem("spdragEnabled", JSON.stringify(!!enabled));
+    } catch (e) {
+      console.error("Failed to save SPD-RAG toggle to sessionStorage:", e);
+    }
+  }
+
+  static isSpdragEnabled() {
+    try {
+      const raw = sessionStorage.getItem("spdragEnabled");
+      return raw ? JSON.parse(raw) : false;
+    } catch (e) {
+      console.error("Failed to read SPD-RAG toggle from sessionStorage:", e);
+      return false;
+    }
+  }
+
   // Show snackbar notification
   static showSnackbar(message, type = "info", duration = 4000) {
     const icons = {

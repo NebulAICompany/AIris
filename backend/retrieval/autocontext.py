@@ -166,6 +166,7 @@ DATE: <YYYY-MM-DD or date range or NO_DATE>"""
         document_title: str = None,
         document_summary: str = None,
         document_date: str = None,
+        page_number: int = None,
     ) -> str:
         """
         Create a contextual header for a chunk.
@@ -174,10 +175,12 @@ DATE: <YYYY-MM-DD or date range or NO_DATE>"""
 
         if file_name:
             header_parts.append(f"File: {file_name}")
-        if document_title:
+        if document_title and document_title.strip() != (file_name or "").strip():
             header_parts.append(f"Document: {document_title}")
         if document_date:
             header_parts.append(f"Date: {document_date}")
+        if page_number is not None:
+            header_parts.append(f"Page: {page_number}")
         if document_summary:
             header_parts.append(f"Summary: {document_summary}")
 
@@ -209,9 +212,10 @@ DATE: <YYYY-MM-DD or date range or NO_DATE>"""
         processed_chunks = []
         for i, chunk in enumerate(chunks):
             try:
+                page_number = chunk.metadata.get("page_number")
                 contextual_chunk_text = self.create_contextual_header(
-                    chunk.page_content, file_name, document_title, 
-                    document_summary, document_date
+                    chunk.page_content, file_name, document_title,
+                    document_summary, document_date, page_number
                 )
 
                 new_metadata = chunk.metadata.copy()

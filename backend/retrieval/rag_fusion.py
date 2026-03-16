@@ -4,7 +4,7 @@ from backend.retrieval.reranker import rerank
 from backend.shared.logger import get_logger
 from backend.shared.constants import CURRENT_MODEL
 from langchain_core.messages import HumanMessage
-from qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient
 
 logger = get_logger("RAG_FUSION")
 
@@ -191,7 +191,7 @@ def _create_doc_id(doc: Dict[str, Any]) -> str:
 
 
 async def retrieve_with_fusion(
-    client: QdrantClient,
+    client: AsyncQdrantClient,
     query: str,
     k: int = 15,
     num_queries: int = 4,
@@ -222,7 +222,7 @@ async def retrieve_with_fusion(
             logger.warning(
                 "RAG Fusion: Only original query available, falling back to standard retrieval"
             )
-            docs = retrieve_top_k(client, query, k=k)
+            docs = await retrieve_top_k(client, query, k=k)
             return docs[:top_n], {"queries_used": [query], "fusion_applied": False}
 
         # Step 2: Retrieve documents for each query
@@ -231,7 +231,7 @@ async def retrieve_with_fusion(
 
         for i, fusion_query in enumerate(queries):
             logger.info(f"  Query {i+1}: {fusion_query}")
-            search_results = retrieve_top_k(client, fusion_query, k=excessive_k)
+            search_results = await retrieve_top_k(client, fusion_query, k=excessive_k)
             all_results[fusion_query] = search_results
             logger.info(f"    Retrieved {len(search_results)} documents")
 
@@ -302,7 +302,7 @@ async def retrieve_with_fusion(
     except Exception as e:
         logger.error(f"Error in RAG Fusion: {e}")
         # Fallback to standard retrieval
-        docs = retrieve_top_k(client, query, k=k)
+        docs = await retrieve_top_k(client, query, k=k)
         return docs[:top_n], {
             "queries_used": [query],
             "fusion_applied": False,

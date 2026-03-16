@@ -25,6 +25,9 @@ from qdrant_client import models
 from backend.utils.preview import PreviewGenerator
 from backend.utils.balance_payments_database import balance_payments_db
 from backend.utils.uploads_database import uploads_db
+from backend.retrieval.retriever import get_vectorstore
+from backend.retrieval.keyword_search import get_keyword_search
+import json
 
 logger = get_logger("ROUTER")
 router = APIRouter()
@@ -41,8 +44,6 @@ def delete_document_images(filename: str) -> dict:
         dict: Information about the deletion operation
     """
     try:
-        import json
-
         # Extract document name without extension
         document_name = Path(filename).stem
 
@@ -96,6 +97,7 @@ def delete_document_images(filename: str) -> dict:
 class QueryRequest(BaseModel):
     query: str
     webSearchEnabled: bool = False
+    useSpdrag: bool = False
     preEmbeddingProcess: str = "none"
     sessionId: Optional[str] = None
     selectedFiles: Optional[List[str]] = None
@@ -206,12 +208,14 @@ async def handle_query(request: QueryRequest):
 
         query = request.query
         web_search_enabled = request.webSearchEnabled
+        use_spdrag = request.useSpdrag
         session_id = request.sessionId
         selected_files = request.selectedFiles
 
         answer = await run_orchestration(
             query,
             web_search_enabled,
+            use_spdrag,
             session_id,
             selected_files,
         )
@@ -241,13 +245,20 @@ async def handle_query_stream(request: QueryRequest):
     try:
         query = request.query
         web_search_enabled = request.webSearchEnabled
+        use_spdrag = request.useSpdrag
         session_id = request.sessionId
         selected_files = request.selectedFiles
+        if use_spdrag:
+            logger.info(
+                "query/stream: useSpdrag=True, selectedFiles count=%s",
+                len(selected_files) if selected_files else 0,
+            )
 
         return StreamingResponse(
             run_orchestration_stream(
                 query,
                 web_search_enabled,
+                use_spdrag,
                 session_id,
                 selected_files,
             ),
@@ -581,7 +592,7 @@ def list_created_documents():
 
 
 @router.delete("/files/{filename}")
-def delete_file(filename: str):
+async def delete_file(filename: str):
     """
     Delete a file from uploads directory and remove its chunks from vector store.
     """
@@ -618,9 +629,6 @@ def delete_file(filename: str):
                 "mapping_updated": image_deletion_result["mapping_updated"],
             }
 
-        # Load existing vector store
-        import json
-
         # Stem file name
         base_filename = Path(filename).stem
 
@@ -642,12 +650,10 @@ def delete_file(filename: str):
                 json.dump(pii_maps, f, ensure_ascii=False, indent=2)
 
         try:
-            from backend.retrieval.retriever import get_vectorstore
-
             client = get_vectorstore()
             if client is not None:
                 logger.info(f"Vector store loaded successfully")
-                client.delete(
+                await client.delete(
                     collection_name="documents",
                     points_selector=models.Filter(
                         must=[
@@ -665,8 +671,6 @@ def delete_file(filename: str):
 
         # Also remove documents from keyword search index
         try:
-            from backend.retrieval.keyword_search import get_keyword_search
-
             logger.info(
                 f"🔍 Removing documents from keyword search index for file: {base_filename}"
             )
