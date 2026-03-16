@@ -18,7 +18,6 @@ from backend.core.runner import extract_query_from_args, extract_text_tokens
 from .file_tools import (
     create_excel_file,
     create_word_document,
-    create_powerpoint_from_code,
     modify_word_content,
     modify_excel_cells,
     create_excel_charts,
@@ -57,7 +56,6 @@ from backend.core.tools.plotting import (
 file_tools = [
     create_excel_file,
     create_word_document,
-    create_powerpoint_from_code,
     modify_word_content,
     modify_excel_cells,
     create_excel_charts,
@@ -103,11 +101,6 @@ file_agent = create_agent(
     tools=file_tools,
     system_prompt=file_agent_prompt,
     middleware=[
-        ToolCallLimitMiddleware(
-            tool_name="create_powerpoint_from_code",
-            run_limit=2,
-            exit_behavior="continue",
-        ),
         ToolCallLimitMiddleware(
             tool_name="execute_file_code",
             run_limit=2,
