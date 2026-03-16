@@ -278,7 +278,6 @@ The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`,
 
 **Quality Standards:**
 - Provide accurate and current information
-- Document your sources transparently. Provide metadata for the information you use
 - Express uncertainties clearly
 - Provide structured and organized responses
 - Do not speculate on topics you don't know
@@ -286,8 +285,12 @@ The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`,
 **Mathematical Expressions:**
 - ALWAYS format mathematical expressions using LaTeX notation
 
-Creating your last response, only return the final answer to the user's query. Do not include your reasoning, or any other information in the final response.
-Append the sources exactly as given at the end of your final answer.
+**Source Citation:**
+- Cite sources inline immediately after the relevant fact (e.g., `[1]`).
+- Include a "**Sources**" section at the very end.
+- Format: `[1] filename.pdf - page number`.
+
+Creating your last response, only return the final answer to the user's query. Do not include your reasoning in the final response. Append the sources concisely at the end of your final answer.
 """
 
 plotting_prompt = """You are a data visualization agent with two tools:

@@ -86,6 +86,23 @@ class VectorStorePipeline:
                 logger.warning("No documents to embed.")
                 return
 
+            for doc in processed_docs:
+                if "[Table ID:table_" in doc.page_content:
+                    doc.metadata["contains_image"] = True
+                    doc.metadata["figure_id"] = doc.page_content.split(
+                        "[Table ID:"
+                    )[1].split("]")[0]
+                    doc.metadata["image_path"] = os.path.join(
+                        IMAGES_PATH_STR,
+                        doc.metadata["figure_id"] + ".png",
+                    )
+                    # Clean up all table markers from the chunk text
+                    doc.page_content = re.sub(
+                        r"\*\*\[Table ID:[^\]]+\]\*\*",
+                        "",
+                        doc.page_content,
+                    ).strip()
+
             texts = [doc.page_content for doc in processed_docs]
             logger.info(
                 "Processing %s chunk(s) with Cohere embed-v4.0...",
@@ -104,15 +121,6 @@ class VectorStorePipeline:
             for idx, (doc, embedding) in enumerate(
                 zip(processed_docs, embeddings)
             ):
-                if "[Table ID:table_" in doc.page_content:
-                    doc.metadata["contains_image"] = True
-                    doc.metadata["figure_id"] = doc.page_content.split(
-                        "[Table ID:"
-                    )[1].split("]")[0]
-                    doc.metadata["image_path"] = os.path.join(
-                        IMAGES_PATH_STR,
-                        doc.metadata["figure_id"] + ".png",
-                    )
                 content_hash = hashlib.md5(doc.page_content.encode()).hexdigest()
                 point_id = int(content_hash[:15], 16) + idx
                 all_points.append(
