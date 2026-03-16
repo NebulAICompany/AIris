@@ -126,11 +126,6 @@ async def search_local_documents(
 
         content = formatted_results
         artifact = sources
-
-        with open("results.txt", "a") as f:
-            f.write(formatted_results)
-            f.write("\n")
-
             
         return content, artifact
 
