@@ -4,6 +4,7 @@ from typing import Tuple, List, Dict, Any, AsyncGenerator, Optional, Generator
 from backend.monitoring.metrics import llm_duration_seconds
 from backend.shared.logger import get_logger
 from langchain_core.messages import ToolMessage, AIMessageChunk
+from backend.core.checkpointer import clear_thread_checkpoints
 
 logger = get_logger("AGENT_RUNNER")
 
@@ -12,6 +13,17 @@ QUERY_PARAM_PRIORITY = [
     "query", "content", "file_name", "symbol", "code", "prompt",
     "category_id", "datagroup_code", "serie_codes", "start_date", "end_date"
 ]
+
+
+def _has_incomplete_tool_state_error(error_str: str) -> bool:
+    """Detect Anthropic/LangGraph errors caused by unresolved checkpointed tool calls."""
+    error_lower = error_str.lower()
+    return (
+        "tool_result blocks immediately after" in error_lower
+        or ("tool_use" in error_lower and "tool_result" in error_lower)
+        or "tool_call_id" in error_lower
+        or "tool_calls" in error_lower
+    )
 
 
 def extract_query_from_args(tool_args: Dict[str, Any], max_length: int = 200) -> Optional[str]:
@@ -244,40 +256,58 @@ async def generate_answer(
     doc_sources = []
 
     try:
-        start_time = time.time()
-        config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
-        config["recursion_limit"] = 30
+        for attempt in range(2):
+            try:
+                start_time = time.time()
+                config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
+                config["recursion_limit"] = 30
 
-        result = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": prompt}]}, config=config
-        )
+                result = await agent.ainvoke(
+                    {"messages": [{"role": "user", "content": prompt}]}, config=config
+                )
 
-        # Extract answer from the last AI message
-        answer = ""
-        if "messages" in result and result["messages"]:
-            for msg in reversed(result["messages"]):
-                if hasattr(msg, "content") and msg.content:
-                    answer = msg.content
-                    break
+                # Extract answer from the last AI message
+                answer = ""
+                if "messages" in result and result["messages"]:
+                    for msg in reversed(result["messages"]):
+                        if hasattr(msg, "content") and msg.content:
+                            answer = msg.content
+                            break
 
-        # Extract sources from tool artifacts
-        if "messages" in result:
-            for msg in result["messages"]:
-                if isinstance(msg, ToolMessage):
-                    extract_sources_from_artifact(msg, web_sources, api_sources, doc_sources)
+                # Extract sources from tool artifacts
+                if "messages" in result:
+                    for msg in result["messages"]:
+                        if isinstance(msg, ToolMessage):
+                            extract_sources_from_artifact(msg, web_sources, api_sources, doc_sources)
 
-        # Deduplicate sources
-        web_sources = deduplicate_sources(web_sources)
-        api_sources = deduplicate_sources(api_sources)
-        doc_sources = deduplicate_sources(doc_sources)
+                # Deduplicate sources
+                web_sources = deduplicate_sources(web_sources)
+                api_sources = deduplicate_sources(api_sources)
+                doc_sources = deduplicate_sources(doc_sources)
 
-        duration = time.time() - start_time
-        llm_duration_seconds.observe(duration)
+                duration = time.time() - start_time
+                llm_duration_seconds.observe(duration)
 
-        return answer, web_sources, api_sources, doc_sources
+                return answer, web_sources, api_sources, doc_sources
+            except Exception as e:
+                error_str = str(e)
+                if (
+                    attempt == 0
+                    and thread_id
+                    and _has_incomplete_tool_state_error(error_str)
+                    and await clear_thread_checkpoints(thread_id)
+                ):
+                    logger.warning(
+                        f"Recovered corrupted checkpoint state for thread_id={thread_id}; retrying generate_answer once."
+                    )
+                    web_sources = []
+                    api_sources = []
+                    doc_sources = []
+                    continue
+                raise
     except Exception as e:
         error_str = str(e)
-        if "tool_call_id" in error_str or "tool_calls" in error_str:
+        if _has_incomplete_tool_state_error(error_str):
             logger.warning(
                 "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
             )
@@ -297,29 +327,46 @@ async def generate_answer_stream(
         - "tool_name": tool name (for tool_start/tool_end types)
         - "sources": dict with web_sources, api_sources, doc_sources (only on "done")
     """
-    processor = StreamProcessor()
-
     try:
-        start_time = time.time()
-        config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
-        config["recursion_limit"] = 30
+        for attempt in range(2):
+            processor = StreamProcessor()
+            yielded_any_events = False
+            try:
+                start_time = time.time()
+                config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
+                config["recursion_limit"] = 30
 
-        async for stream_chunk in agent.astream(
-            {"messages": [{"role": "user", "content": prompt}]},
-            config=config,
-            stream_mode=["messages", "updates", "custom"],
-        ):
-            for event in processor.process_chunk(stream_chunk):
-                yield event
+                async for stream_chunk in agent.astream(
+                    {"messages": [{"role": "user", "content": prompt}]},
+                    config=config,
+                    stream_mode=["messages", "updates", "custom"],
+                ):
+                    for event in processor.process_chunk(stream_chunk):
+                        yielded_any_events = True
+                        yield event
 
-        duration = time.time() - start_time
-        llm_duration_seconds.observe(duration)
+                duration = time.time() - start_time
+                llm_duration_seconds.observe(duration)
 
-        yield {"type": "done", "sources": processor.get_deduplicated_sources()}
-
+                yield {"type": "done", "sources": processor.get_deduplicated_sources()}
+                return
+            except Exception as e:
+                error_str = str(e)
+                if (
+                    attempt == 0
+                    and not yielded_any_events
+                    and thread_id
+                    and _has_incomplete_tool_state_error(error_str)
+                    and await clear_thread_checkpoints(thread_id)
+                ):
+                    logger.warning(
+                        f"Recovered corrupted checkpoint state for thread_id={thread_id}; retrying generate_answer_stream once."
+                    )
+                    continue
+                raise
     except Exception as e:
         error_str = str(e)
-        if "tool_call_id" in error_str or "tool_calls" in error_str:
+        if _has_incomplete_tool_state_error(error_str):
             logger.warning(
                 "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
             )
