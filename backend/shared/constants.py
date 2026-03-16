@@ -75,7 +75,6 @@ MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
 
 # Charts directory - Use absolute path to prevent backend/backend issue
 CHARTS_DIR = PROJECT_ROOT / "backend" / "database" / "charts"
-REPORTS_CHARTS_FILE = CHARTS_DIR / "chart_reports.json"
 CHART_DATA_FILE = CHARTS_DIR / "chart_data.json"
 
 # Market data database path
@@ -112,6 +111,7 @@ BALANCE_TRANSACTION_CATEGORY_ALIASES = {
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
+REPORTS_CHARTS_FILE = CREATED_DOCUMENTS_PATH / "chart_reports.json"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
 # Vectorstore paths

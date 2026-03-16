@@ -28,6 +28,7 @@ from .file_tools import (
     describe_file_image,
     execute_file_code,
     list_created_files,
+    get_available_charts,
     get_generated_files,
     clear_generated_files,
     set_generated_files,
@@ -66,6 +67,7 @@ file_tools = [
     describe_file_image,
     execute_file_code,
     list_created_files,
+    get_available_charts,
 ]
 
 tcmb_tools = [
