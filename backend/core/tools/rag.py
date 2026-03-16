@@ -113,14 +113,15 @@ async def search_local_documents(
             if metadata.get("contains_image", False):
                 image_id = metadata.get("figure_id", "")
                 image_ids.append(image_id)
-                prompt = f"User Query: {get_original_user_query()}, result text: {result_text}"
-                image_description = describe_image_content(image_id, prompt)
-                result_text += f"{image_description}\n"
+                if not image_id.startswith("table_"):
+                    prompt = f"User Query: {get_original_user_query()}, result text: {result_text}"
+                    image_description = describe_image_content(image_id, prompt)
+                    result_text += f"{image_description}\n"
 
-            results.append(result_text)
+            results.append(f"<chunk>\n{result_text}</chunk>")
             sources.append({"name": file_name, "file": file_name})
 
-        formatted_results = "\n---\n".join(results)
+        formatted_results = "\n\n".join(results)
         image_visualizer(image_ids)
 
         content = formatted_results
@@ -187,9 +188,9 @@ async def search_specific_document_for_research(
         results = []
         for doc in reranked_docs:
             content = doc["content"]
-            results.append(f"\n{content}\n")
+            results.append(f"<chunk>\n{content}\n</chunk>")
 
-        return "\n---\n".join(results)
+        return "\n\n".join(results)
     except Exception as e:
         logger.error(f"Error in search_specific_document_for_research: {e}")
         return f"Error searching specific document: {str(e)}"
