@@ -3572,6 +3572,146 @@ body.dark-theme .image-caption {
   }
 }
 
+/* ── Archive (SPD-RAG) sliding switch in header ─────────────────────── */
+.spdrag-switch-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 10px 4px 8px;
+  border-radius: 20px;
+  border: 1.5px solid var(--text-secondary);
+  background: transparent;
+  transition: border-color 0.3s ease, background 0.3s ease, opacity 0.3s ease;
+}
+
+.spdrag-switch-icon {
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
+
+.spdrag-switch-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.spdrag-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1.5px solid var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.spdrag-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
+  pointer-events: none;
+}
+
+.spdrag-switch.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.spdrag-switch.active .spdrag-switch-thumb {
+  transform: translateX(16px);
+  background: #fff;
+}
+
+.spdrag-switch-wrap.active {
+  border-color: #3b82f6;
+}
+
+.spdrag-switch-wrap.active .spdrag-switch-icon,
+.spdrag-switch-wrap.active .spdrag-switch-label {
+  color: #3b82f6;
+}
+
+.spdrag-switch-wrap.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.spdrag-switch-wrap.locked .spdrag-switch {
+  cursor: not-allowed;
+}
+
+/* dark-theme overrides */
+body.dark-theme .spdrag-switch-wrap {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .spdrag-switch {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .spdrag-switch-thumb {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body.dark-theme .spdrag-switch.active {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+}
+
+body.dark-theme .spdrag-switch-wrap.active {
+  border-color: #3b82f6;
+}
+
+body.dark-theme .spdrag-switch-wrap.active .spdrag-switch-icon,
+body.dark-theme .spdrag-switch-wrap.active .spdrag-switch-label {
+  color: #3b82f6;
+}
+
+/* nebula-theme overrides */
+body.nebula-theme .spdrag-switch-wrap {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.05));
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+body.nebula-theme .spdrag-switch {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.08));
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+body.nebula-theme .spdrag-switch.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35),
+              0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+body.nebula-theme .spdrag-switch-wrap.active {
+  border-color: #3b82f6;
+}
+
+body.nebula-theme .spdrag-switch-wrap.active .spdrag-switch-icon,
+body.nebula-theme .spdrag-switch-wrap.active .spdrag-switch-label {
+  color: #3b82f6;
+}
+
 @keyframes webSearchPulse {
 
   0%,
