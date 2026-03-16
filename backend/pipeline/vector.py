@@ -171,11 +171,17 @@ class VectorStorePipeline:
                             )
 
                             if embedding:
-                                page_content = (
+                                page_number = image_data.get("page_number")
+                                figure_label = (
                                     f"**[{caption} ID:{figure_id}]**"
                                     if caption
                                     else f"**[Figure ID:{figure_id}]**"
                                 )
+                                header_parts = [f"File: {document_name}"]
+                                if page_number is not None:
+                                    header_parts.append(f"Page: {page_number}")
+                                context_header = "Context: " + " | ".join(header_parts)
+                                page_content = f"{context_header}\n\nContent: {figure_label}"
                                 metadata = {
                                     "content_type": "image",
                                     "figure_id": figure_id,
@@ -183,7 +189,7 @@ class VectorStorePipeline:
                                     "file_name": document_name,
                                     "image_path": image_data.get("image_path", ""),
                                     "contains_image": True,
-                                    "page_number": image_data.get("page_number"),
+                                    "page_number": page_number,
                                 }
 
                                 hash_obj = hashlib.sha256(figure_id.encode("utf-8"))

@@ -64,28 +64,22 @@ async def search_local_documents(
         keywords: Optional list of keywords for hybrid vector + keyword search.
     """
     try:
-        # Get the global vectorstore client
         client = get_vectorstore()
         if client is None:
             client = await load_vectorstore(VECTORSTORE_PATH_STR)
 
-        # Check if client is available
         if client is None:
             return ("Vectorstore is not available. Please ensure documents are uploaded.", [],)
 
-        # Check if collection exists
         if not await client.collection_exists(collection_name="documents"):
             logger.info("No collection found in vectorstore")
             return "No documents have been uploaded to the knowledge base yet.", []
 
-        # Use provided keywords or empty list if not provided
         query_terms = keywords if keywords is not None else []
 
-        # Use global selected_files from shared state
         selected_files = get_selected_files()
         logger.info(f"🔍 RAG Tool - Searching with selected files filter: {selected_files}")
 
-        # Retrieve documents using hybrid search (vector + keyword)
         retrieved_docs = await retrieve_with_keyword_helping(
             client=client,
             query=query,
@@ -97,7 +91,6 @@ async def search_local_documents(
         if not retrieved_docs:
             return "No relevant documents found for your query.", []
 
-        # Rerank documents
         doc_contents = [
             {"content": doc["content"], "metadata": doc["metadata"]}
             for doc in retrieved_docs
@@ -107,7 +100,6 @@ async def search_local_documents(
         if not reranked_docs:
             return "No relevant documents found after reranking.", []
 
-        # Format results for LLM and collect sources for artifact
         results = []
         image_ids = []
         sources = []
@@ -116,12 +108,8 @@ async def search_local_documents(
             content = doc["content"]
             metadata = doc.get("metadata", {})
             file_name = metadata.get("file_name", "Unknown")
-            page = metadata.get("page", "")
 
-            result_text = f"Source: {file_name}"
-            result_text += f"\n{content}\n"
-            if page:
-                result_text += f" (Page {page})"
+            result_text = f"{content}\n"
             if metadata.get("contains_image", False):
                 image_id = metadata.get("figure_id", "")
                 image_ids.append(image_id)
@@ -130,12 +118,7 @@ async def search_local_documents(
                 result_text += f"{image_description}\n"
 
             results.append(result_text)
-
-            # Collect source information for artifact
-            source_name = file_name
-            if page:
-                source_name = f"{file_name} - Page {page}"
-            sources.append({"name": source_name, "file": file_name, "page": page if page else None})
+            sources.append({"name": file_name, "file": file_name})
 
         formatted_results = "\n---\n".join(results)
         image_visualizer(image_ids)
@@ -143,6 +126,11 @@ async def search_local_documents(
         content = formatted_results
         artifact = sources
 
+        with open("results.txt", "a") as f:
+            f.write(formatted_results)
+            f.write("\n")
+
+            
         return content, artifact
 
     except Exception as e:

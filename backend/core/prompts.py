@@ -287,6 +287,7 @@ The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`,
 - ALWAYS format mathematical expressions using LaTeX notation
 
 Creating your last response, only return the final answer to the user's query. Do not include your reasoning, or any other information in the final response.
+Append the sources exactly as given at the end of your final answer.
 """
 
 plotting_prompt = """You are a data visualization agent with two tools:
