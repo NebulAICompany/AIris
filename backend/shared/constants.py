@@ -111,6 +111,7 @@ BALANCE_TRANSACTION_CATEGORY_ALIASES = {
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
+REPORTS_CHARTS_FILE = CREATED_DOCUMENTS_PATH / "chart_reports.json"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
 # Vectorstore paths
@@ -176,7 +177,7 @@ ANTHROPIC_MODEL = ChatAnthropic(
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-5.2",
+    model="gpt-5.4",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
     frequency_penalty=0.7,
@@ -204,23 +205,9 @@ DEEPSEEK_MODEL = ChatOpenAI(
     callbacks=[ConsoleCallbackHandler()],
 )
 
-GPT5 = ChatOpenAI(
-    model="gpt-5",
-    temperature=0.0,
-    callbacks=[ConsoleCallbackHandler()],
-)
-
-GPT5_MINI = ChatOpenAI(
-    model="gpt-5-mini",
-    temperature=0.0,
-    callbacks=[ConsoleCallbackHandler()],
-)
-
-RESEARCH_LLM_REASONING = GPT5
-RESEARCH_LLM_FAST = GPT5_MINI
-
 CURRENT_MODEL = ANTHROPIC_MODEL
 
+# Marketstack tickers
 MARKETSTACK_TICKERS = [
     "AEFES.IS",
     "AKBNK.IS",
@@ -281,17 +268,3 @@ def set_original_user_query(query: Optional[str]) -> None:
 def get_original_user_query() -> Optional[str]:
     """Get the global original user query."""
     return ORIGINAL_USER_QUERY
-
-
-def get_synthesizer_token_limit_for_fast() -> int:
-    """Return a safe synthesis batch token budget (capped for SPD-RAG recursion)."""
-    max_context_map = {
-        "gpt-5": 400_000,
-        "gpt-5-mini": 400_000,
-    }
-
-    model_name = getattr(RESEARCH_LLM_FAST, "model_name", None) or getattr(
-        RESEARCH_LLM_FAST, "model", None
-    )
-    max_ctx = max_context_map.get(model_name, 128_000)
-    return min(750_000, int(max_ctx * 0.75))

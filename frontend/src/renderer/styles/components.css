@@ -2817,47 +2817,6 @@ body.dark-theme .image-caption {
   text-align: left;
 }
 
-.message-text h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  border-bottom: 1px solid #334155;
-  padding-bottom: 0.5rem;
-}
-
-.message-text h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-top: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Paragraflar ve Listeler */
-.message-text p {
-  margin-bottom: 1rem;
-}
-
-.message-text ul {
-  list-style-type: disc; /* Liste noktalarını geri getirir */
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.message-text ol {
-  list-style-type: decimal; /* Numaralı listeleri geri getirir */
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.message-text li {
-  margin-bottom: 0.25rem;
-}
-
-/* Vurgular */
-.message-text strong {
-  font-weight: 600;
-}
-
 .message-text {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -3437,8 +3396,7 @@ body.dark-theme .image-caption {
 
 .file-attachment-button,
 .file-selection-button,
-.web-search-button,
-.spdrag-toggle-button {
+.web-search-button {
   background: transparent;
   border-radius: 50%;
   width: 44px;
@@ -3456,8 +3414,7 @@ body.dark-theme .image-caption {
 
 .file-attachment-button:hover,
 .file-selection-button:hover,
-.web-search-button:hover,
-.spdrag-toggle-button:hover {
+.web-search-button:hover {
   background: var(--accent-primary) !important;
   transform: translateY(-2px);
   color: white;
@@ -3468,16 +3425,6 @@ body.dark-theme .image-caption {
   border: 2px solid transparent;
   color: white;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-  transform: scale(1.002);
-  position: relative;
-  z-index: 2;
-}
-
-.spdrag-toggle-button.active {
-  background: transparent;
-  border: 2px solid transparent;
-  color: white;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
   transform: scale(1.002);
   position: relative;
   z-index: 2;
@@ -3497,20 +3444,6 @@ body.dark-theme .image-caption {
   opacity: 1;
 }
 
-.spdrag-toggle-button.active::before {
-  content: "";
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  right: -6px;
-  bottom: -6px;
-  background: conic-gradient(from 0deg, #06b6d4, #3b82f6, #6366f1, #06b6d4);
-  border-radius: 50%;
-  z-index: -1;
-  animation: rotate 2s linear infinite;
-  opacity: 1;
-}
-
 .web-search-button.active::after {
   content: "";
   position: absolute;
@@ -3523,18 +3456,6 @@ body.dark-theme .image-caption {
   z-index: 0;
 }
 
-.spdrag-toggle-button.active::after {
-  content: "";
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-radius: 50%;
-  z-index: 0;
-}
-
 .web-search-button.active i {
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
   font-size: 1.1em;
@@ -3542,21 +3463,12 @@ body.dark-theme .image-caption {
   z-index: 2;
 }
 
-.spdrag-toggle-button.active i {
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
-  font-size: 1.1em;
-  position: relative;
-  z-index: 2;
-}
-
 /* Web Search Button Normal State Enhancement */
-.web-search-button,
-.spdrag-toggle-button {
+.web-search-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.web-search-button:not(.active):hover,
-.spdrag-toggle-button:not(.active):hover {
+.web-search-button:not(.active):hover {
   background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -3570,146 +3482,6 @@ body.dark-theme .image-caption {
   100% {
     transform: rotate(360deg);
   }
-}
-
-/* ── Archive (SPD-RAG) sliding switch in header ─────────────────────── */
-.spdrag-switch-wrap {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  cursor: pointer;
-  user-select: none;
-  padding: 4px 10px 4px 8px;
-  border-radius: 20px;
-  border: 1.5px solid var(--text-secondary);
-  background: transparent;
-  transition: border-color 0.3s ease, background 0.3s ease, opacity 0.3s ease;
-}
-
-.spdrag-switch-icon {
-  font-size: 12px;
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
-}
-
-.spdrag-switch-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  transition: color 0.3s ease;
-}
-
-.spdrag-switch {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  border-radius: 10px;
-  border: 1.5px solid var(--text-secondary);
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
-}
-
-.spdrag-switch-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--text-secondary);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
-  pointer-events: none;
-}
-
-.spdrag-switch.active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
-}
-
-.spdrag-switch.active .spdrag-switch-thumb {
-  transform: translateX(16px);
-  background: #fff;
-}
-
-.spdrag-switch-wrap.active {
-  border-color: #3b82f6;
-}
-
-.spdrag-switch-wrap.active .spdrag-switch-icon,
-.spdrag-switch-wrap.active .spdrag-switch-label {
-  color: #3b82f6;
-}
-
-.spdrag-switch-wrap.locked {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.spdrag-switch-wrap.locked .spdrag-switch {
-  cursor: not-allowed;
-}
-
-/* dark-theme overrides */
-body.dark-theme .spdrag-switch-wrap {
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-body.dark-theme .spdrag-switch {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-body.dark-theme .spdrag-switch-thumb {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-body.dark-theme .spdrag-switch.active {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  border-color: #1d4ed8;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
-}
-
-body.dark-theme .spdrag-switch-wrap.active {
-  border-color: #3b82f6;
-}
-
-body.dark-theme .spdrag-switch-wrap.active .spdrag-switch-icon,
-body.dark-theme .spdrag-switch-wrap.active .spdrag-switch-label {
-  color: #3b82f6;
-}
-
-/* nebula-theme overrides */
-body.nebula-theme .spdrag-switch-wrap {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.05));
-  border-color: rgba(139, 92, 246, 0.3);
-}
-
-body.nebula-theme .spdrag-switch {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.08));
-  border-color: rgba(139, 92, 246, 0.3);
-}
-
-body.nebula-theme .spdrag-switch.active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35),
-              0 4px 16px rgba(59, 130, 246, 0.4);
-}
-
-body.nebula-theme .spdrag-switch-wrap.active {
-  border-color: #3b82f6;
-}
-
-body.nebula-theme .spdrag-switch-wrap.active .spdrag-switch-icon,
-body.nebula-theme .spdrag-switch-wrap.active .spdrag-switch-label {
-  color: #3b82f6;
 }
 
 @keyframes webSearchPulse {
@@ -5708,38 +5480,27 @@ body [data-theme="dark"] .message-text pre,
   color: var(--text-muted);
 }
 
-table {
+.markdown-content table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 12px;
-  table-layout: auto; 
-  display: block;
-  overflow-x: auto; 
 }
 
-th,
-td {
+.markdown-content th,
+.markdown-content td {
   border: 1px solid var(--border-color);
-  padding: 10px 14px; /* Biraz daha ferah bir görünüm */
+  padding: 8px 12px;
   text-align: left;
-  /* Verinin hücreden taşmasını engeller: */
-  word-wrap: break-word;
-  max-width: 250px; 
-  /* Kaçış karakterlerinden sızan tabları/boşlukları normalize eder: */
-  white-space: normal; 
 }
 
-th {
+.markdown-content th {
   background-color: var(--bg-secondary);
   font-weight: 600;
   color: var(--text-primary);
-  /* table-header-group hatasını almamak için gap kullanacaksan burayı flex yapmalısın, 
-     ancak standart tabloda border kullanmak daha güvenlidir. */
 }
 
-/* Satır üzerine gelince vurgu (daha temiz bir HTML hissi için) */
-tr:hover {
-  background-color: var(--bg-hover-subtle);
+.markdown-content td {
+  color: var(--text-secondary);
 }
 
 /* Toggle Switch for Web Search */
@@ -8225,8 +7986,7 @@ body.dark-theme .chat-file-item:hover {
 
 body.dark-theme .file-attachment-button,
 body.dark-theme .file-selection-button,
-body.dark-theme .web-search-button,
-body.dark-theme .spdrag-toggle-button {
+body.dark-theme .web-search-button {
   background: var(--bg-secondary);
   border-color: rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
@@ -8240,21 +8000,8 @@ body.dark-theme .web-search-button.active {
     0 6px 25px rgba(16, 185, 129, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-body.dark-theme .spdrag-toggle-button.active {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  border: 2px solid #1d4ed8;
-  color: white;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35),
-    0 6px 25px rgba(59, 130, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
 body.dark-theme .web-search-button.active::after {
   background: conic-gradient(from 0deg, #10b981, #3b82f6, #8b5cf6, #10b981);
-  opacity: 0.9;
-}
-
-body.dark-theme .spdrag-toggle-button.active::after {
-  background: conic-gradient(from 0deg, #3b82f6, #06b6d4, #6366f1, #3b82f6);
   opacity: 0.9;
 }
 
@@ -8576,8 +8323,7 @@ body.nebula-theme .chat-file-item:hover {
 
 body.nebula-theme .file-attachment-button,
 body.nebula-theme .file-selection-button,
-body.nebula-theme .web-search-button,
-body.nebula-theme .spdrag-toggle-button {
+body.nebula-theme .web-search-button {
   background: linear-gradient(135deg,
       rgba(139, 92, 246, 0.2),
       rgba(236, 72, 153, 0.1)) !important;
@@ -8594,29 +8340,12 @@ body.nebula-theme .web-search-button.active {
     0 8px 30px rgba(6, 214, 160, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
-body.nebula-theme .spdrag-toggle-button.active {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-  border: 2px solid #2563eb !important;
-  color: white !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35),
-    0 8px 30px rgba(59, 130, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-
 body.nebula-theme .web-search-button.active::after {
   background: conic-gradient(from 0deg,
       #06d6a0,
       #8b5cf6,
       #ec4899,
       #06d6a0) !important;
-  opacity: 0.9 !important;
-}
-
-body.nebula-theme .spdrag-toggle-button.active::after {
-  background: conic-gradient(from 0deg,
-      #3b82f6,
-      #06b6d4,
-      #6366f1,
-      #3b82f6) !important;
   opacity: 0.9 !important;
 }
 
