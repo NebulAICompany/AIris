@@ -11,7 +11,7 @@ from backend.core.chat import chat_history_manager, MessageRole
 from backend.core.tools.visual import get_image_datas, clear_image_datas
 from backend.shared.logger import get_logger
 from backend.core.tools.finance import get_chart_datas, clear_chart_datas
-from backend.core.tools.office import get_generated_files, clear_generated_files
+from backend.core.tools.file_tools import get_generated_files, clear_generated_files
 from backend.utils.news import format_news_context
 from backend.shared.constants import set_selected_files, set_original_user_query
 
