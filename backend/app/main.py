@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
         # The user should upload files first.
         if os.path.exists(VECTORSTORE_PATH_STR):
             logger.info("Loading vectorstore...")
-            await load_vectorstore(VECTORSTORE_PATH_STR)
+            load_vectorstore(VECTORSTORE_PATH_STR)
             logger.info("Vectorstore loaded successfully.")
         else:
             logger.warning("Vectorstore not found. Please upload files to create it.")
@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
         from backend.core.checkpointer import close_checkpointer
 
         await close_checkpointer()
-        await close_vectorstore()
+        close_vectorstore()
     except Exception as e:
         logger.error(f"Error during shutdown: {e}")
 
