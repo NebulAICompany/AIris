@@ -629,9 +629,6 @@ async def delete_file(filename: str):
                 "mapping_updated": image_deletion_result["mapping_updated"],
             }
 
-        # Load existing vector store
-        import json
-
         # Stem file name
         base_filename = Path(filename).stem
 
@@ -653,8 +650,6 @@ async def delete_file(filename: str):
                 json.dump(pii_maps, f, ensure_ascii=False, indent=2)
 
         try:
-            from backend.retrieval.retriever import get_vectorstore
-
             client = get_vectorstore()
             if client is not None:
                 logger.info(f"Vector store loaded successfully")
