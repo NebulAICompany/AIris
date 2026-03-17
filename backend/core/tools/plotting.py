@@ -482,7 +482,7 @@ def create_financial_stock_chart(
             rows=total_rows,
             cols=1,
             shared_xaxes=True,
-            vertical_spacing=0.06,  # Reduced spacing for more chart area
+            vertical_spacing=0.08,
             subplot_titles=subplot_titles,
             specs=specs,
             row_heights=row_heights,
@@ -807,7 +807,7 @@ def create_financial_stock_chart(
             title=dict(
                 text=f"{', '.join(successful_symbols)} Analysis",
                 x=0.01,
-                y=0.99,
+                y=0.995,
                 xanchor="left",
                 yanchor="top",
                 font=dict(
@@ -827,7 +827,7 @@ def create_financial_stock_chart(
                 size=14,
             ),
             height=final_height,
-            margin=dict(l=32, r=32, t=80, b=48, pad=8),
+            margin=dict(l=32, r=32, t=145, b=48, pad=8),
             hovermode="x unified",
             hoverlabel=dict(
                 bgcolor="#22223B" if layout_style == "dark" else "#FFFFFF",
@@ -841,7 +841,7 @@ def create_financial_stock_chart(
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
-                y=1.02,
+                y=1.12,
                 xanchor="right",
                 x=1,
                 bgcolor="rgba(255,255,255,0.85)" if layout_style != "dark" else "rgba(19,23,34,0.85)",
@@ -868,9 +868,9 @@ def create_financial_stock_chart(
                     ],
                     bgcolor=color_scheme.get("grid", "#f8f9fa"),
                     activecolor=color_scheme["primary"][0],
-                    font=dict(size=13),
-                    y=1.0,
-                    x=0.25,
+                    font=dict(size=11),
+                    y=1.12,
+                    x=0.0,
                     xanchor="left",
                     bordercolor="rgba(0,0,0,0)",
                     borderwidth=0,
@@ -904,9 +904,10 @@ def create_financial_stock_chart(
                 ]
             )
 
-        # Manually adjust annotation positions to sit in the gaps
-        # This fixes the issue where titles overlap with chart lines despite spacing
-        fig.for_each_annotation(lambda a: a.update(yshift=6))  # Shift up by 15 pixels
+        # Move subplot titles slightly down so they do not clash with legend/range buttons.
+        fig.for_each_annotation(
+            lambda a: a.update(yshift=-10, font=dict(size=12, color=color_scheme["text"]))
+        )
 
         # Style all subplots
         fig.update_xaxes(
@@ -917,6 +918,7 @@ def create_financial_stock_chart(
             linewidth=2,
             zeroline=False,
             mirror=True,
+            automargin=True,
             showspikes=True,
             spikethickness=2,
             spikedash="solid",
@@ -934,6 +936,7 @@ def create_financial_stock_chart(
             linewidth=2,
             zeroline=False,
             mirror=True,
+            automargin=True,
             tickfont=dict(size=13, color=color_scheme.get("secondary", ["#888"])[0]),
             ticks="outside",
             showspikes=True,
