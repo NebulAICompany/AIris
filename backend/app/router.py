@@ -253,7 +253,7 @@ async def handle_query_stream(request: QueryRequest):
                 "query/stream: useSpdrag=True, selectedFiles count=%s",
                 len(selected_files) if selected_files else 0,
             )
-            
+
         return StreamingResponse(
             run_orchestration_stream(
                 query,
@@ -671,8 +671,6 @@ async def delete_file(filename: str):
 
         # Also remove documents from keyword search index
         try:
-            from backend.retrieval.keyword_search import get_keyword_search
-
             logger.info(
                 f"🔍 Removing documents from keyword search index for file: {base_filename}"
             )
