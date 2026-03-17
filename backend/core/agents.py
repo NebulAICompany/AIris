@@ -19,7 +19,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
-from .tools.file_tools import list_created_files
+from .tools.office import list_created_files
 from backend.shared.constants import CURRENT_MODEL, get_selected_files
 
 

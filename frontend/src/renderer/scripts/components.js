@@ -12,6 +12,8 @@ class UIComponents {
     this.isProcessing = false;
     this.isDarkMode = false;
     this.webSearchEnabled = Utils.isWebSearchEnabled();
+    this.useSpdrag = Utils.isSpdragEnabled();
+    this.spdragLocked = false;
 
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
@@ -55,6 +57,13 @@ class UIComponents {
 
     const webSearchToggle = document.getElementById("web-search-toggle");
     if (webSearchToggle && this.webSearchEnabled) webSearchToggle.classList.add("active");
+    const spdragToggle = document.getElementById("spdrag-toggle");
+    const spdragWrap = document.getElementById("spdrag-switch-wrap");
+    if (spdragToggle && this.useSpdrag) {
+      spdragToggle.classList.add("active");
+      spdragToggle.setAttribute("aria-checked", "true");
+    }
+    if (spdragWrap && this.useSpdrag) spdragWrap.classList.add("active");
 
     if (window.languageService) {
       const languageSetting = document.getElementById("language-setting");
@@ -740,6 +749,36 @@ class UIComponents {
       }
 
       console.log("webSearchEnabled: ", this.webSearchEnabled);
+    }
+
+    const spdragToggle = document.getElementById("spdrag-toggle");
+    const spdragWrap = document.getElementById("spdrag-switch-wrap");
+    if (spdragToggle) {
+      spdragToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (this.spdragLocked) return;
+
+        this.useSpdrag = !this.useSpdrag;
+        Utils.setSpdragEnabled(this.useSpdrag);
+
+        if (this.useSpdrag) {
+          spdragToggle.classList.add("active");
+          spdragToggle.setAttribute("aria-checked", "true");
+          if (spdragWrap) spdragWrap.classList.add("active");
+        } else {
+          spdragToggle.classList.remove("active");
+          spdragToggle.setAttribute("aria-checked", "false");
+          if (spdragWrap) spdragWrap.classList.remove("active");
+        }
+
+        console.log("SPD-RAG enabled:", this.useSpdrag);
+      });
+
+      if (this.useSpdrag) {
+        spdragToggle.classList.add("active");
+        spdragToggle.setAttribute("aria-checked", "true");
+        if (spdragWrap) spdragWrap.classList.add("active");
+      }
     }
 
     // Finance News refresh button
@@ -1590,6 +1629,7 @@ class UIComponents {
       return;
 
     this.isProcessing = true;
+    this.lockSpdragToggle();
     chatInput.value = "";
 
     // Clear chat files preview immediately when send button is pressed
@@ -1681,14 +1721,21 @@ class UIComponents {
       let streamingStarted = false;
       let hasError = false;
       let typingPromise = Promise.resolve(); // Track async typing animation
+      const selectedFilesForApi = Array.from(
+        new Set([
+          ...this.selectedFiles,
+          ...uploadedFiles.map((file) => file.id || file.name),
+        ])
+      );
 
       try {
         // Send streaming query to backend
         const streamResult = await window.apiService.sendQueryStream(
           message,
           this.webSearchEnabled,
+          this.useSpdrag,
           this.currentSessionId,
-          this.selectedFiles.length > 0 ? this.selectedFiles : null,
+          selectedFilesForApi,
           {
             onToken: (token) => {
               // On first token, hide typing indicator and create streaming message
@@ -1794,6 +1841,7 @@ class UIComponents {
   async sendQueryWithRetry(
     message,
     webSearchEnabled,
+    useSpdrag,
     sessionId,
     maxRetries = 2,
     selectedFiles = null
@@ -1807,6 +1855,7 @@ class UIComponents {
         const response = await window.apiService.sendQuery(
           message,
           webSearchEnabled,
+          useSpdrag,
           sessionId,
           selectedFiles
         );
@@ -1852,7 +1901,9 @@ class UIComponents {
 
     // Determine what features are enabled for status message
     let statusMessage = "AI düşünüyor...";
-    if (this.webSearchEnabled) {
+    if (this.useSpdrag) {
+      statusMessage = "SPD-RAG pipeline calisiyor...";
+    } else if (this.webSearchEnabled) {
       statusMessage = "Web araması yapılıyor...";
     }
 
@@ -3564,6 +3615,24 @@ class UIComponents {
     }
   }
 
+  lockSpdragToggle() {
+    this.spdragLocked = true;
+    const wrap = document.getElementById("spdrag-switch-wrap");
+    if (wrap) {
+      wrap.classList.add("locked");
+      wrap.title = "Pipeline locked — start a new chat to change";
+    }
+  }
+
+  unlockSpdragToggle() {
+    this.spdragLocked = false;
+    const wrap = document.getElementById("spdrag-switch-wrap");
+    if (wrap) {
+      wrap.classList.remove("locked");
+      wrap.title = "Use Archive (SPD-RAG) pipeline";
+    }
+  }
+
   clearChat() {
     const chatMessages = document.getElementById("chat-messages");
     if (chatMessages) {
@@ -3575,6 +3644,9 @@ class UIComponents {
 
       // Start a new session
       this.currentSessionId = null;
+
+      // Unlock the Archive toggle for the fresh thread
+      this.unlockSpdragToggle();
 
       // Add welcome message
       const t = window.languageService
