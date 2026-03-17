@@ -14,7 +14,6 @@
     integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -144,13 +143,6 @@
               </div>
               <div class="chat-session-title-centered" id="chat-session-title">New Chat</div>
               <div class="chat-session-controls">
-                <div class="spdrag-switch-wrap" id="spdrag-switch-wrap" title="Use Archive (SPD-RAG) pipeline">
-                  <i class="fas fa-diagram-project spdrag-switch-icon"></i>
-                  <span class="spdrag-switch-label">Archive</span>
-                  <button class="spdrag-switch" id="spdrag-toggle" role="switch" aria-checked="false">
-                    <span class="spdrag-switch-thumb"></span>
-                  </button>
-                </div>
                 <button id="toggle-chat-history" class="btn btn-secondary" title="View chat history">
                   <i class="fas fa-history"></i>
                   <span data-i18n="history">History</span>
@@ -213,6 +205,7 @@
                   <button id="web-search-toggle" class="web-search-button" title="Web'de Ara">
                     <i class="fas fa-globe"></i>
                   </button>
+
                   <div class="dropdown-container">
                     <button id="file-attachment-btn" class="file-attachment-button" title="Dosya Ekle">
                       <i class="fas fa-plus-circle"></i>
