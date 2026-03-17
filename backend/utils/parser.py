@@ -5,6 +5,7 @@ import uuid
 import os
 import hashlib
 import json
+import re
 import pandas as pd
 from pathlib import Path
 from azure.ai.documentintelligence.models import (
@@ -134,6 +135,9 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
             caption = figure.caption.content if figure.caption else ""
             if not figure.id:
                 continue
+            figure_page_number = None
+            if figure.bounding_regions:
+                figure_page_number = figure.bounding_regions[0].page_number
 
             response = document_intelligence_client.get_analyze_result_figure(
                 model_id=result.model_id,
@@ -165,6 +169,7 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
                 "caption": caption,
                 "image_path": image_path,
                 "image_bytes": img_data,
+                "page_number": figure_page_number,
             }
     else:
         logger.info("No figures found or photo_less mode is active.")
@@ -207,7 +212,17 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
 
     content = result.content
 
-    # Remove figure tags from text content (figures are embedded separately as multimodal embeddings)
+    if result.pages:
+        page_spans = [
+            (page.spans[0].offset, page.page_number)
+            for page in result.pages
+            if page.spans
+        ]
+        for offset, page_num in sorted(page_spans, key=lambda x: x[0], reverse=True):
+            marker = f"<!-- PAGE_BREAK:{page_num} -->"
+            content = content[:offset] + marker + content[offset:]
+
+    content = re.sub(r"<!-- Page(?:Header|Footer|Number|Break)[^>]*-->", "", content)
     while True:
         start = content.find("<figure>")
         if start == -1:
@@ -222,14 +237,14 @@ async def AzureParser(file_path: str, photo_less_mode: bool = False):
     for table_unique_id, data in table_images.items():
         start = content.find("<table>")
         if start != -1:
-            table_reference = (
-                f"\n\n**[Table ID:{table_unique_id}]**\n\n{data['description']}\n"
-            )
+            table_reference = f"\n\n**[Table ID:{table_unique_id}]**\n\n"
             content = (
                 content[:start]
                 + table_reference
-                + content[start + len(table_reference) :]
+                + "<table_processed>"
+                + content[start + len("<table>"):]
             )
+    content = content.replace("<table_processed>", "<table>")
 
     return content, figure_images
 

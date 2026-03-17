@@ -1,13 +1,15 @@
+import asyncio
 import json
 from typing import List, Dict, Any, Optional
-from qdrant_client import QdrantClient, models
+from qdrant_client import AsyncQdrantClient, models
 from backend.shared.constants import co
 from backend.shared.logger import get_logger
 from backend.retrieval.keyword_search import keyword_search
 
 logger = get_logger("RETRIEVER")
 
-_qdrant_client: Optional[QdrantClient] = None
+_qdrant_client: Optional[AsyncQdrantClient] = None
+_qdrant_lock = asyncio.Lock()
 
 
 def embed_query(query: str) -> List[float]:
@@ -36,64 +38,71 @@ def embed_documents(documents: List[str]) -> List[List[float]]:
     return doc_emb
 
 
-def load_vectorstore(path: str) -> QdrantClient:
+async def load_vectorstore(path: str) -> AsyncQdrantClient:
     global _qdrant_client
 
     if _qdrant_client is not None:
         return _qdrant_client
 
-    try:
-        _qdrant_client = QdrantClient(path=path)
-        logger.info(f"✅ Vectorstore loaded from {path}")
-        if _qdrant_client.collection_exists(collection_name="documents"):
-            logger.info(
-                f"📦 Contains {_qdrant_client.count(collection_name='documents')} document chunks"
-            )
-        else:
-            logger.info("No collection found")
-        return _qdrant_client
-    except Exception as e:
-        raise RuntimeError(f"Failed to load vectorstore from {path}: {e}") from e
+    async with _qdrant_lock:
+        if _qdrant_client is not None:
+            return _qdrant_client
+
+        try:
+            _qdrant_client = AsyncQdrantClient(path=path, timeout=30)
+            logger.info(f"✅ Vectorstore loaded from {path}")
+            if await _qdrant_client.collection_exists(collection_name="documents"):
+                count_result = await _qdrant_client.count(collection_name="documents")
+                logger.info(f"📦 Contains {count_result.count} document chunks")
+            else:
+                logger.info("No collection found")
+            return _qdrant_client
+        except Exception as e:
+            raise RuntimeError(f"Failed to load vectorstore from {path}: {e}") from e
 
 
-def get_vectorstore() -> Optional[QdrantClient]:
+def get_vectorstore() -> Optional[AsyncQdrantClient]:
     return _qdrant_client
 
 
-def close_vectorstore() -> None:
+async def close_vectorstore() -> None:
     global _qdrant_client
-    if _qdrant_client is not None:
-        try:
-            _qdrant_client.close()
-            logger.info("Qdrant client closed")
-        except Exception as e:
-            logger.warning(f"Error closing Qdrant client: {e}")
-        finally:
-            _qdrant_client = None
+    async with _qdrant_lock:
+        if _qdrant_client is not None:
+            try:
+                await _qdrant_client.close()
+                logger.info("Qdrant client closed")
+            except Exception as e:
+                logger.warning(f"Error closing Qdrant client: {e}")
+            finally:
+                _qdrant_client = None
 
 
-def retrieve_top_k(
-    client: QdrantClient,
+async def retrieve_top_k(
+    client: AsyncQdrantClient,
     query: str,
     k: int = 10,
     selected_files: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     try:
         logger.info(f"🔍 Retrieving top {k} documents for query: {query}")
-        if not client.collection_exists(collection_name="documents"):
+        if not await client.collection_exists(collection_name="documents"):
             logger.info("No collection found")
-            return None
+            return []
 
+        count_result = await client.count(collection_name="documents")
         logger.info(
-            f"📊 Searching through {client.count(collection_name='documents')} document chunks"
+            f"📊 Searching through {count_result.count} document chunks"
         )
+        query_embedding = await asyncio.to_thread(embed_query, query)
 
+        selected_files = [s.split(".")[0] for s in selected_files]
         if selected_files:
-            selected_files = [file.split(".")[0] for file in selected_files]
             logger.info(f"🔍 Searching through {selected_files} document chunks")
-            docs_with_scores = client.query_points(
+            docs_with_scores = (
+                await client.query_points(
                 collection_name="documents",
-                query=embed_query(query),
+                query=query_embedding,
                 query_filter=models.Filter(
                     must=[
                         models.FieldCondition(
@@ -104,13 +113,16 @@ def retrieve_top_k(
                 ),
                 limit=k,
                 score_threshold=0.2,
+                )
             ).points
         else:
-            docs_with_scores = client.query_points(
+            docs_with_scores = (
+                await client.query_points(
                 collection_name="documents",
-                query=embed_query(query),
+                query=query_embedding,
                 limit=k,
                 score_threshold=0.2,
+                )
             ).points
         logger.info(f"✅ Retrieved {len(docs_with_scores)} documents from vectorstore")
 
@@ -146,8 +158,8 @@ def retrieve_top_k(
         return []
 
 
-def retrieve_with_keyword_helping(
-    client: QdrantClient,
+async def retrieve_with_keyword_helping(
+    client: AsyncQdrantClient,
     query: str,
     query_terms: List[str],
     k: int = 10,
@@ -157,7 +169,7 @@ def retrieve_with_keyword_helping(
         logger.info(f"🔍 Vector + keyword search helping for: '{query}' (limit: {k}+3)")
 
         # Perform vector search
-        vector_results = retrieve_top_k(
+        vector_results = await retrieve_top_k(
             client, query, k=k, selected_files=selected_files
         )
 

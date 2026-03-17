@@ -1,4 +1,4 @@
-from qdrant_client import QdrantClient, models
+from qdrant_client import AsyncQdrantClient, models
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 from langchain_core.documents import Document
 from backend.retrieval.autocontext import apply_autocontext
@@ -14,8 +14,51 @@ import asyncio
 import tiktoken
 import hashlib
 import os
+import re
 logger = get_logger("VECTOR_PIPELINE")
 enc = tiktoken.get_encoding("cl100k_base")
+
+
+async def generate_embeddings(texts: List[str]) -> List[List[float]]:
+    """Embed texts with Cohere embed-v4.0 (search_document, 1536-dim), with batching and rate-limit retries."""
+    if not texts:
+        return []
+
+    def _embed_batch(batch_texts: List[str]) -> List[List[float]]:
+        if not co:
+            raise RuntimeError("Cohere client not initialised")
+        embed_input = [
+            {"content": [{"type": "text", "text": t}]} for t in batch_texts
+        ]
+        return co.embed(
+            inputs=embed_input,
+            model="embed-v4.0",
+            input_type="search_document",
+            output_dimension=1536,
+            embedding_types=["float"],
+        ).embeddings.float
+
+    batch_size = 8
+    all_embeddings: List[List[float]] = []
+
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i : i + batch_size]
+        for attempt in range(13):
+            try:
+                batch_embs = await asyncio.to_thread(_embed_batch, batch)
+                break
+            except Exception as e:
+                if "rate limit" in str(e).lower() and attempt < 12:
+                    logger.warning(
+                        "Embed rate limit hit, retrying in 5s... (attempt %s/13)",
+                        attempt + 1,
+                    )
+                    await asyncio.sleep(5)
+                else:
+                    raise
+        all_embeddings.extend(batch_embs)
+
+    return all_embeddings
 
 
 class PreEmbeddingProcess(Enum):
@@ -36,71 +79,74 @@ class VectorStorePipeline:
 
         @staticmethod
         async def upload_text_embed(
-            client: QdrantClient, processed_docs: List[Document]
+            client: AsyncQdrantClient, processed_docs: List[Document]
         ):
-            """Create embeddings and upload text chunks to Qdrant"""
-            batch_size = 96
-            all_points = []
+            """Create embeddings and upload text chunks to Qdrant."""
+            if not processed_docs:
+                logger.warning("No documents to embed.")
+                return
 
-            for i in range(0, len(processed_docs), batch_size):
-                batch_docs = processed_docs[i : i + batch_size]
-                logger.info(
-                    f"Processing batch {i//batch_size + 1}/{(len(processed_docs) + batch_size - 1)//batch_size} ({len(batch_docs)} documents)"
+            for doc in processed_docs:
+                if "[Table ID:table_" in doc.page_content:
+                    doc.metadata["contains_image"] = True
+                    doc.metadata["figure_id"] = doc.page_content.split(
+                        "[Table ID:"
+                    )[1].split("]")[0]
+                    doc.metadata["image_path"] = os.path.join(
+                        IMAGES_PATH_STR,
+                        doc.metadata["figure_id"] + ".png",
+                    )
+                    # Clean up all table markers from the chunk text
+                    doc.page_content = re.sub(
+                        r"\*\*\[Table ID:[^\]]+\]\*\*",
+                        "",
+                        doc.page_content,
+                    ).strip()
+
+            texts = [doc.page_content for doc in processed_docs]
+            logger.info(
+                "Processing %s chunk(s) with Cohere embed-v4.0...",
+                len(texts),
+            )
+
+            embeddings = await generate_embeddings(texts)
+
+            if len(embeddings) != len(processed_docs):
+                raise ValueError(
+                    "Embedding count (%s) != doc count (%s)"
+                    % (len(embeddings), len(processed_docs))
                 )
 
-                # Extract text content for embedding
-                batch_texts = [doc.page_content for doc in batch_docs]
+            all_points = []
+            for idx, (doc, embedding) in enumerate(
+                zip(processed_docs, embeddings)
+            ):
+                content_hash = hashlib.md5(doc.page_content.encode()).hexdigest()
+                point_id = int(content_hash[:15], 16) + idx
+                all_points.append(
+                    models.PointStruct(
+                        id=point_id,
+                        vector=embedding,
+                        payload={
+                            "page_content": doc.page_content,
+                            "metadata": doc.metadata,
+                        },
+                    )
+                )
 
-                try:
-                    embed_input = [
-                        {"content": [{"type": "text", "text": text}]}
-                        for text in batch_texts
-                    ]
-
-                    def embed_batch():
-                        return co.embed(
-                            inputs=embed_input,
-                            model="embed-v4.0",
-                            input_type="search_document",
-                            output_dimension=1536,
-                            embedding_types=["float"],
-                        ).embeddings.float
-
-                    batch_embeddings = await asyncio.to_thread(embed_batch)
-
-                    # Create Qdrant points
-                    for idx, (doc, embedding) in enumerate(
-                        zip(batch_docs, batch_embeddings)
-                    ):
-                        if "[Table ID:table_" in doc.page_content:
-                            doc.metadata["contains_image"] = True
-                            doc.metadata["figure_id"] = doc.page_content.split("[Table ID:")[1].split("]")[0]
-                            doc.metadata["image_path"] = os.path.join(IMAGES_PATH_STR, doc.metadata["figure_id"] + ".png")
-                        point = models.PointStruct(
-                            id=i + idx,
-                            vector=embedding,
-                            payload={
-                                "page_content": doc.page_content,
-                                "metadata": doc.metadata,
-                            },
-                        )
-                        all_points.append(point)
-
-                except Exception as e:
-                    logger.error(f"Error embedding batch: {str(e)}")
-                    continue
-
-            client.upload_points(
+            await client.upsert(
                 collection_name="documents",
                 points=all_points,
+                wait=True,
             )
             logger.info(
-                f"Successfully uploaded {len(all_points)} points to vectorstore"
+                "Successfully uploaded %s points to vectorstore",
+                len(all_points),
             )
 
         @staticmethod
         async def upload_images_embed(
-            client: QdrantClient,
+            client: AsyncQdrantClient,
             figure_images: dict,
             document_name: str,
             keyword_search,
@@ -133,11 +179,17 @@ class VectorStorePipeline:
                             )
 
                             if embedding:
-                                page_content = (
+                                page_number = image_data.get("page_number")
+                                figure_label = (
                                     f"**[{caption} ID:{figure_id}]**"
                                     if caption
                                     else f"**[Figure ID:{figure_id}]**"
                                 )
+                                header_parts = [f"File: {document_name}"]
+                                if page_number is not None:
+                                    header_parts.append(f"Page: {page_number}")
+                                context_header = "Context: " + " | ".join(header_parts)
+                                page_content = f"{context_header}\n\nContent: {figure_label}"
                                 metadata = {
                                     "content_type": "image",
                                     "figure_id": figure_id,
@@ -145,6 +197,7 @@ class VectorStorePipeline:
                                     "file_name": document_name,
                                     "image_path": image_data.get("image_path", ""),
                                     "contains_image": True,
+                                    "page_number": page_number,
                                 }
 
                                 hash_obj = hashlib.sha256(figure_id.encode("utf-8"))
@@ -173,9 +226,10 @@ class VectorStorePipeline:
                             logger.error(f"Error embedding image {figure_id}: {e}")
                             continue
 
-                client.upload_points(
+                await client.upsert(
                     collection_name="documents",
                     points=image_points,
+                    wait=True,
                 )
                 logger.info(
                     f"Successfully uploaded {len(image_points)} image embeddings to vectorstore"
@@ -281,10 +335,24 @@ class VectorStorePipeline:
             logger.info(
                 f"   ✅ Document '{document_name}' split into {len(docs)} chunks"
             )
+            _PAGE_MARKER = re.compile(r"<!-- PAGE_BREAK:(\d+) -->")
+            current_page = 1
 
             for doc in docs:
                 if not hasattr(doc, "metadata") or doc.metadata is None:
                     doc.metadata = {}
+                first_marker = _PAGE_MARKER.search(doc.page_content)
+                if first_marker is None:
+                    doc.metadata["page_number"] = current_page
+                else:
+                    pre_marker = doc.page_content[: first_marker.start()].strip()
+                    doc.metadata["page_number"] = (
+                        current_page if pre_marker else int(first_marker.group(1))
+                    )
+                    all_markers = _PAGE_MARKER.findall(doc.page_content)
+                    current_page = int(all_markers[-1])
+
+                doc.page_content = _PAGE_MARKER.sub("", doc.page_content).strip()
                 doc.metadata["chunk_id"] = f"chunk_{chunk_idx}"
                 doc.metadata["file_name"] = f"{document_name}"
                 chunk_idx += 1
@@ -298,10 +366,10 @@ class VectorStorePipeline:
             await self._apply_pii_masking(processed_docs, document_name)
             logger.info("PII masking complete")
 
-            client = load_vectorstore(VECTORSTORE_PATH_STR)
+            client = await load_vectorstore(VECTORSTORE_PATH_STR)
 
-            if not client.collection_exists(collection_name="documents"):
-                client.create_collection(
+            if not await client.collection_exists(collection_name="documents"):
+                await client.create_collection(
                     collection_name="documents",
                     vectors_config=models.VectorParams(
                         size=1536, distance=models.Distance.COSINE
