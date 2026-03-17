@@ -47,6 +47,7 @@ azure-ai-textanalytics>=5.3.0
 tavily-python>=0.7.19
 loguru>=0.7.3
 qdrant-client>=1.16.2
+kaleido>=0.2.2
 azure-ai-documentintelligence>=1.0.2
 concurrent-openai>=1.2.2
 plotly>=6.5.2

@@ -60,6 +60,7 @@ def set_chart_data(data):
             json.dump([data], f, ensure_ascii=False, indent=2)
 
     except Exception as e:
+        logger.info(f"Error setting chart data: {e}")
         pass
 
 
@@ -1005,7 +1006,7 @@ def create_financial_stock_chart(
             "file_path": str(chart_file),
             "data_points": sum(len(df) for df in stock_data.values()),
             "failed_symbols": failed_symbols,
-            "png_path": png_path if png_path else None,
+            "png_filename": f"stock_chart_{chart_id}.png",
         }
 
         # Save chart data and file
