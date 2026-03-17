@@ -162,11 +162,12 @@ class Utils {
 
   // Parse markdown-like text for basic formatting
   static parseBasicMarkdown(text) {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/`(.*?)`/g, "<code>$1</code>")
-      .replace(/\n/g, "<br>");
+    if (typeof marked === 'undefined') {
+      console.warn('Marked.js yüklenmedi, düz metin dönülüyor.');
+      return text;
+    }
+    // marked.js tüm Markdown formatını (tablolar dahil) mükemmel HTML'e çevirir
+    return marked.parse(text); 
   }
 
   // Process mathematical expressions using KaTeX
@@ -370,6 +371,25 @@ class Utils {
 
   static isWebSearchEnabled() {
     return this.storage.get("webSearchEnabled", false);
+  }
+
+  // SPD-RAG toggle flag helpers (session-scoped)
+  static setSpdragEnabled(enabled) {
+    try {
+      sessionStorage.setItem("spdragEnabled", JSON.stringify(!!enabled));
+    } catch (e) {
+      console.error("Failed to save SPD-RAG toggle to sessionStorage:", e);
+    }
+  }
+
+  static isSpdragEnabled() {
+    try {
+      const raw = sessionStorage.getItem("spdragEnabled");
+      return raw ? JSON.parse(raw) : false;
+    } catch (e) {
+      console.error("Failed to read SPD-RAG toggle from sessionStorage:", e);
+      return false;
+    }
   }
 
   // Show snackbar notification
