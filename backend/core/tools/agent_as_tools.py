@@ -8,14 +8,30 @@ from langgraph.config import get_stream_writer
 from backend.shared.logger import get_logger
 from backend.core.prompts import (
     finance_agent_prompt,
-    office_agent_prompt,
+    file_agent_prompt,
     plotting_prompt,
     tcmb_data_agent_prompt,
 )
 from langchain.agents.middleware import ToolCallLimitMiddleware
 from datetime import datetime
 from backend.core.runner import extract_query_from_args, extract_text_tokens
-from .office import *
+from .file_tools import (
+    create_excel_file,
+    create_word_document,
+    modify_word_content,
+    modify_excel_cells,
+    create_excel_charts,
+    read_excel_file,
+    read_word_document,
+    read_powerpoint_file,
+    describe_file_image,
+    execute_file_code,
+    list_created_files,
+    get_available_charts,
+    get_generated_files,
+    clear_generated_files,
+    set_generated_files,
+)
 from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
 from .finance import (
     get_eod_data,
@@ -37,13 +53,19 @@ from backend.core.tools.plotting import (
     create_financial_stock_chart,
 )
 
-office_tools = [
+file_tools = [
     create_excel_file,
     create_word_document,
     modify_word_content,
     modify_excel_cells,
     create_excel_charts,
-    create_powerpoint_from_code,
+    read_excel_file,
+    read_word_document,
+    read_powerpoint_file,
+    describe_file_image,
+    execute_file_code,
+    list_created_files,
+    get_available_charts,
 ]
 
 tcmb_tools = [
@@ -74,14 +96,14 @@ finance_agent = create_agent(
     system_prompt=finance_agent_prompt,
 )
 
-office_agent = create_agent(
+file_agent = create_agent(
     model=CURRENT_MODEL,
-    tools=office_tools,
-    system_prompt=office_agent_prompt,
+    tools=file_tools,
+    system_prompt=file_agent_prompt,
     middleware=[
         ToolCallLimitMiddleware(
-            tool_name="create_powerpoint_from_code",
-            run_limit=1,
+            tool_name="execute_file_code",
+            run_limit=2,
             exit_behavior="continue",
         ),
     ],
@@ -337,22 +359,23 @@ async def call_finance_agent(query: str) -> str:
 
 
 @tool(
-    "microsoft_office_operations",
+    "file_operations",
     description=(
-        "Use this tool for Microsoft Office document operations, including creating "
-        "and updating Excel workbooks, Word documents, and PowerPoint presentations. "
-        "It can generate new files, modify existing ones using Word, Excel, or PowerPoint. "
-        "Input must be a natural language request describing the desired Office action "
-        "(for example, 'create an Excel file with this table')."
+        "Use this tool for file and document operations: creating, reading, modifying, "
+        "and analyzing Excel workbooks, Word documents, PowerPoint presentations, and images. "
+        "It can generate new files, read existing file contents, modify documents, "
+        "understand images via vision AI, and run Python code in a sandbox for complex file tasks. "
+        "Input must be a natural language request describing the desired file operation "
+        "(for example, 'create an Excel file with this table' or 'read the contents of report.docx')."
     ),
 )
-async def call_office_agent(query: str) -> str:
-    """Route Office document requests to the Office operations agent.
+async def call_file_agent(query: str) -> str:
+    """Route file and document requests to the file operations agent.
 
     Args:
-        query: Natural language request describing a Word, Excel, or PowerPoint operation.
+        query: Natural language request describing a file operation.
     """
-    content = await stream_subagent_with_events(office_agent, "microsoft_office_operations", query)
+    content = await stream_subagent_with_events(file_agent, "file_operations", query)
     return content
 
 
@@ -408,7 +431,7 @@ async def call_tcmb_agent(query: str):
 # List of subagent tools for the main agent
 main_agent_subagents = [
     call_finance_agent,
-    call_office_agent,
+    call_file_agent,
     call_plotting_agent,
     call_tcmb_agent,
 ]

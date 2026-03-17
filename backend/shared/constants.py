@@ -111,6 +111,7 @@ BALANCE_TRANSACTION_CATEGORY_ALIASES = {
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
+REPORTS_CHARTS_FILE = CREATED_DOCUMENTS_PATH / "chart_reports.json"
 IMAGES_PATH = UPLOADS_PATH / "images"
 
 # Vectorstore paths
@@ -176,7 +177,7 @@ ANTHROPIC_MODEL = ChatAnthropic(
 )
 
 OPENAI_MODEL = ChatOpenAI(
-    model="gpt-5.2",
+    model="gpt-5.4",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
     frequency_penalty=0.7,
@@ -281,7 +282,6 @@ def set_original_user_query(query: Optional[str]) -> None:
 def get_original_user_query() -> Optional[str]:
     """Get the global original user query."""
     return ORIGINAL_USER_QUERY
-
 
 def get_synthesizer_token_limit_for_fast() -> int:
     """Return a safe synthesis batch token budget (capped for SPD-RAG recursion)."""
