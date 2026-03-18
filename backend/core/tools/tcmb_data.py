@@ -89,6 +89,109 @@ async def get_tcmb_datagroup(
         return {"success": False, "error": error_msg, "error_code": "EXCEPTION"}
 
 
+async def get_tcmb_series_top_k(
+    query: str,
+    datagroup_code: Optional[str] = None,
+    k: int = 3,
+    score_threshold: Optional[float] = None,
+) -> Dict[str, Any]:
+    """
+    Series açıklamalarını 'series' collection'ından vektör benzerliği ile arar,
+    en uygun top-k serileri döner.
+    datagroup_code verilirse sadece ilgili datagroup'a ait seriler içinde arar.
+    """
+    try:
+        if not query or not query.strip():
+            return {"success": False, "error": "Query cannot be empty.", "error_code": "EMPTY_QUERY"}
+
+        logger.info(
+            f"Searching series with vector logic for query: {query} "
+            f"(datagroup_code={datagroup_code}, k={k})"
+        )
+
+        client = get_vectorstore()
+        if client is None:
+            from backend.shared.constants import VECTORSTORE_PATH_STR
+            client = await load_vectorstore(VECTORSTORE_PATH_STR)
+
+        if client is None:
+            return {"success": False, "error": "Vectorstore is not available.", "error_code": "NO_VECTORSTORE"}
+
+        collection_name = "series"
+
+        has_collection = await client.collection_exists(collection_name=collection_name)
+        if not has_collection:
+            return {
+                "success": False,
+                "error": "No vectorstore collection named 'series' found.",
+                "error_code": "NO_COLLECTION",
+            }
+
+        # Datagroup'a göre filtre (SERIES tarafında nasıl tuttukysan ona göre ayarla)
+        # Örn: metadata.DATAGROUP_CODE veya metadata.datagroup_code gibi.
+        query_filter = None
+        if datagroup_code:
+            query_filter = models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="metadata.DATAGROUP_CODE",
+                        match=models.MatchValue(value=datagroup_code),
+                    )
+                ]
+            )
+
+        query_embedding = await asyncio.to_thread(embed_query, query)
+
+        kwargs: Dict[str, Any] = dict(
+            collection_name=collection_name,
+            query=query_embedding,
+            with_payload=True,
+            limit=k,
+            query_filter=query_filter,
+        )
+        if score_threshold is not None:
+            kwargs["score_threshold"] = score_threshold
+
+        response = await client.query_points(**kwargs)
+        points = response.points if response is not None else []
+
+        if not points:
+            return {
+                "success": False,
+                "error": "No matching series entries found in vectorstore.",
+                "error_code": "NO_MATCH",
+            }
+
+        # Skora göre sırala ve top-k serileri çıkar
+        sorted_points = sorted(points, key=lambda p: float(p.score or 0.0), reverse=True)
+
+        top_series: List[Dict[str, Any]] = []
+        for p in sorted_points[:k]:
+            payload = p.payload if isinstance(p.payload, dict) else {}
+            struct = payload.get("metadata", {}) if isinstance(payload, dict) else {}
+            top_series.append({
+                "score": float(p.score or 0.0),
+                **struct,
+            })
+
+        best = top_series[0]
+
+        return {
+            "success": True,
+            "query": query,
+            "datagroup_code": datagroup_code,
+            "best_score": best["score"],
+            "best_serie": best,
+            "top_series": top_series,
+            "message": "Top series selected by vector similarity.",
+        }
+
+    except Exception as e:
+        error_msg = f"Error while finding series from vectorstore: {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg, "error_code": "EXCEPTION"}
+
+
 # Main categories list - predefined to avoid repeated API calls
 MAIN_CATEGORIES = [
     (1, "PİYASA VERİLERİ (TCMB)"),
