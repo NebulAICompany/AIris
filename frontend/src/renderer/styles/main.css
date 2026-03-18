@@ -1173,7 +1173,7 @@ input:checked+.slider:before {
 /* Enhanced Typing Indicator */
 .typing-indicator .message-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
 }
 

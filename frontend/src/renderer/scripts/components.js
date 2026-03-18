@@ -1908,13 +1908,12 @@ class UIComponents {
     }
 
     typingDiv.innerHTML = `
-      <div class="message-content">
-        <div class="typing-dots">
-          <span></span>
-          <span></span>
-          <span></span>
+      <div class="message-content" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;">
+        <div class="nebula-loader-container" style="margin: 0 !important;">
+          <div class="halo-ring"></div>
+          <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
         </div>
-        <div class="typing-status">${statusMessage}</div>
+        <div class="typing-status" style="text-align: center; align-content: center; color: var(--text-secondary); font-size: 0.9em;">${statusMessage}</div>
       </div>
     `;
 
@@ -3180,14 +3179,13 @@ class UIComponents {
     typingDiv.id = "typing-indicator";
 
     typingDiv.innerHTML = `
-            <div class="message-content">
-                <div class="typing-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        `;
+      <div class="message-content" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;">
+        <div class="nebula-loader-container" style="margin: 0 !important;">
+          <div class="halo-ring"></div>
+          <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
+        </div>
+      </div>
+    `;
 
     chatMessages.appendChild(typingDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
