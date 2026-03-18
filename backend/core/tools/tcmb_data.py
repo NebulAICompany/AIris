@@ -1,11 +1,93 @@
 import os
-from typing import Dict, Any, List
+import asyncio
+from typing import Dict, Any, List, Optional
 from evds import evdsAPI
 import pandas as pd
 from langchain_core.tools import tool
+from qdrant_client import models
+from backend.retrieval.retriever import get_vectorstore, load_vectorstore, embed_query
+from backend.shared.constants import VECTORSTORE_PATH_STR
 from backend.shared.logger import get_logger
 
 logger = get_logger("TCMB_TOOLS")
+
+from qdrant_client import AsyncQdrantClient, models
+
+async def get_tcmb_datagroup(
+    query: str,
+    score_threshold: Optional[float] = None,
+) -> Dict[str, Any]:
+    """
+    Datagroup açıklamalarını embedlenmiş vectorstore'dan bularak
+    en uygun datagroup(ları) döner.
+    """
+    try:
+        if not query or not query.strip():
+            return {"success": False, "error": "Query cannot be empty.", "error_code": "EMPTY_QUERY"}
+
+        logger.info(f"Searching datagroup with vector logic for query: {query}")
+
+        client = get_vectorstore()
+        if client is None:
+            # Global client yoksa load et
+            from backend.shared.constants import VECTORSTORE_PATH_STR
+            client = await load_vectorstore(VECTORSTORE_PATH_STR)
+
+        if client is None:
+            return {"success": False, "error": "Vectorstore is not available.", "error_code": "NO_VECTORSTORE"}
+
+        collection_name = "datagroups"
+
+        has_collection = await client.collection_exists(collection_name=collection_name)
+        if not has_collection:
+            return {
+                "success": False,
+                "error": "No vectorstore collection named 'datagroups' found.",
+                "error_code": "NO_COLLECTION",
+            }
+
+        query_embedding = await asyncio.to_thread(embed_query, query)
+
+        kwargs: Dict[str, Any] = dict(
+            collection_name=collection_name,
+            query=query_embedding,
+            with_payload=True,
+            limit=k,
+        )
+        if score_threshold is not None:
+            kwargs["score_threshold"] = score_threshold
+
+        response = await client.query_points(**kwargs)
+        points = response.points if response is not None else []
+
+        if not points:
+            return {
+                "success": False,
+                "error": "No matching datagroup entries found in vectorstore.",
+                "error_code": "NO_MATCH",
+            }
+
+        # En iyi noktayı ve top_k listesini çıkar
+        sorted_points = sorted(points, key=lambda p: float(p.score or 0.0), reverse=True)
+        best_point = sorted_points[0]
+        best_score = float(best_point.score or 0.0)
+
+        best_payload = best_point.payload if isinstance(best_point.payload, dict) else {}
+        best_struct = best_payload.get("metadata", {}) if isinstance(best_payload, dict) else {}
+
+        return {
+            "success": True,
+            "query": query,
+            "best_score": best_score,
+            **best_struct,
+            "message": "Most suitable datagroup selected by vector similarity.",
+        }
+
+    except Exception as e:
+        error_msg = f"Error while finding datagroup from vectorstore: {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg, "error_code": "EXCEPTION"}
+
 
 # Main categories list - predefined to avoid repeated API calls
 MAIN_CATEGORIES = [
