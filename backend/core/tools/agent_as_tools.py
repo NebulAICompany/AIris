@@ -32,7 +32,7 @@ from .file_tools import (
     clear_generated_files,
     set_generated_files,
 )
-from .tcmb_data import get_tcmb_subcategories, get_tcmb_series, get_tcmb_data
+from .tcmb_data import search_tcmb_series, get_tcmb_data
 from .finance import (
     get_eod_data,
     get_intraday_data,
@@ -69,8 +69,7 @@ file_tools = [
 ]
 
 tcmb_tools = [
-    get_tcmb_subcategories,
-    get_tcmb_series,
+    search_tcmb_series,
     get_tcmb_data,
 ]
 
@@ -185,15 +184,10 @@ class InnerToolCallbackHandler(BaseCallbackHandler):
                 date_range = f", {start_date} to {end_date}" if start_date and end_date else ""
                 return f"{codes_str}{date_range}"
         
-        elif tool_name == "get_tcmb_subcategories":
-            category_id = input_data.get("category_id")
-            if category_id is not None:
-                return f"category_id: {category_id}"
-        
-        elif tool_name == "get_tcmb_series":
-            datagroup_code = input_data.get("datagroup_code")
-            if datagroup_code:
-                return f"datagroup: {datagroup_code}"
+        elif tool_name == "search_tcmb_series":
+            query = input_data.get("query")
+            if query:
+                return f"query: {query}"
         
         elif tool_name == "create_financial_stock_chart":
             symbols = input_data.get("symbols")
