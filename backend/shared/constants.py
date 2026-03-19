@@ -181,8 +181,8 @@ OPENAI_MODEL = ChatOpenAI(
     model="gpt-5.4",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
-    frequency_penalty=0.7,
-    presence_penalty=0.4,
+    # frequency_penalty=0.7,
+    # presence_penalty=0.4,
     max_retries=3,
     callbacks=[ConsoleCallbackHandler()],
 )
