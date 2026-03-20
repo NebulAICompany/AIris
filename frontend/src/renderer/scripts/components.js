@@ -3715,7 +3715,7 @@ class UIComponents {
     const wrap = document.getElementById("spdrag-switch-wrap");
     if (wrap) {
       wrap.classList.remove("locked");
-      wrap.title = "Use Archive (SPD-RAG) pipeline";
+      wrap.title = "Use Deep Search (SPD-RAG) pipeline";
     }
   }
 
@@ -3731,7 +3731,7 @@ class UIComponents {
       // Start a new session
       this.currentSessionId = null;
 
-      // Unlock the Archive toggle for the fresh thread
+      // Unlock the Deep toggle for the fresh thread
       this.unlockSpdragToggle();
 
       // Add welcome message
