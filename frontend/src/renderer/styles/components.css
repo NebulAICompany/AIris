@@ -3072,18 +3072,17 @@ body.dark-theme .image-caption {
   opacity: 0.7;
 }
 
-/* Tools History Styles - Similar to sources but for tool usage tracking */
+/* Tools History Styles */
 .tools-history-container {
   margin-top: 0;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
 .tools-history-header {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   padding: 0;
   background-color: transparent;
   border: none;
@@ -3093,23 +3092,46 @@ body.dark-theme .image-caption {
 }
 
 .tools-history-header:hover {
-  opacity: 0.8;
+  opacity: 0.7;
+}
+
+/* Icon wrapper in tools header — holds nebula during work, check after done */
+.tools-header-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tools-header-icon-wrap.finalized-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.tools-header-icon-wrap.finalized-icon i {
+  color: var(--accent-primary);
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* Keep nebula at its original size when used inside the tools header */
+.tools-history-header .nebula-loader-container {
+  margin: 0 !important;
 }
 
 .tools-history-label {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 400;
-  opacity: 0.8;
 }
 
 .tools-history-toggle {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-secondary);
   transition: transform 0.2s ease;
-  font-weight: 400;
-  margin-left: 4px;
-  opacity: 0.8;
+  font-weight: 300;
+  opacity: 0.6;
+  line-height: 1;
 }
 
 .tools-history-container.expanded .tools-history-toggle {
@@ -3119,7 +3141,7 @@ body.dark-theme .image-caption {
 .tools-history-list {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
+  transition: grid-template-rows 0.28s ease;
   overflow: hidden;
   background-color: transparent;
   border: none;
@@ -3132,19 +3154,19 @@ body.dark-theme .image-caption {
 .tools-history-items {
   min-height: 0;
   overflow: hidden;
-  padding: 4px 0 0 0;
+  padding: 6px 0 2px 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .tool-history-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  transition: background-color 0.15s ease, opacity 0.2s ease;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: opacity 0.2s ease;
   background-color: transparent;
 }
 
@@ -3153,17 +3175,17 @@ body.dark-theme .image-caption {
 }
 
 .tool-history-item.completed {
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 /* Inner tools (called by agent-as-tools) are indented */
 .tool-history-item.inner-tool {
-  margin-left: 28px;
+  margin-left: 22px;
 }
 
 .tool-history-icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3172,7 +3194,8 @@ body.dark-theme .image-caption {
 
 .tool-history-icon i {
   color: var(--accent-primary);
-  font-size: 12px;
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 .tool-history-content {
@@ -3180,31 +3203,31 @@ body.dark-theme .image-caption {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .tool-history-name {
-  font-size: 13px;
-  color: var(--text-primary);
+  font-size: 12px;
+  color: var(--text-secondary);
   font-weight: 400;
 }
 
 .tool-parent {
-  color: var(--text-secondary);
-  font-size: 12px;
-  opacity: 0.8;
+  color: var(--text-muted);
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 .tool-history-query {
-  font-size: 12px;
-  color: var(--text-secondary);
-  opacity: 0.7;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.65;
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   word-break: break-word;
 }
@@ -3217,8 +3240,8 @@ body.dark-theme .image-caption {
 }
 
 .tool-loading-dots span {
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
   background-color: var(--accent-primary);
   border-radius: 50%;
   animation: toolDotPulse 1.4s infinite ease-in-out both;
@@ -3239,7 +3262,7 @@ body.dark-theme .image-caption {
 @keyframes toolDotPulse {
   0%, 80%, 100% {
     transform: scale(0.6);
-    opacity: 0.5;
+    opacity: 0.4;
   }
   40% {
     transform: scale(1);

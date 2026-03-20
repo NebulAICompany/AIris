@@ -1767,6 +1767,7 @@ class UIComponents {
                 this.createStreamingMessage();
                 streamingStarted = true;
               }
+              this.updateStreamingToolHeader(toolName, parentAgent);
               this.showStreamingToolStatus(toolName, parentAgent, query);
             },
             onToolEnd: (toolName, parentAgent) => {
@@ -1899,13 +1900,7 @@ class UIComponents {
     typingDiv.className = "message assistant-message typing-indicator";
     typingDiv.id = "typing-indicator";
 
-    // Determine what features are enabled for status message
-    let statusMessage = "AI düşünüyor...";
-    if (this.useSpdrag) {
-      statusMessage = "SPD-RAG pipeline calisiyor...";
-    } else if (this.webSearchEnabled) {
-      statusMessage = "Web araması yapılıyor...";
-    }
+    const statusMessage = "AI düşünüyor...";
 
     typingDiv.innerHTML = `
       <div class="message-content" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;">
@@ -1951,8 +1946,14 @@ class UIComponents {
         <div class="sources-placeholder"></div>
         <div class="tools-history-container" style="display: none;">
           <div class="tools-history-header">
-            <span class="tools-history-label">Tools used</span>
-            <span class="tools-history-toggle">></span>
+            <div class="tools-header-icon-wrap">
+              <div class="nebula-loader-container">
+                <div class="halo-ring"></div>
+                <img src="assets/logo.png" alt="AIris Logo" class="logo-image" />
+              </div>
+            </div>
+            <span class="tools-history-label">Thinking...</span>
+            <span class="tools-history-toggle" style="display: none;">›</span>
           </div>
           <div class="tools-history-list">
             <div class="tools-history-items"></div>
@@ -1972,42 +1973,56 @@ class UIComponents {
   // Map technical tool names to user-friendly display names
   getFriendlyToolName(toolName) {
     const toolNameMap = {
-      // Main agent tools
-      'microsoft_office_operations': 'Microsoft Office Operations',
-      'finance_agent': 'Finance Data',
-      'plotting_agent': 'Chart Creation',
-      'tcmb_economic_data': 'Turkish Economic Data',
+      // Sub-agents
+      'web_search_tool':              'Web Search',
+      'finance_agent':                'Finance Data',
+      'file_operations':              'File Operations',
+      'plotting_agent':               'Chart Creation',
+      'tcmb_economic_data':           'Turkish Economic Data',
 
-      // Office tools
-      'create_excel_file': 'Create Excel File',
-      'create_word_document': 'Create Word Document',
-      'modify_word_content': 'Modify Word Document',
-      'modify_excel_cells': 'Modify Excel Cells',
-      'create_excel_charts': 'Create Excel Charts',
-      'create_powerpoint_from_code': 'Create PowerPoint',
+      // Web / general
+      'wolfram_alpha_query':          'Wolfram Alpha',
+      'get_uploaded_files_count':     'Check Uploaded Files',
+      'list_uploaded_files':          'List Uploaded Files',
+      'search_local_documents':       'Search Documents',
+      'search_specific_document_for_research': 'Search Document',
+
+      // File tools
+      'create_excel_file':            'Create Excel File',
+      'create_word_document':         'Create Word Document',
+      'modify_word_content':          'Modify Word Document',
+      'modify_excel_cells':           'Modify Excel Cells',
+      'create_excel_charts':          'Create Excel Charts',
+      'create_powerpoint_from_code':  'Create PowerPoint',
+      'read_excel_file':              'Read Excel File',
+      'read_word_document':           'Read Word Document',
+      'read_powerpoint_file':         'Read PowerPoint',
+      'describe_file_image':          'Analyze Image',
+      'execute_file_code':            'Run Code',
+      'list_created_files':           'List Created Files',
+      'get_available_charts':         'Get Available Charts',
 
       // Finance tools
-      'get_eod_data': 'Get Stock Data',
-      'get_intraday_data': 'Get Intraday Data',
-      'get_exchanges': 'Get Exchanges',
-      'get_exchange_info': 'Get Exchange Info',
-      'get_currencies': 'Get Currencies',
-      'get_timezones': 'Get Timezones',
-      'get_splits_data': 'Get Stock Splits',
-      'get_dividends_data': 'Get Dividends',
-      'get_index_list': 'Get Index List',
-      'get_index_info': 'Get Index Info',
-      'get_tickers_list': 'Get Tickers',
-      'get_ticker_info_detailed': 'Get Ticker Details',
+      'get_eod_data':                 'Get Stock Data',
+      'get_intraday_data':            'Get Intraday Data',
+      'get_exchanges':                'Get Exchanges',
+      'get_exchange_info':            'Get Exchange Info',
+      'get_currencies':               'Get Currencies',
+      'get_timezones':                'Get Timezones',
+      'get_splits_data':              'Get Stock Splits',
+      'get_dividends_data':           'Get Dividends',
+      'get_index_list':               'Get Index List',
+      'get_index_info':               'Get Index Info',
+      'get_tickers_list':             'Get Tickers',
+      'get_ticker_info_detailed':     'Get Ticker Details',
 
       // Plotting tools
       'create_custom_chart_from_code': 'Create Custom Chart',
       'create_financial_stock_chart': 'Create Stock Chart',
 
       // TCMB tools
-      'get_tcmb_subcategories': 'Get TCMB Categories',
-      'get_tcmb_series': 'Get TCMB Series',
-      'get_tcmb_data': 'Get TCMB Data',
+      'search_tcmb_series':           'Search TCMB Series',
+      'get_tcmb_data':                'Get TCMB Data',
     };
 
     // Return mapped name if exists, otherwise format the tool name nicely
@@ -2052,8 +2067,20 @@ class UIComponents {
 
     if (toolsContainer && toolsItems) {
       toolsContainer.style.display = "block";
-      // Expand by default during streaming
-      toolsContainer.classList.add("expanded");
+
+      // Wire up the toggle on first tool so the user can collapse/expand immediately
+      if (this.toolsHistory.length === 1) {
+        const toggleSpan = toolsContainer.querySelector(".tools-history-toggle");
+        if (toggleSpan) toggleSpan.style.display = "";
+
+        const toolsHeader = toolsContainer.querySelector(".tools-history-header");
+        if (toolsHeader && !toolsHeader.dataset.toggleBound) {
+          toolsHeader.dataset.toggleBound = "true";
+          toolsHeader.addEventListener("click", function () {
+            toolsContainer.classList.toggle("expanded");
+          });
+        }
+      }
 
       // Create the tool item with loading animation
       const friendlyToolName = this.getFriendlyToolName(toolName);
@@ -2088,13 +2115,6 @@ class UIComponents {
       `;
 
       toolsItems.appendChild(toolItem);
-
-      // Update the label
-      const label = toolsContainer.querySelector(".tools-history-label");
-      if (label) {
-        const count = this.toolsHistory.length;
-        label.textContent = count === 1 ? "Using 1 tool" : `Using ${count} tools`;
-      }
 
       // Scroll to bottom
       const chatMessages = document.getElementById("chat-messages");
@@ -2134,20 +2154,6 @@ class UIComponents {
         }
       }
 
-      // Update label
-      const toolsContainer = messageDiv.querySelector(".tools-history-container");
-      if (toolsContainer) {
-        const label = toolsContainer.querySelector(".tools-history-label");
-        if (label) {
-          const completedCount = this.toolsHistory.filter(t => t.completed).length;
-          const totalCount = this.toolsHistory.length;
-          if (completedCount === totalCount) {
-            label.textContent = totalCount === 1 ? "Used 1 tool" : `Used ${totalCount} tools`;
-          } else {
-            label.textContent = `Using ${totalCount} tools`;
-          }
-        }
-      }
     }
   }
 
@@ -2161,6 +2167,84 @@ class UIComponents {
     if (toolName) {
       this.markToolComplete(toolName, parentAgent);
     }
+  }
+
+  // Update the tools-history header label to reflect the currently running tool
+  updateStreamingToolHeader(toolName, parentAgent = null) {
+    const messageDiv = document.getElementById("streaming-message");
+    if (!messageDiv) return;
+    const label = messageDiv.querySelector(".tools-history-label");
+    if (!label) return;
+    const lang = window.languageService?.getCurrentLanguage() || 'tr';
+    label.textContent = this.getToolStatusMessage(toolName, parentAgent, null, lang);
+  }
+
+  // Return a human-readable status sentence for the current tool call
+  getToolStatusMessage(toolName, parentAgent, query, lang) {
+    const tr = lang === 'tr';
+
+    const map = {
+      // Web search & general
+      web_search:                            tr ? 'Web\'de araştırıyor...'                          : 'Searching the web...',
+      web_search_tool:                       tr ? 'Web\'de araştırıyor...'                          : 'Searching the web...',
+      wolfram_alpha_query:                   tr ? 'Wolfram Alpha\'ya soruyor...'                    : 'Asking Wolfram Alpha...',
+      get_uploaded_files_count:              tr ? 'Yüklediğin dosyalar sayılıyor...'                : 'Counting your uploaded files...',
+      list_uploaded_files:                   tr ? 'Yüklediğin dosyalar listeleniyor...'             : 'Looking at your uploaded files...',
+
+      // Document search (RAG)
+      search_local_documents:                tr ? 'Yüklediğin belgelerden ilgili kısımlar aranıyor...' : 'Searching through your uploaded documents...',
+      search_specific_document_for_research: tr ? 'Belgen derinlemesine inceleniyor...'             : 'Diving deep into your document...',
+
+      // Finance sub-agent
+      finance_agent:                         tr ? 'Piyasa verileri analiz ediliyor...'              : 'Analyzing market data...',
+      get_eod_data:                          tr ? 'Günlük hisse fiyatları çekiliyor...'             : 'Pulling historical stock prices...',
+      get_intraday_data:                     tr ? 'Gün içi fiyat verisi alınıyor...'               : 'Fetching intraday prices...',
+      get_exchanges:                         tr ? 'Borsalar listeleniyor...'                        : 'Looking up stock exchanges...',
+      get_exchange_info:                     tr ? 'Borsa detayları alınıyor...'                     : 'Fetching exchange details...',
+      get_currencies:                        tr ? 'Döviz birimleri listeleniyor...'                 : 'Looking up available currencies...',
+      get_timezones:                         tr ? 'Piyasa saat dilimleri kontrol ediliyor...'       : 'Checking market timezones...',
+      get_splits_data:                       tr ? 'Hisse bölünme geçmişi getiriliyor...'            : 'Fetching stock split history...',
+      get_dividends_data:                    tr ? 'Temettü ödeme geçmişi getiriliyor...'            : 'Fetching dividend history...',
+      get_index_list:                        tr ? 'Piyasa endeksleri listeleniyor...'               : 'Looking up market indices...',
+      get_index_info:                        tr ? 'Endeks detayları getiriliyor...'                 : 'Fetching index details...',
+      get_tickers_list:                      tr ? 'İşlem sembolleri aranıyor...'                    : 'Searching for ticker symbols...',
+      get_ticker_info_detailed:              tr ? 'Hisse senedi detaylı bilgisi alınıyor...'        : 'Pulling detailed stock info...',
+
+      // File sub-agent & tools
+      file_operations:                       tr ? 'Doküman hazırlanıyor...'                        : 'Preparing your document...',
+      create_excel_file:                     tr ? 'Excel dosyan oluşturuluyor...'                   : 'Building your Excel file...',
+      create_word_document:                  tr ? 'Word belgeni oluşturuluyor...'                   : 'Writing your Word document...',
+      modify_word_content:                   tr ? 'Belgendeki içerik güncelleniyor...'              : 'Updating content in your document...',
+      modify_excel_cells:                    tr ? 'Tabloya yeni veriler işleniyor...'               : 'Writing data into your spreadsheet...',
+      create_excel_charts:                   tr ? 'Excel dosyana grafik ekleniyor...'               : 'Adding a chart to your spreadsheet...',
+      create_powerpoint_from_code:           tr ? 'Sunum slaytları hazırlanıyor...'                 : 'Building your presentation slides...',
+      read_excel_file:                       tr ? 'Excel dosyandaki veriler okunuyor...'            : 'Reading your spreadsheet...',
+      read_word_document:                    tr ? 'Word belgendeki içerik okunuyor...'              : 'Reading through your document...',
+      read_powerpoint_file:                  tr ? 'Sunumundaki slaytlar okunuyor...'                : 'Reading through your presentation...',
+      describe_file_image:                   tr ? 'Görsel ne gösteriyor diye bakılıyor...'          : 'Taking a look at the image...',
+      execute_file_code:                     tr ? 'Dosya oluşturmak için kod yazılıp çalıştırılıyor...' : 'Writing and running code to build the file...',
+      list_created_files:                    tr ? 'Şimdiye kadar oluşturulan dosyalar listeleniyor...' : 'Checking the files created so far...',
+      get_available_charts:                  tr ? 'Daha önce oluşturulan grafikler kontrol ediliyor...' : 'Checking previously generated charts...',
+
+      // Plotting sub-agent
+      plotting_agent:                        tr ? 'Grafik hazırlanıyor...'                          : 'Preparing your chart...',
+      create_custom_chart_from_code:         tr ? 'Grafik kodu çalıştırılıyor...'                  : 'Running the chart code...',
+      create_financial_stock_chart:          tr ? 'Hisse grafiği oluşturuluyor...'                  : 'Building the stock chart...',
+
+      // TCMB sub-agent
+      tcmb_economic_data:                    tr ? 'TCMB verileri araştırılıyor...'                  : 'Looking up TCMB data...',
+      search_tcmb_series:                    tr ? 'Soruya uygun TCMB serisi aranıyor...'            : 'Finding the right TCMB series...',
+      get_tcmb_data:                         tr ? 'TCMB\'den veri indiriliyor...'                   : 'Downloading data from TCMB...',
+    };
+
+    if (map[toolName]) return map[toolName];
+
+    // Fallback: use friendly names in a natural sentence
+    const friendlyName = this.getFriendlyToolName(toolName);
+    const agentName = parentAgent ? this.getFriendlyAgentName(parentAgent) : null;
+    return tr
+      ? (agentName ? `${agentName} üzerinden ${friendlyName} çalışıyor...` : `${friendlyName} çalışıyor...`)
+      : (agentName ? `Running ${friendlyName} via ${agentName}...` : `Running ${friendlyName}...`);
   }
 
   // Append token to streaming message
@@ -2239,6 +2323,13 @@ class UIComponents {
         }
       });
 
+      // Swap nebula loader to a static check icon
+      const iconWrap = toolsContainer.querySelector(".tools-header-icon-wrap");
+      if (iconWrap) {
+        iconWrap.innerHTML = `<i class="fas fa-check"></i>`;
+        iconWrap.classList.add("finalized-icon");
+      }
+
       // Update label to final count
       const label = toolsContainer.querySelector(".tools-history-label");
       if (label) {
@@ -2246,16 +2337,13 @@ class UIComponents {
         label.textContent = count === 1 ? "Used 1 tool" : `Used ${count} tools`;
       }
 
+      // Mark as finalized (stops nebula animation via CSS if needed)
+      toolsContainer.classList.add("finalized");
+
       // Collapse the tools history
       toolsContainer.classList.remove("expanded");
 
-      // Add click handler for toggle
-      const toolsHeader = toolsContainer.querySelector(".tools-history-header");
-      if (toolsHeader) {
-        toolsHeader.addEventListener("click", function () {
-          toolsContainer.classList.toggle("expanded");
-        });
-      }
+      // Toggle and click handler are already bound from addToolToHistory
     } else if (toolsContainer) {
       // No tools were used, hide the container
       toolsContainer.style.display = "none";
