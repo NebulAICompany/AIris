@@ -65,6 +65,17 @@ def get_vectorstore() -> Optional[AsyncQdrantClient]:
     return _qdrant_client
 
 
+async def get_or_load_vectorstore() -> AsyncQdrantClient:
+    """Return the active vectorstore client, loading it from disk if not yet initialised."""
+    from backend.shared.constants import VECTORSTORE_PATH_STR
+    client = get_vectorstore()
+    if client is None:
+        client = await load_vectorstore(VECTORSTORE_PATH_STR)
+    if client is None:
+        raise ValueError("Vectorstore is not available.")
+    return client
+
+
 async def close_vectorstore() -> None:
     global _qdrant_client
     async with _qdrant_lock:

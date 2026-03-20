@@ -26,6 +26,7 @@ AZURE_DOCUMENT_INTELLIGENCE_KEY = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
 AZURE_LANGUAGE_ENDPOINT = os.environ.get("AZURE_LANGUAGE_ENDPOINT")
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
+TCMB_API_KEY = os.getenv("TCMB_API_KEY", "")
 MARKETSTACK_API_KEY = os.getenv("MARKETSTACK_API_KEY")
 MARKETSTACK_BASE_URL = os.getenv(
     "MARKETSTACK_BASE_URL",
@@ -180,8 +181,8 @@ OPENAI_MODEL = ChatOpenAI(
     model="gpt-5.4",
     temperature=0.0,
     api_key=os.getenv("OPENAI_API_KEY"),
-    frequency_penalty=0.7,
-    presence_penalty=0.4,
+    # frequency_penalty=0.7,
+    # presence_penalty=0.4,
     max_retries=3,
     callbacks=[ConsoleCallbackHandler()],
 )

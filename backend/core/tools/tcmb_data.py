@@ -1,182 +1,323 @@
-import os
-from typing import Dict, Any, List
-from evds import evdsAPI
+import asyncio
+from typing import Any, Dict, List, Optional
 import pandas as pd
+from evds import evdsAPI
 from langchain_core.tools import tool
+from qdrant_client import models
+from backend.retrieval.retriever import embed_query, get_or_load_vectorstore
+from backend.shared.constants import TCMB_API_KEY
 from backend.shared.logger import get_logger
 
 logger = get_logger("TCMB_TOOLS")
 
-# Main categories list - predefined to avoid repeated API calls
-MAIN_CATEGORIES = [
-    (1, "PİYASA VERİLERİ (TCMB)"),
-    (2, "KURLAR (TCMB)"),
-    (3, "FAİZ VE KÂR PAYI İSTATİSTİKLERİ (TCMB)"),
-    (4, "AYLIK PARA VE BANKA İSTATİSTİKLERİ (TCMB)"),
-    (6, "TÜRKİYE BRÜT DIŞ BORÇ STOKU (HMB)"),
-    (9, "BANKA DIŞI FİNANSAL KURULUŞLAR İSTATİSTİKLERİ (TCMB)"),
-    (10, "BANKA KREDİLERİ EĞİLİM ANKETİ (TCMB)"),
-    (12, "FİNANSAL HİZMETLER ANKETİ (TCMB)"),
-    (14, "FİYAT ENDEKSLERİ"),
-    (21, "ÜRETİME İLİŞKİN DİĞER VERİLER"),
-    (23, "İŞGÜCÜ İSTATİSTİKLERİ (TÜİK)"),
-    (25, "ALTIN İSTATİSTİKLERİ"),
-    (26, "KONUT FİYAT ENDEKSİ (TCMB)"),
-    (27, "FİNANSAL HESAPLAR (TCMB)"),
-    (28, "KONUT VE İNŞAAT İSTATİSTİKLERİ (TÜİK)"),
-    (30, "DIŞ TİCARET NAKLİYE ARAÇLARI İSTATİSTİKLERİ (UND)"),
-    (31, "DİĞER FİNANSAL VERİLER"),
-    (33, "HAFTALIK PARA VE BANKA İSTATİSTİKLERİ (TCMB)"),
-    (34, "İMALAT SANAYİ KAPASİTE KULLANIM ORANI (TCMB)"),
-    (38, "PİYASA KATILIMCILARI ANKETİ (TCMB)"),
-    (41, "ULUSAL HESAPLAR (TÜİK)"),
-    (44, "SEKTÖR BİLANÇOLARI (2023 - 2024)"),
-    (45, "TİCARİ GAYRİMENKUL FİYAT ENDEKSİ (TCMB)"),
-    (46, "SEKTÖREL ENFLASYON BEKLENTİLERİ (TCMB, TÜİK)"),
-]
-
-
-# Initialize EVDS API client
-def _get_evds_client():
-    """Get EVDS API client instance."""
-    api_key = os.getenv("TCMB_API_KEY")
-    if not api_key:
-        raise ValueError("TCMB_API_KEY environment variable is not set")
-    return evdsAPI(api_key)
-
-
-@tool(parse_docstring=True)
-def get_tcmb_subcategories(category_id: int) -> Dict[str, Any]:
-    """Get subcategories for a given TCMB main category ID.
-
-    Args:
-        category_id: The main category ID (for example, 1 for 'PİYASA VERİLERİ (TCMB)')
-    """
-    try:
-        logger.info(f"Fetching subcategories for category_id: {category_id}")
-        # Get EVDS client
-        evds = _get_evds_client()
-        subcategories_df = evds.get_sub_categories(category_id)
-
-        # Convert DataFrame to list of dictionaries
-        if isinstance(subcategories_df, pd.DataFrame) and not subcategories_df.empty:
-            subcategories_list = []
-            for _, row in subcategories_df.iterrows():
-                subcategories_list.append(
-                    {
-                        "DATAGROUP_CODE": row.get("DATAGROUP_CODE", ""),
-                        "DATAGROUP_NAME": row.get("DATAGROUP_NAME", ""),
-                    }
-                )
-
-            logger.info(f"Successfully fetched {len(subcategories_list)} subcategories for category_id: {category_id}")
-            return {
-                "success": True,
-                "subcategories": subcategories_list,
-                "count": len(subcategories_list),
-                "category_id": category_id,
-                "message": f"Successfully retrieved {len(subcategories_list)} subcategories",
-            }
-        else:
-            return {
-                "success": False,
-                "error": f"No subcategories found for category_id: {category_id}",
-            }
-
-    except Exception as e:
-        error_msg = (
-            f"Error fetching subcategories for category_id {category_id}: {str(e)}"
-        )
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool(parse_docstring=True)
-def get_tcmb_series(datagroup_code: str) -> Dict[str, Any]:
-    """Get series information for a given TCMB datagroup code.
-
-    Args:
-        datagroup_code: The datagroup code (for example, 'bie_sekbil1122')
-    """
-    try:
-        logger.info(f"Fetching series for datagroup_code: {datagroup_code}")
-        # Get EVDS client
-        evds = _get_evds_client()
-        series_df = evds.get_series(datagroup_code)
-
-        # Convert DataFrame to list of dictionaries
-        if isinstance(series_df, pd.DataFrame) and not series_df.empty:
-            series_list = []
-            for _, row in series_df.iterrows():
-                series_list.append(
-                    {
-                        "SERIE_CODE": row.get("SERIE_CODE", ""),
-                        "SERIE_NAME": row.get("SERIE_NAME", ""),
-                        "START_DATE": row.get("START_DATE", ""),
-                    }
-                )
-
-            logger.info(f"Successfully fetched {len(series_list)} series for datagroup_code: {datagroup_code}")
-            return {
-                "success": True,
-                "series": series_list,
-                "count": len(series_list),
-                "datagroup_code": datagroup_code,
-                "message": f"Successfully retrieved {len(series_list)} series",
-            }
-        else:
-            return {
-                "success": False,
-                "error": f"No series found for datagroup_code: {datagroup_code}",
-            }
-
-    except Exception as e:
-        error_msg = (
-            f"Error fetching series for datagroup_code {datagroup_code}: {str(e)}"
-        )
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool(parse_docstring=True)
-def get_tcmb_data(
-    serie_codes: List[str], start_date: str, end_date: str
+async def get_tcmb_datagroup(
+    query: str,
+    k: int = 1,
+    score_threshold: Optional[float] = None,
 ) -> Dict[str, Any]:
-    """Get actual data for given TCMB serie codes within a date range.
+    """Searches the 'datagroups' vectorstore collection by vector similarity.
+
+    Searches on the embedded datagroup name and note text. Returns the best match and its metadata.
+    Payload structure stored by load_datagroup_vs.py:
+    {"text": "DATAGROUP_NAME_ENG\\nNOTE_ENG", "metadata": {all fields except SERIES}}
 
     Args:
-        serie_codes: List of serie codes (for example, ['TP.SEKBILTGA.A'])
-        start_date: Start date in format 'DD-MM-YYYY' (for example, '01-01-2019')
-        end_date: End date in format 'DD-MM-YYYY' (for example, '01-01-2020')
+        query (str): The search query.
+        k (int, optional): Number of top results to return. Defaults to 1.
+        score_threshold (float, optional): Minimum similarity score threshold. Defaults to None.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the search results.
+            On success: {"success": True, "query": str, "best_score": float, "top_datagroups": List[Dict], ...best metadata}
+            On failure: {"success": False, "error": str, "error_code": str}
     """
+    if not query or not query.strip():
+        return {"success": False, "error": "Query cannot be empty.", "error_code": "EMPTY_QUERY"}
+
     try:
-        logger.info(f"Fetching data for serie_codes: {serie_codes}, date range: {start_date} to {end_date}")
-        # Get EVDS client
-        evds = _get_evds_client()
-        data_df = evds.get_data(serie_codes, startdate=start_date, enddate=end_date)
+        logger.info(f"Searching datagroup for query: {query} (k={k})")
 
-        # Convert DataFrame to dictionary format
-        if isinstance(data_df, pd.DataFrame) and not data_df.empty:
-            # Convert DataFrame to dict with 'records' orientation for better readability
-            data_dict = data_df.to_dict(orient="records")
+        client = await get_or_load_vectorstore()
 
-            logger.info(f"Successfully fetched {len(data_dict)} rows of data for serie_codes: {serie_codes}")
-            return {
-                "success": True,
-                "data": data_dict,
-                "serie_codes": serie_codes,
-                "start_date": start_date,
-                "end_date": end_date,
-                "rows": len(data_dict),
-                "message": f"Successfully retrieved {len(data_dict)} rows of data",
-            }
-        else:
+        has_collection = await client.collection_exists(collection_name="datagroups")
+        if not has_collection:
             return {
                 "success": False,
-                "error": f"No data found for serie_codes: {serie_codes} in date range {start_date} to {end_date}",
+                "error": "No vectorstore collection named 'datagroups' found.",
+                "error_code": "NO_COLLECTION",
             }
 
+        query_embedding = await asyncio.to_thread(embed_query, query)
+
+        kwargs: Dict[str, Any] = dict(
+            collection_name="datagroups",
+            query=query_embedding,
+            with_payload=True,
+            limit=k,
+        )
+        if score_threshold is not None:
+            kwargs["score_threshold"] = score_threshold
+
+        response = await client.query_points(**kwargs)
+        points = response.points if response is not None else []
+
+        if not points:
+            return {
+                "success": False,
+                "error": "No matching datagroup entries found in vectorstore.",
+                "error_code": "NO_MATCH",
+            }
+
+        sorted_points = sorted(points, key=lambda p: float(p.score or 0.0), reverse=True)
+        best_score = float(sorted_points[0].score or 0.0)
+
+        top_datagroups: List[Dict[str, Any]] = []
+        for p in sorted_points:
+            payload = p.payload if isinstance(p.payload, dict) else {}
+            meta = payload.get("metadata", {})
+            top_datagroups.append({
+                "score": float(p.score or 0.0),
+                "text": payload.get("text", ""),
+                **meta,
+            })
+
+        return {
+            "success": True,
+            "query": query,
+            "best_score": best_score,
+            "top_datagroups": top_datagroups,
+            "message": "Most suitable datagroup(s) selected by vector similarity.",
+        }
+
     except Exception as e:
-        error_msg = f"Error fetching data for serie_codes {serie_codes}: {str(e)}"
+        error_msg = f"Error while finding datagroup from vectorstore: {str(e)}"
         logger.error(error_msg)
-        return {"success": False, "error": error_msg}
+        return {"success": False, "error": error_msg, "error_code": "EXCEPTION"}
+
+
+async def get_tcmb_series_top_k(
+    query: str,
+    datagroup_codes: Optional[List[str]] = None,
+    k: int = 3,
+    score_threshold: Optional[float] = None,
+) -> Dict[str, Any]:
+    """Searches the 'series' vectorstore collection by vector similarity.
+
+    Searches on the embedded series text. When datagroup_codes is provided, the search is filtered
+    to only series belonging to those datagroups (MatchAny), implementing the hierarchical retrieval step.
+    Payload structure stored by load_datagroup_vs.py:
+    {
+        "text": "Series name: ...\\nFrequency: ...\\nDefault aggregation: ...",
+        "metadata": {SERIE_CODE, SERIE_NAME, TAG, TAG_ENG, METADATA_LINK,
+                     METADATA_LINK_ENG, START_DATE, END_DATE, DATAGROUP_CODE}
+    }
+
+    Args:
+        query (str): The search query.
+        datagroup_codes (List[str], optional): List of datagroup codes to filter by. Defaults to None.
+        k (int, optional): Number of top results to return. Defaults to 3.
+        score_threshold (float, optional): Minimum similarity score threshold. Defaults to None.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the search results.
+            On success: {"success": True, "query": str, "datagroup_codes": List[str], "best_score": float, "best_serie": Dict, "top_series": List[Dict]}
+            On failure: {"success": False, "error": str, "error_code": str}
+    """
+    if not query or not query.strip():
+        return {"success": False, "error": "Query cannot be empty.", "error_code": "EMPTY_QUERY"}
+
+    try:
+        logger.info(
+            f"Searching series for query: {query} "
+            f"(datagroup_codes={datagroup_codes}, k={k})"
+        )
+
+        client = await get_or_load_vectorstore()
+
+        has_collection = await client.collection_exists(collection_name="series")
+        if not has_collection:
+            return {
+                "success": False,
+                "error": "No vectorstore collection named 'series' found.",
+                "error_code": "NO_COLLECTION",
+            }
+
+        query_filter = None
+        if datagroup_codes:
+            query_filter = models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="metadata.DATAGROUP_CODE",
+                        match=models.MatchAny(any=datagroup_codes),
+                    )
+                ]
+            )
+
+        query_embedding = await asyncio.to_thread(embed_query, query)
+
+        kwargs: Dict[str, Any] = dict(
+            collection_name="series",
+            query=query_embedding,
+            with_payload=True,
+            limit=k,
+            query_filter=query_filter,
+        )
+        if score_threshold is not None:
+            kwargs["score_threshold"] = score_threshold
+
+        response = await client.query_points(**kwargs)
+        points = response.points if response is not None else []
+
+        if not points:
+            return {
+                "success": False,
+                "error": "No matching series entries found in vectorstore.",
+                "error_code": "NO_MATCH",
+            }
+
+        sorted_points = sorted(points, key=lambda p: float(p.score or 0.0), reverse=True)
+
+        top_series: List[Dict[str, Any]] = []
+        for p in sorted_points[:k]:
+            payload = p.payload if isinstance(p.payload, dict) else {}
+            meta = payload.get("metadata", {})
+            top_series.append({
+                "score": float(p.score or 0.0),
+                "text": payload.get("text", ""),
+                **meta,
+            })
+
+        best = top_series[0] if top_series else {}
+
+        return {
+            "success": True,
+            "query": query,
+            "datagroup_codes": datagroup_codes,
+            "best_score": best.get("score", 0.0),
+            "best_serie": best,
+            "top_series": top_series,
+            "message": "Top series selected by vector similarity.",
+        }
+
+    except Exception as e:
+        error_msg = f"Error while finding series from vectorstore: {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg, "error_code": "EXCEPTION"}
+
+
+@tool(parse_docstring=True)
+async def search_tcmb_series(
+    query: str,
+) -> str:
+    """Find the most relevant TCMB EVDS series for a natural language query.
+
+    Runs a two-stage hierarchical vector search:
+    1. Finds the top data groups whose embedded name and description best match the query.
+    2. Uses those data group codes as a filter and finds the top series within them whose embedded text best matches the query.
+
+    Returns the best matching series with their codes and metadata. Pass the SERIE_CODE values from this result to get_tcmb_data to fetch actual observations.
+
+    Args:
+        query (str): Natural language description of the economic indicator you need (e.g. "USD exchange rate", "CPI inflation", "deposit money banks").
+
+    Returns:
+        str: Formatted string containing the matched series codes and descriptions, or an error message.
+    """
+    datagroup_result = await get_tcmb_datagroup(query=query, k=3)
+
+    if not datagroup_result.get("success"):
+        return f"Error finding data groups: {datagroup_result.get('error', 'Unknown error')}"
+
+    datagroup_codes = [
+        dg["DATAGROUP_CODE"]
+        for dg in datagroup_result.get("top_datagroups", [])
+        if dg.get("DATAGROUP_CODE")
+    ]
+
+    if not datagroup_codes:
+        return "No data groups found for the given query."
+
+    series_result = await get_tcmb_series_top_k(
+        query=query,
+        datagroup_codes=datagroup_codes,
+        k=5,
+    )
+
+    if not series_result.get("success"):
+        return f"Error finding series: {series_result.get('error', 'Unknown error')}"
+
+    lines: List[str] = [
+        f"Matched data groups: {', '.join(datagroup_codes)}",
+        "",
+    ]
+    for serie in series_result.get("top_series", []):
+        lines.append(
+            f"Serie Code: {serie.get('SERIE_CODE', 'N/A')}\n"
+            f"Description: {serie.get('text', 'N/A')}\n"
+            f"Data group: {serie.get('DATAGROUP_CODE', 'N/A')}\n"
+            f"Date range: {serie.get('START_DATE', '')} to {serie.get('END_DATE', '')}\n"
+            f"Similarity score: {serie.get('score', 0.0):.4f}"
+        )
+
+    return "\n\n---\n\n".join(lines) if series_result.get("top_series") else "No series found."
+
+
+@tool(parse_docstring=True)
+async def get_tcmb_data(
+    serie_codes: List[str],
+    start_date: str,
+    end_date: str,
+    aggregation_method: Optional[str] = None,
+    frequency: Optional[int] = None,
+) -> str:
+    """Fetch actual time-series observations from the TCMB EVDS API for one or more series.
+
+    Returns all observations as a formatted table ready for analysis or charting.
+    Call this after identifying the exact serie codes with search_tcmb_series.
+
+    Args:
+        serie_codes (List[str]): List of SERIE_CODE values to fetch (e.g. ["TP.ISTIRAKBS.A1", "TP.ISTIRAKBS.A2"]).
+        start_date (str): Start date in DD-MM-YYYY format (e.g. "01-01-2020").
+        end_date (str): End date in DD-MM-YYYY format (e.g. "01-01-2025").
+        aggregation_method (str, optional): Optional aggregation override for all series. One of avg, min, max, first, last, sum. Defaults to None.
+        frequency (int, optional): Optional frequency override. 1=daily, 2=workdaily, 3=weekly, 4=fortnightly, 5=monthly, 6=quarterly, 7=semiannual, 8=annual. Defaults to None.
+
+    Returns:
+        str: Formatted string containing the requested observations, or an error message.
+    """
+    if not serie_codes:
+        return "Error: No serie codes provided."
+
+    def _fetch() -> pd.DataFrame:
+        evds = evdsAPI(TCMB_API_KEY)
+        return evds.get_data(
+            serie_codes,
+            startdate=start_date,
+            enddate=end_date,
+            aggregation_types=aggregation_method or "",
+            frequency=str(frequency) if frequency is not None else "",
+        )
+
+    try:
+        logger.info(f"[TOOL] Fetching TCMB EVDS data for series: {serie_codes}")
+
+        df: pd.DataFrame = await asyncio.to_thread(_fetch)
+
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            return (
+                f"No data returned from TCMB EVDS for series {serie_codes} "
+                f"between {start_date} and {end_date}. "
+                "The series may not have observations in this date range."
+            )
+
+        lines = [
+            f"TCMB EVDS Data — Series: {', '.join(serie_codes)}",
+            f"Date range: {start_date} to {end_date} | Total observations: {len(df)}",
+            "",
+            df.to_string(index=False),
+        ]
+        return "\n".join(lines)
+
+    except Exception as e:
+        logger.error(f"Error fetching TCMB data: {str(e)}")
+        return f"Error fetching TCMB data: {str(e)}"
