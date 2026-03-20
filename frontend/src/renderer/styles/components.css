@@ -2724,12 +2724,9 @@ body.dark-theme .image-caption {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 16px 24px;
+  padding: 16px max(24px, calc((100% - 1200px) / 2));
   background-color: transparent;
-  margin: 0 auto;
   width: 100%;
-  max-width: 1200px;
-  /* sabit ve ideal */
   box-sizing: border-box;
 }
 
@@ -3285,9 +3282,9 @@ body.dark-theme .image-caption {
   padding: 16px;
   border-radius: var(--border-radius-lg);
   width: 100%;
-  max-width: 1186px;
+  max-width: 1200px;
   align-self: center;
-  margin-left: 14px;
+  margin-left: -6px;
   display: flex;
   flex-direction: column;
   gap: 8px;
