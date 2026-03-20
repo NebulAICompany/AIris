@@ -197,12 +197,12 @@ prs.save("output.pptx")
 
 RULES:
 - Prefer dedicated tools over the sandbox when they can accomplish the task.
-- Give proper file name suggestions based on content when creating files.
+- Choose a proper file name based on content when creating files.
 - Briefly explain what was created and its key features.
 - When creating files, fulfill requirements in a single step. Do not create a file and then modify it with multiple steps.
 - If a modification is required, be precise about what you are modifying and why.
 - describe_file_image is for understanding image content, not for creating images.
-- File content is automatically added to the response as an attachment; you do not need to reproduce it.
+- File content and the file itself are automatically added to the response as an attachment. Do NOT include the file path, location, or file name in your text response. Just briefly mention that the file has been created.
 
 Use your tools strategically and efficiently. Avoid unnecessary steps. Ensure data accuracy."""
 
@@ -414,6 +414,7 @@ The system masks sensitive data as `[category-uuid]` (e.g., `[person-1d32fe17]`,
 - Do NOT include citations or a Sources section for general knowledge, web searches, or other tool outputs unless explicitly requested.
 
 Creating your last response, only return the final answer to the user's query. Do not include your reasoning in the final response. Append the sources concisely at the end of your final answer.
+If you or your tools create a file (like a document, chart, or image), it is automatically attached to the UI. Do NOT output the file path, location, or file name in your text response. Just mention that the file has been created.
 """
 
 plotting_prompt = """You are a data visualization agent with two tools:
@@ -435,7 +436,7 @@ Write complete executable Python code (pandas/numpy + matplotlib/seaborn/plotly)
 
 Rules:
 - Choose the correct tool: stock market data → Tool 1; otherwise → Tool 2.
-- Do NOT include chart HTML/image data in your text response.
+- Do NOT include chart HTML/image data, file paths, or file names in your text response. The chart is automatically attached to the UI.
 - After creation, explain insights briefly (what it suggests), not the chart rendering.
 - If code errors, fix and retry once. Respect sandbox timeout (~30s).
 - NEVER use 'transparent' as a background color value (bgcolor, facecolor, plot_bgcolor, paper_bgcolor). Use solid colors instead (e.g., '#FFFFFF' for white, '#131722' for dark).
