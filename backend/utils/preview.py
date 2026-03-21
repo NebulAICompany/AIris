@@ -149,6 +149,7 @@ class PreviewGenerator:
 
         Common temporary file patterns:
         - ~$ prefix (Microsoft Office temporary files)
+        - chart_reports.json (internal chart metadata file)
         - .tmp extension
         - .temp extension
         - .bak extension
@@ -172,6 +173,7 @@ class PreviewGenerator:
             r"^\.DS_Store$",  # macOS system files
             r"^Thumbs\.db$",  # Windows thumbnail cache
             r"^desktop\.ini$",  # Windows desktop configuration
+            r"^chart_reports\.json$",  # Internal chart report metadata
         ]
 
         for pattern in temp_patterns:
