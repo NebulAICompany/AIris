@@ -62,7 +62,7 @@ CAPABILITIES:
 - Use this tool for PowerPoint creation and editing too. For a new presentation, save to `/home/user/output.pptx` and pass `["output.pptx"]` as the output filename.
 - If you need to modify an existing created file, reference it by filename only. The tool uploads matching files from the created documents folder into the sandbox automatically.
 - When editing an existing file, save the result back to the same filename under `/home/user/` so the original file is updated rather than creating a new version.
-- Do not use host-machine paths like `C:\...` or assume direct access to local folders from inside the sandbox.
+- Do not use host-machine paths like `C:\\...` or assume direct access to local folders from inside the sandbox.
 - Code must save output files under `/home/user/` and you must specify the output filenames.
 
 *Chart Embedding*
