@@ -80,6 +80,7 @@ async def get_tcmb_datagroup(
                 "text": payload.get("text", ""),
                 **meta,
             })
+        logger.info(f"Top datagroups: {top_datagroups}")
 
         return {
             "success": True,
@@ -233,6 +234,7 @@ async def search_tcmb_series(
         for dg in datagroup_result.get("top_datagroups", [])
         if dg.get("DATAGROUP_CODE")
     ]
+    datagroup_dict = {dg.get("DATAGROUP_CODE"): dg for dg in datagroup_result.get("top_datagroups", [])}
 
     if not datagroup_codes:
         return "No data groups found for the given query."
@@ -255,7 +257,8 @@ async def search_tcmb_series(
             f"Serie Code: {serie.get('SERIE_CODE', 'N/A')}\n"
             f"Description: {serie.get('text', 'N/A')}\n"
             f"Data group: {serie.get('DATAGROUP_CODE', 'N/A')}\n"
-            f"Date range: {serie.get('START_DATE', '')} to {serie.get('END_DATE', '')}\n"
+            f"Data group description: {datagroup_dict.get(serie.get('DATAGROUP_CODE'), {}).get('text', 'N/A')}\n"
+            f"Date range: {serie.get('START_DATE', datagroup_dict.get(serie.get('DATAGROUP_CODE'), {}).get('START_DATE', 'N/A'))} to {serie.get('END_DATE', datagroup_dict.get(serie.get('DATAGROUP_CODE'), {}).get('END_DATE', 'N/A'))}\n"
             f"Similarity score: {serie.get('score', 0.0):.4f}"
         )
 
