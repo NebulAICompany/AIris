@@ -168,7 +168,7 @@ CHECKPOINTER_DB_PATH_STR = str(CHECKPOINTER_DB_PATH)
 
 
 ANTHROPIC_MODEL = ChatAnthropic(
-    model_name="claude-sonnet-4-5-20250929",
+    model_name="claude-sonnet-4-6",
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     max_retries=5,
     temperature=0.0,
@@ -221,7 +221,7 @@ GPT5_MINI = ChatOpenAI(
 RESEARCH_LLM_REASONING = GPT5
 RESEARCH_LLM_FAST = GPT5_MINI
 
-CURRENT_MODEL = OPENAI_MODEL
+CURRENT_MODEL = ANTHROPIC_MODEL
 
 MARKETSTACK_TICKERS = [
     "AEFES.IS",
