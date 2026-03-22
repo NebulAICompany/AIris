@@ -64,11 +64,14 @@ def set_chart_data(data):
         pass
 
 
-def append_chart_record(png_file_path: Path, html_file_path: Path, description: str) -> None:
+def append_chart_record(
+    png_file_path: Optional[Path],
+    html_file_path: Path,
+    description: str,
+) -> None:
     """Append a single chart record to chart_reports.json."""
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Mevcut içeriği oku
     if REPORTS_CHARTS_FILE.exists():
         try:
             with open(REPORTS_CHARTS_FILE, "r", encoding="utf-8") as f:
@@ -79,14 +82,20 @@ def append_chart_record(png_file_path: Path, html_file_path: Path, description: 
             data = []
     else:
         data = []
-    
-    # BASE_DIR'e göre relative path'e çevir
-    rel_png = png_file_path.relative_to(BASE_DIR)
-    rel_html = html_file_path.relative_to(BASE_DIR)
+
+    try:
+        rel_html = Path(html_file_path).relative_to(BASE_DIR).as_posix()
+    except (ValueError, TypeError):
+        rel_html = str(html_file_path)
+
+    try:
+        rel_png = Path(png_file_path).relative_to(BASE_DIR).as_posix() if png_file_path else ""
+    except (ValueError, TypeError):
+        rel_png = str(png_file_path) if png_file_path else ""
 
     record = {
-        "png_file_path": rel_png.as_posix(),
-        "html_file_path": rel_html.as_posix(),
+        "png_file_path": rel_png,
+        "html_file_path": rel_html,
         "description": description,
         "creation_time": datetime.now().isoformat(),
     }
@@ -1011,11 +1020,13 @@ def create_financial_stock_chart(
 
         # Save chart data and file
         set_chart_data(chart_data)
-        short_desc = (f"{', '.join(successful_symbols)} {chart_type} chart "
-            f"from {date_from} to {date_to} with {', '.join(technical_indicators)}"
+        indicators_str = ", ".join(technical_indicators) if technical_indicators else "no indicators"
+        short_desc = (
+            f"{', '.join(successful_symbols)} {chart_type} chart "
+            f"from {date_from} to {date_to} with {indicators_str}"
         )
         append_chart_record(
-            png_file_path=png_path if png_path else "",
+            png_file_path=png_path,
             html_file_path=chart_file,
             description=short_desc,
         )
