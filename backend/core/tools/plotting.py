@@ -64,7 +64,9 @@ def set_chart_data(data):
         pass
 
 
-def append_chart_record(png_file_path: Path, html_file_path: Path, description: str) -> None:
+def append_chart_record(
+    png_file_path: Path | str, html_file_path: Path | str, description: str
+) -> None:
     """Append a single chart record to chart_reports.json."""
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -80,13 +82,20 @@ def append_chart_record(png_file_path: Path, html_file_path: Path, description: 
     else:
         data = []
     
-    # BASE_DIR'e göre relative path'e çevir
-    rel_png = png_file_path.relative_to(BASE_DIR)
-    rel_html = html_file_path.relative_to(BASE_DIR)
+    def normalize_record_path(path_value: Path | str) -> str:
+        if not path_value:
+            return ""
+        path_obj = path_value if isinstance(path_value, Path) else Path(path_value)
+        if not path_obj.is_absolute():
+            path_obj = (BASE_DIR / path_obj).resolve()
+        try:
+            return path_obj.relative_to(BASE_DIR).as_posix()
+        except ValueError:
+            return path_obj.as_posix()
 
     record = {
-        "png_file_path": rel_png.as_posix(),
-        "html_file_path": rel_html.as_posix(),
+        "png_file_path": normalize_record_path(png_file_path),
+        "html_file_path": normalize_record_path(html_file_path),
         "description": description,
         "creation_time": datetime.now().isoformat(),
     }
