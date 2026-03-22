@@ -74,7 +74,7 @@ def _load_plotting_module():
     sys.modules["plotly.graph_objects"] = plotly_graph_objects
     sys.modules["plotly.subplots"] = plotly_subplots
 
-    plotting_path = Path("/home/runner/work/AIris/AIris/backend/core/tools/plotting.py")
+    plotting_path = Path(__file__).resolve().parents[1] / "backend" / "core" / "tools" / "plotting.py"
     spec = importlib.util.spec_from_file_location("plotting_under_test", plotting_path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -121,7 +121,7 @@ def test_append_chart_record_keeps_external_paths(tmp_path):
     plotting.CHARTS_DIR = charts_dir
     plotting.REPORTS_CHARTS_FILE = reports_file
 
-    plotting.append_chart_record(Path(""), external_html, "external chart")
+    plotting.append_chart_record("", external_html, "external chart")
 
     data = json.loads(reports_file.read_text(encoding="utf-8"))
     assert data[0]["html_file_path"] == external_html.as_posix()
