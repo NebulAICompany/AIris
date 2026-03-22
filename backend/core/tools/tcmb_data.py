@@ -10,14 +10,53 @@ from backend.shared.logger import get_logger
 
 logger = get_logger("TCMB_TOOLS")
 
+
+def _rerank_tcmb_candidates(
+    query: str,
+    candidates: List[Dict[str, Any]],
+    top_n: int,
+) -> List[Dict[str, Any]]:
+    """Rerank vector search candidates with Cohere and preserve vector scores."""
+    if not candidates:
+        return []
+
+    try:
+        from backend.shared.constants import co
+
+        response = co.rerank(
+            model="rerank-v4.0-fast",
+            query=query,
+            documents=[str(candidate.get("text", "")) for candidate in candidates],
+            top_n=min(top_n, len(candidates)),
+        )
+
+        reranked_candidates: List[Dict[str, Any]] = []
+        for result in response.results:
+            candidate = dict(candidates[result.index])
+            candidate["vector_score"] = float(candidate.get("score", 0.0))
+            candidate["score"] = float(result.relevance_score)
+            reranked_candidates.append(candidate)
+
+        logger.info(
+            f"Reranked {len(candidates)} TCMB candidates into "
+            f"{len(reranked_candidates)} final results"
+        )
+        return reranked_candidates
+
+    except Exception as e:
+        logger.warning(f"TCMB reranking failed, using vector order instead: {e}")
+        return candidates[:top_n]
+
+
 async def get_tcmb_datagroup(
     query: str,
     k: int = 1,
     score_threshold: Optional[float] = None,
 ) -> Dict[str, Any]:
-    """Searches the 'datagroups' vectorstore collection by vector similarity.
+    """Searches the 'datagroups' vectorstore collection with reranking.
 
-    Searches on the embedded datagroup name and note text. Returns the best match and its metadata.
+    Retrieves datagroup candidates by vector similarity, then reranks the top candidates
+    with Cohere using the embedded datagroup text. Returns the best match and its metadata.
     Payload structure stored by load_datagroup_vs.py:
     {"text": "DATAGROUP_NAME_ENG\\nNOTE_ENG", "metadata": {all fields except SERIES}}
 
@@ -53,7 +92,7 @@ async def get_tcmb_datagroup(
             collection_name="datagroups",
             query=query_embedding,
             with_payload=True,
-            limit=k,
+            limit=k*3,
         )
         if score_threshold is not None:
             kwargs["score_threshold"] = score_threshold
@@ -69,17 +108,26 @@ async def get_tcmb_datagroup(
             }
 
         sorted_points = sorted(points, key=lambda p: float(p.score or 0.0), reverse=True)
-        best_score = float(sorted_points[0].score or 0.0)
 
-        top_datagroups: List[Dict[str, Any]] = []
+        datagroup_candidates: List[Dict[str, Any]] = []
         for p in sorted_points:
             payload = p.payload if isinstance(p.payload, dict) else {}
             meta = payload.get("metadata", {})
-            top_datagroups.append({
-                "score": float(p.score or 0.0),
-                "text": payload.get("text", ""),
-                **meta,
-            })
+            datagroup_candidates.append(
+                {
+                    "score": float(p.score or 0.0),
+                    "text": payload.get("text", ""),
+                    **meta,
+                }
+            )
+
+        top_datagroups = await asyncio.to_thread(
+            _rerank_tcmb_candidates,
+            query,
+            datagroup_candidates,
+            k,
+        )
+        best_score = float(top_datagroups[0].get("score", 0.0))
         logger.info(f"Top datagroups: {top_datagroups}")
 
         return {
@@ -87,7 +135,7 @@ async def get_tcmb_datagroup(
             "query": query,
             "best_score": best_score,
             "top_datagroups": top_datagroups,
-            "message": "Most suitable datagroup(s) selected by vector similarity.",
+            "message": "Most suitable datagroup(s) selected by vector search and reranking.",
         }
 
     except Exception as e:
@@ -99,13 +147,15 @@ async def get_tcmb_datagroup(
 async def get_tcmb_series_top_k(
     query: str,
     datagroup_codes: Optional[List[str]] = None,
+    datagroup_dict: Optional[Dict[str, Any]] = None,
     k: int = 3,
     score_threshold: Optional[float] = None,
 ) -> Dict[str, Any]:
-    """Searches the 'series' vectorstore collection by vector similarity.
+    """Searches the 'series' vectorstore collection with reranking.
 
-    Searches on the embedded series text. When datagroup_codes is provided, the search is filtered
-    to only series belonging to those datagroups (MatchAny), implementing the hierarchical retrieval step.
+    Retrieves series candidates by vector similarity. When datagroup_codes is provided,
+    the search is filtered to only series belonging to those datagroups (MatchAny), and the
+    candidate pool is then reranked with Cohere using the embedded series text.
     Payload structure stored by load_datagroup_vs.py:
     {
         "text": "Series name: ...\\nFrequency: ...\\nDefault aggregation: ...",
@@ -116,6 +166,7 @@ async def get_tcmb_series_top_k(
     Args:
         query (str): The search query.
         datagroup_codes (List[str], optional): List of datagroup codes to filter by. Defaults to None.
+        datagroup_dict (Dict[str, Any], optional): Dictionary of datagroup codes and their descriptions. Defaults to None.
         k (int, optional): Number of top results to return. Defaults to 3.
         score_threshold (float, optional): Minimum similarity score threshold. Defaults to None.
 
@@ -160,7 +211,7 @@ async def get_tcmb_series_top_k(
             collection_name="series",
             query=query_embedding,
             with_payload=True,
-            limit=k,
+            limit=k*3,
             query_filter=query_filter,
         )
         if score_threshold is not None:
@@ -178,15 +229,25 @@ async def get_tcmb_series_top_k(
 
         sorted_points = sorted(points, key=lambda p: float(p.score or 0.0), reverse=True)
 
-        top_series: List[Dict[str, Any]] = []
-        for p in sorted_points[:k]:
+        series_candidates: List[Dict[str, Any]] = []
+        for p in sorted_points:
             payload = p.payload if isinstance(p.payload, dict) else {}
             meta = payload.get("metadata", {})
-            top_series.append({
-                "score": float(p.score or 0.0),
-                "text": payload.get("text", ""),
-                **meta,
-            })
+            new_series_text = f"Serie Code: {meta.get('SERIE_CODE', 'N/A')}\nDescription: {meta.get('text', 'N/A')}\nData group: {meta.get('DATAGROUP_CODE', 'N/A')}\nData group description: {datagroup_dict.get(meta.get('DATAGROUP_CODE'), {}).get('text', 'N/A')}\nDate range: {meta.get('START_DATE', datagroup_dict.get(meta.get('DATAGROUP_CODE'), {}).get('START_DATE', 'N/A'))} to {meta.get('END_DATE', datagroup_dict.get(meta.get('DATAGROUP_CODE'), {}).get('END_DATE', 'N/A'))}\n"
+            series_candidates.append(
+                {
+                    "score": float(p.score or 0.0),
+                    "text": new_series_text,
+                    **meta,
+                }
+            )
+
+        top_series = await asyncio.to_thread(
+            _rerank_tcmb_candidates,
+            query,
+            series_candidates,
+            k,
+        )
 
         best = top_series[0] if top_series else {}
 
@@ -197,7 +258,7 @@ async def get_tcmb_series_top_k(
             "best_score": best.get("score", 0.0),
             "best_serie": best,
             "top_series": top_series,
-            "message": "Top series selected by vector similarity.",
+            "message": "Top series selected by vector search and reranking.",
         }
 
     except Exception as e:
@@ -242,6 +303,7 @@ async def search_tcmb_series(
     series_result = await get_tcmb_series_top_k(
         query=query,
         datagroup_codes=datagroup_codes,
+        datagroup_dict=datagroup_dict,
         k=5,
     )
 
@@ -254,12 +316,7 @@ async def search_tcmb_series(
     ]
     for serie in series_result.get("top_series", []):
         lines.append(
-            f"Serie Code: {serie.get('SERIE_CODE', 'N/A')}\n"
-            f"Description: {serie.get('text', 'N/A')}\n"
-            f"Data group: {serie.get('DATAGROUP_CODE', 'N/A')}\n"
-            f"Data group description: {datagroup_dict.get(serie.get('DATAGROUP_CODE'), {}).get('text', 'N/A')}\n"
-            f"Date range: {serie.get('START_DATE', datagroup_dict.get(serie.get('DATAGROUP_CODE'), {}).get('START_DATE', 'N/A'))} to {serie.get('END_DATE', datagroup_dict.get(serie.get('DATAGROUP_CODE'), {}).get('END_DATE', 'N/A'))}\n"
-            f"Similarity score: {serie.get('score', 0.0):.4f}"
+            f"{serie.get('text', 'N/A')}"
         )
 
     return "\n\n---\n\n".join(lines) if series_result.get("top_series") else "No series found."
