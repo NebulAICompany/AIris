@@ -16,7 +16,8 @@ from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH, REPORTS_CHARTS_FILE, openai_client
 from backend.security.pii import unmask_text
 from backend.core.prompts import describe_image_prompt
-from langchain_core.tools import tool
+from backend.utils.e2b_file_template import ensure_file_agent_template
+from langchain_core.tools import tool 
 
 load_dotenv()
 
@@ -657,8 +658,17 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
                 ),
             }
 
-        logger.info(f"Creating sandbox for code execution: {code}") 
-        sandbox = Sandbox.create(template=FILE_AGENT_SANDBOX_TEMPLATE, timeout=60)
+        logger.info(f"Creating sandbox for code execution: {code}")
+        try:
+            sandbox = Sandbox.create(template=FILE_AGENT_SANDBOX_TEMPLATE, timeout=60)
+        except Exception as create_err:
+            logger.warning(
+                "Sandbox creation failed %s. Building template and retrying once.",
+                str(create_err),
+            )
+            ensure_file_agent_template(alias=FILE_AGENT_SANDBOX_TEMPLATE)
+            sandbox = Sandbox.create(template=FILE_AGENT_SANDBOX_TEMPLATE, timeout=60)
+
         staged_inputs = _stage_referenced_files_in_sandbox(code, sandbox)
         execution = sandbox.run_code(code)
 
