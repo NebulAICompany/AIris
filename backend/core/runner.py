@@ -128,13 +128,19 @@ class StreamProcessor:
             if query:
                 event["query"] = query
             yield event
-        
+
         elif event_type == "inner_tool_end":
             yield {
                 "type": "tool_end",
                 "tool_name": data.get("tool_name", "unknown"),
                 "parent_agent": data.get("agent"),
             }
+
+        elif event_type in ("spdrag_doc_start", "spdrag_doc_end", "spdrag_synthesis_start"):
+            event: Dict = {"type": event_type}
+            if "document" in data:
+                event["document"] = data["document"]
+            yield event
     
     def _handle_messages_mode(self, data: Any) -> Generator[Dict, None, None]:
         """Handle messages mode events."""

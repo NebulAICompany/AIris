@@ -1773,6 +1773,15 @@ class UIComponents {
             onToolEnd: (toolName, parentAgent) => {
               this.hideStreamingToolStatus(toolName, parentAgent);
             },
+            onSpdragDocStart: (document) => {
+              this.showSpdragDocAnalyzing(document);
+            },
+            onSpdragDocEnd: (document) => {
+              this.markSpdragDocComplete(document);
+            },
+            onSpdragSynthesisStart: () => {
+              this.showSpdragSynthesizing();
+            },
             onDone: async (data) => {
               // Wait for any pending typing animation to complete
               await typingPromise;
@@ -1986,6 +1995,7 @@ class UIComponents {
       'list_uploaded_files':          'List Uploaded Files',
       'search_local_documents':       'Search Documents',
       'search_specific_document_for_research': 'Search Document',
+      'deep_research':                'Deep Research',
 
       // File tools
       'create_excel_file':            'Create Excel File',
@@ -2194,6 +2204,7 @@ class UIComponents {
       // Document search (RAG)
       search_local_documents:                tr ? 'Yüklediğin belgelerden ilgili kısımlar aranıyor...' : 'Searching through your uploaded documents...',
       search_specific_document_for_research: tr ? 'Belgen derinlemesine inceleniyor...'             : 'Diving deep into your document...',
+      deep_research:                         tr ? 'Belgeler derinlemesine araştırılıyor...'          : 'Performing deep research on your documents...',
 
       // Finance sub-agent
       finance_agent:                         tr ? 'Piyasa verileri analiz ediliyor...'              : 'Analyzing market data...',
@@ -2245,6 +2256,81 @@ class UIComponents {
     return tr
       ? (agentName ? `${agentName} üzerinden ${friendlyName} çalışıyor...` : `${friendlyName} çalışıyor...`)
       : (agentName ? `Running ${friendlyName} via ${agentName}...` : `Running ${friendlyName}...`);
+  }
+
+  // --- SPDRag per-document animation helpers ---
+
+  _spdragDocId(docName) {
+    return `spdrag-doc-${docName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+  }
+
+  showSpdragDocAnalyzing(docName) {
+    const messageDiv = window.document.getElementById("streaming-message");
+    const toolsItems = messageDiv
+      ? messageDiv.querySelector(".tools-history-items")
+      : null;
+    if (!toolsItems) return;
+
+    const id = this._spdragDocId(docName);
+    if (toolsItems.querySelector(`#${id}`)) return;
+
+    const item = window.document.createElement("div");
+    item.className = "tool-history-item inner-tool active spdrag-doc-item";
+    item.id = id;
+    item.innerHTML = `
+      <div class="tool-history-icon">
+        <div class="tool-loading-dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="tool-history-content">
+        <span class="tool-history-name spdrag-doc-name">${Utils.escapeHtml(docName)}</span>
+      </div>
+    `;
+    toolsItems.appendChild(item);
+
+    const chatMessages = window.document.getElementById("chat-messages");
+    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  markSpdragDocComplete(docName) {
+    const id = this._spdragDocId(docName);
+    const item = window.document.getElementById(id);
+    if (!item) return;
+    item.classList.remove("active");
+    item.classList.add("completed");
+    const iconDiv = item.querySelector(".tool-history-icon");
+    if (iconDiv) iconDiv.innerHTML = `<i class="fas fa-check"></i>`;
+  }
+
+  showSpdragSynthesizing() {
+    const messageDiv = window.document.getElementById("streaming-message");
+    if (!messageDiv) return;
+
+    const lang = window.languageService?.getCurrentLanguage() || "tr";
+    const label = lang === "tr" ? "Bulgular sentezleniyor..." : "Synthesizing findings...";
+
+    const toolsLabel = messageDiv.querySelector(".tools-history-label");
+    if (toolsLabel) toolsLabel.textContent = label;
+
+    const toolsItems = messageDiv.querySelector(".tools-history-items");
+    if (!toolsItems) return;
+
+    if (toolsItems.querySelector("#spdrag-synthesis-item")) return;
+
+    const item = window.document.createElement("div");
+    item.className = "tool-history-item active spdrag-synthesis-item";
+    item.id = "spdrag-synthesis-item";
+    item.innerHTML = `
+      <div class="tool-history-icon">
+        <div class="tool-loading-dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="tool-history-content">
+        <span class="tool-history-name">${Utils.escapeHtml(label)}</span>
+      </div>
+    `;
+    toolsItems.appendChild(item);
+
+    const chatMessages = window.document.getElementById("chat-messages");
+    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
   // Append token to streaming message

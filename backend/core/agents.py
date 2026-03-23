@@ -6,7 +6,7 @@ from .prompts import (
 from typing import List
 from pydantic import BaseModel, Field
 from langchain.agents.structured_output import ToolStrategy
-from langchain.agents.middleware import SummarizationMiddleware
+from langchain.agents.middleware import SummarizationMiddleware, ToolCallLimitMiddleware
 from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
 from langchain_anthropic import ChatAnthropic
 from .checkpointer import get_checkpointer as _get_checkpointer
@@ -19,6 +19,7 @@ from .tools.api import (
 )
 from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
+from .tools.spdrag_tool import deep_research
 from .tools.file_tools import list_created_files
 from backend.shared.constants import CURRENT_MODEL, get_selected_files
 
@@ -78,38 +79,55 @@ main_agent_tools = [
 
 def create_main_agent(
     web_search_enabled: bool = False,
+    use_spdrag: bool = False,
     instruction: str = None,
 ):
     """
     Create a LLM Agent for main assistant functionality with agentic RAG.
 
     Args:
-        web_search_enabled: Whether to enable web search
-        instruction: Optional custom instructions
+        web_search_enabled: Whether to enable web search.
+        use_spdrag: When True, replaces the standard local search tool with the
+            SPD-RAG deep-research tool and injects usage constraints into the prompt.
+        instruction: Optional custom instructions.
 
     Returns a LLM Agent configured with tools, subagents, and custom instructions.
-    The agent can use search_local_documents tool to retrieve information on demand.
     """
     instruction_part = (
         f"**Special Instructions:**\n{instruction}\n" if instruction else ""
     )
 
-    # Include web context
     web_context_part = (
-        f"Use your web_search_tool to research the topic on the internet and "
+        "Use your web_search_tool to research the topic on the internet and "
         if web_search_enabled
         else ""
     )
 
-    # Get selected documents
     selected_files = get_selected_files()
     selected_documents_part = ""
-    if selected_files:
-        files_list = "\n".join([f"- {file}" for file in selected_files])
-        selected_documents_part = f"The following documents are available when you use search_local_documents:\n{files_list}\n"
 
-    # Start with a fresh list to avoid mutating the module-level list
-    tools = [*main_agent_tools, *main_agent_subagents]
+    if use_spdrag:
+        if selected_files:
+            files_list = "\n".join([f"- {file}" for file in selected_files])
+            selected_documents_part = (
+                f"The following documents are available when you use deep_research:\n{files_list}\n"
+            )
+        base_tools = [
+            deep_research,
+            wolfram_alpha_query,
+            get_uploaded_files_count,
+            list_uploaded_files,
+            list_created_files,
+        ]
+    else:
+        if selected_files:
+            files_list = "\n".join([f"- {file}" for file in selected_files])
+            selected_documents_part = (
+                f"The following documents are available when you use search_local_documents:\n{files_list}\n"
+            )
+        base_tools = list(main_agent_tools)
+
+    tools = [*base_tools, *main_agent_subagents]
     if web_search_enabled:
         tools.append(web_search_tool)
 
@@ -125,6 +143,15 @@ def create_main_agent(
             model="gpt-4o-mini", trigger=("tokens", 8000), keep=("messages", 5)
         ),
     ]
+    
+    if use_spdrag:
+        middleware.append(
+            ToolCallLimitMiddleware(
+                tool_name="deep_research",
+                run_limit=1,
+                exit_behavior="continue",
+            )
+        )
     
     if isinstance(CURRENT_MODEL, ChatAnthropic):
         middleware.append(AnthropicPromptCachingMiddleware(ttl="5m"))
