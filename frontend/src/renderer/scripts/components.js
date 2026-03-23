@@ -13,7 +13,6 @@ class UIComponents {
     this.isDarkMode = false;
     this.webSearchEnabled = Utils.isWebSearchEnabled();
     this.useSpdrag = Utils.isSpdragEnabled();
-    this.spdragLocked = false;
 
     this.newsRefreshInterval = null;
     this.lastNewsUpdate = null;
@@ -756,7 +755,6 @@ class UIComponents {
     if (spdragToggle) {
       spdragToggle.addEventListener("click", (e) => {
         e.preventDefault();
-        if (this.spdragLocked) return;
 
         this.useSpdrag = !this.useSpdrag;
         Utils.setSpdragEnabled(this.useSpdrag);
@@ -1629,7 +1627,6 @@ class UIComponents {
       return;
 
     this.isProcessing = true;
-    this.lockSpdragToggle();
     chatInput.value = "";
 
     // Clear chat files preview immediately when send button is pressed
@@ -2258,79 +2255,124 @@ class UIComponents {
       : (agentName ? `Running ${friendlyName} via ${agentName}...` : `Running ${friendlyName}...`);
   }
 
-  // --- SPDRag per-document animation helpers ---
+  // ── SPDRag Radar Animation ────────────────────────────────────────
+  //
+  // A rotating sweep arm over concentric rings.  Counter text ("X / N
+  // analyzed") is the only per-document element, so the animation stays
+  // clean regardless of how many documents are being processed.
 
-  _spdragDocId(docName) {
-    return `spdrag-doc-${docName.replace(/[^a-zA-Z0-9]/g, '-')}`;
+  _initSpdragGraphPanel() {
+    if (window.document.getElementById("spdrag-graph-container")) return;
+    const messageDiv = window.document.getElementById("streaming-message");
+    const toolsItems = messageDiv ? messageDiv.querySelector(".tools-history-items") : null;
+    if (!toolsItems) return;
+
+    this._spdragTotal = 0;
+    this._spdragDone = 0;
+    this._spdragSeenDocs = new Set();
+
+    const filterId = `spdragGlow-${Date.now()}`;
+    const lang = window.languageService?.getCurrentLanguage() || "tr";
+    const statusText = lang === "tr" ? "Belgeler araştırılıyor..." : "Researching documents...";
+
+    // Trailing sector path: 90-degree arc counter-clockwise from the arm tip
+    // (130, 18) to (18, 130), both at radius 112 from center (130, 130).
+    // The sweep group rotates clockwise via CSS, making this the visual tail.
+    const sector = "M 130 130 L 130 18 A 112 112 0 0 0 18 130 Z";
+
+    const container = window.document.createElement("div");
+    container.className = "spdrag-graph-container";
+    container.id = "spdrag-graph-container";
+    container.innerHTML = `
+      <svg class="spdrag-svg" id="spdrag-svg" viewBox="0 0 260 260"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <filter id="${filterId}" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        <circle cx="130" cy="130" r="36"  class="spdrag-radar-ring"/>
+        <circle cx="130" cy="130" r="68"  class="spdrag-radar-ring"/>
+        <circle cx="130" cy="130" r="100" class="spdrag-radar-ring"/>
+        <circle cx="130" cy="130" r="112" class="spdrag-radar-border"/>
+        <g id="spdrag-sweep">
+          <path class="spdrag-sector" d="${sector}"/>
+          <line class="spdrag-arm" x1="130" y1="130" x2="130" y2="18"
+                filter="url(#${filterId})"/>
+        </g>
+        <g id="spdrag-center">
+          <circle cx="130" cy="130" r="36" class="spdrag-pulse-ring spdrag-pulse-ring-1">
+            <animate attributeName="r" values="36;54;36" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.22;0;0.22" dur="3s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="130" cy="130" r="24" class="spdrag-pulse-ring spdrag-pulse-ring-2">
+            <animate attributeName="r" values="24;38;24" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.35;0;0.35" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="130" cy="130" r="16" class="spdrag-center-core" filter="url(#${filterId})"/>
+          <text x="130" y="135" class="spdrag-center-icon">✦</text>
+        </g>
+      </svg>
+      <div class="spdrag-graph-status" id="spdrag-graph-status">${Utils.escapeHtml(statusText)}</div>
+    `;
+
+    toolsItems.insertBefore(container, toolsItems.firstChild);
+  }
+
+  _updateSpdragStatus() {
+    const statusEl = window.document.getElementById("spdrag-graph-status");
+    if (!statusEl) return;
+    const lang = window.languageService?.getCurrentLanguage() || "tr";
+    const done = this._spdragDone || 0;
+    const total = this._spdragTotal || 0;
+    if (total > 0) {
+      statusEl.textContent = lang === "tr"
+        ? `${done} / ${total} belge analiz edildi`
+        : `${done} / ${total} documents analyzed`;
+    } else {
+      statusEl.textContent = lang === "tr"
+        ? "Belgeler araştırılıyor..."
+        : "Researching documents...";
+    }
   }
 
   showSpdragDocAnalyzing(docName) {
-    const messageDiv = window.document.getElementById("streaming-message");
-    const toolsItems = messageDiv
-      ? messageDiv.querySelector(".tools-history-items")
-      : null;
-    if (!toolsItems) return;
-
-    const id = this._spdragDocId(docName);
-    if (toolsItems.querySelector(`#${id}`)) return;
-
-    const item = window.document.createElement("div");
-    item.className = "tool-history-item inner-tool active spdrag-doc-item";
-    item.id = id;
-    item.innerHTML = `
-      <div class="tool-history-icon">
-        <div class="tool-loading-dots"><span></span><span></span><span></span></div>
-      </div>
-      <div class="tool-history-content">
-        <span class="tool-history-name spdrag-doc-name">${Utils.escapeHtml(docName)}</span>
-      </div>
-    `;
-    toolsItems.appendChild(item);
+    this._initSpdragGraphPanel();
+    if (!this._spdragSeenDocs) this._spdragSeenDocs = new Set();
+    if (this._spdragSeenDocs.has(docName)) return;
+    this._spdragSeenDocs.add(docName);
+    this._spdragTotal = (this._spdragTotal || 0) + 1;
+    this._updateSpdragStatus();
 
     const chatMessages = window.document.getElementById("chat-messages");
     if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
   markSpdragDocComplete(docName) {
-    const id = this._spdragDocId(docName);
-    const item = window.document.getElementById(id);
-    if (!item) return;
-    item.classList.remove("active");
-    item.classList.add("completed");
-    const iconDiv = item.querySelector(".tool-history-icon");
-    if (iconDiv) iconDiv.innerHTML = `<i class="fas fa-check"></i>`;
+    this._spdragDone = (this._spdragDone || 0) + 1;
+    this._updateSpdragStatus();
   }
 
   showSpdragSynthesizing() {
-    const messageDiv = window.document.getElementById("streaming-message");
-    if (!messageDiv) return;
-
     const lang = window.languageService?.getCurrentLanguage() || "tr";
-    const label = lang === "tr" ? "Bulgular sentezleniyor..." : "Synthesizing findings...";
+    const text = lang === "tr" ? "Bulgular sentezleniyor..." : "Synthesizing findings...";
 
-    const toolsLabel = messageDiv.querySelector(".tools-history-label");
-    if (toolsLabel) toolsLabel.textContent = label;
+    const statusEl = window.document.getElementById("spdrag-graph-status");
+    if (statusEl) statusEl.textContent = text;
 
-    const toolsItems = messageDiv.querySelector(".tools-history-items");
-    if (!toolsItems) return;
+    const toolsLabel = window.document.getElementById("streaming-message")
+      ?.querySelector(".tools-history-label");
+    if (toolsLabel) toolsLabel.textContent = text;
 
-    if (toolsItems.querySelector("#spdrag-synthesis-item")) return;
+    const sweep = window.document.getElementById("spdrag-sweep");
+    if (sweep) sweep.classList.add("synthesizing");
 
-    const item = window.document.createElement("div");
-    item.className = "tool-history-item active spdrag-synthesis-item";
-    item.id = "spdrag-synthesis-item";
-    item.innerHTML = `
-      <div class="tool-history-icon">
-        <div class="tool-loading-dots"><span></span><span></span><span></span></div>
-      </div>
-      <div class="tool-history-content">
-        <span class="tool-history-name">${Utils.escapeHtml(label)}</span>
-      </div>
-    `;
-    toolsItems.appendChild(item);
-
-    const chatMessages = window.document.getElementById("chat-messages");
-    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+    const center = window.document.getElementById("spdrag-center");
+    if (center) center.classList.add("synthesizing");
   }
 
   // Append token to streaming message
@@ -3787,24 +3829,6 @@ class UIComponents {
     }
   }
 
-  lockSpdragToggle() {
-    this.spdragLocked = true;
-    const wrap = document.getElementById("spdrag-switch-wrap");
-    if (wrap) {
-      wrap.classList.add("locked");
-      wrap.title = "Pipeline locked — start a new chat to change";
-    }
-  }
-
-  unlockSpdragToggle() {
-    this.spdragLocked = false;
-    const wrap = document.getElementById("spdrag-switch-wrap");
-    if (wrap) {
-      wrap.classList.remove("locked");
-      wrap.title = "Use Deep Search (SPD-RAG) pipeline";
-    }
-  }
-
   clearChat() {
     const chatMessages = document.getElementById("chat-messages");
     if (chatMessages) {
@@ -3816,9 +3840,6 @@ class UIComponents {
 
       // Start a new session
       this.currentSessionId = null;
-
-      // Unlock the Deep toggle for the fresh thread
-      this.unlockSpdragToggle();
 
       // Add welcome message
       const t = window.languageService

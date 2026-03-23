@@ -6,7 +6,7 @@ from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from backend.core.spdrag import get_compiled_graph
-from backend.shared.constants import get_original_user_query, get_selected_files
+from backend.shared.constants import get_selected_files
 from backend.shared.logger import get_logger
 
 logger = get_logger("SPDRAG_TOOL")
@@ -35,18 +35,25 @@ def _build_doc_artifact(selected_files: List[str]) -> List[Dict[str, str]]:
 
 @tool(parse_docstring=True, response_format="content_and_artifact")
 async def deep_research(query: str) -> Tuple[str, List[Dict[str, str]]]:
-    """Perform deep, comprehensive research across all selected local documents.
+    """Perform comprehensive, deep research across all selected documents to answer complex questions.
 
-    Use this when you need to thoroughly investigate a complex question or extract
-    detailed information from the selected documents.
+    This tool conducts an exhaustive, parallel analysis of all available documents and synthesizes the findings into a single, detailed response.
+
+    WHEN TO USE:
+    - For complex questions requiring cross-document synthesis.
+    - When you need a deep, exhaustive analysis rather than a simple fact lookup.
+    - When standard search might miss nuanced or scattered information.
+
+    HOW TO USE:
+    - The `query` must be a complete, highly specific, and self-contained question.
+    - Do NOT use simple keywords (e.g., "revenue"). Instead, use full questions (e.g., "What were the key drivers of revenue growth in Q3 across all regions?").
+    - The query is sent directly to the research engine, so it must clearly state the exact information you are looking for.
 
     Args:
-        query: The research question to investigate.
+        query: A complete, specific, and self-contained research question.
     """
     selected_files = get_selected_files() or []
     writer = get_stream_writer()
-
-    research_query = get_original_user_query() or query
 
     if not selected_files:
         logger.warning(
@@ -57,13 +64,13 @@ async def deep_research(query: str) -> Tuple[str, List[Dict[str, str]]]:
     thread_id = f"spdrag-tool-{uuid4().hex}"
     config = {"configurable": {"thread_id": thread_id}}
     initial_state = {
-        "messages": [HumanMessage(content=research_query)],
+        "messages": [HumanMessage(content=query)],
         "selected_documents": selected_files,
     }
 
     logger.info(
-        "deep_research invoked: original_query=%r, document_count=%d",
-        research_query[:100],
+        "deep_research invoked: query=%r, document_count=%d",
+        query[:100],
         len(selected_files),
     )
 
