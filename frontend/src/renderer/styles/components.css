@@ -3274,6 +3274,20 @@ body.dark-theme .image-caption {
   }
 }
 
+/* SPDRag per-document analysis rows */
+.spdrag-doc-item .spdrag-doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+  display: inline-block;
+}
+
+.spdrag-synthesis-item .tool-history-name {
+  font-style: italic;
+  opacity: 0.85;
+}
+
 
 /* ANA KAPLAYICI (KUTU GÖRÜNÜMÜ) */
 .chat-input-container {
