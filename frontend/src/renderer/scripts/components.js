@@ -2174,6 +2174,18 @@ class UIComponents {
     if (toolName) {
       this.markToolComplete(toolName, parentAgent);
     }
+    if (toolName === "deep_research") {
+      this._dismissSpdragPanel();
+    }
+  }
+
+  _dismissSpdragPanel() {
+    const panel = window.document.getElementById("spdrag-graph-container");
+    if (!panel) return;
+    panel.style.transition = "opacity 0.35s ease, transform 0.35s ease";
+    panel.style.opacity = "0";
+    panel.style.transform = "scale(0.97)";
+    setTimeout(() => panel.remove(), 370);
   }
 
   // Update the tools-history header label to reflect the currently running tool
