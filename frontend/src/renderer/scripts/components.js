@@ -2267,11 +2267,10 @@ class UIComponents {
       : (agentName ? `Running ${friendlyName} via ${agentName}...` : `Running ${friendlyName}...`);
   }
 
-  // ── SPDRag Radar Animation ────────────────────────────────────────
+  // ── SPDRag Orbital Animation ───────────────────────────────────────
   //
-  // A rotating sweep arm over concentric rings.  Counter text ("X / N
-  // analyzed") is the only per-document element, so the animation stays
-  // clean regardless of how many documents are being processed.
+  // Particles orbiting a glowing core at varying speeds/directions.
+  // Counter text ("X / N analyzed") is the only per-document element.
 
   _initSpdragGraphPanel() {
     if (window.document.getElementById("spdrag-graph-container")) return;
@@ -2283,50 +2282,65 @@ class UIComponents {
     this._spdragDone = 0;
     this._spdragSeenDocs = new Set();
 
-    const filterId = `spdragGlow-${Date.now()}`;
+    const uid = Date.now();
+    const glowId = `spdragGlow-${uid}`;
+    const gradId = `spdragGrad-${uid}`;
     const lang = window.languageService?.getCurrentLanguage() || "tr";
     const statusText = lang === "tr" ? "Belgeler araştırılıyor..." : "Researching documents...";
-
-    // Trailing sector path: 90-degree arc counter-clockwise from the arm tip
-    // (130, 18) to (18, 130), both at radius 112 from center (130, 130).
-    // The sweep group rotates clockwise via CSS, making this the visual tail.
-    const sector = "M 130 130 L 130 18 A 112 112 0 0 0 18 130 Z";
 
     const container = window.document.createElement("div");
     container.className = "spdrag-graph-container";
     container.id = "spdrag-graph-container";
     container.innerHTML = `
-      <svg class="spdrag-svg" id="spdrag-svg" viewBox="0 0 260 260"
+      <svg class="spdrag-svg" id="spdrag-svg" viewBox="0 0 200 200"
            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
-          <filter id="${filterId}" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+          <filter id="${glowId}" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
             <feMerge>
               <feMergeNode in="blur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
+          <radialGradient id="${gradId}" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="var(--accent-primary)" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="var(--accent-primary)" stop-opacity="0"/>
+          </radialGradient>
         </defs>
-        <circle cx="130" cy="130" r="36"  class="spdrag-radar-ring"/>
-        <circle cx="130" cy="130" r="68"  class="spdrag-radar-ring"/>
-        <circle cx="130" cy="130" r="100" class="spdrag-radar-ring"/>
-        <circle cx="130" cy="130" r="112" class="spdrag-radar-border"/>
-        <g id="spdrag-sweep">
-          <path class="spdrag-sector" d="${sector}"/>
-          <line class="spdrag-arm" x1="130" y1="130" x2="130" y2="18"
-                filter="url(#${filterId})"/>
+
+        <circle cx="100" cy="100" r="50" fill="url(#${gradId})" class="spdrag-ambient"/>
+
+        <circle cx="100" cy="100" r="32" class="spdrag-orbit-path"/>
+        <circle cx="100" cy="100" r="58" class="spdrag-orbit-path"/>
+        <circle cx="100" cy="100" r="84" class="spdrag-orbit-path"/>
+
+        <g class="spdrag-orbit spdrag-orbit-1" id="spdrag-orbit-1">
+          <circle cx="100" cy="68"  r="3"   class="spdrag-particle"/>
+          <circle cx="100" cy="132" r="2"   class="spdrag-particle spdrag-particle-dim"/>
         </g>
+
+        <g class="spdrag-orbit spdrag-orbit-2" id="spdrag-orbit-2">
+          <circle cx="100" cy="42"  r="2.5" class="spdrag-particle"/>
+          <circle cx="150" cy="129" r="3.5" class="spdrag-particle" filter="url(#${glowId})"/>
+          <circle cx="50"  cy="129" r="2"   class="spdrag-particle spdrag-particle-dim"/>
+        </g>
+
+        <g class="spdrag-orbit spdrag-orbit-3" id="spdrag-orbit-3">
+          <circle cx="100" cy="16"  r="2.5" class="spdrag-particle"/>
+          <circle cx="159" cy="159" r="2"   class="spdrag-particle spdrag-particle-dim"/>
+        </g>
+
         <g id="spdrag-center">
-          <circle cx="130" cy="130" r="36" class="spdrag-pulse-ring spdrag-pulse-ring-1">
-            <animate attributeName="r" values="36;54;36" dur="3s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.22;0;0.22" dur="3s" repeatCount="indefinite"/>
+          <circle cx="100" cy="100" r="14" class="spdrag-core-halo">
+            <animate attributeName="r"       values="14;24;14" dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity"  values="0.25;0.06;0.25" dur="3s" repeatCount="indefinite"/>
           </circle>
-          <circle cx="130" cy="130" r="24" class="spdrag-pulse-ring spdrag-pulse-ring-2">
-            <animate attributeName="r" values="24;38;24" dur="3s" begin="0.8s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.35;0;0.35" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+          <circle cx="100" cy="100" r="10" class="spdrag-core-halo spdrag-core-halo-2">
+            <animate attributeName="r"       values="10;18;10" dur="3s" begin="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity"  values="0.3;0.05;0.3" dur="3s" begin="1s" repeatCount="indefinite"/>
           </circle>
-          <circle cx="130" cy="130" r="16" class="spdrag-center-core" filter="url(#${filterId})"/>
-          <text x="130" y="135" class="spdrag-center-icon">✦</text>
+          <circle cx="100" cy="100" r="7" class="spdrag-core" filter="url(#${glowId})"/>
+          <text x="100" y="103.5" class="spdrag-center-icon">✦</text>
         </g>
       </svg>
       <div class="spdrag-graph-status" id="spdrag-graph-status">${Utils.escapeHtml(statusText)}</div>
@@ -2380,8 +2394,8 @@ class UIComponents {
       ?.querySelector(".tools-history-label");
     if (toolsLabel) toolsLabel.textContent = text;
 
-    const sweep = window.document.getElementById("spdrag-sweep");
-    if (sweep) sweep.classList.add("synthesizing");
+    const panel = window.document.getElementById("spdrag-graph-container");
+    if (panel) panel.classList.add("synthesizing");
 
     const center = window.document.getElementById("spdrag-center");
     if (center) center.classList.add("synthesizing");
