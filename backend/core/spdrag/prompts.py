@@ -47,6 +47,7 @@ Your ONLY job in this step:
 - Produce a `synthesis_directive`: a concise instruction (2-4 sentences) for the synthesizer. Tell it what the main goal is, what themes to prioritize, and how to structure the merged response (e.g., "group by department", "compare pros/cons", "chronological order").
 
 Todo-writing rules:
+- You MUST write a MAXIMUM of 5 tasks (todos). Do not exceed this limit.
 - Decompose the user query into concrete information requirements.
 - Each todo must be self-contained and unambiguous: specify exactly what to extract (fields, entities, dates, thresholds, definitions, claims, steps).
 - Prefer atomic tasks over broad tasks. 
