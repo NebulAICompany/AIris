@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional
 from pathlib import Path
-import os
 import json
 import uuid
 import base64
@@ -8,13 +7,11 @@ import re
 from datetime import datetime
 from docx import Document
 from pptx import Presentation
-from openpyxl import Workbook, load_workbook
-from openpyxl.chart import BarChart, LineChart, PieChart, Reference
+from openpyxl import load_workbook
 from e2b_code_interpreter import Sandbox
 from dotenv import load_dotenv
 from backend.shared.logger import get_logger
 from backend.shared.constants import CREATED_DOCUMENTS_PATH, REPORTS_CHARTS_FILE, openai_client
-from backend.security.pii import unmask_text
 from backend.core.prompts import describe_image_prompt
 from backend.utils.e2b_file_template import ensure_file_agent_template
 from langchain_core.tools import tool 
@@ -29,15 +26,6 @@ FILES_PATH.mkdir(parents=True, exist_ok=True)
 FILE_AGENT_SANDBOX_TEMPLATE = "file-agent-template"
 
 logger = get_logger("FILE_TOOLS")
-
-
-def _permission_error_msg(path: str) -> str:
-    return (
-        f"Permission denied: cannot write to '{Path(path).name}'. "
-        "The file is likely open in another program (e.g. Word, Excel). "
-        "Please close the file and try again."
-    )
-
 
 def _resolve_file_path(file_name: str) -> Path:
     """Resolve a filename to an absolute path within CREATED_DOCUMENTS_PATH.
@@ -64,323 +52,6 @@ def _stage_referenced_files_in_sandbox(code: str, sandbox: Sandbox) -> List[str]
         uploaded_files.append(sandbox_name)
 
     return sorted(set(uploaded_files))
-
-
-# ---------------------------------------------------------------------------
-# Create tools
-# ---------------------------------------------------------------------------
-
-@tool(parse_docstring=True)
-def create_excel_file(
-    data: List[List[str]],
-    file_name: str,
-    sheet_name: str = "Sheet1",
-) -> Dict[str, Any]:
-    """Create an Excel file from table data.
-
-    Args:
-        data: List of rows, where each row is a list of cell values.
-        file_name: Name of the Excel file to create.
-        sheet_name: Name of the Excel sheet (default "Sheet1").
-    """
-    try:
-        if not file_name.endswith(".xlsx"):
-            file_name = f"{file_name}.xlsx"
-
-        file_path = FILES_PATH / file_name
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-        unmasked_data = []
-        for row_data in data:
-            unmasked_row = []
-            for cell_value in row_data:
-                if isinstance(cell_value, str):
-                    unmasked_row.append(unmask_text(cell_value))
-                else:
-                    unmasked_row.append(cell_value)
-            unmasked_data.append(unmasked_row)
-
-        workbook = Workbook()
-        worksheet = workbook.active
-        worksheet.title = sheet_name
-
-        for row_idx, row_data in enumerate(unmasked_data, 1):
-            for col_idx, cell_value in enumerate(row_data, 1):
-                worksheet.cell(row=row_idx, column=col_idx, value=cell_value)
-
-        try:
-            workbook.save(str(file_path))
-        except PermissionError:
-            return {"success": False, "error": _permission_error_msg(str(file_path))}
-
-        file_info = {
-            "filename": file_name,
-            "file_path": str(file_path),
-            "file_type": "excel",
-            "created_at": datetime.now().isoformat(),
-            "message": f"Excel file created successfully with {len(unmasked_data)} rows",
-        }
-        set_generated_files([file_info])
-
-        return {
-            "success": True,
-            "file_path": str(file_path),
-            "sheet_name": sheet_name,
-            "rows": len(data),
-            "columns": len(data[0]) if data else 0,
-            "message": f"Excel file created successfully with {len(data)} rows. File loaded successfully into attachments. You can view it directly from the attachments section below.",
-            "file_info": file_info,
-        }
-
-    except Exception as e:
-        logger.error(f"Error creating Excel file: {str(e)}")
-        return {"success": False, "error": f"Failed to create Excel file: {str(e)}"}
-
-
-@tool(parse_docstring=True)
-def create_word_document(content: str, file_name: str) -> Dict[str, Any]:
-    """Create a Word document with the specified content.
-
-    Args:
-        content: Text content to add to the document.
-        file_name: Name of the Word document file to create.
-    """
-    try:
-        if not file_name.endswith(".docx"):
-            file_name = f"{file_name}.docx"
-        file_path = FILES_PATH / file_name
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-        unmasked_content = unmask_text(content)
-        doc = Document()
-
-        paragraphs = unmasked_content.split("\n\n")
-        for paragraph_text in paragraphs:
-            if paragraph_text.strip():
-                if len(paragraph_text.split("\n")) == 1 and len(paragraph_text) < 100:
-                    doc.add_heading(paragraph_text.strip(), level=1)
-                else:
-                    lines = paragraph_text.split("\n")
-                    for line in lines:
-                        if line.strip():
-                            doc.add_paragraph(line.strip())
-
-        try:
-            doc.save(str(file_path))
-        except PermissionError:
-            return {"success": False, "error": _permission_error_msg(str(file_path))}
-
-        file_info = {
-            "filename": file_name,
-            "file_path": str(file_path),
-            "file_type": "word",
-            "created_at": datetime.now().isoformat(),
-            "message": f"Word document created successfully with {len(paragraphs)} paragraphs",
-        }
-        set_generated_files([file_info])
-
-        return {
-            "success": True,
-            "file_path": str(file_path),
-            "paragraphs": len(paragraphs),
-            "message": f"Word document created successfully with {len(paragraphs)} paragraphs. File loaded successfully into attachments. You can view it directly from the attachments section below.",
-            "file_info": file_info,
-        }
-
-    except Exception as e:
-        logger.error(f"Error creating Word document: {str(e)}")
-        return {"success": False, "error": f"Failed to create Word document: {str(e)}"}
-
-
-# ---------------------------------------------------------------------------
-# Modify tools
-# ---------------------------------------------------------------------------
-
-@tool(parse_docstring=True)
-def modify_word_content(
-    file_path: str, search_text: str, replace_text: str
-) -> Dict[str, Any]:
-    """Modify an existing Word document by searching and replacing text.
-
-    Args:
-        file_path: Path to the Word document to update.
-        search_text: Text to search for in the document.
-        replace_text: Text that will replace each occurrence of the search text.
-    """
-    try:
-        doc = Document(file_path)
-
-        unmasked_search_text = unmask_text(search_text)
-        unmasked_replace_text = unmask_text(replace_text)
-
-        replacements_made = 0
-
-        for paragraph in doc.paragraphs:
-            if unmasked_search_text in paragraph.text:
-                paragraph.text = paragraph.text.replace(
-                    unmasked_search_text, unmasked_replace_text
-                )
-                replacements_made += 1
-
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    if unmasked_search_text in cell.text:
-                        cell.text = cell.text.replace(
-                            unmasked_search_text, unmasked_replace_text
-                        )
-                        replacements_made += 1
-
-        try:
-            doc.save(file_path)
-        except PermissionError:
-            return {"success": False, "error": _permission_error_msg(file_path)}
-
-        return {
-            "success": True,
-            "file_path": file_path,
-            "replacements_made": replacements_made,
-            "message": f"Document updated successfully. Made {replacements_made} replacements.",
-        }
-
-    except PermissionError:
-        return {"success": False, "error": _permission_error_msg(file_path)}
-    except Exception as e:
-        logger.error(f"Error modifying Word document: {str(e)}")
-        return {"success": False, "error": f"Failed to modify Word document: {str(e)}"}
-
-
-@tool(parse_docstring=True)
-def modify_excel_cells(
-    file_path: str, updates: str, sheet_name: Optional[str] = None
-) -> Dict[str, Any]:
-    """Update cell values in an Excel file.
-
-    Args:
-        file_path: Path to the Excel file.
-        updates: JSON string with a list of objects containing 'cell' and 'value' keys. Example: "[{'cell': 'A1', 'value': 100}]".
-        sheet_name: Name of the sheet to modify (None for the active sheet).
-    """
-    try:
-        updates_data = json.loads(updates) if isinstance(updates, str) else updates
-        wb = load_workbook(file_path)
-        if sheet_name:
-            if sheet_name in wb.sheetnames:
-                ws = wb[sheet_name]
-            else:
-                return {
-                    "success": False,
-                    "error": f"Worksheet '{sheet_name}' does not exist in the workbook. Available sheets: {', '.join(wb.sheetnames)}",
-                }
-        else:
-            ws = wb.active
-
-        for update in updates_data:
-            cell_address = update["cell"]
-            cell_value = update["value"]
-
-            if isinstance(cell_value, str):
-                unmasked_cell_value = unmask_text(cell_value)
-                ws[cell_address] = unmasked_cell_value
-            else:
-                ws[cell_address] = cell_value
-
-        try:
-            wb.save(file_path)
-        except PermissionError:
-            return {"success": False, "error": _permission_error_msg(file_path)}
-
-        return {
-            "success": True,
-            "file_path": file_path,
-            "updates_applied": len(updates_data),
-            "sheet_name": ws.title,
-            "message": f"Successfully updated {len(updates_data)} cells in sheet '{ws.title}'",
-        }
-
-    except PermissionError:
-        return {"success": False, "error": _permission_error_msg(file_path)}
-    except Exception as e:
-        logger.error(f"Error modifying Excel cells: {str(e)}")
-        return {"success": False, "error": f"Failed to modify Excel cells: {str(e)}"}
-
-
-@tool(parse_docstring=True)
-def create_excel_charts(
-    file_path: str, chart_data: str, sheet_name: Optional[str] = None
-) -> Dict[str, Any]:
-    """Create charts in an Excel workbook.
-
-    Args:
-        file_path: Path to the Excel file to update.
-        chart_data: JSON string with the chart configuration (for example,
-            chart type, ranges, and titles).
-        sheet_name: Name of the sheet to add the chart to (None for the active sheet).
-    """
-    try:
-        chart_config = (json.loads(chart_data) if isinstance(chart_data, str) else chart_data)
-        wb = load_workbook(file_path)
-        if sheet_name:
-            ws = wb[sheet_name]
-        else:
-            ws = wb.active
-
-        chart_type = chart_config.get("type", "bar").lower()
-        data_range = chart_config.get("data_range", "A1:B10")
-        title = chart_config.get("title", "Chart")
-
-        unmasked_title = unmask_text(title)
-
-        if chart_type == "bar":
-            chart = BarChart()
-        elif chart_type == "line":
-            chart = LineChart()
-        elif chart_type == "pie":
-            chart = PieChart()
-        else:
-            chart = BarChart()
-
-        chart.title = unmasked_title
-
-        if "!" in data_range:
-            range_part = data_range.split("!")[-1]
-        else:
-            range_part = data_range
-
-        from openpyxl.utils import range_boundaries
-
-        min_col, min_row, max_col, max_row = range_boundaries(range_part)
-
-        data = Reference(
-            ws, min_col=min_col, min_row=min_row, max_col=max_col, max_row=max_row
-        )
-        chart.add_data(data, titles_from_data=True)
-        ws.add_chart(chart)
-
-        try:
-            wb.save(file_path)
-        except PermissionError:
-            return {"success": False, "error": _permission_error_msg(file_path)}
-
-        return {
-            "success": True,
-            "file_path": file_path,
-            "chart_type": chart_type,
-            "chart_title": title,
-            "sheet_name": ws.title,
-            "message": f"Successfully created {chart_type} chart '{title}' in sheet '{ws.title}'",
-        }
-
-    except PermissionError:
-        return {"success": False, "error": _permission_error_msg(file_path)}
-    except Exception as e:
-        logger.error(f"Error creating Excel chart: {str(e)}")
-        return {"success": False, "error": f"Failed to create Excel chart: {str(e)}"}
-
-
-# ---------------------------------------------------------------------------
-# Read tools
-# ---------------------------------------------------------------------------
 
 @tool(parse_docstring=True)
 def read_excel_file(
@@ -547,10 +218,6 @@ def read_powerpoint_file(file_name: str) -> Dict[str, Any]:
         return {"success": False, "error": f"Failed to read PowerPoint file: {str(e)}"}
 
 
-# ---------------------------------------------------------------------------
-# Image understanding
-# ---------------------------------------------------------------------------
-
 @tool(parse_docstring=True)
 def describe_file_image(file_name: str, query: str) -> str:
     """Analyze an image file from the documents directory using vision AI.
@@ -623,10 +290,6 @@ def describe_file_image(file_name: str, query: str) -> str:
         logger.error(error_msg)
         return error_msg
 
-
-# ---------------------------------------------------------------------------
-# General sandbox
-# ---------------------------------------------------------------------------
 
 @tool(parse_docstring=True)
 def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
@@ -764,10 +427,6 @@ def execute_file_code(code: str, output_filenames: List[str]) -> Dict[str, Any]:
                 logger.warning(f"Failed to kill sandbox: {str(e)}")
 
 
-# ---------------------------------------------------------------------------
-# List files
-# ---------------------------------------------------------------------------
-
 @tool(parse_docstring=True)
 def list_created_files() -> Dict[str, Any]:
     """List all created files in the documents directory.
@@ -816,10 +475,6 @@ def list_created_files() -> Dict[str, Any]:
             "files": [],
         }
 
-
-# ---------------------------------------------------------------------------
-# Chart discovery
-# ---------------------------------------------------------------------------
 
 @tool(parse_docstring=True)
 def get_available_charts() -> Dict[str, Any]:
@@ -872,10 +527,6 @@ def get_available_charts() -> Dict[str, Any]:
             "charts": [],
         }
 
-
-# ---------------------------------------------------------------------------
-# Generated files tracking helpers
-# ---------------------------------------------------------------------------
 
 def get_generated_files() -> Dict[str, Any]:
     global GENERATED_FILES
