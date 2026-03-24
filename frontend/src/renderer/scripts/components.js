@@ -21,6 +21,7 @@ class UIComponents {
     this.chatSessions = [];
 
     this.selectedFiles = [];
+    this.selectedFilesStorageKey = "airis-selected-files";
     this.allFiles = [];
     this.fileSelectionModal = null;
     this.hasInitializedFiles = false;
@@ -568,8 +569,11 @@ class UIComponents {
         const profile = this.allProfiles.find(p => p.name === selectedProfileName);
         if (profile) {
           this.selectedFiles = [...profile.files]; // profile’dan gelen dosyalar seçili olacak
+          this.normalizeSelectedFilesAgainstAllFiles();
         }
       }
+
+      this.saveSelectedFilesToStorage();
 
       // File selection modal'ı güncelle
       this.renderFileSelectionList();
@@ -602,6 +606,38 @@ class UIComponents {
     input?.focus();
   }
 
+  loadSelectedFilesFromStorage() {
+    try {
+      const raw = localStorage.getItem(this.selectedFilesStorageKey);
+      if (!raw) return null;
+
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return null;
+
+      return parsed.filter((name) => typeof name === "string");
+    } catch (error) {
+      console.warn("Could not load selected files from localStorage:", error);
+      return null;
+    }
+  }
+
+  saveSelectedFilesToStorage() {
+    try {
+      localStorage.setItem(this.selectedFilesStorageKey, JSON.stringify(this.selectedFiles));
+    } catch (error) {
+      console.warn("Could not save selected files to localStorage:", error);
+    }
+  }
+
+  normalizeSelectedFilesAgainstAllFiles() {
+    if (!Array.isArray(this.allFiles)) return;
+
+    const validNames = new Set(this.allFiles.map((file) => file.name));
+    this.selectedFiles = Array.from(
+      new Set(this.selectedFiles.filter((name) => validNames.has(name)))
+    );
+  }
+
   // -------------------------------------------------
 
 
@@ -615,8 +651,17 @@ class UIComponents {
         this.allFiles = result.files;
         // Only select all files on the very first initialization
         if (!this.hasInitializedFiles) {
-          this.selectedFiles = this.allFiles.map((file) => file.name);
+          const savedSelection = this.loadSelectedFilesFromStorage();
+
+          if (savedSelection !== null) {
+            this.selectedFiles = savedSelection;
+            this.normalizeSelectedFilesAgainstAllFiles();
+          } else {
+            this.selectedFiles = this.allFiles.map((file) => file.name);
+          }
+
           this.hasInitializedFiles = true; // Mark as initialized
+          this.saveSelectedFilesToStorage();
           // Update button display
           this.updateFileSelectionButton();
         }
@@ -1683,11 +1728,27 @@ class UIComponents {
           );
 
           if (response && response.success) {
+            const selectedName = response.data?.filename || file.name;
+
             uploadedFiles.push({
               name: file.name,
               size: file.size,
               id: response.data?.file_id || response.data?.filename || file.name,
             });
+
+            // Keep successful uploads selected for subsequent queries and across app restarts.
+            if (!this.selectedFiles.includes(selectedName)) {
+              this.selectedFiles.push(selectedName);
+            }
+
+            // Keep local file cache aligned so selected/total counts stay accurate.
+            const alreadyInAllFiles = this.allFiles.some((f) => f.name === selectedName);
+            if (!alreadyInAllFiles) {
+              this.allFiles.push({ name: selectedName, size: file.size });
+            }
+
+            this.saveSelectedFilesToStorage();
+            this.updateFileSelectionButton();
 
             // Update status to success
             this.updateFileStatusMessage(file.name, "success");
@@ -6576,6 +6637,8 @@ class UIComponents {
 
       if (result.success && result.files) {
         this.allFiles = result.files;
+        this.normalizeSelectedFilesAgainstAllFiles();
+        this.saveSelectedFilesToStorage();
         this.renderFileSelectionList();
         this.updateFileSelectionButton();
       } else {
@@ -6687,6 +6750,8 @@ class UIComponents {
     if (index > -1) this.selectedFiles.splice(index, 1);
     else this.selectedFiles.push(fileName);
 
+    this.saveSelectedFilesToStorage();
+
     // Listeyi yeniden render et ve seçili dosyaları en üste taşı
     this.renderFileSelectionList();
     this.updateFileSelectionButton();
@@ -6704,6 +6769,8 @@ class UIComponents {
     visibleNames.forEach(n => set.add(n));
     this.selectedFiles = Array.from(set);
 
+    this.saveSelectedFilesToStorage();
+
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
   }
@@ -6717,6 +6784,8 @@ class UIComponents {
     const visibleNames = visibleFiles.map(f => f.name);
 
     this.selectedFiles = this.selectedFiles.filter(n => !visibleNames.includes(n));
+
+    this.saveSelectedFilesToStorage();
 
     this.updateFileSelectionDisplay();
     this.updateFileSelectionButton();
