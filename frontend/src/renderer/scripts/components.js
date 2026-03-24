@@ -1731,11 +1731,27 @@ class UIComponents {
           );
 
           if (response && response.success) {
+            const selectedName = response.data?.filename || file.name;
+
             uploadedFiles.push({
               name: file.name,
               size: file.size,
               id: response.data?.file_id || response.data?.filename || file.name,
             });
+
+            // Keep successful uploads selected for subsequent queries and across app restarts.
+            if (!this.selectedFiles.includes(selectedName)) {
+              this.selectedFiles.push(selectedName);
+            }
+
+            // Keep local file cache aligned so selected/total counts stay accurate.
+            const alreadyInAllFiles = this.allFiles.some((f) => f.name === selectedName);
+            if (!alreadyInAllFiles) {
+              this.allFiles.push({ name: selectedName, size: file.size });
+            }
+
+            this.saveSelectedFilesToStorage();
+            this.updateFileSelectionButton();
 
             // Update status to success
             this.updateFileStatusMessage(file.name, "success");
