@@ -1988,12 +1988,6 @@ class UIComponents {
       'search_specific_document_for_research': 'Search Document',
 
       // File tools
-      'create_excel_file':            'Create Excel File',
-      'create_word_document':         'Create Word Document',
-      'modify_word_content':          'Modify Word Document',
-      'modify_excel_cells':           'Modify Excel Cells',
-      'create_excel_charts':          'Create Excel Charts',
-      'create_powerpoint_from_code':  'Create PowerPoint',
       'read_excel_file':              'Read Excel File',
       'read_word_document':           'Read Word Document',
       'read_powerpoint_file':         'Read PowerPoint',
@@ -2212,17 +2206,11 @@ class UIComponents {
 
       // File sub-agent & tools
       file_operations:                       tr ? 'Doküman hazırlanıyor...'                        : 'Preparing your document...',
-      create_excel_file:                     tr ? 'Excel dosyan oluşturuluyor...'                   : 'Building your Excel file...',
-      create_word_document:                  tr ? 'Word belgeni oluşturuluyor...'                   : 'Writing your Word document...',
-      modify_word_content:                   tr ? 'Belgendeki içerik güncelleniyor...'              : 'Updating content in your document...',
-      modify_excel_cells:                    tr ? 'Tabloya yeni veriler işleniyor...'               : 'Writing data into your spreadsheet...',
-      create_excel_charts:                   tr ? 'Excel dosyana grafik ekleniyor...'               : 'Adding a chart to your spreadsheet...',
-      create_powerpoint_from_code:           tr ? 'Sunum slaytları hazırlanıyor...'                 : 'Building your presentation slides...',
       read_excel_file:                       tr ? 'Excel dosyandaki veriler okunuyor...'            : 'Reading your spreadsheet...',
       read_word_document:                    tr ? 'Word belgendeki içerik okunuyor...'              : 'Reading through your document...',
       read_powerpoint_file:                  tr ? 'Sunumundaki slaytlar okunuyor...'                : 'Reading through your presentation...',
       describe_file_image:                   tr ? 'Görsel ne gösteriyor diye bakılıyor...'          : 'Taking a look at the image...',
-      execute_file_code:                     tr ? 'Dosya oluşturmak için kod yazılıp çalıştırılıyor...' : 'Writing and running code to build the file...',
+      execute_file_code:                     tr ? 'Dosya işlemleri gerçekleştiriliyor...' : 'Performing file operations...',
       list_created_files:                    tr ? 'Şimdiye kadar oluşturulan dosyalar listeleniyor...' : 'Checking the files created so far...',
       get_available_charts:                  tr ? 'Daha önce oluşturulan grafikler kontrol ediliyor...' : 'Checking previously generated charts...',
 
