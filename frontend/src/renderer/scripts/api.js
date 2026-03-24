@@ -252,7 +252,7 @@ class APIService {
     selectedFiles = null,
     callbacks = {}
   ) {
-    const { onToken, onToolStart, onToolEnd, onDone, onError } = callbacks;
+    const { onToken, onToolStart, onToolEnd, onDone, onError, onSpdragDocStart, onSpdragDocEnd, onSpdragSynthesisStart } = callbacks;
 
     const fetchOptions = {
       method: "POST",
@@ -317,6 +317,15 @@ class APIService {
                       sources: data.sources || [],
                     });
                   }
+                  break;
+                case "spdrag_doc_start":
+                  if (onSpdragDocStart) onSpdragDocStart(data.document);
+                  break;
+                case "spdrag_doc_end":
+                  if (onSpdragDocEnd) onSpdragDocEnd(data.document);
+                  break;
+                case "spdrag_synthesis_start":
+                  if (onSpdragSynthesisStart) onSpdragSynthesisStart();
                   break;
                 case "error":
                   if (onError) onError(data.content);
