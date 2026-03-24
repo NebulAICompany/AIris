@@ -3274,7 +3274,7 @@ body.dark-theme .image-caption {
   }
 }
 
-/* ── SPDRag Radar Animation Panel ──────────────────────────────── */
+/* ── SPDRag Orbital Animation Panel ──────────────────────────────── */
 
 .spdrag-graph-container {
   width: 100%;
@@ -3287,64 +3287,55 @@ body.dark-theme .image-caption {
 
 .spdrag-svg {
   width: 100%;
-  max-width: 220px;
+  max-width: 200px;
   height: auto;
   overflow: visible;
 }
 
-/* Background rings */
-.spdrag-radar-ring {
+.spdrag-orbit-path {
+  fill: none;
+  stroke: var(--accent-primary);
+  stroke-width: 0.5;
+  stroke-opacity: 0.12;
+  stroke-dasharray: 4 6;
+}
+
+.spdrag-ambient {
+  animation: spdragBreath 4s ease-in-out infinite;
+}
+
+.spdrag-orbit {
+  transform-origin: 100px 100px;
+}
+
+.spdrag-orbit-1 { animation: spdragOrbit 7s linear infinite; }
+.spdrag-orbit-2 { animation: spdragOrbit 11s linear infinite reverse; }
+.spdrag-orbit-3 { animation: spdragOrbit 15s linear infinite; }
+
+.spdrag-particle {
+  fill: var(--accent-primary);
+  opacity: 0.85;
+}
+
+.spdrag-particle-dim {
+  opacity: 0.35;
+}
+
+.spdrag-core {
+  fill: var(--accent-primary);
+}
+
+.spdrag-core-halo {
   fill: none;
   stroke: var(--accent-primary);
   stroke-width: 1;
-  stroke-opacity: 0.1;
 }
 
-.spdrag-radar-border {
-  fill: none;
-  stroke: var(--accent-primary);
+.spdrag-core-halo-2 {
   stroke-width: 1.5;
-  stroke-opacity: 0.2;
 }
 
-/* Sweep sector (trailing glow behind arm) */
-.spdrag-sector {
-  fill: var(--accent-primary);
-  opacity: 0.09;
-}
-
-/* Sweep arm */
-.spdrag-arm {
-  stroke: var(--accent-primary);
-  stroke-width: 1.5;
-  stroke-opacity: 0.75;
-  stroke-linecap: round;
-}
-
-/* Sweep group rotation — CSS-driven so animation-duration is easily changed */
-#spdrag-sweep {
-  animation: spdragSweepAnim 3.5s linear infinite;
-  transform-origin: 130px 130px;
-}
-
-#spdrag-sweep.synthesizing {
-  animation-duration: 1.2s;
-}
-
-/* Center pulse rings — animated via SVG SMIL */
-.spdrag-pulse-ring {
-  fill: none;
-  stroke: var(--accent-primary);
-}
-
-.spdrag-pulse-ring-1 { stroke-width: 1;   }
-.spdrag-pulse-ring-2 { stroke-width: 1.5; }
-
-.spdrag-center-core {
-  fill: var(--accent-primary);
-}
-
-#spdrag-center.synthesizing .spdrag-center-core {
+#spdrag-center.synthesizing .spdrag-core {
   animation: spdragCorePulse 0.9s ease-in-out infinite;
 }
 
@@ -3352,13 +3343,12 @@ body.dark-theme .image-caption {
   text-anchor: middle;
   dominant-baseline: middle;
   fill: #ffffff;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
   pointer-events: none;
   user-select: none;
 }
 
-/* Status label below graph */
 .spdrag-graph-status {
   font-size: 11px;
   color: var(--text-secondary);
@@ -3369,16 +3359,25 @@ body.dark-theme .image-caption {
   transition: color 0.4s ease;
 }
 
+.spdrag-graph-container.synthesizing .spdrag-orbit-1 { animation-duration: 2.5s; }
+.spdrag-graph-container.synthesizing .spdrag-orbit-2 { animation-duration: 3.5s; }
+.spdrag-graph-container.synthesizing .spdrag-orbit-3 { animation-duration: 5s; }
+
 /* ── Keyframes ─────────────────────────────────────────────────── */
 
-@keyframes spdragSweepAnim {
-  from { transform: rotate(0deg);   }
+@keyframes spdragOrbit {
+  from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
+}
+
+@keyframes spdragBreath {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.85; }
 }
 
 @keyframes spdragCorePulse {
   0%, 100% { opacity: 0.85; }
-  50%       { opacity: 1;    }
+  50%      { opacity: 1; }
 }
 
 
