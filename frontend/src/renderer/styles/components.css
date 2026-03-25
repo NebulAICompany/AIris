@@ -4783,6 +4783,51 @@ body.dark-theme .progress-bar {
 .files-header {
   margin-bottom: 24px;
   display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.created-documents-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.created-documents-sort label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.created-documents-sort select {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.created-documents-sort select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+@media (max-width: 768px) {
+  .files-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .created-documents-sort {
+    width: 100%;
+  }
+
+  .created-documents-sort select {
+    flex: 1;
+  }
 }
 
 .files-header h2 {
