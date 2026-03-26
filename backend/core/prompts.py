@@ -422,7 +422,7 @@ layout_style must be one of: "professional", "dark", "minimal". Default is "prof
 Use for any non-market or custom/statistical visualization.
 Write complete executable Python code (pandas/numpy + matplotlib/seaborn/plotly) that:
 - loads/prepares data provided by the user/context
-- creates the plot
+- creates the plot. For matplotlib figures, always initialize with constrained_layout=True and an appropriate figsize (e.g., fig, ax = plt.subplots(figsize=(12, 8), constrained_layout=True)). Rotate long x-axis labels (rotation=45, ha='right').
 - saves to PNG (e.g., plt.savefig('chart.png', dpi=150, bbox_inches='tight')) and closes figures
 - handles missing/invalid data gracefully
 
@@ -431,6 +431,4 @@ Rules:
 - Do NOT include chart HTML/image data, file paths, or file names in your text response. The chart is automatically attached to the UI.
 - After creation, explain insights briefly (what it suggests), not the chart rendering.
 - If code errors, fix and retry once. Respect sandbox timeout (~30s).
-- NEVER use 'transparent' as a background color value (bgcolor, facecolor, plot_bgcolor, paper_bgcolor). Use solid colors instead (e.g., '#FFFFFF' for white, '#131722' for dark).
-
-"""
+- NEVER use 'transparent' as a background color value (bgcolor, facecolor, plot_bgcolor, paper_bgcolor). Use solid colors instead (e.g., '#FFFFFF' for white, '#131722' for dark)."""
