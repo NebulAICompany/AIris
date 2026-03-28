@@ -287,7 +287,6 @@ async def generate_unified_summary(articles: List[NewsArticle]) -> Dict[str, str
         # Create agent
         agent = create_news_summarization_agent(
             instructions=news_summarization_prompt,
-            web_search_enabled=False,
         )
 
         # Collect images
