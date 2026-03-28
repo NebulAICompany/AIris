@@ -91,11 +91,9 @@ def create_main_agent(
 
     Returns a LLM Agent configured with tools, subagents, and custom instructions.
     """
-    web_context_part = (
-        "Use your web_search_tool to research the topic on the internet and "
-        if web_search_enabled
-        else ""
-    )
+    web_context_part = ("""ALWAYS prioritize using the web_search_tool first for any query requiring factual, external, or real-world information. 
+    Do NOT search for conversational replies, formatting or when the user explicitly asks about provided documents. 
+    Never rely solely on your internal training knowledge for facts."""  if web_search_enabled else "")
 
     selected_files = get_selected_files()
     selected_documents_part = ""
