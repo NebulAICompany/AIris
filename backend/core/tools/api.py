@@ -71,7 +71,7 @@ def wolfram_alpha_query(query: str):
 
 @tool(parse_docstring=True, response_format="content_and_artifact")
 def web_search_tool(query: str, search_depth: str = "basic"):
-    """Perform a web search using Tavily and return the results.
+    """Perform a web search and return the results.
 
     Args:
         query: The search query to perform.

@@ -80,7 +80,6 @@ main_agent_tools = [
 def create_main_agent(
     web_search_enabled: bool = False,
     use_spdrag: bool = False,
-    instruction: str = None,
 ):
     """
     Create a LLM Agent for main assistant functionality with agentic RAG.
@@ -89,19 +88,12 @@ def create_main_agent(
         web_search_enabled: Whether to enable web search.
         use_spdrag: When True, replaces the standard local search tool with the
             SPD-RAG deep-research tool and injects usage constraints into the prompt.
-        instruction: Optional custom instructions.
 
     Returns a LLM Agent configured with tools, subagents, and custom instructions.
     """
-    instruction_part = (
-        f"**Special Instructions:**\n{instruction}\n" if instruction else ""
-    )
-
-    web_context_part = (
-        "Use your web_search_tool to research the topic on the internet and "
-        if web_search_enabled
-        else ""
-    )
+    web_context_part = ("""ALWAYS prioritize using the web_search_tool first for any query requiring factual, external, or real-world information. 
+    Do NOT search for conversational replies, formatting or when the user explicitly asks about provided documents. 
+    Never rely solely on your internal training knowledge for facts."""  if web_search_enabled else "")
 
     selected_files = get_selected_files()
     selected_documents_part = ""
@@ -134,7 +126,6 @@ def create_main_agent(
     agent_instructions = main_agent_instructions.format(
         current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         web_context_part=web_context_part,
-        instruction_part=instruction_part,
         selected_documents_part=selected_documents_part,
     )
 
@@ -167,29 +158,14 @@ def create_main_agent(
     return agent
 
 
-def create_news_summarization_agent(
-    instructions: str,
-    web_search_enabled: bool,
-):
+def create_news_summarization_agent(instructions: str):
     """
-    Create a specialized Deep Agent for news summarization with news context and web search capabilities.
+    Create a specialized Deep Agent for news summarization with news context.
     """
-    # Include web context
-    web_context_part = (
-        f"Use your web_search_tool to research the topic on the internet and "
-        if web_search_enabled
-        else ""
-    )
-    agent_instructions = f"""
-    {instructions}
-    
-    **Web Search Status:** {web_context_part}
-    """
-
     agent = create_agent(
         model="gpt-4o-mini",
-        tools=[web_search_tool] if web_search_enabled else [],
-        system_prompt=agent_instructions,
+        tools=[],
+        system_prompt=instructions,
         response_format=ToolStrategy(NewsSummarizationResponse),
     )
     return agent
