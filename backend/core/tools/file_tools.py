@@ -540,4 +540,9 @@ def clear_generated_files():
 
 def set_generated_files(files: List[Dict[str, Any]]):
     global GENERATED_FILES
-    GENERATED_FILES.extend(files)
+    for new_file in files:
+        GENERATED_FILES = [
+            f for f in GENERATED_FILES
+            if f.get("filename") != new_file.get("filename")
+        ]
+        GENERATED_FILES.append(new_file)
