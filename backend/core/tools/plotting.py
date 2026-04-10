@@ -2,7 +2,6 @@ import base64
 from pathlib import Path
 from typing import Optional, List
 from e2b_code_interpreter import Sandbox
-from pydantic import BaseModel, Field
 from langchain.tools import tool
 from dotenv import load_dotenv
 import uuid
@@ -23,7 +22,6 @@ from plotly.subplots import make_subplots
 from backend.shared.logger import get_logger
 
 logger = get_logger("PLOTTING")
-
 load_dotenv()
 
 
@@ -38,11 +36,7 @@ def get_missing_dates(df):
     
     # Generate expected business days
     expected = pd.bdate_range(start=start_date, end=end_date)
-    
-    # Get present dates (normalized to midnight)
     present = df.index.normalize().unique()
-    
-    # Find missing days
     missing_business_days = expected.difference(present)
     
     # Format as strings for Plotly
@@ -72,16 +66,15 @@ def append_chart_record(
     """Append a single chart record to chart_reports.json."""
     CHARTS_DIR.mkdir(parents=True, exist_ok=True)
 
+    data = []
     if REPORTS_CHARTS_FILE.exists():
         try:
             with open(REPORTS_CHARTS_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            if not isinstance(data, list):
-                data = []
+                if not isinstance(data, list):
+                    data = []
         except Exception:
-            data = []
-    else:
-        data = []
+            pass
 
     try:
         rel_html = Path(html_file_path).relative_to(BASE_DIR).as_posix()
@@ -132,10 +125,7 @@ def create_custom_chart_from_code(code: str, chart_description: str) -> dict:
 
         # Check if PNG was generated
         if first_result.png:
-            # Generate unique chart ID
             chart_id = f"chart_{uuid.uuid4().hex[:8]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-            # Get base64 PNG data (already base64 encoded from sandbox)
             png_base64 = first_result.png
             png_file = CREATED_DOCUMENTS_PATH / f"{chart_id}.png"
             with open(png_file, "wb") as f:
@@ -226,7 +216,6 @@ def create_custom_chart_from_code(code: str, chart_description: str) -> dict:
 
             # Save chart data
             set_chart_data(chart_data)
-
             append_chart_record(
                 png_file_path=png_file,
                 html_file_path=chart_file,
@@ -356,11 +345,7 @@ def create_financial_stock_chart(
                     limit=min(max(time_range_days, 250), 1000)
                 )
 
-                if (
-                    "error" in response
-                    or "data" not in response
-                    or not response["data"]
-                ):
+                if ("error" in response or "data" not in response or not response["data"]):
                     failed_symbols.append(symbol)
                     continue
 
@@ -432,12 +417,7 @@ def create_financial_stock_chart(
 
         # Calculate subplot rows
         extra_rows = 0
-        if has_volume:
-            extra_rows += 1
-        if has_rsi:
-            extra_rows += 1
-        if has_macd:
-            extra_rows += 1
+        extra_rows += has_volume + has_rsi + has_macd
 
         total_rows = subplot_count + extra_rows
         row_heights = []

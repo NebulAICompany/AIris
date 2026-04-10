@@ -29,6 +29,3 @@ def build_file_agent_template(alias: str = FILE_AGENT_TEMPLATE_ALIAS):
 def ensure_file_agent_template(alias: str = FILE_AGENT_TEMPLATE_ALIAS):
     """Ensure the file-agent template exists by building it for the alias."""
     return build_file_agent_template(alias=alias)
-
-if __name__ == "__main__":
-    build_file_agent_template()

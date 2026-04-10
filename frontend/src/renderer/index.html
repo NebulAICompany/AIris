@@ -436,6 +436,15 @@
                   View and manage AI-generated financial documents
                 </p>
               </div>
+              <div class="created-documents-sort">
+                <label for="created-documents-sort" data-i18n="sortBy">Sort by</label>
+                <select id="created-documents-sort" aria-label="Sort created documents">
+                  <option value="date_desc" data-i18n="sortDateDesc">Date (Newest First)</option>
+                  <option value="date_asc" data-i18n="sortDateAsc">Date (Oldest First)</option>
+                  <option value="name_asc" data-i18n="sortNameAsc">Alphabetical (A-Z)</option>
+                  <option value="name_desc" data-i18n="sortNameDesc">Alphabetical (Z-A)</option>
+                </select>
+              </div>
             </div>
 
             <div class="files-grid" id="created-documents-grid">

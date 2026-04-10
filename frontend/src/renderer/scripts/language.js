@@ -88,6 +88,11 @@ class LanguageService {
         startChatBtn: "Start Chat",
         uploadFilesBtn: "Upload Files",
         deleteFile: "Delete file",
+        sortBy: "Sort by",
+        sortDateDesc: "Date (Newest First)",
+        sortDateAsc: "Date (Oldest First)",
+        sortNameAsc: "Alphabetical (A-Z)",
+        sortNameDesc: "Alphabetical (Z-A)",
 
         // Finance News Section
         financeNewsTitle: "Finance News",
@@ -644,6 +649,11 @@ class LanguageService {
         startChatBtn: "Sohbeti Başlat",
         uploadFilesBtn: "Dosya Yükle",
         deleteFile: "Dosyayı sil",
+        sortBy: "Sırala",
+        sortDateDesc: "Tarih (Yeniden Eskiye)",
+        sortDateAsc: "Tarih (Eskiden Yeniye)",
+        sortNameAsc: "Alfabetik (A-Z)",
+        sortNameDesc: "Alfabetik (Z-A)",
 
         // Finance News Section
         financeNewsTitle: "Finans Haberleri",

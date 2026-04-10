@@ -11,7 +11,7 @@ from openpyxl import load_workbook
 from e2b_code_interpreter import Sandbox
 from dotenv import load_dotenv
 from backend.shared.logger import get_logger
-from backend.shared.constants import CREATED_DOCUMENTS_PATH, REPORTS_CHARTS_FILE, openai_client
+from backend.shared.constants import CREATED_DOCUMENTS_PATH, REPORTS_CHARTS_FILE, openai_client, IMAGE_EXTENSIONS
 from backend.core.prompts import describe_image_prompt
 from backend.utils.e2b_file_template import ensure_file_agent_template
 from langchain_core.tools import tool 
@@ -235,9 +235,8 @@ def describe_file_image(file_name: str, query: str) -> str:
             return f"Error: Image file not found: {file_name}"
 
         ext = file_path.suffix.lower()
-        supported = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
-        if ext not in supported:
-            return f"Error: Unsupported image format '{ext}'. Supported: {', '.join(supported)}"
+        if ext not in IMAGE_EXTENSIONS:
+            return f"Error: Unsupported image format '{ext}'. Supported: {', '.join(IMAGE_EXTENSIONS)}"
 
         with open(file_path, "rb") as f:
             base64_image = base64.b64encode(f.read()).decode("utf-8")
