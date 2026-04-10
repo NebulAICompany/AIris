@@ -25,6 +25,7 @@ class UIComponents {
     this.allFiles = [];
     this.fileSelectionModal = null;
     this.hasInitializedFiles = false;
+    this.createdDocumentsSort = "date_desc";
 
     // Profile modal state
     this.selectedProfileFiles = []; // Sadece profile modal için
@@ -672,6 +673,15 @@ class UIComponents {
   }
 
   setupEventListeners() {
+    const createdDocumentsSort = document.getElementById("created-documents-sort");
+    if (createdDocumentsSort) {
+      createdDocumentsSort.value = this.createdDocumentsSort;
+      createdDocumentsSort.addEventListener("change", async (e) => {
+        this.createdDocumentsSort = e.target.value || "date_desc";
+        await this.loadCreatedDocumentsLibrary();
+      });
+    }
+
     // Listen for chart resize messages from plotting.py generated iframes
     window.addEventListener("message", (event) => {
       if (event.data && event.data.height) {
@@ -4917,7 +4927,7 @@ class UIComponents {
       if (!response.ok)
         throw new Error("Failed to fetch created documents list");
       const data = await response.json();
-      const files = data.files || [];
+      const files = this.getSortedCreatedDocuments(data.files || []);
 
       // Get the created documents library container
       const documentsLibrary = document.getElementById(
@@ -5010,6 +5020,34 @@ class UIComponents {
       }
       console.error("Error loading created documents library:", error);
     }
+  }
+
+  getSortedCreatedDocuments(files) {
+    const safeFiles = Array.isArray(files) ? [...files] : [];
+
+    const getSortableDate = (file) => {
+      const ts = Date.parse(file?.created_at || file?.modified_at || "");
+      return Number.isNaN(ts) ? 0 : ts;
+    };
+
+    const getSortableName = (file) =>
+      (file?.name || "").toString().toLowerCase();
+
+    safeFiles.sort((a, b) => {
+      switch (this.createdDocumentsSort) {
+        case "name_asc":
+          return getSortableName(a).localeCompare(getSortableName(b));
+        case "name_desc":
+          return getSortableName(b).localeCompare(getSortableName(a));
+        case "date_asc":
+          return getSortableDate(a) - getSortableDate(b);
+        case "date_desc":
+        default:
+          return getSortableDate(b) - getSortableDate(a);
+      }
+    });
+
+    return safeFiles;
   }
 
   async loadFilePreview(fileName) {
