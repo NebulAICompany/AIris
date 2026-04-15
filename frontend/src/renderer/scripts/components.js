@@ -1854,7 +1854,7 @@ class UIComponents {
               // Wait for any pending typing animation to complete
               await typingPromise;
 
-              // Finalize the streaming message with metadata; replace text with unmasked content when provided
+              // Finalize the streaming message with metadata and backend final content when provided
               if (streamingStarted) {
                 this.finalizeStreamingMessage(
                   data.images || [],
@@ -2491,13 +2491,13 @@ class UIComponents {
   }
 
   // Finalize streaming message with sources, images, etc.
-  // finalContent: optional unmasked text from backend; when provided, replaces streamed text (fixes PII placeholders)
+  // finalContent: optional finalized text from backend; when provided, replaces streamed text
   finalizeStreamingMessage(images = [], charts = [], generatedFiles = [], sources = [], finalContent = null) {
     const messageDiv = document.getElementById("streaming-message");
     if (!messageDiv) return;
 
-    // Replace streamed text with final unmasked content when provided (e.g. PII unmasking after stream ends).
-    // Use server-provided content as single source of truth (best practice for streaming + PII).
+    // Replace streamed text with backend final content when provided.
+    // Use server-provided content as single source of truth for finalized output.
     if (finalContent != null) {
       const textElement = messageDiv.querySelector(".message-text");
       if (textElement) {
