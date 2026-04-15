@@ -9,7 +9,6 @@ from backend.shared.logger import get_logger
 from backend.shared.constants import (
     UPLOADS_PATH,
     VECTORSTORE_PATH_STR,
-    MASKED_MAP_JSON_PATH,
     CREATED_DOCUMENTS_PATH,
     IMAGES_PATH_STR,
     ALLOWED_FILE_EXTENSIONS,
@@ -608,7 +607,7 @@ async def delete_file(filename: str):
             logger.error(f"File not found: {filename}")
             raise HTTPException(status_code=404, detail=f"File '{filename}' not found")
 
-        # Load vector store and PII mappings
+        # Load vector store
         if not Path(VECTORSTORE_PATH_STR).exists():
             # If no vector store exists, just delete the file
             logger.warning(f"No vector store found, deleting file only: {filename}")
@@ -632,22 +631,7 @@ async def delete_file(filename: str):
         # Stem file name
         base_filename = Path(filename).stem
 
-        # Remove chunks from PII maps
-        pii_map_path = MASKED_MAP_JSON_PATH
-        if pii_map_path.exists():
-            with open(pii_map_path, "r", encoding="utf-8") as f:
-                pii_maps = json.load(f)
-            pii_delete_count = 0
-            chunk_ids_to_delete = [
-                (chunk_id, chunk_map)
-                for chunk_id, chunk_map in pii_maps.items()
-                if base_filename in chunk_id
-            ]
-            for chunk_id, chunk_map in chunk_ids_to_delete:
-                pii_maps.pop(chunk_id, None)
-                pii_delete_count += len(chunk_map)
-            with open(pii_map_path, "w", encoding="utf-8") as f:
-                json.dump(pii_maps, f, ensure_ascii=False, indent=2)
+        chunk_ids_to_delete = []
 
         try:
             client = get_vectorstore()
@@ -695,7 +679,6 @@ async def delete_file(filename: str):
         result = {
             "message": f"File '{filename}' deleted successfully",
             "chunks_deleted": len(chunk_ids_to_delete),
-            "pii_entries_removed": pii_delete_count,
             "file_path": str(file_path),
             "images_deleted": image_deletion_result["images_deleted"],
             "mapping_updated": image_deletion_result["mapping_updated"],
