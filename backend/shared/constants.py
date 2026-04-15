@@ -1,8 +1,6 @@
 import os
 from typing import List, Optional
 from dotenv import load_dotenv
-from azure.ai.textanalytics.aio import TextAnalyticsClient as AsyncTextAnalyticsClient
-from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient
@@ -17,14 +15,12 @@ from langchain_qwq import ChatQwen
 
 load_dotenv()
 
-AZURE_LANGUAGE_KEY = os.environ.get("AZURE_LANGUAGE_KEY")
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 AZURE_DOCUMENT_INTELLIGENCE_KEY = os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
-AZURE_LANGUAGE_ENDPOINT = os.environ.get("AZURE_LANGUAGE_ENDPOINT")
 ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query"
 TCMB_API_KEY = os.getenv("TCMB_API_KEY", "")
 MARKETSTACK_API_KEY = os.getenv("MARKETSTACK_API_KEY")
@@ -54,14 +50,6 @@ concurrent_client = ConcurrentOpenAI(
     tokens_per_minute=27000,
 )
 tavily_client = TavilyClient(TAVILY_API_KEY)
-ta_credential = AzureKeyCredential(AZURE_LANGUAGE_KEY)
-text_analytics_client = TextAnalyticsClient(
-    endpoint=AZURE_LANGUAGE_ENDPOINT, credential=ta_credential
-)
-
-async_text_analytics_client = AsyncTextAnalyticsClient(
-    endpoint=AZURE_LANGUAGE_ENDPOINT, credential=ta_credential
-)
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
 
 # Constants for file paths
@@ -72,7 +60,6 @@ PROJECT_ROOT = BASE_DIR.parent  # AIris/ directory
 # Database paths
 DATABASE_DIR = BASE_DIR / "database"
 CHAT_HISTORY_DB_PATH = DATABASE_DIR / "chat_history.db"
-MASKED_MAP_JSON_PATH = DATABASE_DIR / "masked_map.json"
 
 # Charts directory - Use absolute path to prevent backend/backend issue
 CHARTS_DIR = PROJECT_ROOT / "backend" / "database" / "charts"
@@ -117,7 +104,6 @@ IMAGES_PATH = UPLOADS_PATH / "images"
 
 # Vectorstore paths
 VECTORSTORE_PATH = DATABASE_DIR / "vectorstore"
-PII_CHUNK_MAPS_PATH = VECTORSTORE_PATH / "pii_chunk_maps.json"
 
 # Frontend paths
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
@@ -159,7 +145,6 @@ IMAGES_PATH_STR = str(IMAGES_PATH)
 VECTORSTORE_PATH_STR = str(VECTORSTORE_PATH)
 DATABASE_DIR_STR = str(DATABASE_DIR)
 CHAT_HISTORY_DB_PATH_STR = str(CHAT_HISTORY_DB_PATH)
-MASKED_MAP_JSON_PATH_STR = str(MASKED_MAP_JSON_PATH)
 LOGS_DIR_STR = str(LOGS_DIR)
 BACKEND_LOG_PATH_STR = str(BACKEND_LOG_PATH)
 BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
