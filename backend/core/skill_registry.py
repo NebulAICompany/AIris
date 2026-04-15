@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+from langchain_core.tools import tool 
 
 # vectorrag (workspace root) path'ini Python path'e ekle, böylece backend module'ü bulunabilir
 _current_file = Path(__file__).resolve()
@@ -13,6 +14,12 @@ if str(_vectorrag_root) not in sys.path:
 from backend.shared.constants import SKILLS_DIR
 
 def register_skill_intros():
+    """
+    Register all skill introductions by aggregating SKILL.md frontmatter.
+
+    Returns:
+        str: A concatenated string of all skill introductions (frontmatter blocks).
+    """
     registry = ""
     file_list = iter_skill_md_files()
 
@@ -24,8 +31,32 @@ def register_skill_intros():
             registry += f"\n{intro}\n"
     return registry
 
+@tool(parse_docstring=True)
+def skill_loader(skill_name: str) -> str:
+    """
+    Load the SKILL.md content for a given skill name.
+
+    Args:
+        skill_name: The name of the skill folder to load.
+
+    Returns:
+        The full SKILL.md content, or an error message if not found.
+    """
+    skill_md_path = SKILLS_DIR / skill_name / "SKILL.md"
+    if not skill_md_path.is_file():
+        return f"Error: No SKILL.md found for skill '{skill_name}'."
+    
+    markdown = read_md_file(skill_md_path)
+    return markdown
+
+
 def iter_skill_md_files() -> list[Path]:
-    """Step 1: Iterate skill folders and return existing SKILL.md files."""
+    """
+    Iterate skill folders and return existing SKILL.md files.
+
+    Returns:
+        list[Path]: List of Path objects pointing to each SKILL.md file found.
+    """
     if not SKILLS_DIR.exists() or not SKILLS_DIR.is_dir():
         return []
 
@@ -39,12 +70,28 @@ def iter_skill_md_files() -> list[Path]:
 
 
 def read_md_file(md_path: Path) -> str:
-    """Step 2: Read markdown file content."""
+    """
+    Read markdown file content.
+
+    Args:
+        md_path: Path object pointing to the markdown file.
+
+    Returns:
+        str: The full content of the markdown file.
+    """
     return md_path.read_text(encoding="utf-8")
 
 
 def parse_frontmatter(markdown_text: str) -> str | None:
-    """Step 3: Return text between opening and closing --- lines."""
+    """
+    Extract text between opening and closing --- lines (YAML frontmatter).
+
+    Args:
+        markdown_text: The full markdown text content.
+
+    Returns:
+        str | None: The frontmatter content, or empty string if not found.
+    """
     # İlk --- bul
     first_sep = markdown_text.find("---")
     if first_sep == -1:

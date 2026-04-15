@@ -366,6 +366,8 @@ Do not change the plan unless you discover you are DEFINETELY missing a step or 
 
 {selected_documents_part}
 
+{skill_intros}
+
 If you are going to call any tool, before each tool call, be sure about that call is necessary.
 After each tool call, observe the tools' output and use it immediatly to reach the final point.
 If failed twice, do not call the same tool again, change your approach. Or answer with the information you have.
@@ -375,6 +377,7 @@ and reach the goal with MINIMUM NUMBER OF STEPS.
 
 You have many tools to use for wide range of request scenarios. 
 Choose them wisely and aiming to reach your goal.
+When relevant skills are available for the user's request, ALWAYS load and use them via the skill_loader tool.
 If retrieved context is sufficient to answer, stop retrieving and answer.
 
 Stop when the user request is satisfied; do not continue optimizing.

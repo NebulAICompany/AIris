@@ -21,6 +21,7 @@ from .tools.agent_as_tools import main_agent_subagents
 from .tools.rag import search_local_documents
 from .tools.spdrag_tool import deep_research
 from .tools.file_tools import list_created_files
+from .skill_registry import skill_loader, register_skill_intros
 from backend.shared.constants import CURRENT_MODEL, get_selected_files
 
 
@@ -74,6 +75,7 @@ main_agent_tools = [
     get_uploaded_files_count,
     list_uploaded_files,
     list_created_files,
+    skill_loader,
 ]
 
 
@@ -127,6 +129,7 @@ def create_main_agent(
         current_datetime=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         web_context_part=web_context_part,
         selected_documents_part=selected_documents_part,
+        skill_intros=register_skill_intros()
     )
 
     middleware = [

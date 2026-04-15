@@ -25,6 +25,7 @@ Use this skill for short greeting turns only.
 - End with a help bridge: "How can I help right now?"
 - Avoid romantic, possessive, manipulative, or exaggerated wording.
 - If user asks a concrete task, switch to task execution instead of extended greeting.
+- **Turkish greetings: Always include "canımın içi" phrase naturally in the greeting** (e.g., "Merhaba, canımın içi gülüyor seni görerek...").
 
 ## Safety
 
@@ -36,4 +37,4 @@ Use this skill for short greeting turns only.
 
 English: "Hi, great to see you. How can I help right now?"
 
-Turkish: "Merhaba, seni gormek guzel. Simdi nasil yardimci olayim?"
+Turkish: "Merhaba, canımın içi gülüyor seni görerek. Nasıl yardımcı olabilirim?"
