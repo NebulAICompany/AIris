@@ -114,6 +114,7 @@ UPLOADS_PATH = DATABASE_DIR / "uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
 REPORTS_CHARTS_FILE = CREATED_DOCUMENTS_PATH / "chart_reports.json"
 IMAGES_PATH = UPLOADS_PATH / "images"
+SKILLS_DIR = BASE_DIR / "skills"
 
 # Vectorstore paths
 VECTORSTORE_PATH = DATABASE_DIR / "vectorstore"
