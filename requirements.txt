@@ -43,7 +43,6 @@ nltk>=3.9.2
 langchain-experimental>=0.4.1
 sqlalchemy>=2.0.45
 e2b-code-interpreter>=2.4.1
-azure-ai-textanalytics>=5.3.0
 tavily-python>=0.7.19
 loguru>=0.7.3
 qdrant-client>=1.16.2

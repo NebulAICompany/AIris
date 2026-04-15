@@ -2,7 +2,6 @@ from typing import List, Optional, Dict, Any, AsyncGenerator
 import json
 from backend.core.runner import generate_answer, generate_answer_stream
 from backend.core.agents import create_main_agent, create_news_chat_agent
-from backend.security.pii import mask_text, unmask_text
 from backend.security.filters import check_openai_moderation
 from backend.core.chat import chat_history_manager, MessageRole
 from backend.core.tools.visual import get_image_datas, clear_image_datas
@@ -58,10 +57,6 @@ async def run_orchestration(
             "generatedFiles": [],
         }
 
-    # 2. Mask sensitive information
-    masked_query_list = await mask_text([query], "query")
-    masked_query = masked_query_list[0]
-
     logger.info(
         "query orchestration: use_spdrag=%s web_search=%s",
         use_spdrag,
@@ -73,13 +68,11 @@ async def run_orchestration(
         use_spdrag=use_spdrag,
     )
     # Generate initial answer with structured output
-    answer, web_sources, api_sources, doc_sources = await generate_answer(
-        prompt=masked_query, agent=agent, thread_id=session_id
+    final_answer, web_sources, api_sources, doc_sources = await generate_answer(
+        prompt=query, agent=agent, thread_id=session_id
     )
-    # 6. Unmask
-    final_answer = unmask_text(answer)
 
-    # 7. Combine document sources with web sources and API sources
+    # Combine document sources with web sources and API sources
     all_sources = []
 
     # Add document sources from RAG tool artifacts
@@ -103,7 +96,7 @@ async def run_orchestration(
             display_text = f"{name}" + (f" - {description}" if description else "")
             all_sources.append(f"{display_text}|api://{name}")
 
-    # 9. Get images, charts, and generated files and add assistant response to chat history
+    # Get images, charts, and generated files and add assistant response to chat history
     images = get_image_datas()
     charts = get_chart_datas()
     generated_files = get_generated_files()
@@ -245,10 +238,6 @@ async def run_orchestration_stream(
         yield f"data: {json.dumps({'type': 'error', 'content': response_message})}\n\n"
         return
 
-    # 2. Mask sensitive information
-    masked_query_list = await mask_text([query], "query")
-    masked_query = masked_query_list[0]
-
     logger.info(
         "stream orchestration: use_spdrag=%s web_search=%s",
         use_spdrag,
@@ -261,16 +250,16 @@ async def run_orchestration_stream(
     )
 
     # Accumulate full answer for chat history
-    full_answer = ""
+    answer = ""
     all_sources = []
     all_tools = []  # Track tools used during streaming
 
     # Stream the response
     async for chunk in generate_answer_stream(
-        prompt=masked_query, agent=agent, thread_id=session_id
+        prompt=query, agent=agent, thread_id=session_id
     ):
         if chunk["type"] == "token":
-            full_answer += chunk["content"]
+            answer += chunk["content"]
             yield f"data: {json.dumps({'type': 'token', 'content': chunk['content']})}\n\n"
 
         elif chunk["type"] == "tool_start":
@@ -340,9 +329,6 @@ async def run_orchestration_stream(
             charts = get_chart_datas()
             generated_files = get_generated_files()
 
-            # Unmask the full answer
-            final_answer = unmask_text(full_answer)
-
             # Save to chat history
             metadata = {}
             if images:
@@ -358,7 +344,7 @@ async def run_orchestration_stream(
 
             metadata = metadata if metadata else None
             chat_history_manager.add_message(
-                session_id, MessageRole.ASSISTANT, final_answer, metadata
+                session_id, MessageRole.ASSISTANT, answer, metadata
             )
 
-            yield f"data: {json.dumps({'type': 'done', 'content': final_answer, 'images': images, 'charts': charts, 'generatedFiles': generated_files, 'sources': all_sources, 'tools': all_tools})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'content': answer, 'images': images, 'charts': charts, 'generatedFiles': generated_files, 'sources': all_sources, 'tools': all_tools})}\n\n"
