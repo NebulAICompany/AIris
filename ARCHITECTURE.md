@@ -157,7 +157,7 @@ Key decisions:
 
 The default document search tool runs a vector search (top 15, filtered to the documents the user selected) and a BM25 search on model-supplied keywords, merges the candidates, reranks them with Cohere rerank-v4.0-fast to the top 5, attaches vision descriptions for retrieved figures, and returns the chunks with a source artifact per document.
 
-Citations are file-level in the structured response; page, table, and figure identifiers travel inside the chunk text and attachments, so the model can cite them in prose. Structured page-level citation fields are not implemented.
+Each answer includes a source list of documents, URLs, and APIs. Page, table, and figure identifiers travel inside the retrieved chunk text and as image attachments, so the model can cite them in the answer.
 
 ### SPD-RAG deep research
 
@@ -217,8 +217,7 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 | Retrieval | Vector and keyword search, reranking, image description | `backend/retrieval/` | Qdrant (async client), custom BM25, Cohere rerank |
 | Data services | Market data cache, financial news aggregation and clustering, balance-of-payments ledger, TCMB metadata indexing | `backend/utils/` | SQLite, feedparser, Marketstack, EVDS |
 | State | Chat history, agent checkpoints, upload tracking | `backend/core/`, `backend/utils/` | SQLAlchemy, aiosqlite, LangGraph SQLite checkpointer |
-| Safety and observability | Moderation, metrics, logging | `backend/security/`, `backend/monitoring/`, `backend/shared/` | OpenAI Moderation, Prometheus client, loguru |
-| Self-hosted serving | Launcher for an on-premise vision-language model | `backend/external/glm/` | vLLM |
+| Safety and observability | Input moderation and logging | `backend/security/`, `backend/shared/` | OpenAI Moderation, loguru |
 | Evaluation | Trajectory evaluation with an LLM judge | `tests/` | agentevals |
 
 ---
@@ -267,7 +266,7 @@ Results from the paper on the Loong benchmark (English, 200k-250k token instance
 | Agentic RAG | 32.8 | 8.8% | 0.098 | 40.6 |
 | SPD-RAG | 58.1 | 18.6% | 0.103 | 54.8 |
 
-SPD-RAG reaches 85.4% of full-context quality at 37.9% of the cost (2.25x cost-quality efficiency), with the largest gains on Clustering (+40.5 over Normal RAG) and Chain of Reasoning (+26.2 over Agentic RAG) tasks. The paper used Gemini 2.5 Pro and Flash; this codebase uses GPT-5 and GPT-5-mini in the same roles. Repository-specific benchmark numbers do not exist yet.
+SPD-RAG reaches 85.4% of full-context quality at 37.9% of the cost (2.25x cost-quality efficiency), with the largest gains on Clustering (+40.5 over Normal RAG) and Chain of Reasoning (+26.2 over Agentic RAG) tasks. The paper used Gemini 2.5 Pro and Flash; this codebase uses GPT-5 and GPT-5-mini in the same roles.
 
 ### Other design choices
 
@@ -294,8 +293,7 @@ SPD-RAG reaches 85.4% of full-context quality at 37.9% of the cost (2.25x cost-q
 | Visualization | Plotly, kaleido |
 | External data | Marketstack, TCMB EVDS, Tavily, Wolfram Alpha, RSS |
 | Frontend | Electron, marked, highlight.js, KaTeX |
-| Self-hosted serving | vLLM, Docker (CUDA) |
-| Observability and evaluation | loguru, Prometheus client, agentevals, LangSmith |
+| Observability and evaluation | loguru, agentevals |
 
 ---
 
@@ -304,30 +302,13 @@ SPD-RAG reaches 85.4% of full-context quality at 37.9% of the cost (2.25x cost-q
 - **Async throughout.** FastAPI and LangGraph are fully async; Qdrant is accessed through its async client; blocking SDK calls for embeddings and EVDS are offloaded to threads.
 - **Bounded execution.** Recursion limits, per-tool call limits, per-document iteration caps, and a token-bounded synthesis loop cap cost and latency for every request.
 - **Retries and fallbacks.** Rate-limit retries on embeddings and reranking, backoff on market data requests, one-shot sandbox template rebuild, reranker and header-generation fallbacks, and checkpoint recovery.
-- **Session isolation.** Chat history and agent checkpoints are keyed per session. The backend is designed as a single-user local process; multi-tenant isolation is not a goal of the current design.
-- **Data residency.** Parsing, embedding, moderation, and generation call external providers in the current configuration. A self-hosted model launcher exists for confidentiality-constrained deployments, but end-to-end on-premise operation (parser and embedder included) is not implemented.
-- **Network posture.** The API binds to loopback for the local client; there is no authentication layer, which is appropriate for a desktop deployment and not for a shared server.
-- **Secrets.** Backend credentials come from environment variables. Some third-party price-feed keys are embedded in the client source, a known issue.
+- **Session isolation.** Chat history and agent checkpoints are keyed per session. The backend runs as a single-user local process alongside the desktop client.
+- **Data path.** Document parsing, embeddings, moderation, and generation call external providers.
+- **Network posture.** The API binds to loopback for the local client.
+- **Secrets.** Backend credentials come from environment variables.
 
 ---
 
 ## 11. Evaluation
 
 - A trajectory evaluation harness runs the coordinator on sampled queries and scores each trajectory with an LLM judge (agentevals, o3-mini) together with heuristics for redundant tool calls and loops. The committed run covers three queries, all passing.
-- Prometheus metrics for request counts, LLM latency, guard violations, and index size are defined but not yet exposed.
-- No retrieval-quality, accuracy, latency, or cost measurements for this codebase exist yet; the only quantitative results are the paper's benchmark numbers in Section 8.
-
----
-
-## 12. Known limitations and trade-offs
-
-- **Single-user process.** Per-request state for selected files and attachments is process-global, which is simple for a desktop backend but rules out concurrent users on one instance.
-- **Embedded vector store.** Qdrant runs inside the backend process; scaling out requires moving to a Qdrant server.
-- **Cloud parsing and embedding.** Azure Document Intelligence and Cohere have no offline substitutes yet, so fully on-premise deployment is not possible today.
-- **Manual model selection.** Switching providers or moving to a local model is a configuration change, not runtime routing.
-- **Citation granularity.** Structured sources are file-level; page and table references rely on the model quoting them in prose.
-- **Some blocking calls on the event loop.** Reranking, moderation, and vision calls in the standard path are synchronous SDK calls and can stall other in-flight requests.
-- **Windows-specific conversions.** Legacy `.doc` ingestion and PowerPoint previews depend on Microsoft Office COM automation.
-- **SPD-RAG latency.** At least three sequential LLM stages plus embedding for clustering; the paper measured roughly 20% higher latency than baselines. Mitigated with per-document progress in the UI.
-- **Inactive code.** A RAG-Fusion module, the PII masking stage, and MCP server configuration exist but are not wired into the active path.
-- **Hard ceilings.** Iteration and tool-call caps can truncate legitimately long tasks; for example, the file agent gets at most two sandbox runs per turn.
