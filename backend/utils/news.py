@@ -7,9 +7,7 @@ import feedparser
 import datetime
 from dateutil import parser as date_parser
 import asyncio
-import httpx
 from dataclasses import dataclass
-import numpy as np
 
 logger = get_logger("NEWS_UTILS")
 

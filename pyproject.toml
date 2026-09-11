@@ -43,7 +43,6 @@ dependencies = [
     "pandas>=2.3.3",
     "pillow>=12.1.0",
     "plotly>=6.5.2",
-    "prometheus-client>=0.24.1",
     "pymupdf>=1.26.7",
     "pytesseract>=0.3.13",
     "python-dateutil>=2.9.0.post0",

@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration, run_orchestration_stream
 from backend.core.tools.balance import process_balance_of_payments
 from backend.core.chat import chat_history_manager
-from backend.monitoring.metrics import api_requests_total
 from backend.shared.logger import get_logger
 from backend.shared.constants import (
     UPLOADS_PATH,
@@ -218,7 +217,6 @@ async def handle_query(request: QueryRequest):
             session_id,
             selected_files,
         )
-        api_requests_total.labels(status="success").inc()
 
         return {
             "response": answer.get("response"),
@@ -231,7 +229,6 @@ async def handle_query(request: QueryRequest):
 
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
-        api_requests_total.labels(status="error").inc()
         raise e
 
 
@@ -271,7 +268,6 @@ async def handle_query_stream(request: QueryRequest):
 
     except Exception as e:
         logger.error(f"Error processing streaming query: {str(e)}")
-        api_requests_total.labels(status="error").inc()
         raise e
 
 
@@ -292,7 +288,6 @@ async def handle_news_chat(request: NewsChatRequest):
 
         # Process news chat query
         answer = await run_news_chat_orchestration(query, news_context, session_id)
-        api_requests_total.labels(status="success").inc()
 
         return {
             "status": "success",
@@ -303,7 +298,6 @@ async def handle_news_chat(request: NewsChatRequest):
 
     except Exception as e:
         logger.error(f"Error processing news chat query: {str(e)}")
-        api_requests_total.labels(status="error").inc()
         raise HTTPException(
             status_code=500, detail=f"Error processing news chat query: {str(e)}"
         )

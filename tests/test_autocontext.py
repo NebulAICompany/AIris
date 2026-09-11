@@ -6,7 +6,6 @@ Tests the contextual chunk headers functionality
 
 import asyncio
 import sys
-import os
 from pathlib import Path
 
 # Add the project root to the Python path

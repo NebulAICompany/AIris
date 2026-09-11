@@ -99,8 +99,6 @@ app.mount(
 )
 app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets")
 
-# expose_metrics()
-
 # Allow frontend to easily access this API during development
 app.add_middleware(
     CORSMiddleware,

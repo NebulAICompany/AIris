@@ -1,6 +1,5 @@
 import openai
 from typing import Dict
-from backend.monitoring.metrics import guard_violations_total
 from backend.shared.logger import get_logger
 
 logger = get_logger("SECURITY_FILTERS")
@@ -30,7 +29,6 @@ def check_openai_moderation(text: str) -> Dict:
             for category, flagged in result.categories.__dict__.items():
                 if flagged:
                     violations.append(f"OpenAI moderation flagged: {category}")
-                    guard_violations_total.labels(violation_type=category).inc()
 
         return {
             "flagged": result.flagged,

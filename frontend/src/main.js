@@ -4,7 +4,7 @@ const fs = require("fs");
 const logger = require("./logger");
 
 // Use undici for modern fetch support
-const { fetch, FormData, File } = require("undici");
+const { fetch, FormData } = require("undici");
 
 // Enable live reload for development
 if (process.argv.includes("--dev")) {
@@ -145,7 +145,6 @@ class AIrisApp {
     ipcMain.removeAllListeners("select-file");
     ipcMain.removeAllListeners("read-file");
     ipcMain.removeAllListeners("open-file");
-    ipcMain.removeAllListeners("get-metrics");
     ipcMain.removeAllListeners("delete-file");
     ipcMain.removeAllListeners("get-app-info");
     ipcMain.removeAllListeners("send-query");
@@ -362,30 +361,6 @@ class AIrisApp {
         return {
           success: false,
           error: error.message,
-        };
-      }
-    });
-
-    // Handle metrics requests
-    ipcMain.handle("get-metrics", async () => {
-      try {
-        const response = await fetch("http://localhost:8001/api/metrics");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const metrics = await response.json();
-        return metrics;
-      } catch (error) {
-        logger.warn(`Failed to fetch metrics: ${error.message}`, "IPC");
-        // Return fallback metrics
-        return {
-          totalQueries: 0,
-          totalDocuments: 0,
-          avgResponseTime: "N/A",
-          systemHealth: "Disconnected",
-          vectorStoreStatus: "Unknown",
-          lastUpdated: new Date().toISOString(),
-          recentActivity: [],
         };
       }
     });
