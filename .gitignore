@@ -22,6 +22,8 @@ yarn-error.log*
 tests/test_documents/
 *.pdf
 *.lock
+!uv.lock
+*.ipynb
 
 # IDE/editor
 .vscode/
@@ -34,12 +36,25 @@ tests/test_documents/
 logs/
 *.tmp
 *.bak
+metrics.txt
 
 # Kişisel dosyalar
 backend/chat_sessions/
 deneme.txt
 backend/database/
+backend/uploads/
+backend/vectorstore/
+backend/pipelines/uploads/
+backend/created_documents/
 qdrant_storage/
+qdrant/
+*.db
+*.sqlite
+*.sqlite3
+*.faiss
+*.pkl
+mcp_servers.json
+SECURITY_BACKLOG.md
 
 # Platform
 Thumbs.db
@@ -48,4 +63,6 @@ Desktop.ini
 .DS_Store
 
 # Ortak .env dosyaları
-.env 
+.env
+.env.*
+!.env.example 

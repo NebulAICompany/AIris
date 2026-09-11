@@ -1,14 +1,13 @@
 /**
  * Currency Exchange Service
  * Handles real-time currency data fetching and caching
- * Updated with working APIs as of June 2025
- * 
- * FREE GOLD API SETUP:
- * 1. GoldAPI - Sign up at https://www.goldapi.io/ for FREE API key
- * 2. MetalpriceAPI - Sign up at https://www.metalpriceapi.com/ for FREE API key
- * 
- * Replace 'YOUR_API_KEY' with your actual API keys below.
- * You can enable/disable each API manually by setting enabled to true/false in goldApiEndpoints.
+ *
+ * Gold price APIs (optional):
+ * 1. GoldAPI - https://www.goldapi.io/
+ * 2. MetalpriceAPI - https://www.metalpriceapi.com/
+ *
+ * Set GOLDAPI_KEY and/or METALPRICEAPI_KEY in the repo-root .env file.
+ * Endpoints without a key stay disabled.
  */
 class CurrencyService {
   constructor() {
@@ -41,14 +40,14 @@ class CurrencyService {
         baseUrl: "https://www.goldapi.io/api",
         enabled: false,
         type: "goldapi",
-        apiKey: "***REMOVED***", // Sign up at https://www.goldapi.io/
+        apiKey: null,
       },
       {
         name: "MetalpriceAPI",
         baseUrl: "https://api.metalpriceapi.com/v1",
-        enabled: true,
+        enabled: false,
         type: "metalpriceapi",
-        apiKey: "***REMOVED***", // Sign up at https://www.metalpriceapi.com/
+        apiKey: null,
       },
     ];
 
@@ -103,6 +102,8 @@ class CurrencyService {
 
     this.isRunning = true;
     logger.info("Starting currency service...", "CURRENCY");
+
+    await this.loadCurrencyConfig();
 
     // Load cached gold data from file
     await this.loadGoldCache();
@@ -379,7 +380,45 @@ class CurrencyService {
     }
   }
 
+  async loadCurrencyConfig() {
+    if (!window.airisAPI || typeof window.airisAPI.getCurrencyConfig !== "function") {
+      logger.warn(
+        "Currency config IPC unavailable; gold APIs stay disabled",
+        "CURRENCY"
+      );
+      return;
+    }
+
+    try {
+      const config = await window.airisAPI.getCurrencyConfig();
+      this.applyGoldApiKeys(config);
+    } catch (error) {
+      logger.warn(
+        `Failed to load currency config: ${error.message}`,
+        "CURRENCY"
+      );
+    }
+  }
+
+  applyGoldApiKeys(config) {
+    const goldApiKey = (config && config.GOLDAPI_KEY) || "";
+    const metalpriceKey = (config && config.METALPRICEAPI_KEY) || "";
+
+    for (const endpoint of this.goldApiEndpoints) {
+      if (endpoint.type === "goldapi") {
+        endpoint.apiKey = goldApiKey || null;
+      } else if (endpoint.type === "metalpriceapi") {
+        endpoint.apiKey = metalpriceKey || null;
+      }
+      endpoint.enabled = Boolean(endpoint.apiKey);
+    }
+  }
+
   async fetchGoldFromEndpoint(endpoint) {
+    if (!endpoint.apiKey) {
+      throw new Error(`${endpoint.name} has no API key configured`);
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 

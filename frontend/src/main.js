@@ -16,6 +16,35 @@ if (process.argv.includes("--dev")) {
   } catch {}
 }
 
+function parseDotEnvFile(filePath) {
+  const result = {};
+  if (!fs.existsSync(filePath)) {
+    return result;
+  }
+
+  const text = fs.readFileSync(filePath, "utf8");
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+    const eq = line.indexOf("=");
+    if (eq === -1) {
+      continue;
+    }
+    const key = line.slice(0, eq).trim();
+    let value = line.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    result[key] = value;
+  }
+  return result;
+}
+
 class AIrisApp {
   constructor() {
     this.mainWindow = null;
@@ -126,6 +155,18 @@ class AIrisApp {
     ipcMain.removeAllListeners("open-external-url");
     ipcMain.removeAllListeners("read-gold-cache");
     ipcMain.removeAllListeners("write-gold-cache");
+    ipcMain.removeAllListeners("get-currency-config");
+
+    ipcMain.handle("get-currency-config", async () => {
+      const fileVars = parseDotEnvFile(
+        path.join(__dirname, "..", "..", ".env")
+      );
+      return {
+        GOLDAPI_KEY: process.env.GOLDAPI_KEY || fileVars.GOLDAPI_KEY || "",
+        METALPRICEAPI_KEY:
+          process.env.METALPRICEAPI_KEY || fileVars.METALPRICEAPI_KEY || "",
+      };
+    });
 
     // Handle gold cache read
     ipcMain.handle("read-gold-cache", async () => {

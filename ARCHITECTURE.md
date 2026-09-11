@@ -200,7 +200,7 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 - **Document export.** There is no separate exporter; generated files are the output of sandboxed code and are returned to the client as attachments and tracked in a created-documents library.
 - **External knowledge.** Web search (Tavily) with URL attribution, Wolfram Alpha for computation, Marketstack for market data, and TCMB EVDS for macroeconomic series.
 - **Source artifacts.** Every external-facing tool returns a machine-readable artifact next to its text. The stream processor turns these into the source list shown with each answer, which is what makes answers auditable.
-- **PII handling.** A reversible PII masking stage existed earlier and has been removed; the current input guard is OpenAI moderation only. Not active in the current codebase.
+- **Input guard.** The current input guard is OpenAI moderation only. Not active in the current codebase.
 
 ---
 

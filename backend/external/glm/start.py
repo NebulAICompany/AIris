@@ -8,14 +8,15 @@ def main():
     print("=" * 50)
 
     # Environment variables
-    api_key = os.getenv("API_KEY", "test-key")
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        print("API_KEY is not set. Refusing to start with a default key.")
+        sys.exit(1)
     port = os.getenv("PORT", "8080")  # Cloud Run PORT variable
 
-    print(f"📡 Port: {port}")
-    print(
-        f"🔑 API Key: {api_key[:8]}{'*' * (len(api_key) - 8) if len(api_key) > 8 else '***'}"
-    )
-    print(f"🏠 Model Cache: {os.getenv('HF_HOME', '/tmp/model_cache')}")
+    print(f"Port: {port}")
+    print("API Key: configured")
+    print(f"Model Cache: {os.getenv('HF_HOME', '/tmp/model_cache')}")
     print("=" * 50)
 
     # vLLM server command with all GLM-4.5V optimizations

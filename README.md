@@ -6,8 +6,7 @@
 
 - Python 3.11+ (tercihen 3.11)
 - Node.js 16+
-- .env dosyası (ana dizinde)
-- ARDA İÇİN --- Python 3.11 versiyonlarından birini indir kur.
+- `.env` dosyası (ana dizinde)
 
 ### Kurulum Adımları
 
@@ -30,7 +29,7 @@
    cd ..
    ```
 
-3. **.env dosyasını oluşturun** (ana dizinde) - gerekli API anahtarlarını ekleyin (bu .env dosyasını biz atacağız.)
+3. **`.env` dosyasını oluşturun** (ana dizinde): `.env.example` dosyasını `.env` olarak kopyalayın ve kendi API anahtarlarınızı doldurun.
 
 ### Çalıştırma
 

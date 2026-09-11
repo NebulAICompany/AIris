@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld("airisAPI", {
   // Gold cache operations
   readGoldCache: () => ipcRenderer.invoke("read-gold-cache"),
   writeGoldCache: (data) => ipcRenderer.invoke("write-gold-cache", data),
+  getCurrencyConfig: () => ipcRenderer.invoke("get-currency-config"),
 
   // Health and monitoring
   checkHealth: () => ipcRenderer.invoke("check-health"),
