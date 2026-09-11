@@ -544,8 +544,11 @@ class CurrencyService {
   disableGoldEndpointTemporarily(endpoint) {
     endpoint.enabled = false;
 
-    // Re-enable after 5 minutes
+    // Re-enable after 5 minutes, but only when a key is configured
     setTimeout(() => {
+      if (!endpoint.apiKey) {
+        return;
+      }
       endpoint.enabled = true;
       logger.info(`Re-enabled ${endpoint.name} gold endpoint`, "CURRENCY");
     }, 300000);
