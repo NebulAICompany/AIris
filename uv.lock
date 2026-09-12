@@ -166,7 +166,6 @@ name = "airis"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "agentevals" },
     { name = "aiosqlite" },
     { name = "azure-ai-documentintelligence" },
     { name = "azure-cognitiveservices-vision-computervision" },
@@ -230,9 +229,13 @@ dependencies = [
     { name = "zipp" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "agentevals" },
+]
+
 [package.metadata]
 requires-dist = [
-    { name = "agentevals", specifier = ">=0.0.9" },
     { name = "aiosqlite", specifier = "==0.22.1" },
     { name = "azure-ai-documentintelligence", specifier = ">=1.0.2" },
     { name = "azure-cognitiveservices-vision-computervision", specifier = ">=0.9.1" },
@@ -295,6 +298,9 @@ requires-dist = [
     { name = "xlrd", specifier = ">=2.0.2" },
     { name = "zipp", specifier = ">=3.23.0" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "agentevals", specifier = ">=0.0.9" }]
 
 [[package]]
 name = "annotated-doc"

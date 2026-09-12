@@ -4,7 +4,7 @@ Thanks for your interest in AIris. Read [README.md](README.md) and [ARCHITECTURE
 
 ## Environment
 
-Work on Windows with Python 3.11, Node.js 20.18.1 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Work on Windows with Python 3.11 or newer, Node.js 20.18.1 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```powershell
 uv sync --locked
@@ -15,7 +15,7 @@ npm ci
 Set-Location ..
 ```
 
-Fill in the startup keys listed under [Minimum configuration](README.md#minimum-configuration) in the README, plus any feature-specific credentials for the path you are changing. Do not commit `.env`, databases, uploads, or vector-store files.
+Fill in the keys listed under [Backend startup configuration](README.md#backend-startup-configuration) in the README, plus any feature-specific credentials for the path you are changing. Do not commit `.env`, databases, uploads, or vector-store files.
 
 ## Running locally
 
@@ -46,6 +46,8 @@ Confirm `GET http://127.0.0.1:8001/health` before sending queries. The backend b
 
 Automated unit tests are not yet part of the project; contributions that add them are welcome.
 
+The frontend's `npm test` script is a placeholder rather than a working test suite.
+
 For changes to the coordinator or its tools, run the trajectory evaluation. It calls live providers, scores each agent trajectory with an LLM judge, and writes `metrics.txt`:
 
 ```powershell
@@ -68,4 +70,4 @@ Do not open a public issue for a vulnerability. Follow [SECURITY.md](SECURITY.md
 
 ## License
 
-AIris is distributed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). Copyright is held by the Nebula Intelligence team. By submitting a contribution you agree that it is provided under the same license and that Nebula Intelligence may include it in the project. Commercial licensing: [nebulaicompany@gmail.com](mailto:nebulaicompany@gmail.com).
+AIris is distributed under the [PolyForm Noncommercial License 1.0.0](LICENSE). Copyright is held by the Nebula Intelligence team. By submitting a contribution you agree that it is provided under the same license and that Nebula Intelligence may include it in the project. Commercial licensing: [nebulaicompany@gmail.com](mailto:nebulaicompany@gmail.com).

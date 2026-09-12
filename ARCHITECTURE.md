@@ -1,6 +1,8 @@
 # AIris Architecture
 
-AIris is a multi-agent financial BI platform designed for staff at financial institutions. It lets a user query large archives of financial documents (policies, credit and leasing contracts, claims files, customer records, internal correspondence, reports) in natural language and get source-grounded answers, charts, and generated Office documents instead of manually searching fragmented archives. The workflows it was designed around are the ones where delays are costly and evidence must be traceable: coverage checks, claims assessment, policy renewal, contract review, and macro or market reporting. The design targets insurers, portfolio managers, financial research houses, and banks; the current codebase is a single-user research prototype (see the README's Project status).
+AIris is a multi-agent financial BI platform designed for financial teams. It lets a user query large archives of financial documents (policies, credit and leasing contracts, claims files, customer records, internal correspondence, reports) in natural language and receive analysis with source artifacts, charts, and generated Office documents instead of manually searching fragmented archives. The product design considered workflows such as coverage checks, claims assessment, policy renewal, contract review, and macro or market reporting. The underlying retrieval and generation paths are domain-general; they do not encode insurance, legal, or banking decision rules. The current codebase is a single-user research prototype (see the README's Project status).
+
+This document is the technical reference for component behavior, runtime boundaries, and code navigation. [README.md](README.md) is the reference for product positioning, setup, project status, and headline capabilities.
 
 ---
 
@@ -8,13 +10,11 @@ AIris is a multi-agent financial BI platform designed for staff at financial ins
 
 AIris is a desktop application with a local backend. The Electron client talks to a FastAPI backend over HTTP and Server-Sent Events. The backend runs a tool-calling coordinator agent that delegates to specialist sub-agents (market data, file operations, plotting, Turkish Central Bank macro data) and to a retrieval layer built on layout-aware document parsing, Cohere embeddings and reranking, an embedded Qdrant vector store, and a BM25 keyword index.
 
-For exhaustive cross-document questions, the coordinator can switch to SPD-RAG (Sub-Agent Per Document RAG): a LangGraph map-reduce graph that assigns one retrieval agent per document, runs them in parallel under a shared instruction set, and merges their findings through similarity-guided, token-bounded recursive synthesis. The approach is published in [arXiv:2603.08329](https://arxiv.org/abs/2603.08329), where it reaches 85.4% of full-context answer quality at 37.9% of the API cost on the Loong benchmark.
+For coverage-oriented cross-document questions, the user can enable SPD-RAG (Sub-Agent Per Document RAG): a LangGraph map-reduce graph that assigns one retrieval worker per selected document, runs them in parallel under a shared instruction set, and merges their findings through similarity-guided, token-budgeted recursive synthesis. The approach is published in [arXiv:2603.08329](https://arxiv.org/abs/2603.08329), where it reaches 85.4% of full-context answer quality at 37.9% of the API cost on the Loong benchmark.
 
 All model-generated code (for Word, Excel, and PowerPoint generation and for custom charts) runs in remote E2B sandboxes, never on the host.
 
 Two product principles shape the architecture. First, answers should be auditable: tools return document, URL, or API artifacts that the client renders as sources. This improves traceability but does not guarantee that every model statement has a citation. Second, main-chat web search is opt-in through a per-query toggle; news-story chat includes web search by design. This controls web context, but it is not an offline mode: model calls, moderation, parsing, embeddings, reranking, and sandbox execution still use external providers. The coordinator's instructions also frame outputs as analysis rather than investment advice.
-
-The project placed joint third in the TEKNOFEST 2025 Financial Technologies competition.
 
 ---
 
@@ -22,7 +22,7 @@ The project placed joint third in the TEKNOFEST 2025 Financial Technologies comp
 
 ![AIris system architecture: Electron desktop client, local FastAPI runtime, specialist agents, local indexes, and external providers](docs/assets/architecture/system-overview.svg)
 
-A financial professional uses the Electron desktop client to talk to a local FastAPI service on loopback. The coordinator routes each request to document research, market and TCMB data, chart and Office generation, or optional web search. Documents and indexes stay on the machine. Selected operations call external AI, data, and sandbox providers.
+A financial professional uses the Electron desktop client to talk to a local FastAPI service on loopback. The coordinator routes each request to document research, market and TCMB data, chart and Office generation, or optional web search. Persistent document copies and indexes stay on the machine. Selected operations transmit data to external AI, data, and sandbox providers.
 
 ### Request flow
 
@@ -41,7 +41,7 @@ The design is hub-and-spoke. One coordinator agent owns the conversation and cal
 
 Specialist progress is not hidden: inner tool calls are relayed through LangGraph's custom stream channel, so the UI shows a nested view of what each specialist is doing while the coordinator waits.
 
-![Multi-agent report generation: user request streams through FastAPI to the coordinator, then finance, plotting, file, and E2B sandbox steps return a sourced answer, chart, and Office file](docs/assets/architecture/multi-agent-sequence.svg)
+![Multi-agent report generation: a request streams through FastAPI to the coordinator, then finance, plotting, file, and E2B sandbox steps return analysis with source and output artifacts](docs/assets/architecture/multi-agent-sequence.svg)
 
 A comparative stock-report request travels from the desktop through FastAPI to the coordinator. The coordinator obtains end-of-day prices, renders a chart, and asks the file agent to generate a Word document in an E2B sandbox. Nested specialist progress and the final artifacts return to the client over SSE.
 
@@ -52,7 +52,7 @@ A comparative stock-report request travels from the desktop through FastAPI to t
 | File operations agent | Read and generate Office documents | Excel, Word, and PowerPoint readers; image description; sandboxed Python execution that produces files | At most two sandbox executions per turn; local syntax check before a sandbox is created |
 | Plotting agent | Visualization | Financial chart tool (candlestick, OHLC, line, area, with SMA, EMA, Bollinger, RSI, MACD, volume); custom chart from sandboxed code | One call per chart tool per turn |
 | TCMB macro data agent | Turkish Central Bank data | Semantic series discovery over EVDS metadata, then observation retrieval by series code and date range | Hierarchical search (data group first, then series) to keep candidates small |
-| SPD-RAG graph | Exhaustive cross-document research | Internal per-document retrieval | Five retrieval iterations per document; token-bounded synthesis |
+| SPD-RAG graph | Coverage-oriented cross-document research | Internal per-document retrieval | Five retrieval iterations per document; token-budgeted synthesis |
 
 Auxiliary agents outside the chat path handle balance-of-payments ledger ingestion and financial news clustering and summarization.
 
@@ -81,15 +81,15 @@ Document, URL, and API artifacts from the tools used in a turn are collected int
 
 ### SPD-RAG deep research
 
-![SPD-RAG: a shared research plan fans out to one agent per document, then findings are clustered and recursively summarized into a sourced answer](docs/assets/architecture/spd-rag.svg)
+![SPD-RAG: a shared research plan fans out to one worker per selected document, then findings are clustered and recursively summarized into an answer with document source cards](docs/assets/architecture/spd-rag.svg)
 
-A reasoning model turns the question into a shared task list. LangGraph assigns one bounded retrieval agent to each selected document. Findings are pooled, clustered by similarity, summarized in token-bounded batches, and reduced until a sourced answer remains.
+A reasoning model turns the question into a shared task list. LangGraph assigns one bounded retrieval worker to each selected document. Findings are pooled, clustered by similarity, summarized in token-budgeted batches, and reduced until a synthesized answer remains. The tool returns source artifacts for the selected documents separately from the generated text.
 
 Three layers, matching the paper:
 
 - **Coordination.** A reasoning model reads the question and produces a shared task list plus a directive for the synthesizer. Every document agent receives the same task list, so findings are comparable across documents.
 - **Parallel retrieval.** LangGraph fans out one document agent per selected document. Each agent is a small loop on a cheaper model: search within its own document, judge whether it has enough, repeat up to five times, then write its findings. Because retrieval is confined to one document, a small model is sufficient, and no document can be crowded out of a shared top-k.
-- **Synthesis.** Findings are embedded and clustered by similarity. The cluster tree is walked to form the largest batches that stay under a token budget (75% of the synthesis model's context, capped at 750k tokens). Batches are summarized in parallel and the process repeats until one summary remains. This bounds the context of every synthesis call regardless of corpus size and keeps related evidence adjacent.
+- **Synthesis.** Findings are embedded and clustered by similarity. The cluster tree is walked to form the largest batches that target a token budget (75% of the synthesis model's context, capped globally at 750k tokens). The current GPT-5-mini configuration has a 400k-token context entry, yielding a 300k-token target. Batches are summarized in parallel and the process repeats until one summary remains. A convergence fallback combines the current level when clustering cannot reduce the batch count, so the target is not a hard per-call guarantee.
 
 The UI shows this live: each document appears as it is analyzed, is marked complete when its agent finishes, and a synthesis stage follows.
 
@@ -124,30 +124,31 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 
 ---
 
-## 7. Core capabilities
+## 7. Runtime scenarios and boundaries
 
-- Grounded answers over uploaded PDF, Word, Excel, and text files, with source cards and supporting table or extracted-figure images where available. Standalone image uploads are currently indexed as generic text references rather than multimodal embeddings.
-- Multi-modal document understanding for figures extracted from PDF and Word files: layout, tables, and charts can be interpreted rather than reduced to plain text.
-- Two retrieval modes per query: fast hybrid search, or SPD-RAG exhaustive per-document research for questions that span many documents.
-- Macro-data grounding through the Turkish Central Bank's EVDS API, discovered semantically and retrieved by date range.
-- Market data and technical indicators from Marketstack, plus a live market dashboard.
-- Controllable real-time web search with URL attribution in the main chat; news-story chat includes the web-search tool by design.
-- Automated Word, Excel, and PowerPoint generation through sandboxed code, delivered as attachments.
-- Financial and custom charting embedded in responses and reusable in generated documents.
-- Persistent sessions with multi-turn tool state; streaming progress for every tool, sub-agent, and SPD-RAG document.
-- Financial news feed: Turkish financial RSS sources are aggregated, clustered by story with an LLM, and summarized; the user can open a story and ask questions about it, with a dedicated agent that combines the article context with web search.
-- Ancillary workspace features: balance-of-payments ledger ingestion with a calendar view, a live market dashboard, financial calculators.
-- Model options: Anthropic, OpenAI, Qwen, and DeepSeek clients are defined, and a vLLM launcher exists for self-hosted models. Changing the active model currently requires source and environment changes; automatic local/cloud routing is not implemented.
+### Representative runtime scenarios
 
-### Representative use cases
-
-| Scenario | What happens inside |
+| Scenario | Execution path |
 |---|---|
-| Macro report analysis ("how did the inflation forecast change and which factors were positive?") | Hybrid retrieval over the uploaded report, including chunks linked to the report's tables and charts; figure descriptions from the vision model; the relevant table and chart images returned as attachments alongside the answer. TCMB data can be pulled in to ground the answer in official series. |
-| Stock and market reporting over a long horizon | Finance agent gathers end-of-day data; plotting agent renders interactive charts with indicators; file operations agent turns the findings and charts into a Word or PowerPoint deliverable in the same turn. |
-| Report and presentation automation (analyst notes to management decks, recurring market notes, investment committee reports) | The coordinator sequences research, structuring, summarization, and document generation across specialists; the user receives the analysis in chat and the finished Office file as an attachment. |
-| Multi-document analysis ("across all these contracts, which ones...") | SPD-RAG assigns one agent per document, runs them in parallel under a shared task list, and synthesizes their findings so no document is dropped from a shared top-k. |
-| News-driven questions | The news tab surfaces clustered, summarized stories; a question asked inside a story is answered by an agent that has the article as context and can consult the web for related sources. |
+| Macro report analysis | Hybrid retrieval searches the selected report, including chunks linked to tables and extracted figures. Retrieved visuals can be returned with the answer, and the coordinator can call the TCMB specialist for official series. |
+| Stock and market reporting | The finance specialist retrieves historical Marketstack end-of-day data, the plotting specialist creates an interactive chart, and the file specialist can generate a Word or PowerPoint deliverable with the chart in an E2B sandbox. This path does not execute trades or provide live market data. |
+| Office document automation | The file specialist can read inputs and stage referenced local files in E2B, where syntax-checked model-generated Python produces Word, Excel, or PowerPoint files that return as attachments. |
+| Cross-document comparison, such as contracts or policies | When the user enables SPD-RAG, one bounded retrieval worker researches each selected document before the graph synthesizes their findings into one response. Coverage remains retrieval- and model-dependent. |
+| News-driven questions | The news workspace provides the selected story as context to a dedicated agent that can use Tavily for related web sources. This endpoint is separate from the moderated main-chat path. |
+
+### Capability boundaries
+
+- Multimodal embeddings apply to figures extracted from PDF and DOCX files. Standalone image uploads are indexed as generic text references.
+- The default coordinator and specialist model is Claude Sonnet 4.6. Alternative OpenAI, Qwen, DeepSeek, and local vLLM helpers exist in the repository, but changing the active model requires source and environment changes.
+- News, the balance-of-payments ledger/calendar, market dashboards, and deterministic financial calculators are auxiliary workspaces rather than coordinator specialists.
+
+The current implementation maintains these boundaries:
+
+- The Electron client consumes the local HTTP/SSE API. Model-generated Python for files and custom charts runs in E2B rather than in the Electron or FastAPI process.
+- The coordinator owns conversation context and calls specialist wrappers. Specialists do not call each other and receive only the task passed by the coordinator.
+- Upload parsing and indexing are separate from query-time retrieval. Qdrant and BM25 are populated by the ingestion pipeline and queried through the retrieval layer.
+- Source artifacts identify supporting documents, URLs, or APIs. Generated files and charts are output artifacts and are handled separately.
+- Application chat history and LangGraph checkpoints are separate forms of state, both keyed by session.
 
 ---
 
@@ -157,7 +158,7 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 
 Standard RAG shares one top-k budget across the whole corpus, so for questions like "compare X across all reports" evidence from lower-ranked documents is silently dropped. Agentic RAG issues several global retrievals but each still competes across documents; in the paper it scored no better than standard RAG (32.8 vs 33.0) while using about three times the tokens. Full-context prompting fixes coverage but pays for every token of every document on every query.
 
-SPD-RAG decomposes along the document axis: retrieval is isolated per document, the per-document loops run on a cheaper model in parallel, and only coordination and synthesis use the expensive model. Synthesis is token-bounded and similarity-guided, so context per call stays fixed as the corpus grows and related evidence is summarized together.
+SPD-RAG decomposes along the document axis: retrieval is isolated per document, the per-document loops run on a cheaper model in parallel, and only coordination and synthesis use the expensive model. Synthesis is token-budgeted and similarity-guided so related evidence is summarized together; the convergence fallback described above means the configured batch target is not an absolute bound.
 
 Results from the paper on the Loong benchmark (English, 200k-250k token instances, 102 cases, GPT-5 judge):
 
@@ -186,7 +187,7 @@ In the paper's Loong evaluation all findings fit into a single 750k-token synthe
 
 | Layer | Technologies |
 |---|---|
-| Languages | Python 3.11, JavaScript |
+| Languages | Python 3.11+, JavaScript |
 | Backend | FastAPI, uvicorn, Pydantic |
 | Agents | LangChain 1.x (`create_agent`, middleware), LangGraph 1.x (`StateGraph`, `Send`, streaming), SQLite checkpointer |
 | LLMs | Anthropic Claude Sonnet 4.6 (default coordinator and specialists); OpenAI GPT-5 and GPT-5-mini (SPD-RAG), GPT-5.2 (vision), GPT-4o-mini (summarization, news); Qwen and DeepSeek clients defined; OpenAI Moderation |
@@ -204,10 +205,10 @@ In the paper's Loong evaluation all findings fit into a single 750k-token synthe
 ## 10. Reliability, security, and privacy
 
 - **Async request path.** FastAPI, LangGraph, and Qdrant use async interfaces. Selected blocking SDK calls, including embeddings and EVDS, are offloaded to threads; some parsers and synchronous provider tools remain blocking.
-- **Bounded agent loops.** Recursion limits, per-tool call limits, per-document iteration caps, and token-bounded synthesis constrain agent work, although provider latency and usage still depend on the request and external services.
+- **Bounded agent loops.** Recursion limits, per-tool call limits, per-document iteration caps, and token-budgeted synthesis constrain agent work, although provider latency and usage still depend on the request and external services.
 - **Retries and fallbacks.** Rate-limit retries on embeddings, backoff on market data requests, one-shot sandbox template rebuild, reranker and header-generation fallbacks, and checkpoint recovery.
 - **Session isolation.** Chat history and agent checkpoints are keyed per session. The backend runs as a single-user local process alongside the desktop client.
-- **Data path.** Azure Document Intelligence receives PDF/Word content; Cohere receives chunks, figures, and retrieval queries; model providers receive prompts and retrieved context; E2B receives generated code and referenced files staged for generation. Market, TCMB, web, computation, RSS, and gold-price features call their respective external services.
+- **Data path.** Azure Document Intelligence receives PDF/Word content; Cohere receives chunks, figures, and retrieval queries; model providers receive prompts and retrieved context; E2B receives generated code and referenced files staged for generation. Market, TCMB, web, computation, RSS, and gold-price features call their respective external services. The renderer loads selected assets from cdnjs, jsDelivr, and Google Fonts.
 - **Network posture.** The API binds to loopback for the local client, but has no authentication and currently allows any CORS origin. Loopback does not protect it from untrusted local processes or browser origins.
 - **Secrets.** Backend credentials come from environment variables.
 
@@ -215,4 +216,4 @@ In the paper's Loong evaluation all findings fit into a single 750k-token synthe
 
 ## 11. Evaluation
 
-- `tests/test_trajectory/test.py` runs the coordinator on sampled queries and scores each trajectory with an LLM judge (agentevals, declared as a dev dependency), together with heuristics for redundant tool calls and loops. It requires live provider credentials and writes a `metrics.txt` report; no result file is committed.
+- `tests/test_trajectory/test.py` uses a fixed random seed to sample up to five configured queries, runs the coordinator, and scores each trajectory with an LLM judge (agentevals; `openai:o3-mini` by default), together with heuristics for redundant tool calls and loops. It requires live provider credentials and writes a `metrics.txt` report; no result file is committed.

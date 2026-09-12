@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
   <title id="title">SPD-RAG document-parallel research</title>
-  <desc id="desc">A reasoning model converts the question into shared research tasks. LangGraph assigns one bounded retrieval agent to each selected document and runs them in parallel. Findings are pooled, clustered by similarity, summarized in token-bounded batches, and recursively reduced into a sourced final answer.</desc>
+  <desc id="desc">A reasoning model converts the question into shared research tasks. LangGraph assigns one bounded retrieval worker to each selected document and runs them in parallel. Findings are pooled, clustered by similarity, summarized in token-budgeted batches, and recursively reduced into a synthesized answer returned with selected-document source cards.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#07101C"/>
@@ -61,7 +61,7 @@
   <circle cx="800" cy="760" r="180" fill="#22D3EE" opacity="0.06"/>
 
   <text x="64" y="56" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700">SPD-RAG deep research</text>
-  <text x="64" y="86" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">One retrieval agent per document, then token-bounded recursive synthesis</text>
+  <text x="64" y="86" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">One retrieval worker per document, then token-budgeted recursive synthesis</text>
   <rect x="520" y="42" width="560" height="3" rx="2" fill="url(#headerGlow)"/>
 
   <!-- Coordination -->
@@ -129,10 +129,10 @@
   <path d="M832 734 H864" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
 
   <rect x="876" y="636" width="220" height="196" rx="16" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5"/>
-  <text x="986" y="696" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Token-bounded</text>
+  <text x="986" y="696" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Token-budgeted</text>
   <text x="986" y="724" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">batches</text>
-  <text x="986" y="760" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">75% of context,</text>
-  <text x="986" y="784" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">capped at 750k</text>
+  <text x="986" y="760" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Current: 300k</text>
+  <text x="986" y="784" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Global cap: 750k</text>
   <path d="M1108 734 H1140" stroke="#FBBF24" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
 
   <rect x="1152" y="636" width="168" height="196" rx="16" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="1.5"/>
@@ -144,8 +144,8 @@
   <path d="M1332 734 H1364" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
 
   <rect x="1376" y="636" width="128" height="196" rx="16" fill="url(#greenCard)" stroke="#34D399" stroke-width="2"/>
-  <text x="1440" y="710" text-anchor="middle" fill="#ECFDF5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Sourced</text>
-  <text x="1440" y="738" text-anchor="middle" fill="#ECFDF5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">answer</text>
-  <text x="1440" y="772" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">One source</text>
-  <text x="1440" y="794" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">per document</text>
+  <text x="1440" y="710" text-anchor="middle" fill="#ECFDF5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">Synthesized</text>
+  <text x="1440" y="738" text-anchor="middle" fill="#ECFDF5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">answer</text>
+  <text x="1440" y="772" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14">Document</text>
+  <text x="1440" y="794" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14">source cards</text>
 </svg>

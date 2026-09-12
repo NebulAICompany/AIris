@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: If you use AIris or SPD-RAG, please cite the SPD-RAG paper.
+message: If your work uses SPD-RAG or its implementation in AIris, cite the preferred SPD-RAG paper below. When referencing AIris as software, cite this repository and the commit used.
 title: AIris
 type: software
 abstract: Local desktop financial BI platform for source-grounded research, market analysis, and Office document generation.

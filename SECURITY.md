@@ -29,6 +29,7 @@ The following are documented properties of the current design, not unexpected ex
 - the local API has no authn/authz
 - the local API currently allows any CORS origin; this is not a security boundary
 - Azure Document Intelligence, Cohere, model providers, E2B, market/TCMB data services, Tavily, Wolfram Alpha, RSS publishers, and gold-price providers are external services
+- the Electron renderer loads selected styles, fonts, and client-side libraries from cdnjs, jsDelivr, and Google Fonts
 - main-chat web search sends the query to Tavily when the user enables that toggle; news-story chat has the Tavily tool available by design
 - moderation covers the main chat query paths only, and fails open when the OpenAI moderation request errors; news-story chat is not moderated
 

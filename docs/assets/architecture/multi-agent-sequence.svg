@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
   <title id="title">Multi-agent report generation</title>
-  <desc id="desc">A user requests a comparative stock report. The desktop streams the request through FastAPI to the coordinator, which obtains market data, creates a chart, and generates a Word document in an E2B sandbox. Progress and final artifacts return to the desktop over server-sent events.</desc>
+  <desc id="desc">A user requests a comparative stock report. The desktop streams the request through FastAPI to the coordinator, which obtains market data, creates a chart, and generates a Word document in an E2B sandbox. Analysis with source and output artifacts returns to the desktop over server-sent events.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#07101C"/>
@@ -125,7 +125,7 @@
   <rect x="64" y="580" width="1472" height="276" rx="22" fill="#0C1F18" stroke="#065F46" stroke-width="1.5"/>
   <text x="88" y="616" fill="#34D399" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">STREAMED RESPONSE</text>
   <rect x="88" y="640" width="340" height="180" rx="18" fill="url(#greenCard)" stroke="#34D399" stroke-width="1.5"/>
-  <text x="258" y="696" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Grounded answer</text>
+  <text x="258" y="696" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Answer with sources</text>
   <text x="258" y="732" text-anchor="middle" fill="#A7F3D0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Markdown and math in chat</text>
   <text x="258" y="758" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Analysis, not investment advice</text>
   <rect x="444" y="640" width="340" height="180" rx="18" fill="url(#greenCard)" stroke="#10B981" stroke-width="1.5"/>

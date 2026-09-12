@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
   <title id="title">AIris system architecture</title>
-  <desc id="desc">A financial professional uses the Electron desktop client to talk to a local FastAPI service. A coordinator routes requests to document research, market and TCMB data, chart and Office generation, and optional web search. Documents and indexes stay local. Selected operations use external AI, data, and sandbox providers.</desc>
+  <desc id="desc">A financial professional uses the Electron desktop client to talk to a local FastAPI service. Main-chat requests pass through input moderation, and a coordinator routes work to document research, market and TCMB data, chart and Office generation, and optional web search. Persistent documents and indexes are stored locally, while selected operations transmit data to external AI, data, and sandbox providers.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#07101C"/>
@@ -80,7 +80,7 @@
   <text x="238" y="376" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">127.0.0.1:8001</text>
   <path d="M400 355 H448" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
   <rect x="460" y="300" width="280" height="110" rx="16" fill="url(#violetCard)" stroke="#7C3AED" stroke-width="1.5"/>
-  <text x="600" y="348" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Input moderation</text>
+  <text x="600" y="348" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Main-chat moderation</text>
   <text x="600" y="376" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">OpenAI moderation API</text>
   <path d="M752 355 H800" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
   <rect x="812" y="300" width="340" height="110" rx="16" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="2"/>

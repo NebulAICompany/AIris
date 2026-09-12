@@ -73,7 +73,7 @@
   <text x="228" y="640" text-anchor="middle" fill="#CBD5E1" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">Why not plain text</text>
   <text x="228" y="680" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Headings, tables, figures,</text>
   <text x="228" y="704" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">and page boundaries are</text>
-  <text x="228" y="728" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">preserved so later citations</text>
+  <text x="228" y="728" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">preserved so attribution</text>
   <text x="228" y="752" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">can point at evidence.</text>
 
   <!-- Column 2 -->
@@ -103,7 +103,7 @@
   <rect x="832" y="188" width="312" height="168" rx="18" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="1.5"/>
   <text x="988" y="246" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Attach table references</text>
   <text x="988" y="280" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">IDs travel with the text</text>
-  <text x="988" y="304" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">so citations stay exact</text>
+  <text x="988" y="304" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">to support precise references</text>
   <path d="M988 368 V400" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
   <rect x="832" y="412" width="312" height="168" rx="18" fill="url(#cyanCard)" stroke="#06B6D4" stroke-width="1.5"/>
   <text x="988" y="470" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Markdown-aware chunks</text>
