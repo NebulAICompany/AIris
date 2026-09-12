@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">SPD-RAG document-parallel research</title>
+  <desc id="desc">A reasoning model converts the question into shared research tasks. LangGraph assigns one bounded retrieval agent to each selected document and runs them in parallel. Findings are pooled, clustered by similarity, summarized in token-bounded batches, and recursively reduced into a sourced final answer.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07101C"/>
+      <stop offset="100%" stop-color="#101A33"/>
+    </linearGradient>
+    <linearGradient id="headerGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="blueCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16325A"/>
+      <stop offset="100%" stop-color="#10243F"/>
+    </linearGradient>
+    <linearGradient id="violetCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2A1F55"/>
+      <stop offset="100%" stop-color="#1A153B"/>
+    </linearGradient>
+    <linearGradient id="cyanCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#123A44"/>
+      <stop offset="100%" stop-color="#0D2830"/>
+    </linearGradient>
+    <linearGradient id="greenCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#12382B"/>
+      <stop offset="100%" stop-color="#0C241C"/>
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3C2A12"/>
+      <stop offset="100%" stop-color="#2A1D0E"/>
+    </linearGradient>
+    <linearGradient id="slateCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#182338"/>
+      <stop offset="100%" stop-color="#121A2B"/>
+    </linearGradient>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#60A5FA"/>
+    </marker>
+    <marker id="arrowViolet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#A78BFA"/>
+    </marker>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#22D3EE"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#34D399"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#FBBF24"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g opacity="0.16" stroke="#2A3A58" stroke-width="1">
+    <path d="M80 0 V900 M160 0 V900 M240 0 V900 M320 0 V900 M400 0 V900 M480 0 V900 M560 0 V900 M640 0 V900 M720 0 V900 M800 0 V900 M880 0 V900 M960 0 V900 M1040 0 V900 M1120 0 V900 M1200 0 V900 M1280 0 V900 M1360 0 V900 M1440 0 V900 M1520 0 V900"/>
+    <path d="M0 80 H1600 M0 160 H1600 M0 240 H1600 M0 320 H1600 M0 400 H1600 M0 480 H1600 M0 560 H1600 M0 640 H1600 M0 720 H1600 M0 800 H1600"/>
+  </g>
+  <circle cx="800" cy="160" r="160" fill="#8B5CF6" opacity="0.08"/>
+  <circle cx="800" cy="760" r="180" fill="#22D3EE" opacity="0.06"/>
+
+  <text x="64" y="56" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700">SPD-RAG deep research</text>
+  <text x="64" y="86" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">One retrieval agent per document, then token-bounded recursive synthesis</text>
+  <rect x="520" y="42" width="560" height="3" rx="2" fill="url(#headerGlow)"/>
+
+  <!-- Coordination -->
+  <rect x="64" y="112" width="1472" height="148" rx="22" fill="#120F24" stroke="#3F2D72" stroke-width="1.5"/>
+  <text x="88" y="144" fill="#A78BFA" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">COORDINATION</text>
+  <rect x="88" y="160" width="420" height="76" rx="16" fill="url(#blueCard)" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="298" y="194" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">User question</text>
+  <text x="298" y="218" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Cross-document research query</text>
+  <path d="M520 198 H568" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="580" y="160" width="920" height="76" rx="16" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="2"/>
+  <text x="1040" y="194" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Shared task list and synthesis directive</text>
+  <text x="1040" y="218" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Reasoning model writes one plan that every document agent receives</text>
+
+  <!-- Parallel workers -->
+  <rect x="64" y="280" width="1472" height="284" rx="22" fill="#071C22" stroke="#155E75" stroke-width="1.5"/>
+  <text x="88" y="312" fill="#22D3EE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">PARALLEL DOCUMENT WORKERS</text>
+  <path d="M1040 260 V280" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+
+  <rect x="88" y="332" width="448" height="204" rx="18" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="1.5"/>
+  <text x="312" y="368" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">AGENT A</text>
+  <text x="312" y="400" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Document 1 only</text>
+  <text x="312" y="436" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Retrieve, rerank top 5, then assess</text>
+  <text x="312" y="464" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Fast model, max 5 iterations</text>
+  <text x="312" y="500" text-anchor="middle" fill="#ECFEFF" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Cannot be crowded out of a shared top-k</text>
+
+  <rect x="560" y="332" width="448" height="204" rx="18" fill="url(#cyanCard)" stroke="#06B6D4" stroke-width="1.5"/>
+  <text x="784" y="368" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">AGENT B</text>
+  <text x="784" y="400" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Document 2 only</text>
+  <text x="784" y="436" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Retrieve, rerank top 5, then assess</text>
+  <text x="784" y="464" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Same shared task list</text>
+  <text x="784" y="500" text-anchor="middle" fill="#ECFEFF" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Findings stay comparable across files</text>
+
+  <rect x="1032" y="332" width="472" height="204" rx="18" fill="url(#cyanCard)" stroke="#67E8F9" stroke-width="1.5"/>
+  <text x="1268" y="368" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">AGENT N</text>
+  <text x="1268" y="400" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Document N only</text>
+  <text x="1268" y="436" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Retrieve, rerank top 5, then assess</text>
+  <text x="1268" y="464" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">LangGraph fan-out via Send</text>
+  <text x="1268" y="500" text-anchor="middle" fill="#ECFEFF" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">One worker per selected document</text>
+
+  <!-- Synthesis -->
+  <rect x="64" y="584" width="1472" height="306" rx="22" fill="#0C1624" stroke="#334155" stroke-width="1.5"/>
+  <text x="88" y="616" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">RECURSIVE SYNTHESIS</text>
+  <path d="M312 536 V570" stroke="#22D3EE" stroke-width="2.2"/>
+  <path d="M784 536 V570" stroke="#22D3EE" stroke-width="2.2"/>
+  <path d="M1268 536 V570" stroke="#22D3EE" stroke-width="2.2"/>
+  <path d="M76 570 H1268" stroke="#22D3EE" stroke-width="2.2"/>
+  <path d="M76 570 V734 H88" fill="none" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+
+  <rect x="88" y="636" width="220" height="196" rx="16" fill="url(#slateCard)" stroke="#64748B" stroke-width="1.5"/>
+  <text x="198" y="710" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Pooled findings</text>
+  <text x="198" y="744" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">One report per</text>
+  <text x="198" y="768" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">document agent</text>
+  <path d="M320 734 H352" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+
+  <rect x="364" y="636" width="200" height="196" rx="16" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="1.5"/>
+  <text x="464" y="710" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Embed</text>
+  <text x="464" y="744" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Vectorize</text>
+  <text x="464" y="768" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">each finding</text>
+  <path d="M576 734 H608" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+
+  <rect x="620" y="636" width="200" height="196" rx="16" fill="url(#cyanCard)" stroke="#06B6D4" stroke-width="1.5"/>
+  <text x="720" y="710" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Cluster</text>
+  <text x="720" y="744" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Similar evidence</text>
+  <text x="720" y="768" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">stays together</text>
+  <path d="M832 734 H864" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+
+  <rect x="876" y="636" width="220" height="196" rx="16" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="986" y="696" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Token-bounded</text>
+  <text x="986" y="724" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">batches</text>
+  <text x="986" y="760" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">75% of context,</text>
+  <text x="986" y="784" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">capped at 750k</text>
+  <path d="M1108 734 H1140" stroke="#FBBF24" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
+
+  <rect x="1152" y="636" width="168" height="196" rx="16" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="1.5"/>
+  <text x="1236" y="710" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Summarize</text>
+  <text x="1236" y="744" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">In parallel</text>
+  <text x="1236" y="768" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">until one left</text>
+  <path d="M1236 832 C1236 854 464 854 464 832" fill="none" stroke="#FBBF24" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowAmber)"/>
+  <text x="850" y="882" text-anchor="middle" fill="#FBBF24" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">If more than one summary remains, embed and reduce again</text>
+  <path d="M1332 734 H1364" stroke="#34D399" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+
+  <rect x="1376" y="636" width="128" height="196" rx="16" fill="url(#greenCard)" stroke="#34D399" stroke-width="2"/>
+  <text x="1440" y="710" text-anchor="middle" fill="#ECFDF5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Sourced</text>
+  <text x="1440" y="738" text-anchor="middle" fill="#ECFDF5" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">answer</text>
+  <text x="1440" y="772" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">One source</text>
+  <text x="1440" y="794" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">per document</text>
+</svg>

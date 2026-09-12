@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: If you use AIris or SPD-RAG, please cite the SPD-RAG paper.
+title: AIris
+type: software
+abstract: Local desktop financial BI platform for source-grounded research, market analysis, and Office document generation.
+authors:
+  - family-names: Akay
+    given-names: Yagiz Can
+  - family-names: Kartal
+    given-names: Muhammed Yusuf
+  - family-names: Alparslan
+    given-names: Esra
+  - family-names: Ortakoyluoglu
+    given-names: Faruk
+  - family-names: Akpinar
+    given-names: Arda
+repository-code: https://github.com/NebulAICompany/AIris
+license: PolyForm-Noncommercial-1.0.0
+preferred-citation:
+  type: article
+  title: "SPD-RAG: Sub-Agent Per Document Retrieval-Augmented Generation"
+  authors:
+    - family-names: Akay
+      given-names: Yagiz Can
+    - family-names: Kartal
+      given-names: Muhammed Yusuf
+    - family-names: Alparslan
+      given-names: Esra
+    - family-names: Ortakoyluoglu
+      given-names: Faruk
+    - family-names: Akpinar
+      given-names: Arda
+  year: 2026
+  month: 3
+  doi: 10.48550/arXiv.2603.08329
+  url: https://arxiv.org/abs/2603.08329
+  identifiers:
+    - type: other
+      value: "arXiv:2603.08329"
+      description: arXiv preprint
+  journal: arXiv
+  notes: cs.CL

@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Multi-agent report generation</title>
+  <desc id="desc">A user requests a comparative stock report. The desktop streams the request through FastAPI to the coordinator, which obtains market data, creates a chart, and generates a Word document in an E2B sandbox. Progress and final artifacts return to the desktop over server-sent events.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07101C"/>
+      <stop offset="100%" stop-color="#101A33"/>
+    </linearGradient>
+    <linearGradient id="headerGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="blueCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16325A"/>
+      <stop offset="100%" stop-color="#10243F"/>
+    </linearGradient>
+    <linearGradient id="violetCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2A1F55"/>
+      <stop offset="100%" stop-color="#1A153B"/>
+    </linearGradient>
+    <linearGradient id="cyanCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#123A44"/>
+      <stop offset="100%" stop-color="#0D2830"/>
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3C2A12"/>
+      <stop offset="100%" stop-color="#2A1D0E"/>
+    </linearGradient>
+    <linearGradient id="greenCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#12382B"/>
+      <stop offset="100%" stop-color="#0C241C"/>
+    </linearGradient>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#60A5FA"/>
+    </marker>
+    <marker id="arrowViolet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#A78BFA"/>
+    </marker>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#22D3EE"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#FBBF24"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#34D399"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g opacity="0.16" stroke="#2A3A58" stroke-width="1">
+    <path d="M80 0 V900 M160 0 V900 M240 0 V900 M320 0 V900 M400 0 V900 M480 0 V900 M560 0 V900 M640 0 V900 M720 0 V900 M800 0 V900 M880 0 V900 M960 0 V900 M1040 0 V900 M1120 0 V900 M1200 0 V900 M1280 0 V900 M1360 0 V900 M1440 0 V900 M1520 0 V900"/>
+    <path d="M0 80 H1600 M0 160 H1600 M0 240 H1600 M0 320 H1600 M0 400 H1600 M0 480 H1600 M0 560 H1600 M0 640 H1600 M0 720 H1600 M0 800 H1600"/>
+  </g>
+  <circle cx="220" cy="140" r="150" fill="#3B82F6" opacity="0.08"/>
+  <circle cx="1380" cy="720" r="170" fill="#34D399" opacity="0.07"/>
+
+  <text x="64" y="56" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700">Multi-agent report generation</text>
+  <text x="64" y="86" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">Coordinator calls specialists; FastAPI streams nested progress and results to the client</text>
+  <rect x="520" y="42" width="560" height="3" rx="2" fill="url(#headerGlow)"/>
+
+  <!-- Request rail -->
+  <rect x="64" y="112" width="1472" height="176" rx="22" fill="#0E1728" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="88" y="144" fill="#60A5FA" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">REQUEST PATH</text>
+  <rect x="88" y="164" width="250" height="96" rx="16" fill="url(#blueCard)" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="213" y="200" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">01</text>
+  <text x="213" y="226" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">User request</text>
+  <text x="213" y="248" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Compare two stocks</text>
+  <path d="M350 212 H392" stroke="#60A5FA" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="404" y="164" width="250" height="96" rx="16" fill="url(#blueCard)" stroke="#60A5FA" stroke-width="1.5"/>
+  <text x="529" y="200" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">02</text>
+  <text x="529" y="226" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Electron client</text>
+  <text x="529" y="248" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Selected options</text>
+  <path d="M666 212 H708" stroke="#60A5FA" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="720" y="164" width="250" height="96" rx="16" fill="url(#violetCard)" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="845" y="200" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">03</text>
+  <text x="845" y="226" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">FastAPI stream</text>
+  <text x="845" y="248" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Session checkpoint</text>
+  <path d="M982 212 H1024" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="1036" y="164" width="468" height="96" rx="16" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="2"/>
+  <text x="1270" y="200" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">04</text>
+  <text x="1270" y="226" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Coordinator agent</text>
+  <text x="1270" y="248" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Decomposes the request and calls specialists</text>
+  <path d="M1270 260 V276 H845 V260" fill="none" stroke="#34D399" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowGreen)"/>
+  <path d="M720 248 H654" fill="none" stroke="#34D399" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowGreen)"/>
+  <text x="687" y="244" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="700">SSE</text>
+
+  <!-- Specialist lane -->
+  <rect x="64" y="312" width="1472" height="248" rx="22" fill="#071C22" stroke="#155E75" stroke-width="1.5"/>
+  <text x="88" y="338" fill="#22D3EE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">COORDINATOR-DISPATCHED SPECIALISTS</text>
+  <path d="M1270 260 V342 H1046" fill="none" stroke="#A78BFA" stroke-width="2.5"/>
+  <path d="M258 352 H1046" stroke="#A78BFA" stroke-width="2"/>
+  <path d="M258 352 V364" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <path d="M666 352 V364" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <path d="M1046 342 V364" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+
+  <rect x="88" y="364" width="340" height="160" rx="18" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="1.5"/>
+  <text x="258" y="400" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">05  FINANCE AGENT</text>
+  <text x="258" y="436" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">End-of-day prices</text>
+  <text x="258" y="466" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Symbols, range, and source</text>
+  <text x="258" y="494" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">artifact returned to coordinator</text>
+
+  <rect x="496" y="364" width="340" height="160" rx="18" fill="url(#cyanCard)" stroke="#06B6D4" stroke-width="1.5"/>
+  <text x="666" y="400" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">06  PLOTTING AGENT</text>
+  <text x="666" y="436" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Interactive chart</text>
+  <text x="666" y="466" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Series, volume, indicators</text>
+  <text x="666" y="494" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">HTML and PNG stored for reuse</text>
+
+  <rect x="904" y="364" width="284" height="160" rx="18" fill="url(#cyanCard)" stroke="#0891B2" stroke-width="1.5"/>
+  <text x="1046" y="400" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">07  FILE AGENT</text>
+  <text x="1046" y="436" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Word report</text>
+  <text x="1046" y="466" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Data plus chart image</text>
+  <text x="1046" y="494" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">syntax-checked locally</text>
+
+  <path d="M1200 444 H1244" stroke="#FBBF24" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
+  <rect x="1256" y="364" width="248" height="160" rx="18" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="1380" y="400" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">08  E2B SANDBOX</text>
+  <text x="1380" y="436" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Execute code</text>
+  <text x="1380" y="466" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Remote only</text>
+  <text x="1380" y="494" text-anchor="middle" fill="#FBBF24" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">destroyed after use</text>
+  <path d="M1256 494 H1200" fill="none" stroke="#FBBF24" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowAmber)"/>
+
+  <!-- Outputs -->
+  <rect x="64" y="580" width="1472" height="276" rx="22" fill="#0C1F18" stroke="#065F46" stroke-width="1.5"/>
+  <text x="88" y="616" fill="#34D399" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">STREAMED RESPONSE</text>
+  <rect x="88" y="640" width="340" height="180" rx="18" fill="url(#greenCard)" stroke="#34D399" stroke-width="1.5"/>
+  <text x="258" y="696" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Grounded answer</text>
+  <text x="258" y="732" text-anchor="middle" fill="#A7F3D0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Markdown and math in chat</text>
+  <text x="258" y="758" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Analysis, not investment advice</text>
+  <rect x="444" y="640" width="340" height="180" rx="18" fill="url(#greenCard)" stroke="#10B981" stroke-width="1.5"/>
+  <text x="614" y="696" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Source cards</text>
+  <text x="614" y="732" text-anchor="middle" fill="#A7F3D0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Documents, URLs, and APIs</text>
+  <text x="614" y="758" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Collected from tool artifacts</text>
+  <rect x="800" y="640" width="340" height="180" rx="18" fill="url(#greenCard)" stroke="#059669" stroke-width="1.5"/>
+  <text x="970" y="696" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Interactive chart</text>
+  <text x="970" y="732" text-anchor="middle" fill="#A7F3D0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Sandboxed iframe in the UI</text>
+  <text x="970" y="758" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Reusable in the Office file</text>
+  <rect x="1156" y="640" width="348" height="180" rx="18" fill="url(#greenCard)" stroke="#6EE7B7" stroke-width="1.5"/>
+  <text x="1330" y="696" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Office attachment</text>
+  <text x="1330" y="732" text-anchor="middle" fill="#A7F3D0" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Word, Excel, or PowerPoint</text>
+  <text x="1330" y="758" text-anchor="middle" fill="#6EE7B7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Opened from created-documents</text>
+</svg>

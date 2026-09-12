@@ -1,10 +1,13 @@
 [project]
 name = "airis"
 version = "0.1.0"
-description = "Add your description here"
+description = "Local desktop financial BI platform for source-grounded research, market analysis, and Office document generation"
 readme = "README.md"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE.md"]
 requires-python = ">=3.11"
 dependencies = [
+    "agentevals>=0.0.9",
     "aiosqlite==0.22.1",
     "azure-ai-documentintelligence>=1.0.2",
     "azure-cognitiveservices-vision-computervision>=0.9.1",
