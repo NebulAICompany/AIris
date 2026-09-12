@@ -83,7 +83,7 @@ def web_search_tool(query: str, search_depth: str = "basic"):
             max_results=10,
             auto_parameters=True,
             search_depth=search_depth,
-            # topic="finance", Kaldırdım şu anlık, bazı sıkıntıları var gibi duruyor.
+            # topic="finance", Removed for now, seems to have some issues.
         )
         if not response:
             return "No search results available.", []

@@ -953,7 +953,7 @@
       this.ctx.fillStyle = "#0f172a";
       this.ctx.font = "600 16px Inter, sans-serif";
       this.ctx.textAlign = "center";
-      this.ctx.fillText("Net Değer (TRY)", this.canvas.width / 2, 22);
+      this.ctx.fillText("Net Value (TRY)", this.canvas.width / 2, 22);
 
       // Calculate bar width and spacing
       const barCount = this.chartData.length;
@@ -1016,7 +1016,7 @@
         
         // Shorten category names
         let categoryLabel = item.category;
-        categoryLabel = categoryLabel.replace(" Faaliyetleri", "");
+        categoryLabel = categoryLabel.replace(" Faaliyetleri", "").replace(" Activities", "");
         if (categoryLabel.length > 20) {
           categoryLabel = categoryLabel.substring(0, 18) + "...";
         }

@@ -4,7 +4,7 @@ import sys
 
 
 def main():
-    print("🚀 GLM-4.5V Vision Language Model başlatılıyor...")
+    print("🚀 Starting GLM-4.5V Vision Language Model...")
     print("=" * 50)
 
     # Environment variables
@@ -55,23 +55,23 @@ def main():
         "fp8",  # Memory optimization
     ]
 
-    print("📦 GLM-4.5V model indiriliyor ve başlatılıyor...")
+    print("📦 Downloading and starting GLM-4.5V model...")
     print(f"⚡ Command: vllm serve zai-org/GLM-4.5V --host 0.0.0.0 --port {port} ...")
-    print("⏳ Bu işlem 15-25 dakika sürebilir (ilk kez)")
+    print("⏳ This operation may take 15-25 minutes (first time)")
     print("=" * 50)
 
     try:
         # Start vLLM server
         subprocess.run(cmd, check=True)
     except KeyboardInterrupt:
-        print("\n🛑 Server durduruldu.")
+        print("\n🛑 Server stopped.")
         sys.exit(0)
     except subprocess.CalledProcessError as e:
-        print(f"❌ Server başlatma hatası: {e}")
-        print("💡 Log'ları kontrol edin: Cloud Console > Cloud Run > Service Logs")
+        print(f"❌ Server startup error: {e}")
+        print("💡 Check logs: Cloud Console > Cloud Run > Service Logs")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Beklenmeyen hata: {e}")
+        print(f"❌ Unexpected error: {e}")
         sys.exit(1)
 
 

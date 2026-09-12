@@ -1,7 +1,5 @@
 import json
-import time
 from typing import Tuple, List, Dict, Any, AsyncGenerator, Optional, Generator
-from backend.monitoring.metrics import llm_duration_seconds
 from backend.shared.logger import get_logger
 from langchain_core.messages import ToolMessage, AIMessageChunk
 from backend.core.checkpointer import clear_thread_checkpoints
@@ -264,7 +262,6 @@ async def generate_answer(
     try:
         for attempt in range(2):
             try:
-                start_time = time.time()
                 config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
                 config["recursion_limit"] = 30
 
@@ -291,9 +288,6 @@ async def generate_answer(
                 api_sources = deduplicate_sources(api_sources)
                 doc_sources = deduplicate_sources(doc_sources)
 
-                duration = time.time() - start_time
-                llm_duration_seconds.observe(duration)
-
                 return answer, web_sources, api_sources, doc_sources
             except Exception as e:
                 error_str = str(e)
@@ -318,7 +312,7 @@ async def generate_answer(
                 "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
             )
         logger.error("Error in generate_answer: %s", error_str, exc_info=True)
-        return f"LLM yanıtı alınamadı: {error_str}", [], [], []
+        return f"Could not get LLM response: {error_str}", [], [], []
 
 
 async def generate_answer_stream(
@@ -338,7 +332,6 @@ async def generate_answer_stream(
             processor = StreamProcessor()
             yielded_any_events = False
             try:
-                start_time = time.time()
                 config = {"configurable": {"thread_id": thread_id}} if thread_id else {}
                 config["recursion_limit"] = 30
 
@@ -350,9 +343,6 @@ async def generate_answer_stream(
                     for event in processor.process_chunk(stream_chunk):
                         yielded_any_events = True
                         yield event
-
-                duration = time.time() - start_time
-                llm_duration_seconds.observe(duration)
 
                 yield {"type": "done", "sources": processor.get_deduplicated_sources()}
                 return
@@ -377,4 +367,4 @@ async def generate_answer_stream(
                 "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
             )
         logger.error("Error in generate_answer_stream: %s", error_str, exc_info=True)
-        yield {"type": "error", "content": f"LLM yanıtı alınamadı: {error_str}"}
+        yield {"type": "error", "content": f"Could not get LLM response: {error_str}"}

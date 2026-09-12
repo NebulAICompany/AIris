@@ -253,7 +253,7 @@ async def ImageParser(file_path: str, photo_less_mode: bool = False):
     if not photo_less_mode:
         image_path = Path(file_path)
         if not image_path.exists():
-            logger.warning(f"Görsel dosyası bulunamadı: {file_path}")
+            logger.warning(f"Image file not found: {file_path}")
             return None
 
         with open(file_path, "rb") as f:

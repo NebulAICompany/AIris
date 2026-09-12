@@ -12,7 +12,6 @@ Run from the project root:
     python test_tcmb_agent.py
 """
 import asyncio
-import sys
 import textwrap
 from datetime import datetime
 

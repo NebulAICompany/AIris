@@ -114,12 +114,12 @@ class APIService {
       console.error("[API] Request error:", error);
 
       if (error.name === "AbortError") {
-        throw new Error("İstek zaman aşımına uğradı - lütfen tekrar deneyin");
+        throw new Error("Request timed out - please try again");
       }
 
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
-          "Sunucuya bağlanılamıyor. Lütfen backend'in çalıştığından emin olun."
+          "Cannot connect to server. Please ensure the backend is running."
         );
       }
 
@@ -201,34 +201,34 @@ class APIService {
     } catch (error) {
       console.error("Query API error:", error);
 
-      let errorMessage = "Beklenmeyen bir hata oluştu";
+      let errorMessage = "An unexpected error occurred";
 
       if (
         error.name === "AbortError" ||
         error.message.includes("timeout") ||
-        error.message.includes("zaman aşımı")
+        error.message.includes("timed out")
       ) {
-        let timeoutReason = "AI sorgusu";
+        let timeoutReason = "AI query";
         if (webSearchEnabled) {
-          timeoutReason = "web araması ile AI sorgusu";
+          timeoutReason = "AI query with web search";
         }
 
-        errorMessage = `${timeoutReason} tamamlanması çok uzun sürdü. Lütfen daha kısa bir soru deneyin veya birkaç saniye bekleyip tekrar deneyin.`;
+        errorMessage = `${timeoutReason} took too long to complete. Please try a shorter question or wait a few seconds and try again.`;
       } else if (
         error.message.includes("fetch") ||
-        error.message.includes("bağlan")
+        error.message.includes("connect")
       ) {
         errorMessage =
-          "AI servisine bağlanılamıyor. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
+          "Cannot connect to AI service. Please check your connection and try again.";
       } else if (error.message.includes("500")) {
         errorMessage =
-          "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+          "AI service is temporarily unavailable. Please try again in a few minutes.";
       } else if (
         error.message.includes("502") ||
         error.message.includes("503")
       ) {
         errorMessage =
-          "Backend servisi şu anda meşgul. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
+          "Backend service is currently busy. Please wait a few seconds and try again.";
       } else {
         errorMessage = error.message;
       }
@@ -236,8 +236,8 @@ class APIService {
       return {
         success: false,
         error: errorMessage,
-        images: [], // Error durumunda empty images array
-        charts: [], // Error durumunda empty charts array
+        images: [], // Empty images array on error
+        charts: [], // Empty charts array on error
       };
     }
   }
@@ -342,14 +342,14 @@ class APIService {
     } catch (error) {
       console.error("[API] Streaming query error:", error);
 
-      let errorMessage = "Beklenmeyen bir hata oluştu";
+      let errorMessage = "An unexpected error occurred";
 
-      if (error.message.includes("fetch") || error.message.includes("bağlan")) {
+      if (error.message.includes("fetch") || error.message.includes("connect")) {
         errorMessage =
-          "AI servisine bağlanılamıyor. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
+          "Cannot connect to AI service. Please check your connection and try again.";
       } else if (error.message.includes("500")) {
         errorMessage =
-          "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+          "AI service is temporarily unavailable. Please try again in a few minutes.";
       } else {
         errorMessage = error.message;
       }
@@ -708,83 +708,6 @@ class APIService {
     }
   }
 
-  // Get system metrics (Prometheus endpoint)
-  async getMetrics() {
-    try {
-      // Make a special request for metrics that expects plain text, not JSON
-      const fullUrl = `${this.baseURL}/`;
-      const response = await fetch(fullUrl);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const metricsText = await response.text(); // Get as plain text, not JSON
-
-      // Parse Prometheus metrics format
-      const metrics = this.parsePrometheusMetrics(metricsText);
-
-      return {
-        success: true,
-        metrics,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.message,
-        metrics: {},
-      };
-    }
-  }
-
-  // Parse Prometheus metrics format
-  parsePrometheusMetrics(metricsText) {
-    const metrics = {};
-    const lines = metricsText.split("\n");
-
-    for (const line of lines) {
-      if (line.startsWith("#") || !line.trim()) continue;
-
-      const match = line.match(
-        /^([a-zA-Z_:][a-zA-Z0-9_:]*(?:\{[^}]*\})?) (.+)$/
-      );
-      if (match) {
-        const [, metricName, value] = match;
-        const cleanName = metricName.split("{")[0];
-
-        if (!metrics[cleanName]) {
-          metrics[cleanName] = [];
-        }
-
-        metrics[cleanName].push({
-          name: metricName,
-          value: parseFloat(value) || value,
-        });
-      }
-    }
-
-    return metrics;
-  }
-
-  // Determine system health based on metrics
-  determineSystemHealth(metrics) {
-    // Simple health check based on available metrics
-    if (!metrics || Object.keys(metrics).length === 0) {
-      return "offline";
-    }
-
-    // Check for recent activity
-    const hasRecentActivity =
-      metrics.api_requests_total &&
-      metrics.api_requests_total.some((m) => m.value > 0);
-
-    if (hasRecentActivity) {
-      return "healthy";
-    }
-
-    return "idle";
-  }
-
   // Batch operations
   async batchUpload(files, progressCallback) {
     const results = [];
@@ -904,7 +827,7 @@ class APIService {
       return {
         success: false,
         error: error.message.includes("aborted")
-          ? "İstek zaman aşımına uğradı - lütfen tekrar deneyın"
+          ? "Request timed out - please try again"
           : error.message,
         articles: [],
       };

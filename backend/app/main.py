@@ -84,7 +84,7 @@ logger.info("Starting AIris Backend API...")
 
 # Fast API app start
 app = FastAPI(
-    title="AIris Yerel RAG API",
+    title="AIris Local RAG API",
     version="0.1.0",
     description="Generative AI for Local Data",
     lifespan=lifespan,
@@ -98,8 +98,6 @@ app.mount(
     name="static",
 )
 app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets")
-
-# expose_metrics()
 
 # Allow frontend to easily access this API during development
 app.add_middleware(

@@ -54,10 +54,10 @@ async def test_agent_trajectory_with_llm_judge():
             agent_result = await run_agent_on_input(agent, inp)
             outputs = agent_result["messages"]
 
-            # 2) ANALYSIS.PY: mesajlardan step listesi çıkar
+            # 2) ANALYSIS.PY: extract step list from messages
             steps = extract_steps_from_messages(outputs)
 
-            # 3) TOOL İSTATİSTİĞİ + PATTERN YORUMLARI
+            # 3) TOOL STATS + PATTERN COMMENTS
             tool_stats = compute_tool_call_stats(steps)
             pattern_comments = find_redundant_pattern_comments(steps)
 
@@ -66,14 +66,14 @@ async def test_agent_trajectory_with_llm_judge():
 
             query_text = inp["messages"][0].content
 
-            # Konsol çıktısı
+            # Console output
             print(f"\n=== Query {idx} ===")
             print(query_text)
 
-            print("\n--- Tool çağrı istatistikleri ---")
+            print("\n--- Tool call statistics ---")
             print(tool_stats)
 
-            print("\n--- Adım adım akış ---")
+            print("\n--- Step by step flow ---")
             for s in steps:
                 kind = s["kind"]
                 if kind == "tool_call":
@@ -83,26 +83,26 @@ async def test_agent_trajectory_with_llm_judge():
                 else:
                     print(f"[{s['index']}] {kind.upper()} :: {str(s.get('content'))[:120]}...")
 
-            print("\n--- Heuristik pattern yorumları ---")
-            for c in pattern_comments or ["Belirgin tekrar / loop pattern'i tespit edilmedi."]:
+            print("\n--- Heuristic pattern comments ---")
+            for c in pattern_comments or ["No significant repetition / loop pattern detected."]:
                 print("-", c)
 
             print("\n--- LLM Judge Evaluation ---")
             print(evaluation)
 
-            # METRICS.TXT RAPORU
+            # METRICS.TXT REPORT
             metrics_file.write(f"Query #{idx}\n")
             metrics_file.write("-" * 80 + "\n")
-            metrics_file.write(f"Soru: {query_text}\n\n")
+            metrics_file.write(f"Question: {query_text}\n\n")
 
-            metrics_file.write("Tool çağrı istatistikleri:\n")
+            metrics_file.write("Tool call statistics:\n")
             for tool, count in tool_stats.items():
-                metrics_file.write(f"  - {tool}: {count} çağrı\n")
+                metrics_file.write(f"  - {tool}: {count} calls\n")
             if not tool_stats:
-                metrics_file.write("  - Tool çağrısı yok.\n")
+                metrics_file.write("  - No tool calls.\n")
             metrics_file.write("\n")
 
-            metrics_file.write("Adım adım akış:\n")
+            metrics_file.write("Step by step flow:\n")
             for s in steps:
                 kind = s["kind"]
                 if kind == "tool_call":
@@ -120,15 +120,15 @@ async def test_agent_trajectory_with_llm_judge():
                     )
             metrics_file.write("\n")
 
-            metrics_file.write("Heuristik pattern yorumları:\n")
+            metrics_file.write("Heuristic pattern comments:\n")
             if pattern_comments:
                 for c in pattern_comments:
                     metrics_file.write(f"  - {c}\n")
             else:
-                metrics_file.write("  - Belirgin tekrar / loop pattern'i tespit edilmedi.\n")
+                metrics_file.write("  - No significant repetition / loop pattern detected.\n")
             metrics_file.write("\n")
 
-            metrics_file.write("LLM Judge değerlendirmesi:\n")
+            metrics_file.write("LLM Judge evaluation:\n")
             metrics_file.write(f"  Score: {evaluation.get('score')}\n")
             metrics_file.write(
                 f"  Reasoning: {evaluation.get('reasoning', evaluation.get('comment', 'N/A'))}\n"
@@ -145,7 +145,7 @@ async def test_agent_trajectory_with_llm_judge():
                 }
             )
 
-    # Basit assertion (judge JSON’u için)
+    # Simple assertion (for judge JSON)
     assert len(results) > 0
     for r in results:
         ev = r["evaluation"]
