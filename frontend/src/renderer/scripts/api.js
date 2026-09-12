@@ -114,12 +114,12 @@ class APIService {
       console.error("[API] Request error:", error);
 
       if (error.name === "AbortError") {
-        throw new Error("İstek zaman aşımına uğradı - lütfen tekrar deneyin");
+        throw new Error("Request timed out - please try again");
       }
 
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
-          "Sunucuya bağlanılamıyor. Lütfen backend'in çalıştığından emin olun."
+          "Cannot connect to server. Please ensure the backend is running."
         );
       }
 
@@ -201,34 +201,34 @@ class APIService {
     } catch (error) {
       console.error("Query API error:", error);
 
-      let errorMessage = "Beklenmeyen bir hata oluştu";
+      let errorMessage = "An unexpected error occurred";
 
       if (
         error.name === "AbortError" ||
         error.message.includes("timeout") ||
-        error.message.includes("zaman aşımı")
+        error.message.includes("timed out")
       ) {
-        let timeoutReason = "AI sorgusu";
+        let timeoutReason = "AI query";
         if (webSearchEnabled) {
-          timeoutReason = "web araması ile AI sorgusu";
+          timeoutReason = "AI query with web search";
         }
 
-        errorMessage = `${timeoutReason} tamamlanması çok uzun sürdü. Lütfen daha kısa bir soru deneyin veya birkaç saniye bekleyip tekrar deneyin.`;
+        errorMessage = `${timeoutReason} took too long to complete. Please try a shorter question or wait a few seconds and try again.`;
       } else if (
         error.message.includes("fetch") ||
-        error.message.includes("bağlan")
+        error.message.includes("connect")
       ) {
         errorMessage =
-          "AI servisine bağlanılamıyor. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
+          "Cannot connect to AI service. Please check your connection and try again.";
       } else if (error.message.includes("500")) {
         errorMessage =
-          "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+          "AI service is temporarily unavailable. Please try again in a few minutes.";
       } else if (
         error.message.includes("502") ||
         error.message.includes("503")
       ) {
         errorMessage =
-          "Backend servisi şu anda meşgul. Lütfen birkaç saniye bekleyin ve tekrar deneyin.";
+          "Backend service is currently busy. Please wait a few seconds and try again.";
       } else {
         errorMessage = error.message;
       }
@@ -236,8 +236,8 @@ class APIService {
       return {
         success: false,
         error: errorMessage,
-        images: [], // Error durumunda empty images array
-        charts: [], // Error durumunda empty charts array
+        images: [], // Empty images array on error
+        charts: [], // Empty charts array on error
       };
     }
   }
@@ -342,14 +342,14 @@ class APIService {
     } catch (error) {
       console.error("[API] Streaming query error:", error);
 
-      let errorMessage = "Beklenmeyen bir hata oluştu";
+      let errorMessage = "An unexpected error occurred";
 
-      if (error.message.includes("fetch") || error.message.includes("bağlan")) {
+      if (error.message.includes("fetch") || error.message.includes("connect")) {
         errorMessage =
-          "AI servisine bağlanılamıyor. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.";
+          "Cannot connect to AI service. Please check your connection and try again.";
       } else if (error.message.includes("500")) {
         errorMessage =
-          "AI servisi geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin.";
+          "AI service is temporarily unavailable. Please try again in a few minutes.";
       } else {
         errorMessage = error.message;
       }
@@ -827,7 +827,7 @@ class APIService {
       return {
         success: false,
         error: error.message.includes("aborted")
-          ? "İstek zaman aşımına uğradı - lütfen tekrar deneyın"
+          ? "Request timed out - please try again"
           : error.message,
         articles: [],
       };

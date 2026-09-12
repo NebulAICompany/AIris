@@ -336,7 +336,7 @@ async def handle_upload(
             "filename": file.filename,
             "content_type": file.content_type,
             "status": "success",
-            "message": "Dosya başarıyla yüklendi ve işlendi",
+            "message": "File uploaded and processed successfully",
             "result": result,
             "preEmbeddingProcess": pre_embedding_process,
             "photoLessMode": photoLessMode,
@@ -345,7 +345,7 @@ async def handle_upload(
         error_message = str(e)
         logger.error(f"File upload error for {file.filename}: {error_message}")
         raise HTTPException(
-            status_code=500, detail=f"Dosya yükleme hatası: {error_message}"
+            status_code=500, detail=f"File upload error: {error_message}"
         )
 
 

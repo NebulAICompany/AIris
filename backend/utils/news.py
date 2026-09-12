@@ -390,7 +390,7 @@ def _create_fallback_summary(articles: List[NewsArticle]) -> Dict[str, str]:
 
         # Create comprehensive fallback description with basic image placement
         description_parts = [
-            f"Bu haber {len(sources)} farklı kaynaktan derlenmiştir: {', '.join(sources)}.",
+            f"This news was compiled from {len(sources)} different sources: {', '.join(sources)}.",
             "",
         ]
 
@@ -413,7 +413,7 @@ def _create_fallback_summary(articles: List[NewsArticle]) -> Dict[str, str]:
 
         description_parts.append("")
         description_parts.append(
-            "Bu kapsamlı haber özeti tüm kaynaklardan gelen bilgileri birleştirmektedir."
+            "This comprehensive news summary combines information from all sources."
         )
 
         unified_description = "\n".join(description_parts)
@@ -428,7 +428,7 @@ def _create_fallback_summary(articles: List[NewsArticle]) -> Dict[str, str]:
         logger.warning(f"Even fallback summary failed: {e}")
         return {
             "title": articles[0].title,
-            "description": articles[0].summary or "İçerik mevcut değil",
+            "description": articles[0].summary or "Content not available",
             "available_images": [],
         }
 

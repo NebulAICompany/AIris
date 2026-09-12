@@ -84,7 +84,7 @@ logger.info("Starting AIris Backend API...")
 
 # Fast API app start
 app = FastAPI(
-    title="AIris Yerel RAG API",
+    title="AIris Local RAG API",
     version="0.1.0",
     description="Generative AI for Local Data",
     lifespan=lifespan,

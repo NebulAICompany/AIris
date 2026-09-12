@@ -163,10 +163,10 @@ class Utils {
   // Parse markdown-like text for basic formatting
   static parseBasicMarkdown(text) {
     if (typeof marked === 'undefined') {
-      console.warn('Marked.js yüklenmedi, düz metin dönülüyor.');
+      console.warn('Marked.js not loaded, returning plain text.');
       return text;
     }
-    // marked.js tüm Markdown formatını (tablolar dahil) mükemmel HTML'e çevirir
+    // marked.js converts all Markdown formats (including tables) into HTML
     return marked.parse(text); 
   }
 
@@ -413,7 +413,7 @@ class Utils {
 
     const icon = document.createElement("span");
     icon.className = "snackbar-icon";
-    icon.innerHTML = icons[type] || icons.info; // <-- Burada innerHTML kullanıyoruz
+    icon.innerHTML = icons[type] || icons.info; // Using innerHTML here
 
     const text = document.createElement("span");
     text.className = "snackbar-text";

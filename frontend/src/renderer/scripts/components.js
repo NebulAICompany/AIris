@@ -28,7 +28,7 @@ class UIComponents {
     this.createdDocumentsSort = "date_desc";
 
     // Profile modal state
-    this.selectedProfileFiles = []; // Sadece profile modal için
+    this.selectedProfileFiles = []; // Only for profile modal
     this.profileModal = null;
 
     // Photo-less mode state
@@ -77,15 +77,14 @@ class UIComponents {
     if (!textarea) return;
 
     const adjustHeight = () => {
-      // 1. Önce yüksekliği "tek satır" boyutuna (24px) sabitle.
-      // 'auto' kullanmak bazen titremeye veya yanlış hesaplamaya (48px'e atlamaya) neden olur.
+      // 1. First set height to "single line" size (24px)
+      // Using 'auto' can cause flickering or incorrect jumping to 48px
       textarea.style.height = '24px';
 
-      // 2. Şimdi içeriğin gerçekte ne kadar yer kapladığını ölç
+      // 2. Now measure how much space the content actually occupies
       let newHeight = textarea.scrollHeight;
 
-      // 3. Eğer scrollHeight 24px'ten büyükse (yani yazı 2. satıra taştıysa) büyüt
-      // (Kırılganlık payı için > 24 yerine > 25 diyebiliriz ama > 24 genelde yeterlidir)
+      // 3. If scrollHeight is greater than 24px, expand
       if (newHeight > 24) {
 
         if (newHeight > 96) {
@@ -97,15 +96,14 @@ class UIComponents {
         }
 
       } else {
-        // Eğer yazı tek satıra sığıyorsa, 24px olarak kalsın
-        // (Yukarıda zaten 24px'e eşitlemiştik, burada overflow'u gizlemek yeterli)
+        // If text fits in a single line, keep it at 24px
         textarea.style.overflowY = 'hidden';
       }
     };
 
     textarea.addEventListener('input', adjustHeight);
 
-    // Başlangıçta bir kez çalıştır
+    // Run once at start
     adjustHeight();
   }
 
@@ -118,14 +116,14 @@ class UIComponents {
     const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
     const sidebar = document.querySelector('.sidebar');
 
-    // --- 1. Temizlik ve Başlangıç Ayarları ---
-    // İlk yüklemede tüm aktiflikleri temizle
+    // --- 1. Cleanup and Initial Setup ---
+    // Clear all active states on initial load
     navItems.forEach(item => item.classList.remove('active'));
     subItems.forEach(item => item.classList.remove('active'));
     if (collapsible) collapsible.classList.remove('active');
     balanceSections.forEach(sec => sec.classList.remove('active'));
 
-    // Sayfa açıldığında chat nav varsayılan aktif olsun
+    // Chat nav active by default when page opens
     const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
     if (chatNav) {
       chatNav.classList.add('active');
@@ -133,60 +131,59 @@ class UIComponents {
       if (chatTab) chatTab.classList.add('active');
     }
 
-    // --- 2. Normal Nav Item Tıklama ---
+    // --- 2. Normal Nav Item Click ---
     navItems.forEach(item => {
       item.addEventListener('click', () => {
-        // Temizlik
+        // Cleanup
         navItems.forEach(i => i.classList.remove('active'));
         subItems.forEach(i => i.classList.remove('active'));
 
-        // Collapsible'ın aktifliğini kaldır
+        // Remove active state from collapsible
         if (collapsible) collapsible.classList.remove('active');
 
         balanceSections.forEach(sec => sec.classList.remove('active'));
 
         item.classList.add('active');
 
-        // Sidebar açıkken subMenu kapat (başka menüye geçildi)
+        // Close subMenu when sidebar is open (switched to another menu)
         if (subMenu && !sidebar.classList.contains('collapsed')) {
           subMenu.classList.remove('open');
           subMenu.style.maxHeight = null;
         }
 
-        // Tab göster
+        // Show tab
         const tabId = item.dataset.tab + '-tab';
         const tab = document.getElementById(tabId);
         if (tab) tab.classList.add('active');
       });
     });
 
-    // --- 3. Collapsible (Finansal Analiz) Mantığı ---
+    // --- 3. Collapsible (Financial Analysis) Logic ---
     if (collapsible && subMenu) {
 
-      // A) TIKLAMA (CLICK) İŞLEMİ
-      // A) TIKLAMA (CLICK) İŞLEMİ
+      // A) CLICK ACTION
       collapsible.addEventListener('click', () => {
         const isCollapsed = sidebar.classList.contains('collapsed');
 
-        // Diğer her şeyi temizle
+        // Clear everything else
         navItems.forEach(i => i.classList.remove('active'));
         subItems.forEach(i => i.classList.remove('active'));
 
-        // Ana başlığı aktif yap
+        // Activate main header
         collapsible.classList.add('active');
 
         if (!isCollapsed) {
-          // Sidebar AÇIK
+          // Sidebar OPEN
           subMenu.classList.toggle('open');
           subMenu.style.maxHeight = subMenu.classList.contains('open')
             ? subMenu.scrollHeight + 'px'
             : null;
         } else {
-          // Sidebar KAPALI
+          // Sidebar COLLAPSED
           this.setupFloatingSubmenu(collapsible, subMenu);
         }
 
-        // Tabı göster
+        // Show tab
         const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
         const tab = document.getElementById(tabId);
         if (tab) {
@@ -195,21 +192,21 @@ class UIComponents {
         }
       });
 
-      // B) HOVER (MOUSEENTER) İŞLEMİ
+      // B) HOVER (MOUSEENTER) ACTION
       collapsible.addEventListener('mouseenter', () => {
-        // Sadece sidebar KAPALIYKEN hover çalışsın
+        // Only run hover when sidebar is collapsed
         if (sidebar.classList.contains('collapsed')) {
           this.setupFloatingSubmenu(collapsible, subMenu);
         }
       });
 
-      // C) MOUSELEAVE İŞLEMİ
+      // C) MOUSELEAVE ACTION
       collapsible.addEventListener('mouseleave', () => {
         if (sidebar.classList.contains('collapsed')) {
-          // Kullanıcı mouse'u ikondan menüye kaydırırken menü kapanmasın diye gecikme
+          // Delay to prevent menu closing when moving cursor from icon to menu
           setTimeout(() => {
             const floatingMenu = document.querySelector('.floating-sub-menu');
-            // Eğer mouse şu an floating menünün üzerinde değilse kapat
+            // Close if mouse is not over the floating menu
             if (floatingMenu && !floatingMenu.matches(':hover')) {
               floatingMenu.remove();
             }
@@ -218,29 +215,29 @@ class UIComponents {
       });
     }
 
-    // --- 4. Sub-item (Alt Menü) Tıklama ---
+    // --- 4. Sub-item Click ---
     subItems.forEach(item => {
       item.addEventListener('click', (e) => {
-        e.stopPropagation(); // Üst menü tıklamasını engelle
+        e.stopPropagation(); // Prevent parent menu click
         const isCollapsed = sidebar.classList.contains('collapsed');
 
-        // 1. Tüm aktiflikleri temizle
+        // 1. Clear all active states
         navItems.forEach(i => i.classList.remove('active'));
         subItems.forEach(i => i.classList.remove('active'));
         balanceSections.forEach(sec => sec.classList.remove('active'));
 
-        // 2. ÖNEMLİ DEĞİŞİKLİK: Üst menünün aktifliğini kaldır
+        // 2. Remove parent menu active state
         if (collapsible) collapsible.classList.remove('active');
 
-        // 3. Sadece tıklanan alt öğeyi aktif yap
+        // 3. Activate clicked sub-item only
         item.classList.add('active');
 
-        // 4. İlgili Tabı aç
+        // 4. Open corresponding tab
         const sectionId = item.dataset.page.replace('#', '') + '-tab';
         const section = document.getElementById(sectionId);
         if (section) section.classList.add('active');
 
-        // Sidebar kapalıysa floating menüyü kapat
+        // Close floating menu if sidebar is collapsed
         if (isCollapsed) {
           const floatingMenu = document.querySelector('.floating-sub-menu');
           if (floatingMenu) floatingMenu.remove();
@@ -251,21 +248,21 @@ class UIComponents {
     });
   }
 
-  // --- Floating Submenu Helper (Sidebar Kapalıyken) ---
+  // --- Floating Submenu Helper (When Sidebar is Collapsed) ---
   setupFloatingSubmenu(collapsible, subMenu) {
     const sidebar = document.querySelector('.sidebar');
-    // Sadece sidebar kapalıysa çalışmalı
+    // Only run if sidebar is collapsed
     if (!sidebar.classList.contains('collapsed')) return;
 
-    // Önce varsa eski floating menüyü temizle
+    // Remove existing floating menu if present
     const existing = document.querySelector('.floating-sub-menu');
     if (existing) existing.remove();
 
-    // Yeni floating submenu klonla
+    // Clone new floating submenu
     const clone = subMenu.cloneNode(true);
     clone.classList.add('floating-sub-menu');
 
-    // Stil Ayarları (JS ile zorunlu stiller)
+    // Style settings (required inline styles)
     clone.style.position = 'absolute';
     clone.style.zIndex = '4000';
     clone.style.display = 'flex';
@@ -273,32 +270,32 @@ class UIComponents {
     clone.style.maxHeight = '500px';
     clone.style.minWidth = '180px';
     clone.style.padding = '0px';
-    clone.style.backgroundColor = 'var(--bg-secondary)'; // Temanızdaki değişken
-    clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Gölge
+    clone.style.backgroundColor = 'var(--bg-secondary)'; // Theme variable
+    clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Shadow
     clone.style.borderRadius = '8px';
     clone.style.border = '1px solid var(--border-color)';
 
-    // KONUM HESAPLAMASI (getBoundingClientRect ile ekran koordinatları)
+    // Position calculation (screen coordinates via getBoundingClientRect)
     const rect = collapsible.getBoundingClientRect();
 
-    // Sidebar'ın sağına hizala
+    // Align to right of sidebar
     clone.style.top = rect.top + 'px';
-    clone.style.left = (rect.right + 10) + 'px'; // +10px boşluk
+    clone.style.left = (rect.right + 10) + 'px'; // +10px gap
 
-    // Body'ye ekle (Sidebar overflow'undan kurtulmak için)
+    // Append to body (to escape sidebar overflow clipping)
     document.body.appendChild(clone);
 
-    // --- Floating Menü Olayları ---
+    // --- Floating Menu Events ---
 
-    // 1. Mouse menüden çıkınca kapat
+    // 1. Close when mouse leaves menu
     clone.addEventListener('mouseleave', () => {
       clone.remove();
     });
 
-    // 2. Alt öğelere tıklanınca orijinal mantığı çalıştır
+    // 2. Trigger original logic when sub-items are clicked
     clone.querySelectorAll('.sub-item').forEach(item => {
       item.addEventListener('click', () => {
-        // Orijinal öğeyi bul ve tıkla (Bütün mantık initSidebar'da tek yerde)
+        // Find and click the original item (all logic is centralized in initSidebar)
         const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
         if (originalItem) originalItem.click();
 
@@ -306,7 +303,7 @@ class UIComponents {
       });
     });
 
-    // 3. Dışarı tıklayınca kapat (Güvenlik önlemi)
+    // 3. Close when clicking outside (safety measure)
     const closeMenu = (e) => {
       if (!clone.contains(e.target) && !collapsible.contains(e.target)) {
         clone.remove();
@@ -330,13 +327,13 @@ class UIComponents {
   setupSidebarToggle() {
     const sidebar = document.querySelector('.sidebar');
     const toggleBtn = document.querySelector('.toggle-btn');
-    // Sub-menu ve collapsible elemanlarını da seçelim
+    // Select sub-menu and collapsible elements
     const subMenu = document.querySelector('.sub-menu');
     const collapsible = document.querySelector('.nav-item.collapsible');
 
     if (!sidebar || !toggleBtn) return;
 
-    // LocalStorage kontrolü (Mevcut kodun)
+    // Check LocalStorage
     const savedState = localStorage.getItem('sidebarState');
     if (savedState === 'expanded') {
       sidebar.classList.add('expanded');
@@ -350,29 +347,24 @@ class UIComponents {
       const isCollapsed = sidebar.classList.contains('collapsed');
 
       if (isCollapsed) {
-        // --- SIDEBAR AÇILIYOR (Collapsed -> Expanded) ---
+        // --- SIDEBAR OPENING (Collapsed -> Expanded) ---
         sidebar.classList.remove('collapsed');
         sidebar.classList.add('expanded');
         localStorage.setItem('sidebarState', 'expanded');
 
-        // İsteğe bağlı: Sidebar açıldığında sub-menu kapalı gelsin istersen buraya dokunma.
-        // Eğer sidebar açılınca son durumu hatırlasın istersen burada işlem gerekir ama genelde kapalı gelmesi daha temizdir.
-
       } else {
-        // --- SIDEBAR KAPANIYOR (Expanded -> Collapsed) ---
+        // --- SIDEBAR CLOSING (Expanded -> Collapsed) ---
         sidebar.classList.remove('expanded');
         sidebar.classList.add('collapsed');
         localStorage.setItem('sidebarState', 'collapsed');
 
-        // --- EKLENEN KISIM: İÇERİDE AÇIK KALAN MENÜYÜ KAPAT ---
-        // Sidebar küçüldüğünde, içerideki sub-menu hala "açık" (max-height değerli) kalmamalı.
+        // Close open sub-menu when sidebar collapses
         if (subMenu && subMenu.classList.contains('open')) {
           subMenu.classList.remove('open');
-          subMenu.style.maxHeight = null; // Inline stili temizle
+          subMenu.style.maxHeight = null;
         }
 
-        // Collapsible butonunun 'active' durumunu da kaldırmak isteyebilirsin
-        // Böylece sidebar kapalıyken ikon seçili (mavi/aktif) görünmez.
+        // Remove active state from collapsible button
         if (collapsible) {
           collapsible.classList.remove('active');
         }
@@ -391,7 +383,7 @@ class UIComponents {
     if (!this.allProfiles) this.allProfiles = [];
     this.setupProfileSelect();
 
-    // Butonlar
+    // Buttons
     document.getElementById("open-profile-popup")?.addEventListener("click", () => this.showProfileModal());
     document.getElementById("close-profile-selection")?.addEventListener("click", () => this.hideProfileModal());
     document.getElementById("cancel-profile-popup")?.addEventListener("click", () => this.hideProfileModal());
@@ -400,7 +392,7 @@ class UIComponents {
     document.getElementById("select-all-profile-files")?.addEventListener("click", () => this.selectAllProfiles());
     document.getElementById("deselect-all-profile-files")?.addEventListener("click", () => this.deselectAllProfiles());
 
-    // Arama input
+    // Search input
     const input = document.getElementById("file-profile-selection-search");
     const clearBtn = document.getElementById("file-profile-selection-search-clear");
 
@@ -408,12 +400,12 @@ class UIComponents {
     input?.addEventListener("keypress", (e) => { if (e.key === "Escape") this.clearProfileSearch(); });
     clearBtn?.addEventListener("click", () => this.clearProfileSearch());
 
-    // Escape tuşu modal kapatma
+    // Escape key modal close
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && this.profileModal.classList.contains("show")) this.hideProfileModal();
     });
 
-    // İlk render
+    // Initial render
     this.renderProfileFiles();
   }
 
@@ -421,7 +413,7 @@ class UIComponents {
     if (!this.profileModal) return;
     this.profileModal.classList.add("show");
 
-    // Dosyaları modalda göster
+    // Display files in modal
     this.renderProfileFiles();
   }
 
@@ -438,7 +430,7 @@ class UIComponents {
       ? this.allFiles.filter(f => f.name.toLowerCase().includes(filter))
       : this.allFiles;
 
-    // Seçili dosyaları en üste taşı
+    // Move selected files to the top
     visibleFiles.sort((a, b) => {
       const aSelected = this.selectedProfileFiles.includes(a.name);
       const bSelected = this.selectedProfileFiles.includes(b.name);
@@ -558,10 +550,10 @@ class UIComponents {
     const select = document.getElementById("file-profile-select");
     if (!select) return;
 
-    // Dropdown seçeneklerini güncelle
+    // Update dropdown options
     this.updateProfileSelectOptions();
 
-    // Profil seçildiğinde
+    // When profile is selected
     select.addEventListener("change", () => {
       const selectedProfileName = select.value;
       if (!selectedProfileName) {
@@ -569,14 +561,14 @@ class UIComponents {
       } else {
         const profile = this.allProfiles.find(p => p.name === selectedProfileName);
         if (profile) {
-          this.selectedFiles = [...profile.files]; // profile’dan gelen dosyalar seçili olacak
+          this.selectedFiles = [...profile.files]; // files from profile will be selected
           this.normalizeSelectedFilesAgainstAllFiles();
         }
       }
 
       this.saveSelectedFilesToStorage();
 
-      // File selection modal'ı güncelle
+      // Update file selection modal
       this.renderFileSelectionList();
       this.updateFileSelectionButton();
     });
@@ -587,7 +579,7 @@ class UIComponents {
     const select = document.getElementById("file-profile-select");
     if (!select) return;
 
-    // Önce tüm seçenekleri temizle
+    // Clear all options first
     select.innerHTML = `<option value="" data-i18n="selectProfile">Select Profile</option>`;
 
     this.allProfiles.forEach(profile => {
@@ -890,51 +882,51 @@ class UIComponents {
     }
 
     // File attachment button (paperclip)
-    // Dropdown açıp kapatma
+    // Toggle dropdown
     const fileAttachmentBtn = document.getElementById("file-attachment-btn");
     const dropdown = document.getElementById("file-dropdown");
 
     fileAttachmentBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); // dışarı taşmasın
+      e.stopPropagation(); // prevent bubbling
       dropdown.style.display =
         dropdown.style.display === "block" ? "none" : "block";
     });
 
-    // Menü dışına tıklayınca kapansın
+    // Close when clicking outside menu
     document.addEventListener("click", () => {
       dropdown.style.display = "none";
     });
 
-    // Normal attach seçeneği
+    // Normal attach option
     const normalAttachBtn = document.getElementById("normal-file");
 
     normalAttachBtn.addEventListener("click", () => {
-      chatFileInput?.click();  // ❗ ESKİ davranış buraya taşındı
+      chatFileInput?.click();
       dropdown.style.display = "none";
     });
 
-    // Photo-less mode seçeneği
+    // Photo-less mode option
     this.photoLessBtn = document.getElementById("photoless-mode");
 
     this.photoLessBtn.addEventListener("click", () => {
       // Language
-      const lang = window.languageService?.getCurrentLanguage() || "tr";
+      const lang = window.languageService?.getCurrentLanguage() || "en";
 
       // Enable photo-less mode for the next file upload
       this.photoLessMode = true;
       this.photoLessBtn.classList.add("active");
 
-      let msg = lang === "en"
-        ? "Files will be processed without photos."
-        : "Dosya fotoğrafları kullanılmadan işlenecektir.";
+      let msg = lang === "tr"
+        ? "Dosya fotoğrafları kullanılmadan işlenecektir."
+        : "Files will be processed without photos.";
 
       Utils.showSnackbar(msg, "info", 4000);
 
-      // Dosya seçimi aç
+      // Open file selection
       const chatFileInput = document.getElementById("chat-file-input");
       chatFileInput?.click();
 
-      // Dropdown kapat
+      // Close dropdown
       dropdown.style.display = "none";
     });
 
@@ -1610,6 +1602,21 @@ class UIComponents {
 
     // Define the queries for each suggestion chip
     const chipQueries = {
+      // English
+      "What's in my latest report?":
+        "Analyze all my uploaded documents and provide a comprehensive summary of their content. What types of documents do I have and what information do they contain?",
+      "Analyze financial trends":
+        "Analyze the financial trends and patterns across the selected documents. Highlight key changes, growth patterns, and notable financial insights.",
+      "Summary of expenses":
+        "Prepare a comprehensive summary of all expenses found in my selected documents. Break down expenses by category and time period, and highlight notable spending patterns.",
+      // Turkish
+      "Son raporumda neler var?":
+        "Yüklediğim tüm dosyaları analiz et ve içeriklerinin genel bir özetini çıkar. Hangi türde belgelerim var ve ne tür bilgiler içeriyorlar?",
+      "Finansal trendleri analiz et":
+        "Seçili belgelerdeki finansal trendleri ve desenleri analiz et. Önemli değişiklikleri, büyüme kalıplarını ve dikkat çekici finansal görüşleri göster.",
+      "Gider özeti":
+        "Seçili dosyalarımda bulunan tüm giderlerin kapsamlı bir özetini hazırla. Giderleri kategoriye, zaman dilimine göre ayır ve önemli harcama kalıplarını vurgula.",
+      // Legacy Turkish keys
       "Tüm Dosyalarımı özetle":
         "Yüklediğim tüm dosyaları analiz et ve içeriklerinin genel bir özetini çıkar. Hangi türde belgelerim var ve ne tür bilgiler içeriyorlar?",
       "Seçili Dosyalarımı özetle":
@@ -1954,9 +1961,12 @@ class UIComponents {
 
         // If not the last attempt, wait before retrying
         if (attempt < maxRetries) {
-          this.updateTypingIndicatorMessage(
-            `Bağlantı sorunu, tekrar deneniyor... (${attempt}/${maxRetries})`
-          );
+          const lang = window.languageService?.getCurrentLanguage() || "en";
+          const retryMsg =
+            lang === "tr"
+              ? `Bağlantı sorunu, tekrar deneniyor... (${attempt}/${maxRetries})`
+              : `Connection issue, retrying... (${attempt}/${maxRetries})`;
+          this.updateTypingIndicatorMessage(retryMsg);
           await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
         }
       }
@@ -1977,7 +1987,8 @@ class UIComponents {
     typingDiv.className = "message assistant-message typing-indicator";
     typingDiv.id = "typing-indicator";
 
-    const statusMessage = "AI düşünüyor...";
+    const lang = window.languageService?.getCurrentLanguage() || "en";
+    const statusMessage = message || (lang === "tr" ? "AI düşünüyor..." : "AI is thinking...");
 
     typingDiv.innerHTML = `
       <div class="message-content" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;">
@@ -2259,7 +2270,7 @@ class UIComponents {
     if (!messageDiv) return;
     const label = messageDiv.querySelector(".tools-history-label");
     if (!label) return;
-    const lang = window.languageService?.getCurrentLanguage() || 'tr';
+    const lang = window.languageService?.getCurrentLanguage() || 'en';
     label.textContent = this.getToolStatusMessage(toolName, parentAgent, null, lang);
   }
 
@@ -2344,7 +2355,7 @@ class UIComponents {
     const uid = Date.now();
     const glowId = `spdragGlow-${uid}`;
     const gradId = `spdragGrad-${uid}`;
-    const lang = window.languageService?.getCurrentLanguage() || "tr";
+    const lang = window.languageService?.getCurrentLanguage() || "en";
     const statusText = lang === "tr" ? "Belgeler araştırılıyor..." : "Researching documents...";
 
     const container = window.document.createElement("div");
@@ -2411,7 +2422,7 @@ class UIComponents {
   _updateSpdragStatus() {
     const statusEl = window.document.getElementById("spdrag-graph-status");
     if (!statusEl) return;
-    const lang = window.languageService?.getCurrentLanguage() || "tr";
+    const lang = window.languageService?.getCurrentLanguage() || "en";
     const done = this._spdragDone || 0;
     const total = this._spdragTotal || 0;
     if (total > 0) {
@@ -2443,7 +2454,7 @@ class UIComponents {
   }
 
   showSpdragSynthesizing() {
-    const lang = window.languageService?.getCurrentLanguage() || "tr";
+    const lang = window.languageService?.getCurrentLanguage() || "en";
     const text = lang === "tr" ? "Bulgular sentezleniyor..." : "Synthesizing findings...";
 
     const statusEl = window.document.getElementById("spdrag-graph-status");
@@ -3268,7 +3279,7 @@ class UIComponents {
         chartsContainer.appendChild(chartWrapper);
       });
 
-      // Charts container'ı sources ve tools'tan sonra ekle (sources ve tools en üstte olmalı)
+      // Append charts container after sources and tools (sources and tools should stay on top)
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
         // Find the first element after sources/tools (usually message-text)
@@ -3366,7 +3377,7 @@ class UIComponents {
         });
       }
 
-      // Attachments container'ını message content'in içine ekle
+      // Append attachments container into message content
       const messageContent = messageDiv.querySelector(".message-content");
       if (messageContent) {
         messageContent.appendChild(attachmentsContainer);
@@ -4809,10 +4820,10 @@ class UIComponents {
       const data = await response.json();
       this.allFiles = data.files || [];
 
-      // İlk listeleme
+      // Initial listing
       this.displayFilteredFiles();
 
-      // 🔍 Arama olayları
+      // Search events
       const searchInput = document.getElementById("file-tab-search");
       const clearBtn = document.getElementById("file-tab-search-clear");
 
@@ -4903,7 +4914,7 @@ class UIComponents {
       </div>
     `;
 
-      // 📂 Dosyaya tıklayınca aç
+      // Open file on click
       fileItem.addEventListener("click", (e) => {
         if (!e.target.closest(".file-card-actions")) {
           this.openFile(file.name);
@@ -4912,7 +4923,7 @@ class UIComponents {
 
       fileLibrary.appendChild(fileItem);
 
-      // ✅ Önizlemeyi yükle
+      // Load preview
       this.loadFilePreview(file.name);
     });
   }
@@ -5594,11 +5605,16 @@ class UIComponents {
       const t = window.languageService
         ? window.languageService.t.bind(window.languageService)
         : (key) => key;
+      const lang = window.languageService?.getCurrentLanguage() || "en";
+      const clusteringText =
+        lang === "tr"
+          ? "AI ile akıllı haber kümeleme yapılıyor..."
+          : "Smart news clustering with AI in progress...";
       newsGrid.innerHTML = `
         <div class="loading-state">
           <div class="loading-spinner"></div>
           <p>${t("loadingLatestNews")}</p>
-          <small style="color: #666; margin-top: 8px; display: block;">AI ile akıllı haber kümeleme yapılıyor...</small>
+          <small style="color: #666; margin-top: 8px; display: block;">${clusteringText}</small>
         </div>
       `;
 
@@ -6702,14 +6718,14 @@ class UIComponents {
       ? this.allFiles.filter(f => f.name.toLowerCase().includes(q))
       : this.allFiles;
 
-    // Seçili dosyaları en üste taşı
+    // Move selected files to the top
     visibleFiles.sort((a, b) => {
       const aSelected = this.selectedFiles.includes(a.name);
       const bSelected = this.selectedFiles.includes(b.name);
 
-      if (aSelected && !bSelected) return -1; // a seçiliyse b'nin üstüne al
-      if (!aSelected && bSelected) return 1;  // b seçiliyse a'nın üstüne al
-      return 0; // ikisi de aynı seçili durumdaysa sıralamayı bozma
+      if (aSelected && !bSelected) return -1; // if a is selected, place before b
+      if (!aSelected && bSelected) return 1;  // if b is selected, place before a
+      return 0; // keep order if both have the same selection state
     });
 
 
@@ -6735,7 +6751,7 @@ class UIComponents {
         </div>`;
     }).join("");
 
-    // Click eventlerini bağla (item veya checkbox farketmez)
+    // Bind click events (applies to item or checkbox)
     const items = filesList.querySelectorAll(".file-selection-item");
     items.forEach(item => {
       const fileName = item.dataset.filename;
@@ -6743,13 +6759,13 @@ class UIComponents {
 
       // Container click
       item.onclick = (e) => {
-        e.stopPropagation(); // çakışmaları önle
+        e.stopPropagation(); // prevent conflicts
         this.toggleFileSelection(fileName);
       };
 
       // Checkbox click
       checkbox.onclick = (e) => {
-        e.stopPropagation(); // parent click ile çakışmayı önle
+        e.stopPropagation(); // prevent conflict with parent click
         this.toggleFileSelection(fileName);
       };
     });
@@ -6790,7 +6806,7 @@ class UIComponents {
 
     this.saveSelectedFilesToStorage();
 
-    // Listeyi yeniden render et ve seçili dosyaları en üste taşı
+    // Re-render list and move selected files to the top
     this.renderFileSelectionList();
     this.updateFileSelectionButton();
   }
@@ -7011,8 +7027,13 @@ class UIComponents {
 
   // Credit Calculator Methods
   computeLoanPayments(principal, termMonths, monthlyRatePercent) {
+    const isTr = window.languageService?.getCurrentLanguage() === "tr";
     if (termMonths <= 0) {
-      throw new Error("Kredi vadesi 0'dan büyük olmalıdır");
+      throw new Error(
+        isTr
+          ? "Kredi vadesi 0'dan büyük olmalıdır"
+          : "Loan term must be greater than 0"
+      );
     }
 
     const monthlyRate = monthlyRatePercent / 100;
@@ -7030,7 +7051,11 @@ class UIComponents {
     const denominator = powerTerm - 1;
 
     if (Math.abs(denominator) < 1e-9) {
-      throw new Error("Faiz oranı hesaplanamadı, lütfen girdileri kontrol edin");
+      throw new Error(
+        isTr
+          ? "Faiz oranı hesaplanamadı, lütfen girdileri kontrol edin"
+          : "Interest rate could not be calculated, please check inputs"
+      );
     }
 
     const monthlyPayment = principal * ((monthlyRate * powerTerm) / denominator);
@@ -7043,13 +7068,18 @@ class UIComponents {
 
   calculateLoan() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       // Get input values
       const loanAmountInput = document.getElementById("loan-amount");
       const loanTermInput = document.getElementById("loan-term");
       const interestRateInput = document.getElementById("interest-rate");
 
       if (!loanAmountInput || !loanTermInput || !interestRateInput) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       // Parse and validate inputs
@@ -7060,29 +7090,53 @@ class UIComponents {
       // Validation with specific error messages
       if (isNaN(loanAmount) || loanAmount <= 0) {
         loanAmountInput.focus();
-        throw new Error("Kredi tutarı 0'dan büyük geçerli bir sayı olmalıdır");
+        throw new Error(
+          isTr
+            ? "Kredi tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Loan amount must be a valid number greater than 0"
+        );
       }
       if (loanAmount > 100000000) {
         // 100 million limit
         loanAmountInput.focus();
-        throw new Error("Kredi tutarı çok yüksek (maksimum 100.000.000 TL)");
+        throw new Error(
+          isTr
+            ? "Kredi tutarı çok yüksek (maksimum 100.000.000 TL)"
+            : "Loan amount is too high (maximum 100,000,000 TRY)"
+        );
       }
       if (isNaN(loanTerm) || loanTerm <= 0) {
         loanTermInput.focus();
-        throw new Error("Kredi vadesi 0'dan büyük geçerli bir sayı olmalıdır");
+        throw new Error(
+          isTr
+            ? "Kredi vadesi 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Loan term must be a valid number greater than 0"
+        );
       }
       if (loanTerm > 360) {
         // 30 years max
         loanTermInput.focus();
-        throw new Error("Kredi vadesi çok uzun (maksimum 360 ay)");
+        throw new Error(
+          isTr
+            ? "Kredi vadesi çok uzun (maksimum 360 ay)"
+            : "Loan term is too long (maximum 360 months)"
+        );
       }
       if (isNaN(interestRate) || interestRate < 0) {
         interestRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif bir sayı olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif bir sayı olmalıdır"
+            : "Interest rate must be 0 or a positive number"
+        );
       }
       if (interestRate > 100) {
         interestRateInput.focus();
-        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı %100'den küçük olmalıdır"
+            : "Interest rate must be less than 100%"
+        );
       }
 
       // Calculate payments using monthly rate percentage provided by the user
@@ -7113,12 +7167,17 @@ class UIComponents {
 
   calculateDepositReturn() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       const principalInput = document.getElementById("deposit-principal");
       const daysInput = document.getElementById("deposit-days");
       const annualRateInput = document.getElementById("deposit-annual-rate");
 
       if (!principalInput || !daysInput || !annualRateInput) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       const principal = this.parseNumber(principalInput.value);
@@ -7128,28 +7187,46 @@ class UIComponents {
       if (isNaN(principal) || principal <= 0) {
         principalInput.focus();
         throw new Error(
-          "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+          isTr
+            ? "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Principal amount must be a valid number greater than 0"
         );
       }
 
       if (isNaN(days) || days <= 0) {
         daysInput.focus();
-        throw new Error("Vade gün sayısı 0'dan büyük olmalıdır");
+        throw new Error(
+          isTr
+            ? "Vade gün sayısı 0'dan büyük olmalıdır"
+            : "Term in days must be greater than 0"
+        );
       }
 
       if (days > 3650) {
         daysInput.focus();
-        throw new Error("Vade 3650 günden (10 yıl) uzun olamaz");
+        throw new Error(
+          isTr
+            ? "Vade 3650 günden (10 yıl) uzun olamaz"
+            : "Term cannot exceed 3650 days (10 years)"
+        );
       }
 
       if (isNaN(annualRate) || annualRate < 0) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif olmalıdır"
+            : "Interest rate must be 0 or positive"
+        );
       }
 
       if (annualRate > 100) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı %100'den küçük olmalıdır"
+            : "Interest rate must be less than 100%"
+        );
       }
 
       const interest = principal * annualRate * (days / 36500);
@@ -7169,6 +7246,7 @@ class UIComponents {
 
   calculateCompoundDepositReturn() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       const principalInput = document.getElementById(
         "compound-deposit-principal"
       );
@@ -7181,7 +7259,11 @@ class UIComponents {
       );
 
       if (!principalInput || !annualRateInput || !termInput || !frequencySelect) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       const principal = this.parseNumber(principalInput.value);
@@ -7192,23 +7274,37 @@ class UIComponents {
       if (isNaN(principal) || principal <= 0) {
         principalInput.focus();
         throw new Error(
-          "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+          isTr
+            ? "Anapara tutarı 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Principal amount must be a valid number greater than 0"
         );
       }
 
       if (isNaN(annualRate) || annualRate < 0) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif olmalıdır"
+            : "Interest rate must be 0 or positive"
+        );
       }
 
       if (annualRate > 100) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı %100'den küçük olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı %100'den küçük olmalıdır"
+            : "Interest rate must be less than 100%"
+        );
       }
 
       if (isNaN(term) || term <= 0) {
         termInput.focus();
-        throw new Error("Vade dönem sayısı 0'dan büyük olmalıdır");
+        throw new Error(
+          isTr
+            ? "Vade dönem sayısı 0'dan büyük olmalıdır"
+            : "Number of terms must be greater than 0"
+        );
       }
 
       let periodsPerYear;
@@ -7224,7 +7320,9 @@ class UIComponents {
           break;
         default:
           throw new Error(
-            "Frekans 'daily', 'monthly' veya 'yearly' olmalıdır"
+            isTr
+              ? "Frekans 'daily', 'monthly' veya 'yearly' olmalıdır"
+              : "Frequency must be 'daily', 'monthly', or 'yearly'"
           );
       }
 
@@ -7247,6 +7345,7 @@ class UIComponents {
 
   calculatePresentValue() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       const futureAmountInput = document.getElementById(
         "present-value-future-amount"
       );
@@ -7264,7 +7363,11 @@ class UIComponents {
         !monthsInput ||
         !daysInput
       ) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       const futureAmount = this.parseNumber(futureAmountInput.value);
@@ -7276,13 +7379,19 @@ class UIComponents {
       if (isNaN(futureAmount) || futureAmount <= 0) {
         futureAmountInput.focus();
         throw new Error(
-          "Gelecekteki tutar 0'dan büyük geçerli bir sayı olmalıdır"
+          isTr
+            ? "Gelecekteki tutar 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Future amount must be a valid number greater than 0"
         );
       }
 
       if (isNaN(annualRate) || annualRate < 0) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif olmalıdır"
+            : "Interest rate must be 0 or positive"
+        );
       }
 
       const totalYears =
@@ -7293,7 +7402,9 @@ class UIComponents {
       if (totalYears <= 0) {
         yearsInput.focus();
         throw new Error(
-          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+          isTr
+            ? "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+            : "You must enter at least one duration value (years, months, or days)"
         );
       }
 
@@ -7312,6 +7423,7 @@ class UIComponents {
 
   calculateFutureValue() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       const presentAmountInput = document.getElementById(
         "future-value-present-amount"
       );
@@ -7329,7 +7441,11 @@ class UIComponents {
         !monthsInput ||
         !daysInput
       ) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       const presentAmount = this.parseNumber(presentAmountInput.value);
@@ -7341,13 +7457,19 @@ class UIComponents {
       if (isNaN(presentAmount) || presentAmount <= 0) {
         presentAmountInput.focus();
         throw new Error(
-          "Bugünkü tutar 0'dan büyük geçerli bir sayı olmalıdır"
+          isTr
+            ? "Bugünkü tutar 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Present amount must be a valid number greater than 0"
         );
       }
 
       if (isNaN(annualRate) || annualRate < 0) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif olmalıdır"
+            : "Interest rate must be 0 or positive"
+        );
       }
 
       const totalYears =
@@ -7358,7 +7480,9 @@ class UIComponents {
       if (totalYears <= 0) {
         yearsInput.focus();
         throw new Error(
-          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+          isTr
+            ? "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+            : "You must enter at least one duration value (years, months, or days)"
         );
       }
 
@@ -7377,6 +7501,7 @@ class UIComponents {
 
   calculateFutureValueAnnuity() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       const paymentInput = document.getElementById(
         "future-value-annuity-payment"
       );
@@ -7400,7 +7525,11 @@ class UIComponents {
         !monthsInput ||
         !daysInput
       ) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       const payment = this.parseNumber(paymentInput.value);
@@ -7412,13 +7541,19 @@ class UIComponents {
       if (isNaN(payment) || payment <= 0) {
         paymentInput.focus();
         throw new Error(
-          "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+          isTr
+            ? "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Periodic payment must be a valid number greater than 0"
         );
       }
 
       if (isNaN(annualRate) || annualRate < 0) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif olmalıdır"
+            : "Interest rate must be 0 or positive"
+        );
       }
 
       const hasYears = !Number.isNaN(years) && years > 0;
@@ -7428,7 +7563,9 @@ class UIComponents {
       if (!hasYears && !hasMonths && !hasDays) {
         yearsInput.focus();
         throw new Error(
-          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+          isTr
+            ? "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+            : "You must enter at least one duration value (years, months, or days)"
         );
       }
 
@@ -7467,6 +7604,7 @@ class UIComponents {
 
   calculatePresentValueAnnuity() {
     try {
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
       const paymentInput = document.getElementById(
         "present-value-annuity-payment"
       );
@@ -7490,7 +7628,11 @@ class UIComponents {
         !monthsInput ||
         !daysInput
       ) {
-        throw new Error("Gerekli form elemanları bulunamadı");
+        throw new Error(
+          isTr
+            ? "Gerekli form elemanları bulunamadı"
+            : "Required form elements not found"
+        );
       }
 
       const payment = this.parseNumber(paymentInput.value);
@@ -7502,13 +7644,19 @@ class UIComponents {
       if (isNaN(payment) || payment <= 0) {
         paymentInput.focus();
         throw new Error(
-          "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+          isTr
+            ? "Periyodik ödeme 0'dan büyük geçerli bir sayı olmalıdır"
+            : "Periodic payment must be a valid number greater than 0"
         );
       }
 
       if (isNaN(annualRate) || annualRate < 0) {
         annualRateInput.focus();
-        throw new Error("Faiz oranı 0 veya pozitif olmalıdır");
+        throw new Error(
+          isTr
+            ? "Faiz oranı 0 veya pozitif olmalıdır"
+            : "Interest rate must be 0 or positive"
+        );
       }
 
       const hasYears = !Number.isNaN(years) && years > 0;
@@ -7518,7 +7666,9 @@ class UIComponents {
       if (!hasYears && !hasMonths && !hasDays) {
         yearsInput.focus();
         throw new Error(
-          "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+          isTr
+            ? "En az bir süre değeri (yıl, ay veya gün) girmelisiniz"
+            : "You must enter at least one duration value (years, months, or days)"
         );
       }
 
@@ -7720,11 +7870,13 @@ class UIComponents {
     }
 
     if (titleEl) {
-      titleEl.textContent = "Bugünkü Değer Sonuçları";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      titleEl.textContent = isTr ? "Bugünkü Değer Sonuçları" : "Present Value Results";
     }
 
     if (labelEl) {
-      labelEl.textContent = "Bugünkü Değer";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      labelEl.textContent = isTr ? "Bugünkü Değer" : "Present Value";
     }
 
     setTimeout(() => {
@@ -7776,11 +7928,13 @@ class UIComponents {
     }
 
     if (titleEl) {
-      titleEl.textContent = "Gelecek Değer Sonuçları";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      titleEl.textContent = isTr ? "Gelecek Değer Sonuçları" : "Future Value Results";
     }
 
     if (labelEl) {
-      labelEl.textContent = "Gelecek Değer";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      labelEl.textContent = isTr ? "Gelecek Değer" : "Future Value";
     }
 
     setTimeout(() => {
@@ -7832,11 +7986,13 @@ class UIComponents {
     }
 
     if (titleEl) {
-      titleEl.textContent = "Gelecek Değer Sonuçları";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      titleEl.textContent = isTr ? "Gelecek Değer Sonuçları" : "Future Value Results";
     }
 
     if (labelEl) {
-      labelEl.textContent = "Gelecek Değer";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      labelEl.textContent = isTr ? "Gelecek Değer" : "Future Value";
     }
 
     setTimeout(() => {
@@ -7888,11 +8044,13 @@ class UIComponents {
     }
 
     if (titleEl) {
-      titleEl.textContent = "Bugünkü Değer Sonuçları";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      titleEl.textContent = isTr ? "Bugünkü Değer Sonuçları" : "Present Value Results";
     }
 
     if (labelEl) {
-      labelEl.textContent = "Bugünkü Değer";
+      const isTr = window.languageService?.getCurrentLanguage() === "tr";
+      labelEl.textContent = isTr ? "Bugünkü Değer" : "Present Value";
     }
 
     setTimeout(() => {
@@ -8112,7 +8270,9 @@ class UIComponents {
 
   // Helper method to format currency
   formatCurrency(amount, fractionDigits = 2) {
-    return new Intl.NumberFormat("tr-TR", {
+    const lang = window.languageService?.getCurrentLanguage() || "en";
+    const locale = lang === "tr" ? "tr-TR" : "en-US";
+    return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: "TRY",
       minimumFractionDigits: fractionDigits,
@@ -8257,15 +8417,23 @@ class UIComponents {
         qaContainer.id = qaContainerId;
         qaContainer.className = "news-qa-container";
 
+        const lang = window.languageService?.getCurrentLanguage() || "en";
+        const qaTitle =
+          lang === "tr" ? "Haberle İlgili Sorular" : "Questions About the Article";
+        const qaDesc =
+          lang === "tr"
+            ? "AI ile haber hakkında soru sorabilir ve detaylı bilgi alabilirsiniz"
+            : "Ask questions about this article and get detailed insights with AI";
+
         // Add a divider and header before Q&A section
         qaContainer.innerHTML = `
           <hr class="news-qa-divider" />
           <div class="news-qa-header">
             <h3>
               <i class="fas fa-comments"></i>
-              Haberle İlgili Sorular
+              ${qaTitle}
             </h3>
-            <p>AI ile haber hakkında soru sorabilir ve detaylı bilgi alabilirsiniz</p>
+            <p>${qaDesc}</p>
           </div>
         `;
 
@@ -8308,6 +8476,14 @@ class UIComponents {
     // Show typing indicator
     this.showNewsChatTyping();
 
+    const qaLang = window.languageService?.getCurrentLanguage() || "en";
+    const thinkingText =
+      qaLang === "tr" ? "AI yanıt hazırlıyor..." : "AI is preparing a response...";
+    const defaultErrorMsg =
+      qaLang === "tr"
+        ? "Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin."
+        : "Sorry, an error occurred while processing your request. Please try again.";
+
     // Create Q&A block for this conversation
     let qaContentId = null;
     const mount = document.getElementById("news-qa-container");
@@ -8330,7 +8506,7 @@ class UIComponents {
           <div class="message-content">
             <div class="message-text" id="${qaContentId}">
               <div class="news-qa-thinking">
-                <span>AI yanıt hazırlıyor...</span>
+                <span>${thinkingText}</span>
                 <div class="typing-dots">
                   <div class="typing-dot"></div>
                   <div class="typing-dot"></div>
@@ -8367,7 +8543,7 @@ class UIComponents {
         if (qaContentId) {
           const contentEl = document.getElementById(qaContentId);
           if (contentEl) {
-            contentEl.innerHTML = `Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.`;
+            contentEl.innerHTML = defaultErrorMsg;
           }
         }
       }
@@ -8378,7 +8554,7 @@ class UIComponents {
       if (qaContentId) {
         const contentEl = document.getElementById(qaContentId);
         if (contentEl) {
-          contentEl.innerHTML = `Üzgünüm, isteğinizi işlerken bir hata oluştu. Lütfen tekrar deneyin.`;
+          contentEl.innerHTML = defaultErrorMsg;
         }
       }
     } finally {
@@ -8773,10 +8949,13 @@ class UIComponents {
     const priceChange = document.getElementById("stock-price-change");
     const priceTime = document.getElementById("stock-price-time");
 
+    const currentLanguage = window.languageService?.getCurrentLanguage() || "en";
+    const numLocale = currentLanguage === "tr" ? "tr-TR" : "en-US";
+
     if (companyName) companyName.textContent = this.getCompanyName(symbol);
     if (symbolEl) symbolEl.textContent = symbol;
     if (currentPrice)
-      currentPrice.textContent = `₺${latest.close?.toLocaleString("tr-TR")}`;
+      currentPrice.textContent = `₺${latest.close?.toLocaleString(numLocale)}`;
     if (priceChange) {
       priceChange.textContent = `${isPositive ? "+" : ""}₺${change.toFixed(
         2
@@ -8864,10 +9043,11 @@ class UIComponents {
     const dayRange = `${Math.min(latest.low, latest.high).toFixed(
       2
     )} - ${Math.max(latest.low, latest.high).toFixed(2)}`;
+    const volumeLocale = (window.languageService?.getCurrentLanguage() || "en") === "tr" ? "tr-TR" : "en-US";
     const volume = latest.volume
-      ? latest.volume.toLocaleString("tr-TR")
+      ? latest.volume.toLocaleString(volumeLocale)
       : previous
-        ? previous.volume.toLocaleString("tr-TR")
+        ? previous.volume.toLocaleString(volumeLocale)
         : "--";
 
     metricsContainer.innerHTML = `
@@ -9265,7 +9445,8 @@ class UIComponents {
       hoverLine.style.display = "block";
       hoverDot.style.display = "block";
       tooltip.style.display = "block";
-      const price = (d.close ?? d.Close ?? d.c)?.toLocaleString("tr-TR", {
+      const chartLocale = (window.languageService?.getCurrentLanguage() || "en") === "tr" ? "tr-TR" : "en-US";
+      const price = (d.close ?? d.Close ?? d.c)?.toLocaleString(chartLocale, {
         maximumFractionDigits: 2,
         minimumFractionDigits: 2,
       });

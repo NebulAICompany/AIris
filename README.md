@@ -1,27 +1,32 @@
 # AIris
 
-## Kurulum ve Çalıştırma
+AIris is a multi-agent, B2B financial assistant designed for financial institutions and researchers. It allows users to query large archives of financial documents (policies, contracts, reports, financial statements) in natural language and receive auditable, decision-ready answers, technical charts, and generated Office documents (Word, Excel, PowerPoint).
 
-### Gereksinimler
+For detailed architecture and system design, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-- Python 3.11+ (tercihen 3.11)
+## Installation and Setup
+
+### Prerequisites
+
+- Python 3.11+ (Python 3.11 recommended)
 - Node.js 16+
-- `.env` dosyası (ana dizinde)
+- `.env` file in the root directory
 
-### Kurulum Adımları
+### Setup Steps
 
-1. **Backend kurulumu:**
+1. **Backend Setup:**
 
    ```bash
-   # Virtual environment oluşturun ve aktifleştirin
+   # Create and activate virtual environment
    python -m venv .venv
-   .venv\Scripts\activate  # Windows için
+   .venv\Scripts\activate  # Windows
+   # source .venv/bin/activate  # macOS / Linux
 
-   # Bağımlılıkları yükleyin
+   # Install dependencies
    pip install -r requirements.txt
    ```
 
-2. **Frontend kurulumu:**
+2. **Frontend Setup:**
 
    ```bash
    cd frontend
@@ -29,22 +34,26 @@
    cd ..
    ```
 
-3. **`.env` dosyasını oluşturun** (ana dizinde): `.env.example` dosyasını `.env` olarak kopyalayın ve kendi API anahtarlarınızı doldurun.
+3. **Configure Environment Variables:**
+   Copy `.env.example` to `.env` in the root directory and fill in your API keys:
+   ```bash
+   cp .env.example .env
+   ```
 
-### Çalıştırma
+### Running the Application
 
-1. **İki terminal açın** (split olarak daha iyi oluyor)
-2. **Backend'i çalıştırın:**
+1. **Open two terminal windows** (split terminal recommended)
+2. **Start the Backend:**
 
    ```bash
-   .venv\Scripts\activate  # Virtual environment'ı aktifleştirin
+   .venv\Scripts\activate  # Activate virtual environment
    python backend_runner.py
    ```
 
-3. **Frontend'i çalıştırın:**
+3. **Start the Frontend:**
 
    ```bash
    python frontend_runner.py
    ```
 
-**Not:** Backend'in çalışması biraz uzun sürüyor özellikle ilk defa çalıştırırken. Frontend önceden açılabilir, backend başlamadan uygulamada bir şey yapmasanız daha iyi olur.
+> **Note:** The backend may take some time to start, especially on the first run. The frontend can be opened in advance, but it is recommended to wait until the backend is fully initialized before submitting queries.

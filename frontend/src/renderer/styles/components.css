@@ -2464,7 +2464,7 @@ body.dark-theme .image-caption {
 
 .btn-danger {
   background-color: red;
-  /* normal kırmızı */
+  /* normal red */
   border: 1px solid #ff4d4f;
   color: #fff;
   padding: 8px 12px;
@@ -2478,7 +2478,7 @@ body.dark-theme .image-caption {
 
 .btn-danger:hover {
   background-color: #cc3a3d;
-  /* daha koyu kırmızı */
+  /* darker red */
   border-color: #cc3a3d;
 }
 
@@ -2832,21 +2832,21 @@ body.dark-theme .image-caption {
   margin-bottom: 0.5rem;
 }
 
-/* Paragraflar ve Listeler */
+/* Paragraphs and Lists */
 .message-text p {
   margin-bottom: 1rem;
 }
 
 .message-text ul {
   list-style-type: disc;
-  /* Liste noktalarını geri getirir */
+  /* Restores bullet points */
   margin-left: 1.5rem;
   margin-bottom: 1rem;
 }
 
 .message-text ol {
   list-style-type: decimal;
-  /* Numaralı listeleri geri getirir */
+  /* Restores numbered lists */
   margin-left: 1.5rem;
   margin-bottom: 1rem;
 }
@@ -2855,7 +2855,7 @@ body.dark-theme .image-caption {
   margin-bottom: 0.25rem;
 }
 
-/* Vurgular */
+/* Highlights */
 .message-text strong {
   font-weight: 600;
 }
@@ -3381,7 +3381,7 @@ body.dark-theme .image-caption {
 }
 
 
-/* ANA KAPLAYICI (KUTU GÖRÜNÜMÜ) */
+/* MAIN CONTAINER (BOX VIEW) */
 .chat-input-container {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
@@ -3413,13 +3413,13 @@ body.dark-theme .image-caption {
   box-sizing: border-box;
 
   line-height: 24px;
-  /* 1 satır = 24px */
+  /* 1 line = 24px */
   padding: 0 4px;
 
   min-height: 24px;
-  /* Minimum 1 satır */
+  /* Minimum 1 line */
   max-height: 96px;
-  /* Maksimum 4 satır (4 * 24px) */
+  /* Maximum 4 lines (4 * 24px) */
   transition: background-color 0.2s;
 }
 
@@ -3473,11 +3473,11 @@ body.dark-theme .image-caption {
   border-radius: 3px;
 }
 
-/* ALT SATIR (BUTONLAR) */
+/* BOTTOM ROW (BUTTONS) */
 .chat-controls-row {
   display: flex;
   justify-content: space-between;
-  /* Sol ve Sağ grupları ayırır */
+  /* Separates Left and Right groups */
   align-items: center;
   margin-top: 4px;
 }
@@ -3495,17 +3495,17 @@ body.dark-theme .image-caption {
   align-items: center;
 }
 
-/* Yukarı açılan dropdown */
+/* Upward opening dropdown */
 .dropdown-menu {
   display: none;
   flex-direction: column;
 
   position: absolute;
   bottom: 45px;
-  /* Yukarı açılması için */
+  /* Opens upward */
 
   min-width: 170px;
-  /* Chat-bar yapısına daha uygun */
+  /* Better fit for chat-bar structure */
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 10px;
@@ -3517,7 +3517,7 @@ body.dark-theme .image-caption {
   animation: dropdownFadeUp 0.15s ease-out;
 }
 
-/* Aktifken görünür */
+/* Visible when active */
 .dropdown-menu.show {
   display: flex;
 }
@@ -3535,14 +3535,14 @@ body.dark-theme .image-caption {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* Yazı solda, ikon sağda */
+  /* Text on left, icon on right */
   gap: 10px;
   transition: background 0.15s ease;
 }
 
 .dropdown-item i {
   color: var(--text-secondary);
-  /* İkon temaya göre renklensin */
+  /* Color icon by theme */
   font-size: 14px;
   transition: color 0.15s ease;
 }
@@ -3553,11 +3553,11 @@ body.dark-theme .image-caption {
 
 .dropdown-item:hover i {
   color: var(--text-primary);
-  /* Hover olduğunda ikon daha belirgin */
+  /* Icon more prominent on hover */
 }
 
 
-/* Animasyon */
+/* Animation */
 @keyframes dropdownFadeUp {
   from {
     opacity: 0;
@@ -3898,25 +3898,25 @@ body.nebula-theme .spdrag-switch-wrap.active .spdrag-switch-label {
   color: var(--text-primary);
 }
 
-/* Disabled görünümü */
+/* Disabled appearance */
 .send-button[disabled] {
   opacity: 0.4;
   cursor: default;
 }
 
-/* İkon dönüşümler */
+/* Icon transitions */
 .send-icon {
   width: 27px;
   height: 27px;
   transition: transform 0.2s ease;
 }
 
-/* Disabled → yukarı */
+/* Disabled → upward */
 .send-button[disabled] .send-icon {
   transform: rotate(-90deg);
 }
 
-/* Enabled → sağa */
+/* Enabled → right */
 .send-button:not([disabled]) .send-icon {
   transform: rotate(0deg);
 }
@@ -5924,12 +5924,12 @@ th,
 td {
   border: 1px solid var(--border-color);
   padding: 10px 14px;
-  /* Biraz daha ferah bir görünüm */
+  /* A slightly more spacious look */
   text-align: left;
-  /* Verinin hücreden taşmasını engeller: */
+  /* Prevents data from overflowing the cell: */
   word-wrap: break-word;
   max-width: 250px;
-  /* Kaçış karakterlerinden sızan tabları/boşlukları normalize eder: */
+  /* Normalizes tabs/spaces leaking from escape characters: */
   white-space: normal;
 }
 
@@ -5937,11 +5937,11 @@ th {
   background-color: var(--bg-secondary);
   font-weight: 600;
   color: var(--text-primary);
-  /* table-header-group hatasını almamak için gap kullanacaksan burayı flex yapmalısın, 
-     ancak standart tabloda border kullanmak daha güvenlidir. */
+  /* To avoid table-header-group error when using gap you must make this flex, 
+     but using border in a standard table is safer. */
 }
 
-/* Satır üzerine gelince vurgu (daha temiz bir HTML hissi için) */
+/* Highlight on row hover (for a cleaner HTML feel) */
 tr:hover {
   background-color: var(--bg-hover-subtle);
 }
@@ -6015,7 +6015,7 @@ tr:hover {
   transform: scale(0.96);
 }
 
-/* Dark theme için mevcut renkleri koru */
+/* Preserve current colors for dark theme */
 body.dark-theme .toggle-switch {
   border: 1px solid var(--border-color);
   background-color: var(--bg-primary);
@@ -7445,10 +7445,10 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   border: none !important;
 }
 
-/* Haber detayları sayfasında news-chat-section'ın arka planını düzelt */
+/* Fix news-chat-section background on news detail page */
 .news-detail .news-chat-section {
   background: var(--bg-primary) !important;
-  /* Ana içerik ile aynı arka plan */
+  /* Same background as main content */
   border: none !important;
   box-shadow: none !important;
 }
@@ -7531,7 +7531,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   bottom: 0;
   padding: 12px 24px;
   background: var(--bg-primary);
-  /* Ana içerik ile aynı arka plan */
+  /* Same background as main content */
   box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.06);
   border-top: 1px solid var(--border-color);
   z-index: 20;
@@ -7880,7 +7880,7 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   animation: modalFadeIn 0.3s ease;
 }
 
-/* Container ve label-input kapsayıcı */
+/* Container and label-input wrapper */
 .profile-name-input {
   margin-top: 10px;
   display: flex;
@@ -7888,10 +7888,10 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   align-items: center;
   padding: 8px;
   border: 1px solid var(--border-color);
-  /* ana border */
+  /* main border */
   border-radius: var(--border-radius);
   background-color: var(--bg-secondary);
-  /* tema uyumlu */
+  /* theme compatible */
   transition: var(--transition);
 }
 
@@ -7906,28 +7906,28 @@ body.dark-theme .toggle-switch input:checked+.slider:before {
   color: var(--text-secondary);
 }
 
-/* Input alanı */
+/* Input field */
 .profile-name-input input {
   padding: 8px 10px;
   border: 1px solid var(--border-color);
   /* input border */
   border-radius: var(--border-radius);
   background-color: var(--bg-primary);
-  /* input arka plan */
+  /* input background */
   color: var(--text-primary);
   font-size: 14px;
   outline: none;
   transition: var(--transition);
 }
 
-/* Input focus efekti */
+/* Input focus effect */
 .profile-name-input input:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb, 139, 92, 246), 0.2);
   background-color: var(--bg-primary);
 }
 
-/* Küçük ekran uyumu */
+/* Small screen adaptation */
 @media (max-width: 480px) {
   .profile-name-input {
     padding: 6px;
@@ -8068,7 +8068,7 @@ body.nebula-theme .file-selection-search:focus-visible {
   font-size: 14px;
 }
 
-/* Clear butonu input boşken gizlensin */
+/* Hide clear button when input is empty */
 #file-selection-search:placeholder-shown+.search-clear-btn,
 #file-selection-search:placeholder-shown~.search-clear-btn {
   opacity: 0;
@@ -8076,7 +8076,7 @@ body.nebula-theme .file-selection-search:focus-visible {
   transform: scale(0.9);
 }
 
-/* Küçük ekran uyumu */
+/* Small screen adaptation */
 @media (max-width: 480px) {
   .file-selection-search {
     font-size: 15px;
@@ -9407,7 +9407,7 @@ body.nebula-theme .web-search-button:hover {
   gap: 10px;
   z-index: 9999;
   pointer-events: none;
-  /* Altındaki elementlere tıklanabilir kalsın */
+  /* Keep underlying elements clickable */
 }
 
 /* Snackbar */

@@ -18,7 +18,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Test ve büyük dosyalar
+# Test and large files
 tests/test_documents/
 *.pdf
 *.lock
@@ -31,14 +31,14 @@ tests/test_documents/
 *.swp
 *.swo
 
-# Çıktı ve cache
+# Output and cache
 *.log
 logs/
 *.tmp
 *.bak
 metrics.txt
 
-# Kişisel dosyalar
+# Personal files
 backend/chat_sessions/
 deneme.txt
 backend/database/
@@ -62,7 +62,7 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
-# Ortak .env dosyaları
+# Shared .env files
 .env
 .env.*
 !.env.example 

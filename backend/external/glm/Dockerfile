@@ -7,7 +7,7 @@ RUN pip3 install transformers-v4.55.0-GLM-4.5V-preview
 WORKDIR /app
 COPY start.py /app/
 
-# Video işleme için temp directory
+# Temp directory for video processing
 RUN mkdir -p /tmp/media
 
 EXPOSE 8000

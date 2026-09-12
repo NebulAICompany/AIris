@@ -548,10 +548,10 @@ class AIrisApp {
     warning.innerHTML = `
             <div class="warning-content">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Backend bağlantısı başarısız. AI özelliklerini kullanmak için backend'in çalıştığından emin olun.</span>
+                <span>Backend connection failed. Make sure the backend is running to use AI features.</span>
                 <div class="warning-actions">
                     <button onclick="window.airisApp.reconnectBackend()" class="retry-btn">
-                        <i class="fas fa-redo"></i> Tekrar Dene
+                        <i class="fas fa-redo"></i> Retry
                     </button>
                     <button onclick="this.closest('.connection-warning').remove()" class="close-btn">
                         <i class="fas fa-times"></i>

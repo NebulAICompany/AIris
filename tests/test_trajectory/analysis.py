@@ -5,8 +5,8 @@ from typing import List, Dict, Any
 
 def extract_steps_from_messages(messages: List[Any]) -> List[Dict[str, Any]]:
     """
-    LangChain mesajlarından (HumanMessage, AIMessage, ToolMessage vs.)
-    analiz için kullanılabilir düz bir step listesi çıkarır.
+    Extracts a flat step list from LangChain messages (HumanMessage, AIMessage, ToolMessage, etc.)
+    usable for analysis.
     """
     steps: List[Dict[str, Any]] = []
     step_index = 0
@@ -53,7 +53,7 @@ def extract_steps_from_messages(messages: List[Any]) -> List[Dict[str, Any]]:
                 step_index += 1
             continue
 
-        # Tool result (LangChain ToolMessage veya benzeri)
+        # Tool result (LangChain ToolMessage or similar)
         if msg_type == "tool":
             steps.append({
                 "index": step_index,
@@ -64,7 +64,7 @@ def extract_steps_from_messages(messages: List[Any]) -> List[Dict[str, Any]]:
             step_index += 1
             continue
 
-        # Diğer tipler için sadece generic log
+        # Generic log for other types
         steps.append({
             "index": step_index,
             "kind": msg_type or "unknown",
@@ -77,7 +77,7 @@ def extract_steps_from_messages(messages: List[Any]) -> List[Dict[str, Any]]:
 
 def compute_tool_call_stats(steps: List[Dict[str, Any]]) -> Dict[str, int]:
     """
-    Hangi tool kaç kere çağrılmış?
+    How many times each tool was called.
     """
     counter = Counter()
     for s in steps:
@@ -89,8 +89,8 @@ def compute_tool_call_stats(steps: List[Dict[str, Any]]) -> Dict[str, int]:
 
 def find_redundant_pattern_comments(steps: List[Dict[str, Any]]) -> List[str]:
     """
-    Basit tekrar / loop pattern yorumları üretir.
-    Örn: x→y→x→y gibi patternleri işaretler, aynı tool'un çok çağrılması vs.
+    Generates simple repetition / loop pattern comments.
+    E.g.: flags patterns like x→y→x→y, calling the same tool multiple times, etc.
     """
     comments: List[str] = []
 
@@ -99,21 +99,21 @@ def find_redundant_pattern_comments(steps: List[Dict[str, Any]]) -> List[str]:
     for tool, count in stats.items():
         if count > 1:
             comments.append(
-                f"{tool} aracı toplam {count} kez çağrılmış. "
-                "Bu tekrarların bazıları aynı amaca hizmet ediyor veya çıktıları kullanılmamış olabilir."
+                f"Tool {tool} was called a total of {count} times. "
+                "Some of these repetitions may serve the same purpose or their outputs may be unused."
             )
 
     # Tool call sequence
     seq = [s["tool_name"] for s in steps if s.get("kind") == "tool_call"]
 
-    # x→y→x→y türü pattern
+    # x→y→x→y type pattern
     if len(seq) >= 4:
         for i in range(len(seq) - 3):
             a, b, c, d = seq[i:i+4]
             if a == c and b == d and a != b:
                 comments.append(
-                    f"Tool çağrı dizisinde {a}→{b}→{a}→{b} gibi bir tekrar pattern'i gözlenmiş. "
-                    "Bu, gereksiz ileri-geri çağrılara işaret ediyor olabilir."
+                    f"A repetition pattern like {a}→{b}→{a}→{b} was observed in the tool call sequence. "
+                    "This may indicate unnecessary back-and-forth calls."
                 )
                 break
 

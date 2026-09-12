@@ -188,7 +188,7 @@ input::-webkit-inner-spin-button {
   font-weight: 400;
 }
 
-/* AIRIS yazısı */
+/* AIris title */
 .airis-title {
   font-family: math;
   font-style: italic;
@@ -210,7 +210,7 @@ input::-webkit-inner-spin-button {
   transition: all 0.3s ease;
 }
 
-/* Hover efekti (çok şık duruyor) */
+/* Hover effect */
 .logo:hover .airis-title {
   text-shadow:
     0 0 18px rgba(79, 172, 254, 0.4),
@@ -596,19 +596,19 @@ input:checked+.slider:before {
   font-size: 12px;
   transition: transform 0.3s, opacity 0.3s;
   opacity: 1;
-  /* sidebar açık/kapalı farkında opacity değiştirilecek */
+  /* opacity changed based on sidebar open/closed state */
   transform: rotate(0deg);
-  /* default sağ */
+  /* default right */
 }
 
 .sidebar.collapsed .nav-item.collapsible .submenu-icon {
   display: none;
 }
 
-/* Hoverdayken ikon aşağıya dönsün */
+/* Rotate icon down on hover */
 .nav-item.collapsible:hover .submenu-icon {
   transform: rotate(90deg);
-  /* sağdan aşağıya döndür */
+  /* rotate from right to down */
 }
 
 /* Sub-menu container */
@@ -663,7 +663,7 @@ input:checked+.slider:before {
 
 .sub-menu.open {
   display: block;
-  /* veya slide efekti istersen transition ile */
+  /* or transition if slide effect is desired */
 }
 
 .sidebar.collapsed .sub-menu {

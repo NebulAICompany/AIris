@@ -34,16 +34,16 @@ def make_request(
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPStatusError as e:
-            return {"error": f"HTTP hata: {e.response.status_code} - {e.response.text}"}
+            return {"error": f"HTTP error: {e.response.status_code} - {e.response.text}"}
         except httpx.RequestError as e:
             attempt += 1
             if attempt < retries:
                 wait_time = 2 ** (attempt - 1)
                 time.sleep(wait_time)
             else:
-                return {"error": f"İstek hatası: {str(e)}"}
+                return {"error": f"Request error: {str(e)}"}
         except Exception as e:
-            return {"error": f"Beklenmeyen hata: {str(e)}"}
+            return {"error": f"Unexpected error: {str(e)}"}
 
 
 @tool(parse_docstring=True)

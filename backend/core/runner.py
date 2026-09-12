@@ -312,7 +312,7 @@ async def generate_answer(
                 "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
             )
         logger.error("Error in generate_answer: %s", error_str, exc_info=True)
-        return f"LLM yanıtı alınamadı: {error_str}", [], [], []
+        return f"Could not get LLM response: {error_str}", [], [], []
 
 
 async def generate_answer_stream(
@@ -367,4 +367,4 @@ async def generate_answer_stream(
                 "Checkpoint state issue detected. This may be due to incomplete previous conversation state."
             )
         logger.error("Error in generate_answer_stream: %s", error_str, exc_info=True)
-        yield {"type": "error", "content": f"LLM yanıtı alınamadı: {error_str}"}
+        yield {"type": "error", "content": f"Could not get LLM response: {error_str}"}

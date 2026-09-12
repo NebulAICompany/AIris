@@ -46,7 +46,7 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 concurrent_client = ConcurrentOpenAI(
     client=async_openai_client,
     max_concurrent_requests=5,
-    requests_per_minute=450,  # hesabınızdaki RPM’e göre ayarlayın
+    requests_per_minute=450,  # adjust according to your account's RPM
     tokens_per_minute=27000,
 )
 tavily_client = TavilyClient(TAVILY_API_KEY)
