@@ -1,7 +1,7 @@
 {
   "name": "airis-desktop",
   "version": "1.0.0",
-  "description": "AIris - AI-Powered Financial Document Processing Desktop Application",
+  "description": "AIris — local desktop financial BI platform",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -17,8 +17,8 @@
     "document-processing",
     "rag"
   ],
-  "author": "AIris Team",
-  "license": "MIT",
+  "author": "Nebula Intelligence",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "homepage": "./",
   "build": {
     "appId": "com.airis.desktop",

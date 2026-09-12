@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Document ingestion pipeline</title>
+  <desc id="desc">Uploaded files use format-aware parsers. PDF and DOCX use Azure Document Intelligence; text, spreadsheets, and images use local parsers. The current upload route enriches chunks with contextual headers before writing them to vector and keyword indexes. Figures extracted from PDF and DOCX files follow a multimodal embedding path.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07101C"/>
+      <stop offset="100%" stop-color="#101A33"/>
+    </linearGradient>
+    <linearGradient id="headerGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="blueCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16325A"/>
+      <stop offset="100%" stop-color="#10243F"/>
+    </linearGradient>
+    <linearGradient id="violetCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2A1F55"/>
+      <stop offset="100%" stop-color="#1A153B"/>
+    </linearGradient>
+    <linearGradient id="cyanCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#123A44"/>
+      <stop offset="100%" stop-color="#0D2830"/>
+    </linearGradient>
+    <linearGradient id="slateCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#182338"/>
+      <stop offset="100%" stop-color="#121A2B"/>
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3C2A12"/>
+      <stop offset="100%" stop-color="#2A1D0E"/>
+    </linearGradient>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#60A5FA"/>
+    </marker>
+    <marker id="arrowViolet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#A78BFA"/>
+    </marker>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#22D3EE"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#FBBF24"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g opacity="0.16" stroke="#2A3A58" stroke-width="1">
+    <path d="M80 0 V900 M160 0 V900 M240 0 V900 M320 0 V900 M400 0 V900 M480 0 V900 M560 0 V900 M640 0 V900 M720 0 V900 M800 0 V900 M880 0 V900 M960 0 V900 M1040 0 V900 M1120 0 V900 M1200 0 V900 M1280 0 V900 M1360 0 V900 M1440 0 V900 M1520 0 V900"/>
+    <path d="M0 80 H1600 M0 160 H1600 M0 240 H1600 M0 320 H1600 M0 400 H1600 M0 480 H1600 M0 560 H1600 M0 640 H1600 M0 720 H1600 M0 800 H1600"/>
+  </g>
+  <circle cx="180" cy="180" r="150" fill="#3B82F6" opacity="0.08"/>
+  <circle cx="1400" cy="720" r="170" fill="#22D3EE" opacity="0.07"/>
+
+  <text x="64" y="56" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700">Document ingestion pipeline</text>
+  <text x="64" y="86" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">Format-aware parsing, contextual chunk headers, and hybrid indexing</text>
+  <rect x="520" y="42" width="560" height="3" rx="2" fill="url(#headerGlow)"/>
+
+  <!-- Column 1 -->
+  <rect x="48" y="120" width="360" height="740" rx="24" fill="#0E1728" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="72" y="160" fill="#60A5FA" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">01  INTAKE</text>
+  <rect x="72" y="188" width="312" height="140" rx="18" fill="url(#blueCard)" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="228" y="246" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="24" font-weight="700">Document upload</text>
+  <text x="228" y="280" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">PDF, Word, Excel, text, image</text>
+  <path d="M228 340 V372" stroke="#60A5FA" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="72" y="384" width="312" height="180" rx="18" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="228" y="430" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700">FORMAT-AWARE PARSING</text>
+  <text x="228" y="470" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Azure + local parsers</text>
+  <text x="228" y="508" text-anchor="middle" fill="#FBBF24" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Azure DI: PDF and DOCX</text>
+  <text x="228" y="536" text-anchor="middle" fill="#FBBF24" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Local: text, Excel, images</text>
+  <rect x="72" y="592" width="312" height="236" rx="18" fill="url(#slateCard)" stroke="#64748B" stroke-width="1.5"/>
+  <text x="228" y="640" text-anchor="middle" fill="#CBD5E1" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">Why not plain text</text>
+  <text x="228" y="680" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Headings, tables, figures,</text>
+  <text x="228" y="704" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">and page boundaries are</text>
+  <text x="228" y="728" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">preserved so later citations</text>
+  <text x="228" y="752" text-anchor="middle" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">can point at evidence.</text>
+
+  <!-- Column 2 -->
+  <rect x="428" y="120" width="360" height="740" rx="24" fill="#120F24" stroke="#3F2D72" stroke-width="1.5"/>
+  <text x="452" y="160" fill="#A78BFA" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">02  EXTRACTION</text>
+  <path d="M408 474 H428" stroke="#FBBF24" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
+  <rect x="452" y="188" width="312" height="168" rx="18" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="1.5"/>
+  <text x="608" y="246" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Structured text</text>
+  <text x="608" y="280" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Page-aware Markdown for PDF/DOCX</text>
+  <text x="608" y="304" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Sheet-aware Markdown for Excel</text>
+  <rect x="452" y="380" width="312" height="168" rx="18" fill="url(#violetCard)" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="608" y="438" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Extracted figures</text>
+  <text x="608" y="472" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">PDF and DOCX figures saved</text>
+  <text x="608" y="496" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">and embedded with captions</text>
+  <rect x="452" y="572" width="312" height="256" rx="18" fill="url(#violetCard)" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="608" y="640" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Tables and PDF clips</text>
+  <text x="608" y="680" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Markdown for the model</text>
+  <text x="608" y="708" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">PDF page clips for</text>
+  <text x="608" y="736" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">the user attachment</text>
+  <text x="608" y="768" text-anchor="middle" fill="#DDD6FE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Table IDs stay in the chunk</text>
+
+  <!-- Column 3 -->
+  <rect x="808" y="120" width="360" height="740" rx="24" fill="#071C22" stroke="#155E75" stroke-width="1.5"/>
+  <text x="832" y="160" fill="#22D3EE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">03  ENRICHMENT</text>
+  <path d="M764 272 H790 V496 H832" fill="none" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <path d="M764 700 H800 V272 H832" fill="none" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="832" y="188" width="312" height="168" rx="18" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="1.5"/>
+  <text x="988" y="246" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Attach table references</text>
+  <text x="988" y="280" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">IDs travel with the text</text>
+  <text x="988" y="304" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">so citations stay exact</text>
+  <path d="M988 368 V400" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+  <rect x="832" y="412" width="312" height="168" rx="18" fill="url(#cyanCard)" stroke="#06B6D4" stroke-width="1.5"/>
+  <text x="988" y="470" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Markdown-aware chunks</text>
+  <text x="988" y="504" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">1000 tokens, 250 overlap</text>
+  <text x="988" y="528" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Respects document structure</text>
+  <path d="M988 592 V624" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+  <rect x="832" y="636" width="312" height="192" rx="18" fill="url(#cyanCard)" stroke="#67E8F9" stroke-width="1.5"/>
+  <text x="988" y="692" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Context headers</text>
+  <text x="988" y="728" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Title, summary, date, page</text>
+  <text x="988" y="756" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Pipeline supports cch and none</text>
+  <text x="988" y="788" text-anchor="middle" fill="#67E8F9" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Current upload route: cch</text>
+
+  <!-- Column 4 -->
+  <rect x="1188" y="120" width="364" height="740" rx="24" fill="#0C1624" stroke="#334155" stroke-width="1.5"/>
+  <text x="1212" y="160" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">04  HYBRID INDEXING</text>
+  <path d="M1144 496 H1172 V272 H1212" fill="none" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+  <path d="M1144 704 H1180 V320 H1212" fill="none" stroke="#67E8F9" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowCyan)"/>
+  <path d="M1144 774 H1212" stroke="#67E8F9" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+  <path d="M764 464 H782 V844 H1176 V464 H1212" fill="none" stroke="#A78BFA" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrowViolet)"/>
+  <rect x="1212" y="188" width="316" height="168" rx="18" fill="url(#slateCard)" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="1370" y="246" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Text embeddings</text>
+  <text x="1370" y="280" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Cohere embed-v4.0</text>
+  <text x="1370" y="304" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">1536-dimensional vectors</text>
+  <rect x="1212" y="380" width="316" height="168" rx="18" fill="url(#slateCard)" stroke="#A78BFA" stroke-width="1.5"/>
+  <text x="1370" y="438" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Figure embeddings</text>
+  <text x="1370" y="472" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Image plus caption</text>
+  <text x="1370" y="496" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Multimodal Cohere path</text>
+  <path d="M1370 356 H1540 V646 H1528" fill="none" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <path d="M1370 548 V580" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+  <path d="M1528 464 H1542 V774 H1528" fill="none" stroke="#A78BFA" stroke-width="2.2" stroke-dasharray="7 6" marker-end="url(#arrowViolet)"/>
+  <rect x="1212" y="592" width="316" height="108" rx="18" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="2"/>
+  <text x="1370" y="636" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Qdrant vector index</text>
+  <text x="1370" y="668" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Cosine similarity, local store</text>
+  <rect x="1212" y="720" width="316" height="108" rx="18" fill="url(#cyanCard)" stroke="#67E8F9" stroke-width="2"/>
+  <text x="1370" y="764" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">BM25 keyword index</text>
+  <text x="1370" y="796" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Exact identifiers and names</text>
+</svg>

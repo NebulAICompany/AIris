@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">AIris system architecture</title>
+  <desc id="desc">A financial professional uses the Electron desktop client to talk to a local FastAPI service. A coordinator routes requests to document research, market and TCMB data, chart and Office generation, and optional web search. Documents and indexes stay local. Selected operations use external AI, data, and sandbox providers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#07101C"/>
+      <stop offset="55%" stop-color="#0B1526"/>
+      <stop offset="100%" stop-color="#101A33"/>
+    </linearGradient>
+    <linearGradient id="headerGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#8B5CF6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="blueCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16325A"/>
+      <stop offset="100%" stop-color="#10243F"/>
+    </linearGradient>
+    <linearGradient id="violetCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2A1F55"/>
+      <stop offset="100%" stop-color="#1A153B"/>
+    </linearGradient>
+    <linearGradient id="cyanCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#123A44"/>
+      <stop offset="100%" stop-color="#0D2830"/>
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3C2A12"/>
+      <stop offset="100%" stop-color="#2A1D0E"/>
+    </linearGradient>
+    <linearGradient id="slateCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#182338"/>
+      <stop offset="100%" stop-color="#121A2B"/>
+    </linearGradient>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#60A5FA"/>
+    </marker>
+    <marker id="arrowViolet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#A78BFA"/>
+    </marker>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#22D3EE"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1.2 L 10 5 L 0 8.8 Z" fill="#FBBF24"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <g opacity="0.18" stroke="#2A3A58" stroke-width="1">
+    <path d="M80 0 V900 M160 0 V900 M240 0 V900 M320 0 V900 M400 0 V900 M480 0 V900 M560 0 V900 M640 0 V900 M720 0 V900 M800 0 V900 M880 0 V900 M960 0 V900 M1040 0 V900 M1120 0 V900 M1200 0 V900 M1280 0 V900 M1360 0 V900 M1440 0 V900 M1520 0 V900"/>
+    <path d="M0 80 H1600 M0 160 H1600 M0 240 H1600 M0 320 H1600 M0 400 H1600 M0 480 H1600 M0 560 H1600 M0 640 H1600 M0 720 H1600 M0 800 H1600"/>
+  </g>
+  <circle cx="180" cy="90" r="140" fill="#3B82F6" opacity="0.08"/>
+  <circle cx="1420" cy="780" r="180" fill="#F59E0B" opacity="0.06"/>
+  <circle cx="980" cy="220" r="160" fill="#8B5CF6" opacity="0.08"/>
+
+  <text x="64" y="56" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" font-weight="700">AIris system architecture</text>
+  <text x="64" y="86" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18">Local desktop runtime with specialist agents, hybrid retrieval, and provider-backed services</text>
+  <rect x="520" y="42" width="560" height="3" rx="2" fill="url(#headerGlow)"/>
+
+  <!-- Layer 1: client -->
+  <rect x="64" y="112" width="1472" height="118" rx="22" fill="#0E1728" stroke="#1E3A5F" stroke-width="1.5"/>
+  <text x="88" y="142" fill="#60A5FA" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">CLIENT</text>
+  <rect x="88" y="158" width="280" height="52" rx="14" fill="url(#blueCard)" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="228" y="191" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="600">Financial professional</text>
+  <path d="M380 184 H430" stroke="#60A5FA" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="442" y="158" width="420" height="52" rx="14" fill="url(#blueCard)" stroke="#60A5FA" stroke-width="1.5"/>
+  <text x="652" y="180" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="600">Electron desktop client</text>
+  <text x="652" y="200" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Chat, uploads, market, news, calculators</text>
+  <path d="M874 184 H924" stroke="#60A5FA" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <rect x="936" y="158" width="564" height="52" rx="14" fill="url(#blueCard)" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="1218" y="191" text-anchor="middle" fill="#E0F2FE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20">REST, file upload, and SSE on loopback</text>
+
+  <!-- Layer 2: runtime -->
+  <rect x="64" y="250" width="1472" height="186" rx="22" fill="#120F24" stroke="#3F2D72" stroke-width="1.5"/>
+  <text x="88" y="280" fill="#A78BFA" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">LOCAL APPLICATION RUNTIME</text>
+  <rect x="88" y="300" width="300" height="110" rx="16" fill="url(#violetCard)" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="238" y="348" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">FastAPI service</text>
+  <text x="238" y="376" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">127.0.0.1:8001</text>
+  <path d="M400 355 H448" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="460" y="300" width="280" height="110" rx="16" fill="url(#violetCard)" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="600" y="348" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Input moderation</text>
+  <text x="600" y="376" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">OpenAI moderation API</text>
+  <path d="M752 355 H800" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="812" y="300" width="340" height="110" rx="16" fill="url(#violetCard)" stroke="#A78BFA" stroke-width="2"/>
+  <text x="982" y="348" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700">Coordinator agent</text>
+  <text x="982" y="376" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">LangGraph tool-calling hub</text>
+  <path d="M1164 355 H1210" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="1222" y="300" width="282" height="110" rx="16" fill="url(#violetCard)" stroke="#6D28D9" stroke-width="1.5"/>
+  <text x="1363" y="340" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Sessions and stream</text>
+  <text x="1363" y="368" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Checkpoints, sources,</text>
+  <text x="1363" y="390" text-anchor="middle" fill="#C4B5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">and SSE assembly</text>
+  <path d="M652 210 V240 H390 V292 H238 V300" fill="none" stroke="#60A5FA" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+
+  <!-- Layer 3: capabilities -->
+  <rect x="64" y="456" width="1472" height="148" rx="22" fill="#071C22" stroke="#155E75" stroke-width="1.5"/>
+  <text x="88" y="486" fill="#22D3EE" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">AGENT CAPABILITIES</text>
+  <path d="M982 410 V492" stroke="#A78BFA" stroke-width="2.5"/>
+  <path d="M258 492 H1330" stroke="#A78BFA" stroke-width="2"/>
+  <path d="M258 492 V504" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <path d="M614 492 V504" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <path d="M970 492 V504" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <path d="M1330 492 V504" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#arrowViolet)"/>
+  <rect x="88" y="504" width="340" height="76" rx="16" fill="url(#cyanCard)" stroke="#22D3EE" stroke-width="1.5"/>
+  <text x="258" y="536" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Document research</text>
+  <text x="258" y="560" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Hybrid RAG or SPD-RAG</text>
+  <rect x="444" y="504" width="340" height="76" rx="16" fill="url(#cyanCard)" stroke="#06B6D4" stroke-width="1.5"/>
+  <text x="614" y="536" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Finance and TCMB</text>
+  <text x="614" y="560" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Marketstack and EVDS series</text>
+  <rect x="800" y="504" width="340" height="76" rx="16" fill="url(#cyanCard)" stroke="#0891B2" stroke-width="1.5"/>
+  <text x="970" y="536" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Charts and Office files</text>
+  <text x="970" y="560" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Plotly plus E2B generation</text>
+  <rect x="1156" y="504" width="348" height="76" rx="16" fill="url(#cyanCard)" stroke="#67E8F9" stroke-width="1.5"/>
+  <text x="1330" y="536" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Web and computation</text>
+  <text x="1330" y="560" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Tavily opt-in; Wolfram available</text>
+
+  <!-- Layer 4: local data -->
+  <rect x="64" y="624" width="720" height="236" rx="22" fill="#0C1624" stroke="#334155" stroke-width="1.5"/>
+  <text x="88" y="656" fill="#94A3B8" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">LOCAL DATA LAYER</text>
+  <rect x="88" y="676" width="672" height="56" rx="14" fill="url(#slateCard)" stroke="#64748B" stroke-width="1.5"/>
+  <text x="424" y="712" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="600">Uploaded documents, figures, and tables</text>
+  <rect x="88" y="748" width="328" height="84" rx="14" fill="url(#slateCard)" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="252" y="784" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">Qdrant vectors</text>
+  <text x="252" y="810" text-anchor="middle" fill="#93C5FD" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Embedded local store</text>
+  <rect x="432" y="748" width="328" height="84" rx="14" fill="url(#slateCard)" stroke="#22D3EE" stroke-width="1.5"/>
+  <text x="596" y="784" text-anchor="middle" fill="#F8FAFC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700">BM25 keyword index</text>
+  <text x="596" y="810" text-anchor="middle" fill="#A5F3FC" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Codes, names, identifiers</text>
+  <path d="M258 604 V624" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+
+  <!-- Layer 5: external -->
+  <rect x="808" y="624" width="728" height="236" rx="22" fill="#1C1408" stroke="#92400E" stroke-width="1.5"/>
+  <text x="832" y="656" fill="#FBBF24" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="1.6">EXTERNAL PROVIDERS</text>
+  <rect x="832" y="676" width="220" height="72" rx="14" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="942" y="706" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">LLM providers</text>
+  <text x="942" y="728" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Anthropic, OpenAI</text>
+  <rect x="1068" y="676" width="220" height="72" rx="14" fill="url(#amberCard)" stroke="#D97706" stroke-width="1.5"/>
+  <text x="1178" y="706" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">Azure DI</text>
+  <text x="1178" y="728" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Layout-aware parse</text>
+  <rect x="1304" y="676" width="204" height="72" rx="14" fill="url(#amberCard)" stroke="#FBBF24" stroke-width="1.5"/>
+  <text x="1406" y="706" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">Cohere</text>
+  <text x="1406" y="728" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Embed and rerank</text>
+  <rect x="832" y="764" width="332" height="68" rx="14" fill="url(#amberCard)" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="998" y="794" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">Market, TCMB, Tavily, Wolfram</text>
+  <text x="998" y="816" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Data and search APIs</text>
+  <rect x="1180" y="764" width="328" height="68" rx="14" fill="url(#amberCard)" stroke="#FBBF24" stroke-width="1.5"/>
+  <text x="1344" y="794" text-anchor="middle" fill="#FEF3C7" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="700">E2B sandboxes</text>
+  <text x="1344" y="816" text-anchor="middle" fill="#FCD34D" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16">Generated code never runs on host</text>
+  <path d="M1172 604 V624" stroke="#FBBF24" stroke-width="2.5" marker-end="url(#arrowAmber)"/>
+</svg>
