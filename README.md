@@ -28,7 +28,11 @@
 
 ## Demo
 
-[![Watch the AIris demonstration: document research, market analysis, and report generation](https://img.youtube.com/vi/bpOPxwwpNus/hqdefault.jpg)](https://www.youtube.com/watch?v=bpOPxwwpNus)
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=bpOPxwwpNus">
+    <img src="docs/assets/demo-thumbnail.jpg" alt="Watch the AIris demonstration: document research, market analysis, and report generation" width="800">
+  </a>
+</div>
 
 **Full demo** on YouTube (Turkish audio). The [example workflow](#example-workflow) below is an English written walkthrough of the same capabilities.
 
