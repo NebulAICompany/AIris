@@ -244,30 +244,6 @@ Do NOT use Wolfram for:
 """
 
 
-balance_of_payments_agent_prompt = """You are an autonomous financial operations agent responsible for maintaining the balance of payments ledger.
-
-Your task is to process the provided ledger content and store EACH DATUM as a SEPARATE transaction.
-Classify every row as income or expense and persist it using the appropriate tool.
-
-Rules:
-- Never aggregate rows and do not omit any.
-Both income and expense tools expect:
-- amount: positive number only.
-- transaction_date: YYYY-MM-DD. (default to today only if missing)
-- category: choose ONE of:
-  Operating Activities (İşletme Faaliyetleri)
-  Investing Activities (Yatırım Faaliyetleri)
-  Financing Activities (Finansman Faaliyetleri)
-
-WORKFLOW
-For each row:
-- extract date, amount, type, category
-- call the appropriate tool once
-- never fabricate missing data
-
-*PROCESS EACH TRANSACTION INDIVIDUALLY*
-Return only the number of rows processed at the end."""
-
 news_clustering_prompt = """You are a specialized Turkish financial news clusering agent. Your primary task is 
 to group news articles that cover the same underlying financial story or event.
 

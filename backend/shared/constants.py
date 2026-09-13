@@ -63,30 +63,8 @@ MARKET_DATA_DB_PATH = DATABASE_DIR / "market_data.db"
 # Uploads tracking database path
 UPLOADS_DB_PATH = DATABASE_DIR / "uploads_tracking.db"
 
-# Balance of payments database path
-BALANCE_PAYMENTS_DB_PATH = DATABASE_DIR / "balance_payments.db"
-
 # Checkpointer database path (SQLite)
 CHECKPOINTER_DB_PATH = DATABASE_DIR / "checkpoints.db"
-
-# Balance of payments transaction categories
-BALANCE_TRANSACTION_CATEGORIES = (
-    "İşletme Faaliyetleri",
-    "Yatırım Faaliyetleri",
-    "Finansman Faaliyetleri",
-)
-
-BALANCE_TRANSACTION_CATEGORY_ALIASES = {
-    "operating activities": "İşletme Faaliyetleri",
-    "operating activity": "İşletme Faaliyetleri",
-    "işletme faaliyetleri": "İşletme Faaliyetleri",
-    "investment activities": "Yatırım Faaliyetleri",
-    "investment activity": "Yatırım Faaliyetleri",
-    "yatırım faaliyetleri": "Yatırım Faaliyetleri",
-    "financing activities": "Finansman Faaliyetleri",
-    "financing activity": "Finansman Faaliyetleri",
-    "finansman faaliyetleri": "Finansman Faaliyetleri",
-}
 
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
@@ -140,7 +118,6 @@ CHAT_HISTORY_DB_PATH_STR = str(CHAT_HISTORY_DB_PATH)
 LOGS_DIR_STR = str(LOGS_DIR)
 BACKEND_LOG_PATH_STR = str(BACKEND_LOG_PATH)
 BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
-BALANCE_PAYMENTS_DB_PATH_STR = str(BALANCE_PAYMENTS_DB_PATH)
 CHECKPOINTER_DB_PATH_STR = str(CHECKPOINTER_DB_PATH)
 
 

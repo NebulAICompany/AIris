@@ -49,7 +49,7 @@ A coordinator agent owns each conversation and calls specialist agents as tools.
 - **Market and macro data.** Marketstack end-of-day data and Turkish Central Bank EVDS series, discovered semantically and retrieved by date range.
 - **Charts and Office deliverables.** Interactive Plotly charts and Word, Excel, or PowerPoint files generated from sandboxed code and returned as attachments.
 - **Financial news workspace.** RSS stories clustered and summarized by an LLM, with a dedicated agent for questions about a story.
-- **Supporting workspaces.** A market dashboard, deterministic financial calculators, and a calendar-backed transaction ledger.
+- **Supporting workspaces.** A market dashboard and deterministic financial calculators.
 - **Live progress.** Tool calls, specialist steps, and SPD-RAG document progress are streamed to the desktop client over Server-Sent Events.
 
 ## Project status

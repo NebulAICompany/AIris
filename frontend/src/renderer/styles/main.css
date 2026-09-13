@@ -586,91 +586,6 @@ input:checked+.slider:before {
   z-index: 1000;
 }
 
-/* Collapsible icon for nav-items with submenu */
-.nav-item.collapsible {
-  position: relative;
-}
-
-.nav-item.collapsible .submenu-icon {
-  margin-right: 3px;
-  font-size: 12px;
-  transition: transform 0.3s, opacity 0.3s;
-  opacity: 1;
-  /* opacity changed based on sidebar open/closed state */
-  transform: rotate(0deg);
-  /* default right */
-}
-
-.sidebar.collapsed .nav-item.collapsible .submenu-icon {
-  display: none;
-}
-
-/* Rotate icon down on hover */
-.nav-item.collapsible:hover .submenu-icon {
-  transform: rotate(90deg);
-  /* rotate from right to down */
-}
-
-/* Sub-menu container */
-.sub-menu {
-  display: flex;
-  flex-direction: column;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s ease;
-  padding-left: 8px;
-}
-
-/* Keep submenu visible if hovering over parent or submenu (only when sidebar is expanded) */
-.sidebar:not(.collapsed) .nav-item.collapsible:hover+.sub-menu,
-.sidebar:not(.collapsed) .sub-menu:hover {
-  max-height: 500px;
-}
-
-/* Sub-item styling */
-.sub-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border: none;
-  background: none;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: left;
-  width: 100%;
-  white-space: nowrap;
-  min-height: 44px;
-  justify-content: flex-start;
-}
-
-.sub-item i {
-  font-size: 16px;
-  width: 16px;
-  flex-shrink: 0;
-  margin-right: 12px;
-  transition: margin-right 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.sub-item:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-}
-
-.sub-menu.open {
-  display: block;
-  /* or transition if slide effect is desired */
-}
-
-.sidebar.collapsed .sub-menu {
-  display: none !important;
-  /* Hide original submenu when collapsed - floating menu handles it */
-}
-
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
@@ -683,8 +598,7 @@ input:checked+.slider:before {
   }
 }
 
-.nav-item.active,
-.sub-item.active {
+.nav-item.active {
   background-color: var(--accent-primary);
   color: white;
   box-shadow: 0 2px 12px rgba(59, 130, 246, 0.3);

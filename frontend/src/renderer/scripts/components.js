@@ -109,21 +109,12 @@ class UIComponents {
 
 
   initSidebar() {
-    const navItems = document.querySelectorAll('.nav-item:not(.collapsible)');
-    const collapsible = document.querySelector('.nav-item.collapsible');
-    const subMenu = document.querySelector('.sub-menu');
-    const subItems = document.querySelectorAll('.sub-item');
-    const balanceSections = document.querySelectorAll('.tab-content[id$="-tab"]');
-    const sidebar = document.querySelector('.sidebar');
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabSections = document.querySelectorAll('.tab-content[id$="-tab"]');
 
-    // --- 1. Cleanup and Initial Setup ---
-    // Clear all active states on initial load
     navItems.forEach(item => item.classList.remove('active'));
-    subItems.forEach(item => item.classList.remove('active'));
-    if (collapsible) collapsible.classList.remove('active');
-    balanceSections.forEach(sec => sec.classList.remove('active'));
+    tabSections.forEach(sec => sec.classList.remove('active'));
 
-    // Chat nav active by default when page opens
     const chatNav = document.querySelector('.nav-item[data-tab="chat"]');
     if (chatNav) {
       chatNav.classList.add('active');
@@ -131,209 +122,25 @@ class UIComponents {
       if (chatTab) chatTab.classList.add('active');
     }
 
-    // --- 2. Normal Nav Item Click ---
     navItems.forEach(item => {
       item.addEventListener('click', () => {
-        // Cleanup
         navItems.forEach(i => i.classList.remove('active'));
-        subItems.forEach(i => i.classList.remove('active'));
-
-        // Remove active state from collapsible
-        if (collapsible) collapsible.classList.remove('active');
-
-        balanceSections.forEach(sec => sec.classList.remove('active'));
+        tabSections.forEach(sec => sec.classList.remove('active'));
 
         item.classList.add('active');
 
-        // Close subMenu when sidebar is open (switched to another menu)
-        if (subMenu && !sidebar.classList.contains('collapsed')) {
-          subMenu.classList.remove('open');
-          subMenu.style.maxHeight = null;
-        }
-
-        // Show tab
         const tabId = item.dataset.tab + '-tab';
         const tab = document.getElementById(tabId);
         if (tab) tab.classList.add('active');
       });
     });
-
-    // --- 3. Collapsible (Financial Analysis) Logic ---
-    if (collapsible && subMenu) {
-
-      // A) CLICK ACTION
-      collapsible.addEventListener('click', () => {
-        const isCollapsed = sidebar.classList.contains('collapsed');
-
-        // Clear everything else
-        navItems.forEach(i => i.classList.remove('active'));
-        subItems.forEach(i => i.classList.remove('active'));
-
-        // Activate main header
-        collapsible.classList.add('active');
-
-        if (!isCollapsed) {
-          // Sidebar OPEN
-          subMenu.classList.toggle('open');
-          subMenu.style.maxHeight = subMenu.classList.contains('open')
-            ? subMenu.scrollHeight + 'px'
-            : null;
-        } else {
-          // Sidebar COLLAPSED
-          this.setupFloatingSubmenu(collapsible, subMenu);
-        }
-
-        // Show tab
-        const tabId = collapsible.dataset.page.replace('#', '') + '-tab';
-        const tab = document.getElementById(tabId);
-        if (tab) {
-          balanceSections.forEach(sec => sec.classList.remove('active'));
-          tab.classList.add('active');
-        }
-      });
-
-      // B) HOVER (MOUSEENTER) ACTION
-      collapsible.addEventListener('mouseenter', () => {
-        // Only run hover when sidebar is collapsed
-        if (sidebar.classList.contains('collapsed')) {
-          this.setupFloatingSubmenu(collapsible, subMenu);
-        }
-      });
-
-      // C) MOUSELEAVE ACTION
-      collapsible.addEventListener('mouseleave', () => {
-        if (sidebar.classList.contains('collapsed')) {
-          // Delay to prevent menu closing when moving cursor from icon to menu
-          setTimeout(() => {
-            const floatingMenu = document.querySelector('.floating-sub-menu');
-            // Close if mouse is not over the floating menu
-            if (floatingMenu && !floatingMenu.matches(':hover')) {
-              floatingMenu.remove();
-            }
-          }, 100);
-        }
-      });
-    }
-
-    // --- 4. Sub-item Click ---
-    subItems.forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent parent menu click
-        const isCollapsed = sidebar.classList.contains('collapsed');
-
-        // 1. Clear all active states
-        navItems.forEach(i => i.classList.remove('active'));
-        subItems.forEach(i => i.classList.remove('active'));
-        balanceSections.forEach(sec => sec.classList.remove('active'));
-
-        // 2. Remove parent menu active state
-        if (collapsible) collapsible.classList.remove('active');
-
-        // 3. Activate clicked sub-item only
-        item.classList.add('active');
-
-        // 4. Open corresponding tab
-        const sectionId = item.dataset.page.replace('#', '') + '-tab';
-        const section = document.getElementById(sectionId);
-        if (section) section.classList.add('active');
-
-        // Close floating menu if sidebar is collapsed
-        if (isCollapsed) {
-          const floatingMenu = document.querySelector('.floating-sub-menu');
-          if (floatingMenu) floatingMenu.remove();
-        }
-
-        location.hash = item.dataset.page;
-      });
-    });
   }
-
-  // --- Floating Submenu Helper (When Sidebar is Collapsed) ---
-  setupFloatingSubmenu(collapsible, subMenu) {
-    const sidebar = document.querySelector('.sidebar');
-    // Only run if sidebar is collapsed
-    if (!sidebar.classList.contains('collapsed')) return;
-
-    // Remove existing floating menu if present
-    const existing = document.querySelector('.floating-sub-menu');
-    if (existing) existing.remove();
-
-    // Clone new floating submenu
-    const clone = subMenu.cloneNode(true);
-    clone.classList.add('floating-sub-menu');
-
-    // Style settings (required inline styles)
-    clone.style.position = 'absolute';
-    clone.style.zIndex = '4000';
-    clone.style.display = 'flex';
-    clone.style.flexDirection = 'column';
-    clone.style.maxHeight = '500px';
-    clone.style.minWidth = '180px';
-    clone.style.padding = '0px';
-    clone.style.backgroundColor = 'var(--bg-secondary)'; // Theme variable
-    clone.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)'; // Shadow
-    clone.style.borderRadius = '8px';
-    clone.style.border = '1px solid var(--border-color)';
-
-    // Position calculation (screen coordinates via getBoundingClientRect)
-    const rect = collapsible.getBoundingClientRect();
-
-    // Align to right of sidebar
-    clone.style.top = rect.top + 'px';
-    clone.style.left = (rect.right + 10) + 'px'; // +10px gap
-
-    // Append to body (to escape sidebar overflow clipping)
-    document.body.appendChild(clone);
-
-    // --- Floating Menu Events ---
-
-    // 1. Close when mouse leaves menu
-    clone.addEventListener('mouseleave', () => {
-      clone.remove();
-    });
-
-    // 2. Trigger original logic when sub-items are clicked
-    clone.querySelectorAll('.sub-item').forEach(item => {
-      item.addEventListener('click', () => {
-        // Find and click the original item (all logic is centralized in initSidebar)
-        const originalItem = document.querySelector(`.sub-item[data-page="${item.dataset.page}"]`);
-        if (originalItem) originalItem.click();
-
-        clone.remove();
-      });
-    });
-
-    // 3. Close when clicking outside (safety measure)
-    const closeMenu = (e) => {
-      if (!clone.contains(e.target) && !collapsible.contains(e.target)) {
-        clone.remove();
-        document.removeEventListener('click', closeMenu);
-      }
-    };
-    setTimeout(() => document.addEventListener('click', closeMenu), 0);
-  }
-
-
-
-
-
-
-
-
-
-
-
-
   setupSidebarToggle() {
     const sidebar = document.querySelector('.sidebar');
     const toggleBtn = document.querySelector('.toggle-btn');
-    // Select sub-menu and collapsible elements
-    const subMenu = document.querySelector('.sub-menu');
-    const collapsible = document.querySelector('.nav-item.collapsible');
 
     if (!sidebar || !toggleBtn) return;
 
-    // Check LocalStorage
     const savedState = localStorage.getItem('sidebarState');
     if (savedState === 'expanded') {
       sidebar.classList.add('expanded');
@@ -347,27 +154,13 @@ class UIComponents {
       const isCollapsed = sidebar.classList.contains('collapsed');
 
       if (isCollapsed) {
-        // --- SIDEBAR OPENING (Collapsed -> Expanded) ---
         sidebar.classList.remove('collapsed');
         sidebar.classList.add('expanded');
         localStorage.setItem('sidebarState', 'expanded');
-
       } else {
-        // --- SIDEBAR CLOSING (Expanded -> Collapsed) ---
         sidebar.classList.remove('expanded');
         sidebar.classList.add('collapsed');
         localStorage.setItem('sidebarState', 'collapsed');
-
-        // Close open sub-menu when sidebar collapses
-        if (subMenu && subMenu.classList.contains('open')) {
-          subMenu.classList.remove('open');
-          subMenu.style.maxHeight = null;
-        }
-
-        // Remove active state from collapsible button
-        if (collapsible) {
-          collapsible.classList.remove('active');
-        }
       }
     });
   }
@@ -1577,11 +1370,6 @@ class UIComponents {
 
       case "news":
         await this.loadFinanceNews();
-        break;
-
-      case "balance":
-        // Lazy loading: data is loaded only when user clicks refresh button
-        // No automatic refresh on tab activation
         break;
     }
   }

@@ -99,26 +99,6 @@
             <i class="fas fa-newspaper"></i>
             <span data-i18n="financeNews">Finance News</span>
           </button>
-
-          <div class="nav-item collapsible" data-page="#balance">
-            <i class="fas fa-wallet"></i>
-            <span data-i18n="financialAnalysis">Financial Analysis</span>
-            <i class="fas fa-chevron-right submenu-icon"></i>
-          </div>
-          <div class="sub-menu">
-            <button class="sub-item" data-page="#currentStatus">
-              <i class="fas fa-balance-scale"></i>
-              <span data-i18n="currentStatus">Balance Sheet</span>
-            </button>
-            <button class="sub-item" data-page="#purchase">
-              <i class="fas fa-file-invoice-dollar"></i>
-              <span data-i18n="purchase">Income Statement</span>
-            </button>
-            <button class="sub-item" data-page="#cash">
-              <i class="fas fa-money-bill-wave"></i>
-              <span data-i18n="cash">Cash Flow</span>
-            </button>
-          </div>
           <button class="nav-item" data-tab="settings" data-tooltip="Settings">
             <i class="fas fa-cog"></i>
             <span data-i18n="settings">Settings</span>
@@ -1206,144 +1186,6 @@
         </div>
 
 
-        <div id="balance-tab" class="tab-content">
-          <div class="balance-app">
-            <header class="balance-header">
-              <div class="header-text">
-                <h1 data-i18n="balanceCalendar.title">Financial Analysis</h1>
-                <p class="subtitle" data-i18n="balanceCalendar.subtitle">
-                  Track daily cash positions derived from processed Excel workbooks.
-                </p>
-              </div>
-              <div class="header-actions">
-                <label class="timeframe-select">
-                  <span data-i18n="balanceCalendar.timeframeLabel">Timeframe</span>
-                  <select id="balance-timeframe">
-                    <option value="1" data-i18n="balanceCalendar.timeframes.last1Month">
-                      Last 1 month
-                    </option>
-                    <option value="3" selected data-i18n="balanceCalendar.timeframes.last3Months">
-                      Last 3 months
-                    </option>
-                    <option value="6" data-i18n="balanceCalendar.timeframes.last6Months">
-                      Last 6 months
-                    </option>
-                    <option value="9" data-i18n="balanceCalendar.timeframes.last9Months">
-                      Last 9 months
-                    </option>
-                    <option value="12" data-i18n="balanceCalendar.timeframes.last12Months">
-                      Last 12 months
-                    </option>
-                  </select>
-                </label>
-                <button id="balance-refresh" class="btn btn-secondary" style="margin-top: 21px;">
-                  <i class="fas fa-rotate"></i>
-                  <span data-i18n="balanceCalendar.refresh">Refresh</span>
-                </button>
-              </div>
-            </header>
-
-            <section class="balance-process-panel">
-              <div class="panel-header">
-                <h2>
-                  <i class="fas fa-file-excel"></i>
-                  <span data-i18n="balanceCalendar.processTitle">
-                    Process Financial Analysis Document
-                  </span>
-                </h2>
-                <p data-i18n="balanceCalendar.processDescription">
-                  Upload or select a financial analysis document (balance of payments, Excel, PDF, image, etc.).
-                  The parser extracts the ledger and the agent will normalize transactions automatically.
-                </p>
-              </div>
-              <div class="process-controls">
-                <div class="process-upload">
-                  <input type="file" id="balance-file-input"
-                    accept=".xlsx,.xls,.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif"
-                    style="display: none" />
-                  <button id="balance-upload-btn" class="btn btn-secondary" type="button">
-                    <i class="fas fa-upload"></i>
-                    <span data-i18n="balanceCalendar.uploadButton">
-                      Upload &amp; Process
-                    </span>
-                  </button>
-                </div>
-                <button id="balance-process-btn" class="btn btn-primary" type="button">
-                  <i class="fas fa-play"></i>
-                  <span data-i18n="balanceCalendar.runAgent">Run Agent</span>
-                </button>
-              </div>
-              <div id="balance-process-feedback" class="process-feedback"></div>
-            </section>
-
-            <section class="balance-calendar-section">
-              <div class="calendar-header">
-                <div id="balance-summary" class="balance-summary"></div>
-                <div class="calendar-legend" id="balance-legend"></div>
-              </div>
-              <div id="balance-heatmap" class="balance-heatmap"></div>
-            </section>
-
-            <!-- Category Distribution Pie Chart Section -->
-            <section class="category-chart-section">
-              <div class="panel-header">
-                <h3>
-                  <i class="fas fa-chart-pie"></i>
-                  Transaction Category Distribution
-                </h3>
-                <p>
-                  Shows the distribution of your transactions' total amounts and net values by category.
-                </p>
-              </div>
-              <div class="category-charts-wrapper">
-                <!-- Pie Chart -->
-                <div class="chart-box">
-                  <h4 class="chart-title">Total Transaction Volume</h4>
-                  <div class="pie-chart-container">
-                    <canvas id="category-pie-chart" width="350" height="350"></canvas>
-                  </div>
-                  <div id="category-chart-legend" class="category-chart-legend"></div>
-                </div>
-
-                <!-- Column Chart -->
-                <div class="chart-box">
-                  <h4 class="chart-title">Net Values (Income - Expense)</h4>
-                  <div class="column-chart-container">
-                    <canvas id="category-column-chart" width="450" height="400"></canvas>
-                  </div>
-                </div>
-              </div>
-              <div id="category-chart-loading" class="chart-loading-indicator" style="display: none;">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading...</span>
-              </div>
-              <div id="category-chart-empty" class="chart-empty-message" style="display: none;">
-                <i class="fas fa-info-circle"></i>
-                <span>No categorized transactions found yet.</span>
-              </div>
-            </section>
-          </div>
-        </div>
-
-        <!-- Balance Sheet Tab -->
-        <div id="currentStatus-tab" class="tab-content">
-          <h2>Balance Sheet</h2>
-          <p>Balance sheet information will be displayed here.</p>
-        </div>
-
-        <!-- Income Statement Tab -->
-        <div id="purchase-tab" class="tab-content">
-          <h2>Income Statement</h2>
-          <p>Income statement data will be displayed here.</p>
-        </div>
-
-        <!-- Cash Flow Tab -->
-        <div id="cash-tab" class="tab-content">
-          <h2>Cash Flow</h2>
-          <p>Cash flow data will be displayed here.</p>
-        </div>
-
-
         <!-- Settings Tab -->
         <div id="settings-tab" class="tab-content">
           <div class="settings-container">
@@ -1440,7 +1282,6 @@
   <script src="scripts/currency-service.js"></script>
   <script src="scripts/utils.js"></script>
   <script src="scripts/api.js"></script>
-  <script src="scripts/balance.js"></script>
   <script src="scripts/components.js"></script>
   <script src="scripts/app.js"></script>
 </body>

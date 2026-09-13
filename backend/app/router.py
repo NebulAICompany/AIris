@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from backend.pipeline.query import run_orchestration, run_news_chat_orchestration, run_orchestration_stream
-from backend.core.tools.balance import process_balance_of_payments
 from backend.core.chat import chat_history_manager
 from backend.shared.logger import get_logger
 from backend.shared.constants import (
@@ -14,14 +13,12 @@ from backend.shared.constants import (
 )
 import shutil
 from pathlib import Path
-from datetime import date, datetime, timedelta
+from datetime import datetime
 from typing import List, Optional
-from dateutil.relativedelta import relativedelta
 from backend.utils.news import get_aggregated_financial_news
 from backend.utils.market_data import store, refresh_eod
 from qdrant_client import models
 from backend.utils.preview import PreviewGenerator
-from backend.utils.balance_payments_database import balance_payments_db
 from backend.utils.uploads_database import uploads_db
 from backend.retrieval.retriever import get_vectorstore
 from backend.retrieval.keyword_search import get_keyword_search
@@ -115,11 +112,6 @@ class UpdateChatSessionRequest(BaseModel):
 class UploadRequest(BaseModel):
     file: str
     preEmbeddingProcess: str = "none"  # "none", "cch"
-
-
-class BalanceProcessRequest(BaseModel):
-    fileName: str
-    replaceExisting: bool = True
 
 
 @router.get("/market/eod")
@@ -346,49 +338,6 @@ async def handle_upload(
         logger.error(f"File upload error for {file.filename}: {error_message}")
         raise HTTPException(
             status_code=500, detail=f"File upload error: {error_message}"
-        )
-
-
-@router.post("/balance-of-payments/upload")
-async def handle_balance_upload(
-    file: UploadFile = File(...),
-    photoLessMode: bool = Form(False),
-):
-    """Store balance-of-payments documents without triggering vector ingestion."""
-
-    filename = getattr(file, "filename", "unknown")
-
-    try:
-        uploads_dir = Path(UPLOADS_PATH)
-        uploads_dir.mkdir(parents=True, exist_ok=True)
-
-        file_path = uploads_dir / filename
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        logger.info(
-            "Balance document stored for agent-only processing: %s (photoLessMode=%s)",
-            filename,
-            photoLessMode,
-        )
-
-        return {
-            "filename": filename,
-            "content_type": file.content_type,
-            "status": "success",
-            "message": "Balance document stored for agent processing",
-            "photoLessMode": photoLessMode,
-        }
-    except Exception as e:
-        error_message = str(e)
-        logger.error(
-            "Balance document upload failed for %s: %s",
-            filename,
-            error_message,
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Balance document upload failed: {error_message}",
         )
 
 
@@ -833,145 +782,6 @@ def delete_created_document(filename: str):
         raise HTTPException(
             status_code=500,
             detail=f"Error deleting created document: {error_message}",
-        )
-
-
-@router.post("/balance-of-payments/process")
-async def trigger_balance_of_payments_process(request: BalanceProcessRequest):
-    file_path = Path(UPLOADS_PATH) / request.fileName
-
-    if not file_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail=f"File {request.fileName} not found in uploads directory",
-        )
-
-    suffix = file_path.suffix.lower()
-    if suffix not in ALLOWED_FILE_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Balance of payments processing currently supports files with extensions: "
-                + ", ".join(sorted(ALLOWED_FILE_EXTENSIONS))
-            ),
-        )
-
-    try:
-        result = await process_balance_of_payments(file_path=str(file_path))
-
-        return result
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to process balance of payments workbook",
-        )
-
-
-@router.get("/balance-of-payments/calendar")
-def get_balance_of_payments_calendar(
-    months: int = 3,
-    endDate: Optional[str] = None,
-):
-    months = max(1, min(months, 12))
-
-    latest_activity_str = balance_payments_db.latest_activity_date()
-    latest_activity: Optional[date] = None
-    if latest_activity_str:
-        try:
-            latest_activity = datetime.fromisoformat(latest_activity_str).date()
-        except ValueError:
-            logger.warning(
-                "Invalid latest activity date stored in database: %s",
-                latest_activity_str,
-            )
-
-    if endDate:
-        try:
-            end_date = datetime.fromisoformat(endDate).date()
-        except ValueError:
-            raise HTTPException(
-                status_code=400, detail="Invalid endDate format. Use YYYY-MM-DD"
-            )
-    else:
-        # Use today's date as the end date for calendar view
-        end_date = datetime.today().date()
-
-    # Calculate start date by going back 'months' number of months
-    start_date = end_date.replace(day=1) - relativedelta(months=months - 1)
-
-    end_weekday = end_date.weekday()
-    if end_weekday != 6:  # extend to Sunday for full week display
-        end_date = end_date + timedelta(days=(6 - end_weekday))
-
-    if start_date > end_date:
-        start_date = end_date
-
-    daily_balances = balance_payments_db.get_daily_balances(start_date, end_date)
-    max_absolute = max((abs(day["net"]) for day in daily_balances), default=0.0)
-
-    return {
-        "startDate": start_date.isoformat(),
-        "endDate": end_date.isoformat(),
-        "days": daily_balances,
-        "maxAbsoluteNet": max_absolute,
-        "latestActivity": latest_activity_str,
-    }
-
-
-@router.get("/balance-of-payments/transactions/{date_str}")
-def get_balance_transactions_for_day(date_str: str):
-    try:
-        target_date = datetime.fromisoformat(date_str).date()
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid date format. Use YYYY-MM-DD",
-        )
-
-    transactions = balance_payments_db.get_transactions_for_date(target_date)
-    return {
-        "date": target_date.isoformat(),
-        "transactions": transactions,
-    }
-
-
-@router.get("/balance-of-payments/category-totals")
-def get_balance_category_totals():
-    """
-    Get transaction totals grouped by category.
-    All amounts are treated as positive (absolute values).
-    """
-    try:
-        category_totals = balance_payments_db.get_category_totals()
-        return {
-            "categories": category_totals,
-        }
-    except Exception as e:
-        logger.error(f"Error fetching category totals: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch category totals",
-        )
-
-
-@router.get("/balance-of-payments/category-net-values")
-def get_balance_category_net_values():
-    """
-    Get net values (income - expense) for each category.
-    Returns income, expense, and net amounts for each category.
-    """
-    try:
-        category_net_values = balance_payments_db.get_category_net_values()
-        return {
-            "categories": category_net_values,
-        }
-    except Exception as e:
-        logger.error(f"Error fetching category net values: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch category net values",
         )
 
 

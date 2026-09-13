@@ -54,7 +54,7 @@ A comparative stock-report request travels from the desktop through FastAPI to t
 | TCMB macro data agent | Turkish Central Bank data | Semantic series discovery over EVDS metadata, then observation retrieval by series code and date range | Hierarchical search (data group first, then series) to keep candidates small |
 | SPD-RAG graph | Coverage-oriented cross-document research | Internal per-document retrieval | Five retrieval iterations per document; token-budgeted synthesis |
 
-Auxiliary agents outside the chat path handle balance-of-payments ledger ingestion and financial news clustering and summarization.
+Auxiliary agents outside the chat path handle financial news clustering and summarization.
 
 ---
 
@@ -110,14 +110,14 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 
 | Component | Responsibility | Location | Technologies |
 |---|---|---|---|
-| Desktop client | Chat, uploads, document and created-file libraries, sources and attachments, live agent progress, market and news dashboards, balance calendar, i18n (en, tr) | `frontend/` | Electron, vanilla JS, marked, KaTeX, highlight.js |
+| Desktop client | Chat, uploads, document and created-file libraries, sources and attachments, live agent progress, market and news dashboards, i18n (en, tr) | `frontend/` | Electron, vanilla JS, marked, KaTeX, highlight.js |
 | API layer | Routes, SSE streaming, file management, sessions, market and news endpoints | `backend/app/` | FastAPI, uvicorn, Pydantic |
 | Orchestration | Request pipeline, coordinator construction, stream processing, source extraction | `backend/pipeline/`, `backend/core/` | LangChain agents and middleware, LangGraph streaming |
 | Specialist agents and tools | Finance, file operations, plotting, TCMB agents; all tools | `backend/core/tools/` | LangChain tools, E2B, Plotly, httpx |
 | SPD-RAG | Coordination, per-document parallel retrieval, recursive synthesis | `backend/core/spdrag/` | LangGraph `StateGraph` and `Send`, structured outputs, scikit-learn |
 | Ingestion | Parsing, figure and table extraction, chunking, contextual headers, embedding | `backend/utils/`, `backend/pipeline/` | Azure Document Intelligence, PyMuPDF, Cohere |
 | Retrieval | Vector and keyword search, reranking, image description | `backend/retrieval/` | Qdrant (async client), custom BM25, Cohere rerank |
-| Data services | Market data cache, financial news aggregation and clustering, balance-of-payments ledger, TCMB metadata indexing | `backend/utils/` | SQLite, feedparser, Marketstack, EVDS |
+| Data services | Market data cache, financial news aggregation and clustering, TCMB metadata indexing | `backend/utils/` | SQLite, feedparser, Marketstack, EVDS |
 | State | Chat history, agent checkpoints, upload tracking | `backend/core/`, `backend/utils/` | SQLAlchemy, aiosqlite, LangGraph SQLite checkpointer |
 | Safety and observability | Input moderation and logging | `backend/security/`, `backend/shared/` | OpenAI Moderation, loguru |
 | Evaluation | Trajectory evaluation with an LLM judge | `tests/` | agentevals |
@@ -140,7 +140,7 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 
 - Multimodal embeddings apply to figures extracted from PDF and DOCX files. Standalone image uploads are indexed as generic text references.
 - The default coordinator and specialist model is Claude Sonnet 4.6. Alternative OpenAI, Qwen, and DeepSeek clients exist in the repository, but changing the active model requires source and environment changes.
-- News, the balance-of-payments ledger/calendar, market dashboards, and deterministic financial calculators are auxiliary workspaces rather than coordinator specialists.
+- News, market dashboards, and deterministic financial calculators are auxiliary workspaces rather than coordinator specialists.
 
 The current implementation maintains these boundaries:
 
