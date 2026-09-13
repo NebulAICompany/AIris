@@ -99,13 +99,17 @@ app.mount(
 )
 app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="assets")
 
-# Allow frontend to easily access this API during development
+# The desktop renderer has an opaque `null` origin when loaded from file://.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "null",
+        "http://127.0.0.1:8001",
+        "http://localhost:8001",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 
 

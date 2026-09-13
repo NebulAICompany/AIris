@@ -6,8 +6,8 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "build": "electron-builder",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "electron-builder --win nsis",
+    "test": "node --test src/gold-quotes.test.js src/security.test.js"
   },
   "keywords": [
     "electron",
@@ -20,6 +20,9 @@
   "author": "Nebula Intelligence",
   "license": "PolyForm-Noncommercial-1.0.0",
   "homepage": "./",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "build": {
     "appId": "com.airis.desktop",
     "productName": "AIris Desktop",
@@ -28,16 +31,30 @@
     },
     "files": [
       "src/**/*",
+      "!src/**/*.test.js",
       "assets/**/*",
       "node_modules/**/*"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     }
   },
   "devDependencies": {
-    "electron": "^36.3.1"
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "axios": "^1.9.0",

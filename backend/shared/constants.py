@@ -5,9 +5,8 @@ from azure.core.credentials import AzureKeyCredential
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from tavily import TavilyClient
 import cohere
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI
 from pathlib import Path
-from concurrent_openai import ConcurrentOpenAI
 from langchain_core.tracers.stdout import ConsoleCallbackHandler
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
@@ -41,14 +40,7 @@ document_intelligence_client = DocumentIntelligenceClient(
     credential=AzureKeyCredential(str(AZURE_DOCUMENT_INTELLIGENCE_KEY)),
 )
 
-async_openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
-concurrent_client = ConcurrentOpenAI(
-    client=async_openai_client,
-    max_concurrent_requests=5,
-    requests_per_minute=450,  # adjust according to your account's RPM
-    tokens_per_minute=27000,
-)
 tavily_client = TavilyClient(TAVILY_API_KEY)
 co = cohere.ClientV2(api_key=COHERE_API_KEY)
 

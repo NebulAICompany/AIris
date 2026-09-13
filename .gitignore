@@ -23,6 +23,7 @@ tests/test_documents/
 *.pdf
 *.lock
 !uv.lock
+!frontend/package-lock.json
 *.ipynb
 
 # IDE/editor

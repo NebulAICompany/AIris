@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const logger = require("./logger");
+const { fetchGoldQuotes } = require("./gold-quotes");
+const { isAllowedExternalUrl } = require("./security");
 
 // Use undici for modern fetch support
 const { fetch, FormData } = require("undici");
@@ -154,17 +156,17 @@ class AIrisApp {
     ipcMain.removeAllListeners("open-external-url");
     ipcMain.removeAllListeners("read-gold-cache");
     ipcMain.removeAllListeners("write-gold-cache");
-    ipcMain.removeAllListeners("get-currency-config");
+    ipcMain.removeAllListeners("fetch-gold-quotes");
 
-    ipcMain.handle("get-currency-config", async () => {
+    ipcMain.handle("fetch-gold-quotes", async () => {
       const fileVars = parseDotEnvFile(
         path.join(__dirname, "..", "..", ".env")
       );
-      return {
-        GOLDAPI_KEY: process.env.GOLDAPI_KEY || fileVars.GOLDAPI_KEY || "",
-        METALPRICEAPI_KEY:
+      return fetchGoldQuotes({
+        goldApiKey: process.env.GOLDAPI_KEY || fileVars.GOLDAPI_KEY || "",
+        metalpriceApiKey:
           process.env.METALPRICEAPI_KEY || fileVars.METALPRICEAPI_KEY || "",
-      };
+      });
     });
 
     // Handle gold cache read
@@ -554,6 +556,9 @@ class AIrisApp {
     // Handle external URL opening
     ipcMain.handle("open-external-url", async (event, url) => {
       try {
+        if (!isAllowedExternalUrl(url)) {
+          throw new Error("Only HTTP and HTTPS URLs without credentials are allowed");
+        }
         logger.info(`Opening external URL: ${url}`);
         await shell.openExternal(url);
         return { success: true };

@@ -139,7 +139,7 @@ The UI shows this live: each document appears as it is analyzed, is marked compl
 ### Capability boundaries
 
 - Multimodal embeddings apply to figures extracted from PDF and DOCX files. Standalone image uploads are indexed as generic text references.
-- The default coordinator and specialist model is Claude Sonnet 4.6. Alternative OpenAI, Qwen, DeepSeek, and local vLLM helpers exist in the repository, but changing the active model requires source and environment changes.
+- The default coordinator and specialist model is Claude Sonnet 4.6. Alternative OpenAI, Qwen, and DeepSeek clients exist in the repository, but changing the active model requires source and environment changes.
 - News, the balance-of-payments ledger/calendar, market dashboards, and deterministic financial calculators are auxiliary workspaces rather than coordinator specialists.
 
 The current implementation maintains these boundaries:
@@ -209,8 +209,8 @@ In the paper's Loong evaluation all findings fit into a single 750k-token synthe
 - **Retries and fallbacks.** Rate-limit retries on embeddings, backoff on market data requests, one-shot sandbox template rebuild, reranker and header-generation fallbacks, and checkpoint recovery.
 - **Session isolation.** Chat history and agent checkpoints are keyed per session. The backend runs as a single-user local process alongside the desktop client.
 - **Data path.** Azure Document Intelligence receives PDF/Word content; Cohere receives chunks, figures, and retrieval queries; model providers receive prompts and retrieved context; E2B receives generated code and referenced files staged for generation. Market, TCMB, web, computation, RSS, and gold-price features call their respective external services. The renderer loads selected assets from cdnjs, jsDelivr, and Google Fonts.
-- **Network posture.** The API binds to loopback for the local client, but has no authentication and currently allows any CORS origin. Loopback does not protect it from untrusted local processes or browser origins.
-- **Secrets.** Backend credentials come from environment variables.
+- **Network posture.** The API binds to `127.0.0.1`. CORS allows the Electron `file://` origin (`null`) and pages served by the same FastAPI process on `http://127.0.0.1:8001` and `http://localhost:8001`. `/` and `/health` return process status JSON. CORS does not apply to non-browser clients on the same machine.
+- **Secrets.** Backend credentials come from environment variables. Gold price API keys are read in the Electron main process; the renderer receives quote data over IPC.
 
 ---
 

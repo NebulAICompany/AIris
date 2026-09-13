@@ -7,7 +7,7 @@
  * 2. MetalpriceAPI - https://www.metalpriceapi.com/
  *
  * Set GOLDAPI_KEY and/or METALPRICEAPI_KEY in the repo-root .env file.
- * Endpoints without a key stay disabled.
+ * Gold quotes are fetched in the Electron main process so keys stay out of the renderer.
  */
 class CurrencyService {
   constructor() {
@@ -30,24 +30,6 @@ class CurrencyService {
         baseUrl: "https://api.currencyapi.com/v3",
         enabled: true,
         type: "currencyapi",
-      },
-    ];
-
-    // Gold price APIs - You can manually enable/disable APIs by setting enabled to true/false
-    this.goldApiEndpoints = [
-      {
-        name: "GoldAPI Main",
-        baseUrl: "https://www.goldapi.io/api",
-        enabled: false,
-        type: "goldapi",
-        apiKey: null,
-      },
-      {
-        name: "MetalpriceAPI",
-        baseUrl: "https://api.metalpriceapi.com/v1",
-        enabled: false,
-        type: "metalpriceapi",
-        apiKey: null,
       },
     ];
 
@@ -102,8 +84,6 @@ class CurrencyService {
 
     this.isRunning = true;
     logger.info("Starting currency service...", "CURRENCY");
-
-    await this.loadCurrencyConfig();
 
     // Load cached gold data from file
     await this.loadGoldCache();
@@ -342,216 +322,32 @@ class CurrencyService {
   }
 
   async fetchGoldPrice() {
-    try {
-      // Try each gold API endpoint
-      for (const endpoint of this.goldApiEndpoints) {
-        if (!endpoint.enabled) continue;
-
-        try {
-          const data = await this.fetchGoldFromEndpoint(endpoint);
-          if (data) {
-            this.goldCache.data = data;
-            this.goldCache.timestamp = Date.now();
-
-            // Save to persistent cache
-            await this.saveGoldCache();
-
-            logger.info(
-              `Gold price fetched successfully from ${endpoint.name}`,
-              "CURRENCY"
-            );
-            return data;
-          }
-        } catch (error) {
-          logger.warn(
-            `${endpoint.name} gold API failed: ${error.message}`,
-            "CURRENCY"
-          );
-          this.disableGoldEndpointTemporarily(endpoint);
-          continue;
-        }
-      }
-
-      // If all APIs failed, use simulation
-      throw new Error("All gold APIs failed");
-    } catch (error) {
-      logger.error(`Failed to fetch gold data: ${error.message}`, "CURRENCY");
-      this.useSimulatedGoldPrice();
-    }
-  }
-
-  async loadCurrencyConfig() {
-    if (!window.airisAPI || typeof window.airisAPI.getCurrencyConfig !== "function") {
+    if (!window.airisAPI || typeof window.airisAPI.fetchGoldQuotes !== "function") {
       logger.warn(
-        "Currency config IPC unavailable; gold APIs stay disabled",
+        "Gold quote IPC unavailable; using simulated gold price",
         "CURRENCY"
       );
+      this.useSimulatedGoldPrice();
       return;
     }
 
     try {
-      const config = await window.airisAPI.getCurrencyConfig();
-      this.applyGoldApiKeys(config);
+      const data = await window.airisAPI.fetchGoldQuotes();
+      if (data) {
+        this.goldCache.data = data;
+        this.goldCache.timestamp = Date.now();
+        await this.saveGoldCache();
+        logger.info(
+          `Gold price fetched successfully from ${data.source}`,
+          "CURRENCY"
+        );
+        return data;
+      }
+      throw new Error("Gold quote IPC returned no data");
     } catch (error) {
-      logger.warn(
-        `Failed to load currency config: ${error.message}`,
-        "CURRENCY"
-      );
+      logger.error(`Failed to fetch gold data: ${error.message}`, "CURRENCY");
+      this.useSimulatedGoldPrice();
     }
-  }
-
-  applyGoldApiKeys(config) {
-    const goldApiKey = (config && config.GOLDAPI_KEY) || "";
-    const metalpriceKey = (config && config.METALPRICEAPI_KEY) || "";
-
-    for (const endpoint of this.goldApiEndpoints) {
-      if (endpoint.type === "goldapi") {
-        endpoint.apiKey = goldApiKey || null;
-      } else if (endpoint.type === "metalpriceapi") {
-        endpoint.apiKey = metalpriceKey || null;
-      }
-      endpoint.enabled = Boolean(endpoint.apiKey);
-    }
-  }
-
-  async fetchGoldFromEndpoint(endpoint) {
-    if (!endpoint.apiKey) {
-      throw new Error(`${endpoint.name} has no API key configured`);
-    }
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-    try {
-      let url, headers, response;
-
-      switch (endpoint.type) {
-        case "goldapi":
-          url = `${endpoint.baseUrl}/XAU/USD`;
-          headers = {
-            Accept: "application/json",
-            "Cache-Control": "no-cache",
-            "X-Access-Token": endpoint.apiKey,
-            "Content-Type": "application/json",
-          };
-          response = await fetch(url, {
-            signal: controller.signal,
-            headers,
-          });
-          break;
-
-        case "metalpriceapi":
-          url = `${endpoint.baseUrl}/latest`;
-          response = await fetch(
-            `${url}?api_key=${endpoint.apiKey}&base=USD&currencies=XAU`,
-            {
-              signal: controller.signal,
-              headers: {
-                Accept: "application/json",
-                "Cache-Control": "no-cache",
-              },
-            }
-          );
-          break;
-
-        default:
-          throw new Error(`Unknown gold API type: ${endpoint.type}`);
-      }
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return this.normalizeGoldData(data, endpoint.type);
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error.name === "AbortError") {
-        throw new Error("Request timeout");
-      }
-      throw error;
-    }
-  }
-
-  normalizeGoldData(data, type = "goldapi") {
-    try {
-      const toNumber = (v) =>
-        v === null || v === undefined || v === "" ? null : Number(v);
-
-      switch (type) {
-        case "goldapi": {
-          const gramUsd = toNumber(data.price_gram_24k); // USD/gram (24k)
-          const ounceUsd =
-            toNumber(data.price) || // USD/ounce
-            toNumber(data.ask) ||
-            (gramUsd ? gramUsd * this.OUNCE_TO_GRAM : null);
-
-          if (!ounceUsd) {
-            throw new Error("GoldAPI response missing price");
-          }
-
-          return {
-            price: ounceUsd, // ounce USD price
-            ounceUsd: ounceUsd,
-            gramUsd: gramUsd ?? ounceUsd / this.OUNCE_TO_GRAM,
-            open_price: toNumber(data.open_price),
-            low_price: toNumber(data.low_price),
-            high_price: toNumber(data.high_price),
-            timestamp: data.timestamp || Date.now(),
-            currency: data.currency || "USD",
-            source: "goldapi",
-            isOffline: false,
-          };
-        }
-
-        case "metalpriceapi": {
-          // Check if the API call was successful
-          if (!data.success) {
-            throw new Error("MetalpriceAPI response not successful");
-          }
-
-          const xauRate = toNumber(data.rates?.XAU);
-          if (!xauRate) {
-            throw new Error("MetalpriceAPI response missing XAU rate");
-          }
-
-          // rate = 1 USD / (ounce gold) => gold price per ounce = 1 / rate
-          const ounceUsd = 1.0 / xauRate;
-          const gramUsd = ounceUsd / this.OUNCE_TO_GRAM;
-
-          return {
-            price: ounceUsd, // ounce USD price
-            ounceUsd: ounceUsd,
-            gramUsd: gramUsd,
-            timestamp: Date.now(),
-            currency: "USD",
-            source: "metalpriceapi",
-            isOffline: false,
-          };
-        }
-
-        default:
-          throw new Error(`Unknown gold data type: ${type}`);
-      }
-    } catch (error) {
-      throw new Error(`Failed to normalize gold data: ${error.message}`);
-    }
-  }
-
-
-  disableGoldEndpointTemporarily(endpoint) {
-    endpoint.enabled = false;
-
-    // Re-enable after 5 minutes, but only when a key is configured
-    setTimeout(() => {
-      if (!endpoint.apiKey) {
-        return;
-      }
-      endpoint.enabled = true;
-      logger.info(`Re-enabled ${endpoint.name} gold endpoint`, "CURRENCY");
-    }, 300000);
   }
 
   useSimulatedGoldPrice() {

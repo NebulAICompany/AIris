@@ -1,0 +1,70 @@
+name: Feature request
+description: Request a new feature or enhancement. For bugs, use the bug report template.
+labels: ["feature request"]
+type: feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to request a feature.
+
+        Check [README](https://github.com/NebulAICompany/AIris/blob/HEAD/README.md) and [ARCHITECTURE](https://github.com/NebulAICompany/AIris/blob/HEAD/ARCHITECTURE.md) before filing, and search existing issues.
+
+        This is a research prototype. Feature requests are recorded; there is no commitment to implement them.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checklist
+      description: Please confirm and check all the following options.
+      options:
+        - label: This is a feature request, not a bug report or usage question.
+          required: true
+        - label: I added a clear and descriptive title that summarizes the feature request.
+          required: true
+        - label: I used the GitHub search to find a similar feature request and did not find it.
+          required: true
+        - label: I checked the README and ARCHITECTURE docs to see if this already exists.
+          required: true
+  - type: textarea
+    id: feature-description
+    validations:
+      required: true
+    attributes:
+      label: Feature description
+      description: What specific functionality are you requesting?
+      placeholder: |
+        I would like AIris to support...
+
+        This would allow users to...
+  - type: textarea
+    id: use-case
+    validations:
+      required: true
+    attributes:
+      label: Use case
+      description: Why do you need this? What problem does it solve?
+      placeholder: |
+        I am trying to...
+
+        Currently I have to work around this by...
+  - type: textarea
+    id: proposed-solution
+    validations:
+      required: false
+    attributes:
+      label: Proposed solution
+      description: Optional. How you think this could work.
+  - type: textarea
+    id: alternatives
+    validations:
+      required: false
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you tried or considered.
+  - type: textarea
+    id: additional-context
+    validations:
+      required: false
+    attributes:
+      label: Additional context
+      description: Related issues, examples, or references.

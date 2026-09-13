@@ -1,10 +1,10 @@
 # Contributing to AIris
 
-Thanks for your interest in AIris. Read [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md) first; they describe the system and the external providers it depends on.
+Thanks for your interest in AIris. Read [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md) first; they describe the system and the external providers it depends on. Participation in project spaces is covered by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Environment
 
-Work on Windows with Python 3.11 or newer, Node.js 20.18.1 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Work on Windows with Python 3.11 or newer, Node.js 22.12.0 or newer, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ```powershell
 uv sync --locked
@@ -33,7 +33,9 @@ python frontend_runner.py
 
 Confirm `GET http://127.0.0.1:8001/health` before sending queries. The backend binds to loopback only.
 
-## Pull requests
+## Pull request requirements
+
+Fill in the repository pull-request template. Pull requests should show meaningful effort and contextual understanding. Low-effort or unreviewed AI-generated submissions may be closed without comment.
 
 1. Create a branch from the default branch.
 2. Keep the change focused. Do not mix retrieval, UI, and provider changes unless they are one behavior.
@@ -44,9 +46,24 @@ Confirm `GET http://127.0.0.1:8001/health` before sending queries. The backend b
 
 ## Verifying changes
 
-Automated unit tests are not yet part of the project; contributions that add them are welcome.
+Run the local frontend tests:
 
-The frontend's `npm test` script is a placeholder rather than a working test suite.
+```powershell
+Set-Location frontend
+npm test
+Set-Location ..
+```
+
+These cover URL validation and that gold-quote responses do not include API keys. Broader automated unit coverage is not yet part of the project.
+
+Installer packaging is separate from those tests. After `npm ci`, a Windows x64 NSIS build is:
+
+```powershell
+Set-Location frontend
+$env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
+npm run build
+Set-Location ..
+```
 
 For changes to the coordinator or its tools, run the trajectory evaluation. It calls live providers, scores each agent trajectory with an LLM judge, and writes `metrics.txt`:
 

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="frontend/src/renderer/assets/logo.png" alt="Nebula Intelligence logo" width="120">
   <h1>AIris</h1>
-  <p><strong>A local Windows desktop financial BI platform for source-linked research, market analysis, and Word, Excel, and PowerPoint generation.</strong></p>
+  <p><strong>A local Windows desktop financial BI platform for source-grounded research, market analysis, and Word, Excel, and PowerPoint generation.</strong></p>
   <p>
     <a href="https://arxiv.org/abs/2603.08329"><img src="https://img.shields.io/badge/arXiv-2603.08329-b31b1b" alt="SPD-RAG paper on arXiv"></a>
     <a href="https://teknofest.org/tr/yarismalar/finansal-teknolojiler-yarismasi/"><img src="https://img.shields.io/badge/TEKNOFEST%202025-3rd%20place-0F172A" alt="TEKNOFEST 2025 Financial Technologies, third place"></a>
@@ -62,7 +62,7 @@ AIris is a research and competition project intended for local evaluation and ex
 
 - Windows with PowerShell
 - Python 3.11 or newer
-- Node.js 20.18.1 or newer
+- Node.js 22.12.0 or newer
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - API keys for the providers listed under [Backend startup configuration](#backend-startup-configuration)
 
@@ -93,7 +93,7 @@ The backend creates its provider clients at startup, so these values must be pre
 | `OPENAI_API_KEY` | Moderation, SPD-RAG, summarization, news, vision |
 | `COHERE_API_KEY` | Embeddings and reranking |
 | `TAVILY_API_KEY` | Web search |
-| `QWEN_API_KEY` | Eagerly constructed alternative client; unused by default |
+| `QWEN_API_KEY` | Optional alternative coordinator client; unused unless selected in code |
 | `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` | Document parsing service endpoint |
 
 PDF and DOCX ingestion additionally requires `AZURE_DOCUMENT_INTELLIGENCE_KEY`. The example workflows require the relevant feature keys listed under [External services](#external-services). `.env` is ignored by git; never commit it.
@@ -113,6 +113,17 @@ python frontend_runner.py
 ```
 
 Success state: `GET http://127.0.0.1:8001/health` returns JSON and the Electron window opens. The first start takes longer while local stores initialize.
+
+To package a Windows x64 NSIS installer after `npm ci`:
+
+```powershell
+Set-Location frontend
+$env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
+npm run build
+Set-Location ..
+```
+
+The installer is written to `frontend/dist/`. The packaged desktop client still expects a separately running local backend.
 
 ## Example workflow
 
@@ -186,7 +197,7 @@ AIris uses bring-your-own credentials. Each provider may charge for requests.
 | OpenAI | Moderation, SPD-RAG, summarization, news, vision | Prompts, retrieved context, figure images | `OPENAI_API_KEY` (startup) |
 | Cohere | Embeddings and reranking | Document chunks, figures, and queries | `COHERE_API_KEY` (startup) |
 | Tavily | Web search | Search queries | `TAVILY_API_KEY` (startup) |
-| Qwen | Alternative model client | None unless selected in code | `QWEN_API_KEY` (startup) |
+| Qwen | Alternative coordinator and specialist model | Prompts and retrieved context | `QWEN_API_KEY` (optional unless selected in code) |
 | Azure Document Intelligence | PDF and Word parsing | Uploaded document content | `AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` (startup), `AZURE_DOCUMENT_INTELLIGENCE_KEY` |
 | E2B | Sandboxed chart and Office generation | Generated code and referenced files | `E2B_API_KEY` |
 | Marketstack | Market data and dashboard | Symbol and date requests | `MARKETSTACK_API_KEY` |
@@ -195,7 +206,7 @@ AIris uses bring-your-own credentials. Each provider may charge for requests.
 | GoldAPI or MetalpriceAPI | Live gold prices in the desktop widget | Price requests | `GOLDAPI_KEY` or `METALPRICEAPI_KEY` |
 | cdnjs, jsDelivr, Google Fonts | Renderer styles, fonts, and client-side libraries | Standard network request metadata | None |
 
-Optional: `DEEPSEEK_API_KEY`, LangSmith tracing variables, and the GLM/vLLM helper under `backend/external/glm/`. Full variable list: [`.env.example`](.env.example).
+Optional: `QWEN_API_KEY`, `DEEPSEEK_API_KEY`, and LangSmith tracing variables. Full variable list: [`.env.example`](.env.example).
 
 ## Privacy and data flow
 
@@ -203,7 +214,7 @@ Optional: `DEEPSEEK_API_KEY`, LangSmith tracing variables, and the GLM/vLLM help
 - Document content leaves the machine when it is parsed (Azure), embedded or reranked (Cohere), included in a prompt (model providers), or staged for generation (E2B), as listed above.
 - Main-chat web search is off unless the user enables it for a query; news-story chat includes web search.
 - The renderer loads selected styles, fonts, and libraries from public CDNs when the application starts.
-- The API binds to loopback and has no authentication layer. Run it on a trusted machine and do not expose port `8001`.
+- The API binds to loopback. CORS is limited to the desktop origins and is not a boundary for other local processes. Run it on a trusted machine and do not expose port `8001`.
 
 ## Supported files
 
@@ -217,9 +228,9 @@ Optional: `DEEPSEEK_API_KEY`, LangSmith tracing variables, and the GLM/vLLM help
 
 - Single-user desktop application; no multi-tenant or hosted deployment.
 - Model outputs are non-deterministic and depend on the configured providers; provider outages affect the corresponding features.
-- The default coordinator model is Claude Sonnet 4.6; switching models is a code change.
+- The default coordinator model is Claude Sonnet 4.6. OpenAI, Qwen, and DeepSeek clients are available as alternatives; switching is a code change.
 - Benchmark results above come from the paper, not from a committed evaluation run in this repository.
-- There is no automated unit test suite yet; evaluation relies on the trajectory scoring above and manual verification of workflows.
+- Local frontend tests exist (`frontend` `npm test`). Broader automated unit coverage is not yet part of the project; evaluation still relies on trajectory scoring and manual verification of workflows.
 
 ## Documentation
 
@@ -227,6 +238,7 @@ Optional: `DEEPSEEK_API_KEY`, LangSmith tracing variables, and the GLM/vLLM help
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Components, request flow, ingestion, SPD-RAG internals, design decisions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Environment setup, pull-request expectations, verifying changes |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Contributor Covenant 2.1, with project enforcement contact |
 | [SECURITY.md](SECURITY.md) | Vulnerability reporting and scope |
 | [CITATION.cff](CITATION.cff) | Machine-readable citation metadata |
 | [LICENSE](LICENSE) | PolyForm Noncommercial License 1.0.0 |
@@ -256,7 +268,7 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, pul
 
 ## Security
 
-Do not open public issues for vulnerabilities. Follow the process in [SECURITY.md](SECURITY.md).
+The backend binds to loopback. CORS is limited to the desktop origins. The Electron main process opens only credential-free HTTP(S) links and keeps gold API keys out of the renderer. Do not open public issues for vulnerabilities. Follow the process in [SECURITY.md](SECURITY.md).
 
 ## Citation
 

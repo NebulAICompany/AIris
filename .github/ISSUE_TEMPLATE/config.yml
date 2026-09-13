@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/NebulAICompany/AIris/blob/HEAD/SECURITY.md
+    about: Report a vulnerability privately. Do not open a public security issue.
+  - name: Documentation
+    url: https://github.com/NebulAICompany/AIris/blob/HEAD/README.md
+    about: README, architecture, setup, and license.
