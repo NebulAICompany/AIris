@@ -3,12 +3,12 @@
 TCMB RAG Vectorstore Pipeline
 
 Fetches datagroups and series from the TCMB EVDS API, normalizes the data,
-stores it in 'clean_datagroups_with_series.json', and embeds/indexes it into
+stores it in 'backend/database/clean_datagroups_with_series.json', and embeds/indexes it into
 Qdrant vectorstore collections ('datagroups' and 'series') using Cohere embed-v4.0.
 
 Usage:
     python backend/utils/tcmb_rag.py
-    python backend/utils/tcmb_rag.py --json-path clean_datagroups_with_series.json
+    python backend/utils/tcmb_rag.py --json-path backend/database/clean_datagroups_with_series.json
     python backend/utils/tcmb_rag.py --force-extract
     python backend/utils/tcmb_rag.py --skip-embed
 """
@@ -35,6 +35,7 @@ try:
         DATABASE_DIR,
         PROJECT_ROOT,
         TCMB_API_KEY,
+        TCMB_DATAGROUPS_JSON_PATH,
         VECTORSTORE_PATH_STR,
     )
     from backend.shared.logger import get_logger
@@ -51,6 +52,7 @@ except ImportError:
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     DATABASE_DIR = PROJECT_ROOT / "backend" / "database"
     VECTORSTORE_PATH_STR = str(DATABASE_DIR / "vectorstore")
+    TCMB_DATAGROUPS_JSON_PATH = DATABASE_DIR / "clean_datagroups_with_series.json"
     TCMB_API_KEY = os.getenv("TCMB_API_KEY", "")
     COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
 
@@ -74,21 +76,27 @@ def chunked(items: List[Any], batch_size: int) -> Generator[List[Any], None, Non
 
 
 def resolve_json_path(custom_path: Optional[str] = None) -> Path:
-    """Find the path for clean_datagroups_with_series.json."""
+    """Find the path for clean_datagroups_with_series.json.
+    
+    Defaults to backend/database/clean_datagroups_with_series.json.
+    """
     if custom_path:
         return Path(custom_path)
 
-    # Prefer database directory or project root if already present
-    candidates = [
-        Path("clean_datagroups_with_series.json"),
+    # Primary location: backend/database/clean_datagroups_with_series.json
+    if TCMB_DATAGROUPS_JSON_PATH.exists():
+        return TCMB_DATAGROUPS_JSON_PATH
+
+    # Fallback check if legacy file exists at project root or working directory
+    legacy_candidates = [
         PROJECT_ROOT / "clean_datagroups_with_series.json",
-        DATABASE_DIR / "clean_datagroups_with_series.json",
+        Path("clean_datagroups_with_series.json"),
     ]
-    for candidate in candidates:
+    for candidate in legacy_candidates:
         if candidate.exists():
             return candidate
 
-    return PROJECT_ROOT / "clean_datagroups_with_series.json"
+    return TCMB_DATAGROUPS_JSON_PATH
 
 
 # ---------------------------------------------------------------------------
@@ -589,7 +597,7 @@ def main():
         "--json-path",
         type=str,
         default=None,
-        help="Path to clean_datagroups_with_series.json (default: search root and database dir)",
+        help="Path to clean_datagroups_with_series.json (default: backend/database/clean_datagroups_with_series.json)",
     )
     parser.add_argument(
         "--force-extract",

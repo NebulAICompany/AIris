@@ -66,6 +66,9 @@ UPLOADS_DB_PATH = DATABASE_DIR / "uploads_tracking.db"
 # Checkpointer database path (SQLite)
 CHECKPOINTER_DB_PATH = DATABASE_DIR / "checkpoints.db"
 
+# TCMB datagroups and series JSON path
+TCMB_DATAGROUPS_JSON_PATH = DATABASE_DIR / "clean_datagroups_with_series.json"
+
 # Upload and document paths
 UPLOADS_PATH = DATABASE_DIR / "uploads"
 CREATED_DOCUMENTS_PATH = DATABASE_DIR / "created_documents"
@@ -119,6 +122,7 @@ LOGS_DIR_STR = str(LOGS_DIR)
 BACKEND_LOG_PATH_STR = str(BACKEND_LOG_PATH)
 BACKEND_ERROR_LOG_PATH_STR = str(BACKEND_ERROR_LOG_PATH)
 CHECKPOINTER_DB_PATH_STR = str(CHECKPOINTER_DB_PATH)
+TCMB_DATAGROUPS_JSON_PATH_STR = str(TCMB_DATAGROUPS_JSON_PATH)
 
 
 ANTHROPIC_MODEL = ChatAnthropic(
