@@ -108,10 +108,10 @@ If you plan to use the TCMB macroeconomic data agent to query Turkish Central Ba
 python backend/utils/tcmb_rag.py
 ```
 
-- **Extraction & Caching:** Queries the EVDS API for all datagroups and series, caching the structured result into `clean_datagroups_with_series.json`. If the file already exists, it skips EVDS calls and proceeds directly to vector indexing.
+- **Extraction & Caching:** Queries the EVDS API for all datagroups and series, caching the structured result into `backend/database/clean_datagroups_with_series.json`. If the file already exists, it skips EVDS calls and proceeds directly to vector indexing.
 - **Indexing:** Embeds datagroups and series using Cohere `embed-v4.0` and upserts them into the local Qdrant vector store (`backend/database/vectorstore`).
 - **CLI Options:**
-  - `--skip-embed`: Only extract and update `clean_datagroups_with_series.json` without embedding to Qdrant.
+  - `--skip-embed`: Only extract and update `backend/database/clean_datagroups_with_series.json` without embedding to Qdrant.
   - `--force-extract`: Force re-downloading from the EVDS API even if the JSON exists.
   - `--batch-size 32`: Adjust Cohere embedding batch size.
 

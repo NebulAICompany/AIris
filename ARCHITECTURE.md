@@ -99,7 +99,7 @@ In addition to user document retrieval, AIris maintains a persistent vector inde
 
 To make discovery reliable and fast, series are organized in a two-stage hierarchical vector store in Qdrant:
 
-1. **Extraction and caching:** [`backend/utils/tcmb_rag.py`](backend/utils/tcmb_rag.py) pulls the full EVDS datagroup and series catalog via `/datagroups` and `/serieList`, normalizes metadata (English titles, notes, frequency, aggregation method, start and end dates), and saves it to `clean_datagroups_with_series.json`.
+1. **Extraction and caching:** [`backend/utils/tcmb_rag.py`](backend/utils/tcmb_rag.py) pulls the full EVDS datagroup and series catalog via `/datagroups` and `/serieList`, normalizes metadata (English titles, notes, frequency, aggregation method, start and end dates), and saves it to `backend/database/clean_datagroups_with_series.json`.
 2. **Two-tier Qdrant collections:**
    - `datagroups`: Each point represents an EVDS data group. The text embeds the English name and descriptive notes using Cohere `embed-v4.0` (1536 dimensions, cosine distance).
    - `series`: Each point represents an individual time series, embedding the series name, observation frequency, and default aggregation method. The payload carries metadata including `START_DATE`, `END_DATE`, and a keyword-indexed `metadata.DATAGROUP_CODE`.
