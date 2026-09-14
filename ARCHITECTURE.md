@@ -93,6 +93,21 @@ Three layers, matching the paper:
 
 The UI shows this live: each document appears as it is analyzed, is marked complete when its agent finishes, and a synthesis stage follows.
 
+### Macroeconomic series vector index (TCMB EVDS)
+
+In addition to user document retrieval, AIris maintains a persistent vector index for Turkish Central Bank macroeconomic series. EVDS hosts tens of thousands of time series across hundreds of data groups; searching them directly by keyword or expecting an LLM to guess codes like `TP.DK.USD.A.YTL` is brittle.
+
+To make discovery reliable and fast, series are organized in a two-stage hierarchical vector store in Qdrant:
+
+1. **Extraction and caching:** [`backend/utils/tcmb_rag.py`](backend/utils/tcmb_rag.py) pulls the full EVDS datagroup and series catalog via `/datagroups` and `/serieList`, normalizes metadata (English titles, notes, frequency, aggregation method, start and end dates), and saves it to `clean_datagroups_with_series.json`.
+2. **Two-tier Qdrant collections:**
+   - `datagroups`: Each point represents an EVDS data group. The text embeds the English name and descriptive notes using Cohere `embed-v4.0` (1536 dimensions, cosine distance).
+   - `series`: Each point represents an individual time series, embedding the series name, observation frequency, and default aggregation method. The payload carries metadata including `START_DATE`, `END_DATE`, and a keyword-indexed `metadata.DATAGROUP_CODE`.
+3. **Hierarchical search and reranking:** When the TCMB agent receives a natural-language request (e.g., "monthly USD/TRY exchange rate for 2023"), it calls `search_tcmb_series`:
+   - Stage 1: Vector search over `datagroups` + Cohere `rerank-v4.0-fast` identifies the top matching data group.
+   - Stage 2: Filtered vector search over `series` restricted to that data group (`models.MatchAny`) + Cohere reranking selects the most relevant series code.
+   - Stage 3: The agent invokes `get_tcmb_data` with the selected code and date range to fetch actual observations from the EVDS API.
+
 ---
 
 ## 5. Tool and function-calling layer
