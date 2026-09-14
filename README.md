@@ -93,6 +93,23 @@ The backend creates its provider clients at startup, so these values must be pre
 
 Feature-specific keys are listed under [External services](#external-services). `.env` is ignored by git; never commit it.
 
+### TCMB macroeconomic data setup (optional)
+
+If you plan to use the TCMB macroeconomic data agent to query Turkish Central Bank EVDS indicators, initialize the local Qdrant collections (`datagroups` and `series`):
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+# Requires TCMB_API_KEY and COHERE_API_KEY in .env
+python backend/utils/tcmb_rag.py
+```
+
+- **Extraction & Caching:** Queries the EVDS API for all datagroups and series, caching the structured result into `clean_datagroups_with_series.json`. If the file already exists, it skips EVDS calls and proceeds directly to vector indexing.
+- **Indexing:** Embeds datagroups and series using Cohere `embed-v4.0` and upserts them into the local Qdrant vector store (`backend/database/vectorstore`).
+- **CLI Options:**
+  - `--skip-embed`: Only extract and update `clean_datagroups_with_series.json` without embedding to Qdrant.
+  - `--force-extract`: Force re-downloading from the EVDS API even if the JSON exists.
+  - `--batch-size 32`: Adjust Cohere embedding batch size.
+
 ### Run
 
 Start the backend, then start the desktop client in a second terminal:
